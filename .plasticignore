@@ -1,0 +1,34 @@
+# Unity が自動生成するフォルダ
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+
+# ユーザーごとの設定
+*.csproj
+*.unityproj
+*.sln
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+
+# 自動生成されるアセット
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# OSごとの不要ファイル
+.DS_Store
+Thumbs.db
+
+# Unity Cache
+MemoryCaptures/
+Recordings/
+
+# あなたのケース特有（例: Obfuscator のログ）
+Assets/OPS/Obfuscator/Log/
