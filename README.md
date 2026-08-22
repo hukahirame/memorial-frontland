@@ -1,4 +1,4 @@
-# Memorial FlontLand
+# Memorial FrontLand
 
 > "2.5次元"探索アクション × サバイバルゲーム（made with Unity）
 
@@ -58,6 +58,7 @@
 
 - ライセンスの都合上、サードパーティの Unity Asset Store アセット（キャラクター素材・背景・フォント等）は含まれていません。そのため、clone しても動作しません。
 - 自作のスクリプト（`Assets/Scripts/`）とプロジェクト設定（`ProjectSettings/`、`Packages/`）のみを収録しています。
+- 本リポジトリのコードは [LICENSE](LICENSE) の条件下にあります（閲覧のみ可・全権留保。複製・改変・再配布・組み込みには事前の許諾が必要です）。
 <!-- - 実際のプレイは上記の WebGL 体験版からご確認ください。-->
 
 ---

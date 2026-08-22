@@ -16,7 +16,7 @@
 
 ## セットアップ
 
-1. Unity `<バージョン>` をインストール
+1. Unity をインストール（バージョンは `ProjectSettings/ProjectVersion.txt` が正典）
 2. `./scripts/setup.ps1` を実行
 3. `./scripts/test.ps1` が緑になれば完了
 
@@ -27,14 +27,22 @@
 
 | 範囲 | 扱い |
 |---|---|
-| `Assets/Scripts/<層>/` | 自由に。PRベース |
-| `Assets/Scripts/Legacy/` | 触らない。移行は別途相談 |
+| `Assets/_Project/Scripts/<層>/` | 自由に。PRベース。**新規スクリプトは必ずここに作る** |
+| `Assets/Scripts/` | Legacy。既存ファイルの最小限の修正のみ。新規ファイルを追加しない |
+| `Assets/_Project/` のその他（`Scenes/` `Prefabs/` `Art/` `Resources/` 等） | 自由に。ただし操作は Unity Editor 上で |
+| `Assets/` 直下のサードパーティ、`Assets/Resources/`、`Assets/LegacyScenes/` | 追跡対象外。コミットに含めない |
 | `*.asmdef` | CODEOWNERS 対象。レビュー必須 |
 | `.github/workflows/` | CODEOWNERS 対象。レビュー必須 |
 | `ProjectSettings/` | 直接編集しない |
 
 ファイルの移動・リネームは必ず Unity Editor 上で行うこと。
 エクスプローラで動かすと `.meta` が追従せず GUID が壊れます。
+
+`Assets/` 配下は `.gitignore` で既定拒否（ホワイトリスト方式）です。
+サードパーティ素材を誤ってコミットしないための構造なので、緩めないこと。
+`Assets/` 直下に新しいディレクトリを作っても、そのままでは追跡されません。
+追跡が必要なら `Assets/_Project/` の下に作るか、`.gitignore` に
+ディレクトリと `.meta` を対で追加してください（対を忘れると GUID が振り直されます）。
 
 ## PRが自動で落ちる条件
 

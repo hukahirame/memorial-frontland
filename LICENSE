@@ -1,0 +1,84 @@
+Copyright (c) 2026 hukahirame. All rights reserved.
+著作権 (c) 2026 hukahirame. 無断複製・転載を禁じます。
+
+------------------------------------------------------------------------
+日本語（正文）
+------------------------------------------------------------------------
+
+本リポジトリに含まれるソースコード、プロジェクト設定、ドキュメント、その他
+一切の内容物（以下「本ソフトウェア」）の著作権は、著作権者に帰属します。
+
+これはオープンソースライセンスではありません。本ソフトウェアは、内容を
+閲覧できる状態で公開されていますが、利用を許諾するものではありません。
+
+1. 許可される行為
+   本ソフトウェアを閲覧し、読解すること。個人的な学習・評価・技術的検討の
+   目的で参照すること。
+
+2. 禁止される行為
+   著作権者による事前の書面（電子メールを含む）による許諾なく、以下の行為を
+   行うことはできません。
+   - 本ソフトウェアの全部または一部の複製、頒布、公衆送信、再配布
+   - 本ソフトウェアの全部または一部の改変、翻案、二次的著作物の作成
+   - 本ソフトウェアの全部または一部を、他のソフトウェア、製品、サービスに
+     組み込むこと
+   - 商用・非商用を問わない、上記以外の利用
+
+3. サードパーティ素材について
+   本リポジトリには、ライセンスの都合により、第三者が権利を有する素材
+   （Unity Asset Store で取得したアセット等）は含まれていません。それらの
+   素材は各提供元のライセンス条件に従うものであり、本ライセンスの対象外です。
+
+4. 無保証および免責
+   本ソフトウェアは「現状有姿」で提供され、明示・黙示を問わず、商品性、
+   特定目的への適合性、権利非侵害を含むいかなる保証も行いません。本
+   ソフトウェアの使用または使用不能から生じるいかなる損害についても、
+   著作権者は責任を負いません。
+
+5. 許諾の申請
+   上記2に該当する利用を希望される場合は、著作権者までご連絡ください。
+   個別に検討します。
+
+------------------------------------------------------------------------
+English (reference translation)
+------------------------------------------------------------------------
+
+All source code, project settings, documentation, and other contents of this
+repository (the "Software") are the copyrighted work of the copyright holder.
+
+This is NOT an open source license. The Software is made available for
+viewing only; no license to use it is granted.
+
+1. Permitted
+   Viewing and reading the Software. Referring to it for personal study,
+   evaluation, or technical review.
+
+2. Not permitted without prior written permission (including by email) from
+   the copyright holder
+   - Copying, distributing, publicly transmitting, or redistributing the
+     Software in whole or in part
+   - Modifying, adapting, or creating derivative works from the Software in
+     whole or in part
+   - Incorporating the Software, in whole or in part, into other software,
+     products, or services
+   - Any other use, whether commercial or non-commercial
+
+3. Third-party materials
+   For licensing reasons, this repository does not include materials owned by
+   third parties (such as assets obtained from the Unity Asset Store). Those
+   materials are governed by their respective licenses and are outside the
+   scope of this license.
+
+4. No warranty
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY
+   ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+   OTHER DEALINGS IN THE SOFTWARE.
+
+5. Requesting permission
+   If you wish to use the Software in a way described in section 2, please
+   contact the copyright holder. Requests are considered individually.
+
+In case of any discrepancy, the Japanese text above prevails.

@@ -1,17 +1,32 @@
-# ===== Whitelist: Assets配下は原則すべて無視 =====
+# ===== Whitelist: Assets配下は原則すべて無視し、自作分だけ明示的に許可する =====
+# /[Aa]ssets/* は「直下の各エントリ」を除外する。Git は除外されたディレクトリの
+# 中を走査しないため、再包含は必ず直下から順に、ディレクトリと .meta を対で書く
+# （.meta を忘れると GUID が振り直される）。
 /[Aa]ssets/*
-!/[Aa]ssets/[Ss]cripts/
-!/[Aa]ssets/[Ss]cripts.meta
 
-# ディレクトリ再編時に対で追加する（.meta を忘れると GUID が振り直される）
-# !/[Aa]ssets/_[Pp]roject/
-# !/[Aa]ssets/_[Pp]roject.meta
+# --- Legacy コード。恒久的に追跡する（_Project へは移さない） ---
+# 新ルール適用前の既存スクリプト。リファクタしたものから _Project/Scripts へ移る。
+!/[Aa]ssets/[Ll]egacyScripts/
+!/[Aa]ssets/[Ll]egacyScripts.meta
 
-# 自作コードが他にもあるなら、ディレクトリと .meta を対で追加する
+# --- 自作物の集約先。新規・リファクタ済みコード、シーン、プレハブ、自作アート ---
+!/[Aa]ssets/_[Pp]roject/
+!/[Aa]ssets/_[Pp]roject.meta
+
+# --- 他に許可を足すときの雛形（ディレクトリと .meta を対で） ---
 # !/[Aa]ssets/[Ee]ditor/
 # !/[Aa]ssets/[Ee]ditor.meta
-# !/[Aa]ssets/[Cc]haraParts/
-# !/[Aa]ssets/[Cc]haraParts.meta
+
+# --- 許可した中から落とすもの（! より後に置くこと。後勝ちで効く） ---
+# サードパーティ由来を自作ツリーに置いてしまった場合の保険
+/[Aa]ssets/**/[Tt]hird[Pp]arty/
+/[Aa]ssets/**/[Pp]lugins/
+# フォント本体。再配布に当たるため既定で除外する。
+# 自作フォント、または再配布が許諾されたフォントに限り、この2行を消して許可する。
+# 注意: TMP の SDF フォントアセット（*.asset）はグリフ画像を内包するため、
+#       この行では止まらない。追加する前に元フォントの規約を個別に確認すること。
+/[Aa]ssets/_[Pp]roject/**/*.[Tt][Tt][Ff]
+/[Aa]ssets/_[Pp]roject/**/*.[Oo][Tt][Ff]
 
 # ===== Unity 生成物 =====
 /[Ll]ibrary/
@@ -30,6 +45,7 @@ crashlytics-build.properties
 # ===== IDE =====
 .vs/
 .idea/
+.vscode/
 .gradle/
 .consulo/
 *.csproj
