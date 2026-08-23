@@ -16,6 +16,11 @@
       元の行は消さず `→ D-X` を追記する。
 -->
 
+### 8/23
+- UnityCLI+pipelineは1.0.0beta(8/13)を使う
+- UVCSはローカルをすべて削除済
+- vHierarchyは非推奨のため削除。標準機能化したらしい
+
 ### 8/22
 
 **Git / LFS**
@@ -47,7 +52,7 @@
 
 **Unity 6 移行**
 
-- `upgrade/unity6` ブランチで実施し、main は動く状態のまま維持する。
+- `upgrade/unity6` ブランチで実施し、main は動く状態のまま維持する（ブランチはできればつくらない）。
 - 手順: 全ファイルをコミット → ブランチ作成 → `Library/` 削除 → Unity 6 で起動 →
   API Updater → コンソールのエラー解消 → Play / ビルド確認 → main へマージ。
 - ProjectSettings と全 `.meta` が書き換わり巨大な差分になるため、アップグレード

@@ -42,7 +42,7 @@
 - **エンジン**: Unity 2022
 - **言語**: C#
 - **対象プラットフォーム**: Android, Windows
-- **バージョン管理**: Unity Version Control (UVCS) で管理
+- **バージョン管理**: Gitで管理(昔はUVCSを使用)
 
 ---
 
