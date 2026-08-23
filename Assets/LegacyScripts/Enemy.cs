@@ -28,7 +28,7 @@ public class Enemy : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (move == true) rb.velocity = attitude * speed;
+        if (move == true) rb.linearVelocity = attitude * speed;
         if (transform.position.y < -6) gameObject.SetActive(false);
     }
 

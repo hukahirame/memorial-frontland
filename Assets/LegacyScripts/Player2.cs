@@ -79,14 +79,14 @@ public class Player2 : MonoBehaviour
         Vector3 pos = transform.position;
         bool XL = pos.x > expos.x + 0.4, XS = pos.x < expos.y - 0.4, ZL = pos.z > expos.z + 0.4, ZS = pos.z < expos.w - 0.4;
         if (expos == null) return;
-        if ((pos.x > expos.x) && !XL) playerrb.velocity = Vector3.left * 0.5f;
-        if ((pos.x < expos.y) && !XS) playerrb.velocity = Vector3.right * 0.5f;
-        if ((pos.z > expos.z) && !ZL) playerrb.velocity = Vector3.back * 0.5f;
-        if ((pos.z < expos.w) && !ZS) playerrb.velocity = Vector3.forward * 0.5f;
+        if ((pos.x > expos.x) && !XL) playerrb.linearVelocity = Vector3.left * 0.5f;
+        if ((pos.x < expos.y) && !XS) playerrb.linearVelocity = Vector3.right * 0.5f;
+        if ((pos.z > expos.z) && !ZL) playerrb.linearVelocity = Vector3.back * 0.5f;
+        if ((pos.z < expos.w) && !ZS) playerrb.linearVelocity = Vector3.forward * 0.5f;
         if (XL || XS || ZL || ZS || (Mathf.Abs(pos.y) > 4))
         {
             transform.position = new Vector3(-2, 0.65f, -2);
-            playerrb.velocity = Vector3.right * 2;
+            playerrb.linearVelocity = Vector3.right * 2;
         }
 
         if (cool == false)//この中は停止可能

@@ -32,7 +32,7 @@ public class Slime : MonoBehaviour
     private void FixedUpdate()
     {
         if (isDead) return;
-        if (move == true) rb.velocity = attitude * speed;
+        if (move == true) rb.linearVelocity = attitude * speed;
         if (transform.position.y < -10) gameObject.SetActive(false);
         if (hp.value <= 0)
         {
