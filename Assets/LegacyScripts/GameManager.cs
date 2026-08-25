@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
@@ -37,19 +37,19 @@ public class GameManager : MonoBehaviour
 
         coin = maincanvas.Find("Status_Gold").Find("CoinText").GetComponent<TextMeshProUGUI>();
 
-        StringReader reader = new StringReader(itemdata.text); // TextAsset‚ğStringReader‚É•ÏŠ·
+        StringReader reader = new StringReader(itemdata.text); // TextAssetã‚’StringReaderã«å¤‰æ›
         while (reader.Peek() != -1)
         {
-            string line = reader.ReadLine(); // 1s‚¸‚Â“Ç‚İ‚Ş
-            items.Add(line.Split(',')); // itemsƒŠƒXƒg‚É’Ç‰Á‚·‚é
+            string line = reader.ReadLine(); // 1è¡Œãšã¤èª­ã¿è¾¼ã‚€
+            items.Add(line.Split(',')); // itemsãƒªã‚¹ãƒˆã«è¿½åŠ ã™ã‚‹
         }
-        for (int i = 0; i < items.Count; i++) // itemsƒŠƒXƒg‚ÌğŒ‚ğ–‚½‚·’l‚Ì”i‘S‚Äj
+        for (int i = 0; i < items.Count; i++) // itemsãƒªã‚¹ãƒˆã®æ¡ä»¶ã‚’æº€ãŸã™å€¤ã®æ•°ï¼ˆå…¨ã¦ï¼‰
         {
-        /*    Debug.Log("ƒVƒXƒeƒ€“à–¼ÌF" + items[i][0] +
-                "@–¼ÌF" + items[i][1] +
-                    "@Å‘åƒXƒgƒbƒN”F" + items[i][2] +
-                      "@Å‘å‘Ï‹v’lF" + items[i][3] +
-                      "@•ª—ŞF" + items[i][4] // ‘fŞA‘•”õ•iAİ”õ‚È‚Ç ¦İ’u‰Â‚È‚Ç‚Ì”»’fŠî€‚É‚·‚é‚×‚«(boolŒ^—v‘f)
+        /*    Debug.Log("ã‚·ã‚¹ãƒ†ãƒ å†…åç§°ï¼š" + items[i][0] +
+                "ã€€åç§°ï¼š" + items[i][1] +
+                    "ã€€æœ€å¤§ã‚¹ãƒˆãƒƒã‚¯æ•°ï¼š" + items[i][2] +
+                      "ã€€æœ€å¤§è€ä¹…å€¤ï¼š" + items[i][3] +
+                      "ã€€åˆ†é¡ï¼š" + items[i][4] // ç´ æã€è£…å‚™å“ã€è¨­å‚™ãªã© â€»è¨­ç½®å¯ãªã©ã®åˆ¤æ–­åŸºæº–ã«ã™ã‚‹ã¹ã(boolå‹è¦ç´ )
                       );*/
         }
     }

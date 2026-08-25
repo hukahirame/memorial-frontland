@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -18,7 +18,7 @@ public class MiddleText : MonoBehaviour
     {
         origin = transform.position;
         transform.localScale = new Vector3(0, 1, 1);
-        Midtxt_Anim("ŠÇ—’n[‚Í‚¶‚Ü‚è‚Ì’n[");
+        Midtxt_Anim("ç®¡ç†åœ°ãƒ¼ã¯ã˜ã¾ã‚Šã®åœ°ãƒ¼");
     }
 
     public void Midtxt_Anim(string s)

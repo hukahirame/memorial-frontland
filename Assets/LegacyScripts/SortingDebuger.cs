@@ -1,4 +1,4 @@
-using System.Collections;
+Ôªøusing System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -11,7 +11,7 @@ public class SortingDebuger : MonoBehaviour
         {
             if(sprite.sortingOrder != 0)
             {
-                Debug.Log("Åyî≠å©Åz" + sprite.gameObject.name + "ÅF" + sprite.sortingOrder);
+                Debug.Log("„ÄêÁô∫Ë¶ã„Äë" + sprite.gameObject.name + "Ôºö" + sprite.sortingOrder);
                 sprite.sortingOrder = 0;
             }
         }

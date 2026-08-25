@@ -1,4 +1,4 @@
-using Assets.HeroEditor.Common.Scripts.CharacterScripts;
+﻿using Assets.HeroEditor.Common.Scripts.CharacterScripts;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;

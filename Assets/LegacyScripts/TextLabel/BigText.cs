@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -10,10 +10,10 @@ public class BigText : MonoBehaviour
     public int flame;
     [SerializeField] private Image image1;
     [SerializeField] private Image image2;
-    [SerializeField] private TextMeshProUGUI txt1; //’†‰›
-    [SerializeField] private TextMeshProUGUI txt2; //ƒŠƒ{ƒ“‘¤
+    [SerializeField] private TextMeshProUGUI txt1; //ä¸­å¤®
+    [SerializeField] private TextMeshProUGUI txt2; //ãƒªãƒœãƒ³å´
 
-    //ƒeƒLƒXƒgE‰æ‘œ‚ÍÅ‰‚©‚ç“§‰ßw’è
+    //ãƒ†ã‚­ã‚¹ãƒˆãƒ»ç”»åƒã¯æœ€åˆã‹ã‚‰é€éæŒ‡å®š
 
     public void Bigtxt_Anim(string s1,string s2)
     {
