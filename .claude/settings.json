@@ -21,5 +21,40 @@
       "Edit(ProjectSettings/**)",
       "Write(ProjectSettings/**)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe",
+            "args": [
+              "-NoProfile",
+              "-ExecutionPolicy",
+              "Bypass",
+              "-File",
+              ".claude/hooks/log-unity-checkpoint.ps1"
+            ],
+            "if": "PowerShell(unity command *)",
+            "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "powershell.exe",
+            "args": [
+              "-NoProfile",
+              "-ExecutionPolicy",
+              "Bypass",
+              "-File",
+              ".claude/hooks/log-unity-checkpoint.ps1"
+            ],
+            "if": "Bash(unity command *)",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
   }
 }

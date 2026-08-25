@@ -98,3 +98,7 @@ desktop.ini
 !/tests/**/*.csproj
 /tests/**/bin/
 /tests/**/obj/
+
+# エージェント作業開始時の作業ツリー記録（手元のデバッグ用。共有しない）
+/.claude/editor-changes.log
+/.claude/.unity-checkpoint-state
