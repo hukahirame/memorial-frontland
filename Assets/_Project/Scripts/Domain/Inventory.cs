@@ -111,6 +111,18 @@ namespace MemorialFloor.Domain
         }
 
         /// <summary>
+        /// 指定アイテムの所持数を、複数スロットにまたがって合計する。
+        /// </summary>
+        public int CountOf(string itemId)
+        {
+            int total = 0;
+            for (int i = 0; i < _items.Count; i++)
+            {
+                if (_items[i] == itemId) total += _stocks[i];
+            }
+            return total;
+        }
+        /// <summary>
         /// アイテムを1個減らす。最後に見つかったスロットから減らし、
         /// 0以下になったらスロットを空にする。
         /// </summary>

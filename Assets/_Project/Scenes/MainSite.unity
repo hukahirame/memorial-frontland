@@ -9436,7 +9436,7 @@ GameObject:
   m_Layer: 0
   m_Name: CraftInventory
   m_TagString: CraftDateBase
-  m_Icon: {fileID: 0}
+  m_Icon: {fileID: 2974397684917235467, guid: 0000000000000000d000000000000000, type: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
@@ -9483,8 +9483,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pi: {fileID: 761480763}
+  recipeDefinitions:
+  - {fileID: 11400000, guid: f17c9ccc209df94439500a6067b7eb8f, type: 2}
+  - {fileID: 11400000, guid: de08add90a7f24a4cb297373fda41435, type: 2}
+  - {fileID: 11400000, guid: a12f0e74e3379854fbded76d1b775aeb, type: 2}
   set: {fileID: 1884500544}
-  craftdata: {fileID: 4900000, guid: c525dff4fed8e0643a81f0bcebdbc4c4, type: 3}
   material1: {fileID: 112028891}
   demand1: {fileID: 1847906382}
   Image1: {fileID: 1453769850}
