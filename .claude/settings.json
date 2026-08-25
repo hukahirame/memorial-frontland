@@ -4,8 +4,6 @@
     "deny": [
       "Bash(unity command set_authoring_root *)",
       "PowerShell(unity command set_authoring_root *)",
-      "Bash(git push --force *)",
-      "PowerShell(git push --force *)",
       "Bash(git reset --hard *)",
       "PowerShell(git reset --hard *)"
     ],
@@ -18,6 +16,8 @@
       "PowerShell(unity command rename_asset *)",
       "Bash(git push *)",
       "PowerShell(git push *)",
+      "Bash(git push --force *)",
+      "PowerShell(git push --force *)",
       "Edit(ProjectSettings/**)",
       "Write(ProjectSettings/**)"
     ]

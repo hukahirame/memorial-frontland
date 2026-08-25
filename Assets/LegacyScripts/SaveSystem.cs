@@ -42,7 +42,9 @@ public class SaveSystem : MonoBehaviour
                 savedata = JsonUtility.FromJson<SaveData>(data);
             }
 
-            SceneManager.LoadScene(savedata.entered_scene);
+            //既に目的のシーンにいる場合は読み直さない。読み直すと Awake が再入して無限ループになる
+            if (SceneManager.GetActiveScene().name != savedata.entered_scene)
+                SceneManager.LoadScene(savedata.entered_scene);
             StartCoroutine(Load2());
         }
     }

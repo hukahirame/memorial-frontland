@@ -92,3 +92,9 @@ plastic.selector
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# dotnet による Domain 層のテスト（Unity 非依存・CI 用）
+# 上の *.csproj / *.sln の除外に対する例外
+!/tests/**/*.csproj
+/tests/**/bin/
+/tests/**/obj/

@@ -16,6 +16,55 @@
       元の行は消さず `→ D-X` を追記する。
 -->
 
+### 8/25
+
+**Unity 6.3 移行後の初 Play でエディタが停止**
+
+- `SaveSystem.Awake()` がセーブファイルの存在だけを条件に `Load()` を呼び、その中で
+  `SceneManager.LoadScene(entered_scene)` を実行する。セーブの `entered_scene` と
+  同じシーンで Play すると、遷移先で `Awake` が再入して無限にシーンを読み直す。
+- 症状は「フリーズ」に見えるが、実際は低速で回り続けている。エディタが非フォアグラウンドだと
+  フレームレートが絞られるため CPU がほぼ立たず、Editor.log だけが 52行/秒 で増える。
+  → 固まったように見えたら、CPU 増加ではなく **ログの行数の増加**で判定する。CPU 0 でも動いている。
+- 対症療法として「現在のシーンと一致するなら `LoadScene` を呼ばない」ガードを入れた。ループは塞がる。
+- 移行とは無関係で、以前から MainSite で Play すれば同じことが起きていたはず。
+  Title から始める習慣だったため踏んでいなかった。
+
+**構造的な問題（未着手）**
+
+- `SaveSystem`: 別シーンから遷移する経路では `LoadScene` 直後に `StartCoroutine(Load2())` を
+  呼ぶが、遷移で自身が破棄されコルーチンも止まる。`DontDestroyOnLoad` も無い。
+  この経路ではセーブが適用されていない可能性が高い。
+- そもそも `Awake` から `SceneManager.LoadScene` を呼ぶ設計が危うい。
+  起動用シーンがセーブを読んでから遷移する形に作り替えるのが根治。
+- ゲーム状態の正典がシーンに散在している。所持金は UI ラベルの文字列を `int.Parse` している。
+  `SaveData` はデータモデルではなくシーン走査器で、抽出できるルールが無い。
+  → セーブの Domain 分離は「最初」ではなく「最後」。他システムのドメインモデルが先。
+- インベントリの `items` / `stocks` / `maxstocks` が並行3リスト。スロット型にまとめるべきだが、
+  `SaveData` と Inspector のシリアライズを同時に触るため別スライス扱い。
+- シーンに Missing Mono Script が残っている（`Silent Land playerA`、`airsenser`）。
+- `PlayerInventory` を `_Project` へ移せない。`Player2` / `GameManager` / `Inventbutton` /
+  `Info_set` が Legacy にあり、asmdef の参照は Assembly-CSharp → 各アセンブリの一方向のため。
+  移行の単位はファイルではなく「依存が閉じた塊」。
+- LegacyScripts に asmdef を付ける移行手も使えない。`Player2` / `PlayerDeath` が HeroEditor に
+  依存しており、third-party は `.gitignore` 対象なので asmdef を足してもコミットされず他環境で壊れる。
+
+**JOURNAL の運用（未着手）**
+
+- 書き込みが自動化されていない。手動運用の結果、8/22 以降この日まで一度も書かれなかった。
+- 何を JOURNAL に書き、何を `DECISIONS.md` に書くかの基準が曖昧。
+  CONTRIBUTING に行き先の表はあるが、判断の粒度が実運用で決まっていない。
+- エージェントは JOURNAL を**読めない**（AGENTS.md で禁止）が**書ける**。
+  この非対称をどう扱うか未定。書いた内容を自分で検証できない状態になっている。
+- `DECISIONS.md` への昇格基準（2回以上参照されたら `### [決定]` へ）を、誰がいつ判定するか未定。
+- 鮮度チェック CI（最新エントリが4日以上古いと警告）が未実装。
+
+**その他 未着手**
+
+- Play 通しとビルドの検証。コンパイルとテストは通ったが、実行は未確認。
+- AGENTS.md の各ルールへの `[D-XXX]` 付与（索引化）。
+- `git lfs prune`（参照されていない LFS オブジェクト 461 MB の回収）。
+
 ### 8/23
 - Pipeline
   - 1.0.0beta(8/13)を使う

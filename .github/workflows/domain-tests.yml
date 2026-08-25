@@ -1,0 +1,25 @@
+# Domain 層（UnityEngine 非依存）のテストを Unity 無しで実行する。
+# Unity ライセンス認証も LFS の取得も不要なため、数十秒で完了する。
+# Game 層や PlayMode の検証は対象外。それらが必要になったら Unity を動かす CI を別途足す。
+
+name: Domain Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        # LFS は既定で取得されない。Domain のテストに不要なので、そのままにしておくこと
+        # （取得すると LFS 無料枠の転送量を消費する）
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Run Domain tests
+        run: dotnet test tests/Domain.Tests/Domain.Tests.csproj --nologo --verbosity minimal

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Unity を起動せずに Domain 層を検証するためのプロジェクト。
+    Assets/ の外に置くことで Unity からは無視される。
+    ソースは写しを作らず、Unity 側と同一のファイルを直接コンパイルする。
+    MemorialFloor.Domain は noEngineReferences のため UnityEngine 無しで通る。
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AssemblyName>MemorialFloor.Domain.DotnetTests</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../Assets/_Project/Scripts/Domain/**/*.cs" />
+    <Compile Include="../../Assets/_Project/Tests/Domain/**/*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+  </ItemGroup>
+
+</Project>
