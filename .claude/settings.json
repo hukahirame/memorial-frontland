@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "disableBypassPermissionsMode": "disable",
+    "deny": [
+      "Bash(unity command set_authoring_root *)",
+      "PowerShell(unity command set_authoring_root *)",
+      "Bash(git push --force *)",
+      "PowerShell(git push --force *)",
+      "Bash(git reset --hard *)",
+      "PowerShell(git reset --hard *)"
+    ],
+    "ask": [
+      "Bash(unity command delete_asset *)",
+      "PowerShell(unity command delete_asset *)",
+      "Bash(unity command move_asset *)",
+      "PowerShell(unity command move_asset *)",
+      "Bash(unity command rename_asset *)",
+      "PowerShell(unity command rename_asset *)",
+      "Bash(git push *)",
+      "PowerShell(git push *)",
+      "Edit(ProjectSettings/**)",
+      "Write(ProjectSettings/**)"
+    ]
+  }
+}

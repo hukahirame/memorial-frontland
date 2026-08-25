@@ -17,7 +17,9 @@
 -->
 
 ### 8/23
-- UnityCLI+pipelineは1.0.0beta(8/13)を使う
+- Pipeline
+  - 1.0.0beta(8/13)を使う
+  - 書き込めるパスの権限設定はデフォであった。set_authoring_rootをAssets/_Projectにしておく
 - UVCSはローカルをすべて削除済
 - vHierarchyは非推奨のため削除。標準機能化したらしい
 
