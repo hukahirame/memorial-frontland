@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using MemorialFloor.Domain;
 
 public class PlayerInventory : MonoBehaviour
 {
@@ -22,68 +23,55 @@ public class PlayerInventory : MonoBehaviour
         LoadInventory("Ironsword",0);
     }
 
+    // 格納規則は MemorialFloor.Domain.Inventory 側。ここは効果適用と表示のみ。
+    // SaveData.LoadDynamic() がリスト参照ごと差し替えるため、Inventory は保持せず都度生成する。
+
     public int LoadInventory(string s, int durability)
     {
-        int index = -1;
+        if (s == "Speedneckless") Player2.speed += 0.3f; //所持しているだけで加速する
 
-        if (s == "Speedneckless")
+        var result = new Inventory(items, stocks, maxstocks).Add(s, () => GetMaxStock(s)); //新規配置時のみ評価される
+
+        switch (result.Outcome)
         {
-            if (Player2.speed < 1.2f) Player2.speed = 1.3f;
-            else Player2.speed *= 1.3f;
+            case AddOutcome.Stacked:
+                transform.GetChild(CHILDPLUS + result.SlotIndex).Find("Text").GetComponent<Text>().text = result.Stock.ToString();
+                return 1;
+
+            case AddOutcome.Placed:
+                // ボタンへの描写処理 GetSiblingIndex←いつか使う
+                Inventbutton ib = transform.GetChild(result.SlotIndex + CHILDPLUS).GetComponent<Inventbutton>();
+                ib.Ready(s, durability);
+                return 1;
+
+            default:
+                return -1;
         }
-
-        for (int i = 0; i <= items.Count-1; i++) //同名探し
-        {
-            if ((items[i] == s) && (stocks[i] < maxstocks[i]))
-            {
-                index = i;
-                break;
-            }
-
-        }
-        if(index != -1)
-        {
-            stocks[index]++;
-            transform.GetChild(CHILDPLUS + index).Find("Text").GetComponent<Text>().text = stocks[index].ToString();
-            return 1;
-        }
-
-        index = items.FindIndex(n => n == ""); //空いてる所探し
-        if (index != -1)
-        {
-            items[index] = s;
-            stocks[index]++;
-
-            int i;
-            for (i = 0; i < GameManager.items.Count; i++) //最大ストック数の取得
-                if (GameManager.items[i][0] == s) break;
-            maxstocks[index] = int.Parse(GameManager.items[i][2]);
-
-            // ボタンへの描写処理 GetSiblingIndex←いつか使う
-            Inventbutton ib = transform.GetChild(index + CHILDPLUS).GetComponent<Inventbutton>();
-            ib.Ready(s, durability);
-
-            return 1;
-        }
-        return -1;
     }
 
-    public void UnloadInventory(string s) // 所持数以上消す指示出すとエラー
+    private int GetMaxStock(string s) //最大ストック数の取得
     {
-        int index = items.FindLastIndex(n => n == s);
-        stocks[index]--;
-        transform.GetChild(CHILDPLUS + index).Find("Text").GetComponent<Text>().text = stocks[index].ToString();
+        int i;
+        for (i = 0; i < GameManager.items.Count; i++)
+            if (GameManager.items[i][0] == s) break;
+        return int.Parse(GameManager.items[i][2]);
+    }
 
-        if (stocks[index] <= 0)
+    public void UnloadInventory(string s)
+    {
+        if (s == "Speedneckless") Player2.speed -= 0.3f;
+
+        var result = new Inventory(items, stocks, maxstocks).Remove(s);
+        if (result.Outcome == RemoveOutcome.NotFound) return;
+
+        transform.GetChild(CHILDPLUS + result.SlotIndex).Find("Text").GetComponent<Text>().text = result.Stock.ToString();
+
+        if (result.Outcome == RemoveOutcome.SlotCleared)
         {
-            items[index] = "";
-            maxstocks[index] = 0;
-            transform.GetChild(CHILDPLUS + index).GetComponent<Image>().sprite = buttonsprite;
-            transform.GetChild(CHILDPLUS + index).Find("Text").GetComponent<Text>().text = "";
+            transform.GetChild(CHILDPLUS + result.SlotIndex).GetComponent<Image>().sprite = buttonsprite;
+            transform.GetChild(CHILDPLUS + result.SlotIndex).Find("Text").GetComponent<Text>().text = "";
 
             transform.Find("Info_set").GetComponent<Info_set>().Delete_Info();
         }
-
-
     }
 }

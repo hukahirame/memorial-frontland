@@ -28,7 +28,7 @@
 | 範囲 | 扱い |
 |---|---|
 | `Assets/_Project/Scripts/<層>/` | 自由に。PRベース。**新規スクリプトは必ずここに作る** |
-| `Assets/Scripts/` | Legacy。既存ファイルの最小限の修正のみ。新規ファイルを追加しない |
+| `Assets/LegacyScripts/` | Legacy。既存ファイルの修正のみ。新規ファイルを追加しない。ロジックは順次 Domain へ抜く |
 | `Assets/_Project/` のその他（`Scenes/` `Prefabs/` `Art/` `Resources/` 等） | 自由に。ただし操作は Unity Editor 上で |
 | `Assets/` 直下のサードパーティ、`Assets/Resources/`、`Assets/LegacyScenes/` | 追跡対象外。コミットに含めない |
 | `*.asmdef` | CODEOWNERS 対象。レビュー必須 |
