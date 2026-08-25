@@ -1,0 +1,17 @@
+{
+    "name": "MemorialFloor.Game",
+    "rootNamespace": "MemorialFloor.Game",
+    "references": [
+        "MemorialFloor.Domain",
+        "Unity.TextMeshPro"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
