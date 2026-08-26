@@ -1,0 +1,122 @@
+# このリポジトリの書式と命名規則。
+# 命名規則は Assets/_Project 配下にのみ適用する（Legacy と third-party は対象外）。
+# 違反は warning。error にすると規約に合わない試作コードが一切書けなくなるため。
+
+root = true
+
+# ---------------- 書式 ----------------
+
+[*]
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+indent_size = 4
+end_of_line = crlf
+# PowerShell 5.1 と VS2022 の誤判定を避けるため BOM を付ける
+charset = utf-8-bom
+
+[*.ps1]
+indent_size = 4
+# BOM 必須。無いと PowerShell 5.1 が CP932 として読み、構文エラーになる
+charset = utf-8-bom
+
+[*.csv]
+# Excel が UTF-8 と認識するために必要
+charset = utf-8-bom
+insert_final_newline = false
+
+[*.{json,yml,yaml}]
+indent_size = 2
+# BOM を付けない。パーサが拒否するため
+charset = utf-8
+
+[*.md]
+# 行末2スペースによる改行があるため除去しない
+trim_trailing_whitespace = false
+
+# Unity が生成・管理するファイルには手を入れない
+[*.{asset,unity,prefab,meta,mat,anim,controller,asmdef}]
+charset = utf-8
+insert_final_newline = false
+trim_trailing_whitespace = false
+
+# ---------------- 命名規則（新規コードのみ） ----------------
+
+[Assets/_Project/**.cs]
+
+# 書き換え可能な public インスタンスフィールドを宣言しない。
+# 既定では無効なため明示的に有効化する。
+dotnet_diagnostic.CA1051.severity = warning
+
+# 命名規則違反。個々の rule の severity に加えて、これが無いとビルド時に出ない
+dotnet_diagnostic.IDE1006.severity = warning
+
+# 定数は PascalCase
+dotnet_naming_rule.constants_pascal.severity = warning
+dotnet_naming_rule.constants_pascal.symbols = constants
+dotnet_naming_rule.constants_pascal.style = pascal_case
+dotnet_naming_symbols.constants.applicable_kinds = field
+dotnet_naming_symbols.constants.applicable_accessibilities = *
+dotnet_naming_symbols.constants.required_modifiers = const
+
+# static readonly は PascalCase
+dotnet_naming_rule.static_readonly_pascal.severity = warning
+dotnet_naming_rule.static_readonly_pascal.symbols = static_readonly_fields
+dotnet_naming_rule.static_readonly_pascal.style = pascal_case
+dotnet_naming_symbols.static_readonly_fields.applicable_kinds = field
+dotnet_naming_symbols.static_readonly_fields.applicable_accessibilities = *
+dotnet_naming_symbols.static_readonly_fields.required_modifiers = static,readonly
+
+# public readonly は不変なので PascalCase（Domain の値型で使う）
+dotnet_naming_rule.public_readonly_pascal.severity = warning
+dotnet_naming_rule.public_readonly_pascal.symbols = public_readonly_fields
+dotnet_naming_rule.public_readonly_pascal.style = pascal_case
+dotnet_naming_symbols.public_readonly_fields.applicable_kinds = field
+dotnet_naming_symbols.public_readonly_fields.applicable_accessibilities = public
+dotnet_naming_symbols.public_readonly_fields.required_modifiers = readonly
+
+# public フィールドは camelCase。
+# ScriptableObject や [Serializable] のデータ入れ物で使う Unity の慣習に合わせる。
+dotnet_naming_rule.public_fields_camel.severity = warning
+dotnet_naming_rule.public_fields_camel.symbols = public_fields
+dotnet_naming_rule.public_fields_camel.style = camel_case
+dotnet_naming_symbols.public_fields.applicable_kinds = field
+dotnet_naming_symbols.public_fields.applicable_accessibilities = public
+
+# それ以外のフィールドは _camelCase
+dotnet_naming_rule.private_fields_underscore.severity = warning
+dotnet_naming_rule.private_fields_underscore.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore.style = underscore_camel_case
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private,protected,internal,protected_internal,private_protected
+
+# 型とメンバーは PascalCase
+dotnet_naming_rule.members_pascal.severity = warning
+dotnet_naming_rule.members_pascal.symbols = members
+dotnet_naming_rule.members_pascal.style = pascal_case
+dotnet_naming_symbols.members.applicable_kinds = property,method,event,class,struct,enum,delegate,namespace
+dotnet_naming_symbols.members.applicable_accessibilities = *
+
+# インターフェースは I 始まり
+dotnet_naming_rule.interface_prefix.severity = warning
+dotnet_naming_rule.interface_prefix.symbols = interfaces
+dotnet_naming_rule.interface_prefix.style = i_pascal_case
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_symbols.interfaces.applicable_accessibilities = *
+
+# 引数は camelCase
+dotnet_naming_rule.parameters_camel.severity = warning
+dotnet_naming_rule.parameters_camel.symbols = parameters
+dotnet_naming_rule.parameters_camel.style = camel_case
+dotnet_naming_symbols.parameters.applicable_kinds = parameter
+dotnet_naming_symbols.parameters.applicable_accessibilities = *
+
+# スタイル定義
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+dotnet_naming_style.camel_case.capitalization = camel_case
+dotnet_naming_style.underscore_camel_case.capitalization = camel_case
+dotnet_naming_style.underscore_camel_case.required_prefix = _
+dotnet_naming_style.i_pascal_case.capitalization = pascal_case
+dotnet_naming_style.i_pascal_case.required_prefix = I

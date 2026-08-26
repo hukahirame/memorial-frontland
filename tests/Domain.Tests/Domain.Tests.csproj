@@ -14,6 +14,16 @@
     <IsPackable>false</IsPackable>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AssemblyName>MemorialFloor.Domain.DotnetTests</AssemblyName>
+
+    <!--
+      Domain 層に .NET アナライザを適用する。Unity のコンパイルは .NET SDK を
+      通らないためこの規則が効かないが、ここでビルドすれば CI で検出できる。
+      CA1051: 書き換え可能な public インスタンスフィールドを宣言しない。
+    -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <!-- IDE 系（命名規則）はこれが無いとビルド時に走らない -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
   <ItemGroup>

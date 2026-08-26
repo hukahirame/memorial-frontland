@@ -24,9 +24,9 @@ namespace MemorialFloor.Domain
 
     public readonly struct AddResult
     {
-        public readonly AddOutcome Outcome;
-        public readonly int SlotIndex;
-        public readonly int Stock;
+        public AddOutcome Outcome { get; }
+        public int SlotIndex { get; }
+        public int Stock { get; }
 
         public AddResult(AddOutcome outcome, int slotIndex, int stock)
         {
@@ -38,9 +38,9 @@ namespace MemorialFloor.Domain
 
     public readonly struct RemoveResult
     {
-        public readonly RemoveOutcome Outcome;
-        public readonly int SlotIndex;
-        public readonly int Stock;
+        public RemoveOutcome Outcome { get; }
+        public int SlotIndex { get; }
+        public int Stock { get; }
 
         public RemoveResult(RemoveOutcome outcome, int slotIndex, int stock)
         {

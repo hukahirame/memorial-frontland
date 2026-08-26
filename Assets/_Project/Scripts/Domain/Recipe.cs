@@ -6,10 +6,10 @@ namespace MemorialFloor.Domain
     public readonly struct Ingredient
     {
         /// <summary>システム内名称。インベントリのアイテムIDと一致する</summary>
-        public readonly string ItemId;
+        public string ItemId { get; }
         /// <summary>UI に出す表示名</summary>
-        public readonly string DisplayName;
-        public readonly int Amount;
+        public string DisplayName { get; }
+        public int Amount { get; }
 
         public Ingredient(string itemId, string displayName, int amount)
         {
