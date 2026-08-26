@@ -16,6 +16,52 @@
       元の行は消さず `→ D-X` を追記する。
 -->
 
+### 8/26
+
+**やったこと**
+
+- `.editorconfig` を追加。書式・文字コード・命名規則を機械化した。
+  命名規則は `Assets/_Project` のみ、Legacy と third-party は対象外。違反は warning。
+- `tests/Domain.Tests` にアナライザを有効化し、Domain 層でのみ CA1051 が CI で効くようにした。
+- 全 `.cs` を BOM 付き UTF-8 に統一。うち4件（`GameManager` / `SortingDebuger` /
+  `BigText` / `MiddleText`）は CP932 で保存されていた。
+- `conventions.md` から散文の理由を分離し、`DECISIONS.md` に D-006〜D-008 として移した。
+  規約は「規則の言い切り + コード例」だけにする。コード例は理由ではなく仕様なので残す。
+- エージェントが `unity command` を実行する直前に作業ツリーを記録するフックを追加。
+
+**Unity / Pipeline の運用で踏んだこと**
+
+- **Unity のプロセスは `unity pipeline list` の PID で特定する。**
+  `Get-Process Unity` の先頭は Editor とは限らず、AssetImportWorker が混ざる。
+  今日それで Editor ではないプロセスを kill し、診断も別プロセスに対して行っていた。
+- **`run_tests` にクライアント側の短いタイムアウトを付けない。**
+  タイムアウトでキャンセルが走ると `PipelineTestRunner.InvalidatePreviousRun` に入り、
+  Pipeline が実行ゲートを握ったまま CPU を空回りさせる。以降のコマンドは全部タイムアウトする。
+  長時間かかる可能性があるコマンドはバックグラウンド実行にする。
+- **フリーズの判定は CPU ではなくログ行数で行う。**
+  エディタが非フォアグラウンドだとフレームレートが絞られ、無限ループ中でも CPU がほぼ立たない。
+  「CPU 0 なのに Editor.log が毎秒数十行増える」= 低速で回っている、が実際に起きた。
+- **`unity open` は Editor を子プロセスとして保持する。**
+  バックグラウンド実行にしたコマンドが終了したタイミングで Editor も落ちた。
+  CLI から起動するならフォアグラウンドで扱うか、Hub から開く。
+- **PowerShell スクリプトは BOM 付き UTF-8 必須。**
+  BOM 無しだと 5.1 が CP932 として読み、日本語コメントが壊れて構文エラーになる。
+  フックは失敗しても黙って何も起きないため、単体実行で確認しないと気づけない。
+  加えてフック経由では git の出力も CP932 になるので `[Console]::OutputEncoding` を明示する。
+- **フックとアナライザは「発火すること」まで確認する。**
+  最初の `.editorconfig` は `EnforceCodeStyleInBuild` と各診断 ID の severity 指定が無く、
+  設定した気になっていただけで何も検出していなかった。
+  一時的に違反コードを置いて、実際に警告が出ることを見るまで信用しない。
+
+**未着手**
+
+- クラフト画面の目視確認。Legendsword / Speedneckless で材料3・4の枠が消えているか
+  （エージェントが挙動を変えた箇所で、テストが届かない領域）
+- Play 通しとビルド検証。Unity 6.3 移行以来ずっと未確認
+- AGENTS.md の各ルールへの `[D-XXX]` 付与（索引化）
+- `git lfs prune`（参照されていない LFS オブジェクト 461 MB）
+- ドキュメントの絵文字方針をどこに残すか（保留）
+
 ### 8/25
 
 **Unity 6.3 移行後の初 Play でエディタが停止**
