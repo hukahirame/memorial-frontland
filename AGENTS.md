@@ -31,7 +31,11 @@ Editor が閉じていると全コマンドが失敗する。その場合は起�
   `cancel_tests` を叩いてから再実行すれば戻る（プロセスを殺す必要はない）
 - 静的解析: `unity command audit` → `unity command audit_status`
 
-## 絶対禁止
+## クラスを変えた後
+
+変えた後は `dotnet test tests/Domain.Tests/Domain.Tests.csproj` で素データを更新し、`./tools/diagram-diff.ps1` で差分図を出し、現状図を直す（[D-009]）。
+
+## 禁止
 
 - `docs/JOURNAL.md` を読むこと（時系列ログ。未整理の卓上案や覆された前提を
   採用済みと誤読する。判断の正典は `docs/DECISIONS.md`）

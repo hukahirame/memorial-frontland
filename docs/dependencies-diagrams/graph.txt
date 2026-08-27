@@ -1,0 +1,191 @@
+# 機械用の素データ。tools/diagram-diff.ps1 が読む。
+# 人が読む図は docs/dependencies-diagrams/ と docs/dependencies-diff-diagrams/。
+# DependencyGraphTests が生成する。手で編集しない。
+#
+# ソースの字面から拾っているので厳密ではない。
+# - ファイル単位で参照を拾い、宣言する型すべてに割り当てる
+# - var で受けている依存は型名が現れないので出ない
+# - コメントと文字列リテラルは除いてから照合している
+
+[types]
+AccumulationLevel Domain
+AddOutcome Domain
+AddResult Domain
+Allmaity Legacy
+BigText Legacy
+BranchFallSystem Legacy
+CloseInventory Legacy
+CloseManager Legacy
+Craft Legacy
+CraftButton Legacy
+Craft_set Legacy
+DamageSet Legacy
+Dropitem Legacy
+DynamicLayer Legacy
+Enemy Legacy
+ExchangeButton Legacy
+FieldCreator Legacy
+FirstSeedSet Legacy
+GameManager Legacy
+Info_set Legacy
+Ingredient Domain
+IngredientEntry Game
+Inventbutton Legacy
+Inventory Domain
+JoystickEffect Legacy
+JoystickEffect_ATK Legacy
+MS_Spawner Legacy
+MainCamera Legacy
+MapButton Legacy
+MiddleText Legacy
+OF_Spawner Legacy
+OutField Legacy
+Player2 Legacy
+PlayerDeath Legacy
+PlayerHp Legacy
+PlayerInventory Legacy
+QuestButton Legacy
+QuestManager Legacy
+Recipe Domain
+RecipeDefinition Game
+RemoveOutcome Domain
+RemoveResult Domain
+RewardUI Legacy
+Root Domain
+RootRegistry Domain
+RootUI Legacy
+RootsManager Legacy
+SaveData Legacy
+SaveSystem Legacy
+SceneFinisher Legacy
+SceneStarter Legacy
+Seeker Legacy
+SideJab Legacy
+Slime Legacy
+SortingDebuger Legacy
+SpawnerCandidate Legacy
+Sun2 Legacy
+TempAudio Legacy
+Title Legacy
+UpDownUI Legacy
+ViewSecurer Legacy
+Weapon Legacy
+WeaponBox Legacy
+Wink Legacy
+
+[cofile]
+AccumulationLevel Root RootRegistry
+AddOutcome AddResult Inventory RemoveOutcome RemoveResult
+FieldCreator FirstSeedSet
+Ingredient Recipe
+IngredientEntry RecipeDefinition
+
+[edges]
+Allmaity -> GameManager
+Allmaity -> MiddleText
+Allmaity -> QuestManager
+CloseInventory -> TempAudio
+Craft -> Craft_set
+Craft -> Inventory
+Craft -> PlayerInventory
+Craft -> Recipe
+Craft -> RecipeDefinition
+CraftButton -> Craft
+Craft_set -> GameManager
+Dropitem -> PlayerInventory
+Enemy -> Player2
+Enemy -> QuestManager
+ExchangeButton -> RootsManager
+ExchangeButton -> TempAudio
+GameManager -> SceneFinisher
+Info_set -> GameManager
+Info_set -> Player2
+Info_set -> PlayerInventory
+Info_set -> TempAudio
+Info_set -> Weapon
+Ingredient -> Inventory
+IngredientEntry -> Ingredient
+IngredientEntry -> Recipe
+Inventbutton -> GameManager
+Inventbutton -> Info_set
+JoystickEffect -> Player2
+MapButton -> RootsManager
+OF_Spawner -> GameManager
+OF_Spawner -> MiddleText
+OF_Spawner -> QuestManager
+OF_Spawner -> Root
+OF_Spawner -> RootsManager
+OF_Spawner -> SaveData
+OF_Spawner -> SaveSystem
+OF_Spawner -> SceneStarter
+OF_Spawner -> Seeker
+Player2 -> Allmaity
+Player2 -> PlayerDeath
+Player2 -> SideJab
+Player2 -> TempAudio
+Player2 -> Weapon
+Player2 -> Wink
+PlayerDeath -> BigText
+PlayerDeath -> GameManager
+PlayerDeath -> Player2
+PlayerDeath -> RewardUI
+PlayerDeath -> Wink
+PlayerInventory -> AddOutcome
+PlayerInventory -> GameManager
+PlayerInventory -> Info_set
+PlayerInventory -> Inventbutton
+PlayerInventory -> Inventory
+PlayerInventory -> Player2
+PlayerInventory -> RemoveOutcome
+QuestButton -> GameManager
+QuestButton -> MiddleText
+QuestButton -> QuestManager
+QuestManager -> BigText
+QuestManager -> GameManager
+QuestManager -> RewardUI
+QuestManager -> RootsManager
+Recipe -> Inventory
+RecipeDefinition -> Ingredient
+RecipeDefinition -> Recipe
+RewardUI -> PlayerInventory
+RewardUI -> QuestManager
+RewardUI -> RootsManager
+RootUI -> AccumulationLevel
+RootUI -> QuestManager
+RootUI -> RootsManager
+RootsManager -> AccumulationLevel
+RootsManager -> GameManager
+RootsManager -> MS_Spawner
+RootsManager -> OF_Spawner
+RootsManager -> Root
+RootsManager -> RootRegistry
+SaveData -> GameManager
+SaveData -> Player2
+SaveData -> PlayerInventory
+SaveData -> QuestManager
+SaveData -> Sun2
+SaveSystem -> SaveData
+SceneFinisher -> GameManager
+SceneFinisher -> SaveData
+SceneFinisher -> SaveSystem
+SceneStarter -> GameManager
+SceneStarter -> OF_Spawner
+SceneStarter -> Player2
+SceneStarter -> QuestManager
+SceneStarter -> RewardUI
+SceneStarter -> RootsManager
+SceneStarter -> SaveData
+SceneStarter -> SaveSystem
+Seeker -> OF_Spawner
+Slime -> GameManager
+Slime -> Player2
+Slime -> QuestManager
+Slime -> RootsManager
+Sun2 -> MiddleText
+Sun2 -> QuestManager
+Sun2 -> RootsManager
+Weapon -> DamageSet
+Weapon -> OF_Spawner
+Weapon -> SpawnerCandidate
+Weapon -> TempAudio
+Weapon -> WeaponBox

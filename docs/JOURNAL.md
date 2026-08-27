@@ -16,6 +16,57 @@
       元の行は消さず `→ D-X` を追記する。
 -->
 
+### 8/27-28
+
+#### やったこと
+
+- スモークテスト（PlayMode）。シーンの起動と MainSite -> Root への遷移で例外ゼロを見る
+- セーブのホットキーを停止。Space がジャンプと同じキーで、ジャンプのたびに保存されていた
+- 根源を Domain へ。3並行 static リスト（roots / pos / parameta）を Root / RootRegistry に置換
+- 構造を図で確認する仕組み。クラス図の生成、依存の素データ、機能スライスの現状図、変更の差分図
+
+#### 差し替えの途中で見つけたバグ
+
+読むまで誰も気づいていなかったもの。置き換えると自然に直るものが多かった。
+
+- StampedeJudge の `for (int f = 0; f < 5; i++)`。f が増えず無限ループ。
+  1日=実時間2分、蓄積値は1日+10なので、約20分プレイで到達して固まる
+- MS_Spawner.index が -1 のまま一度も代入されておらず parameta[-1] を読む。
+  呼び出し元は氾濫だけで、その氾濫が無限ループで到達不能だったため誰も踏んでいない
+- RewardUI が rewardUI_index（quests の添字）で roots を引いていた
+- RewardUI の報酬が、一致後もループを続けて残り回数ぶん多重加算されていた
+- SaveData の roots / quests / rewards は JsonUtility が List<string[]> を保存できず、
+  セーブファイルにキー自体が無い。保存されないのに読み込み時は空リストで上書きするため、
+  ロードのたび根源が消えていた。roots だけ同期を外した。quests / rewards は残っている
+- RootUIShow の Destroy(Transform)。Unity が拒否して削除されず、マップを開くたび UI が重なる
+- RootsManager は MainSite にしか無く DontDestroyOnLoad でもないため、
+  戻るたび Start が再実行され static な roots に同じ ID が積み増されていた
+
+#### 運用で踏んだこと
+
+- `run_tests --mode all` は `--async_tests` に対応していない。しかも外側は「成功 true」を返し、
+  失敗は内側の error にしか出ない。テストが走っていないのに走ったように見える
+- `cancel_tests` は安全なキャンセルではなく、次の1回を道連れにする。
+  詰まりの判定は test_status が running かつ editor_status の playMode が stopped。
+  editor_status は ready を返し続けるので単体では検出できない。
+  復旧は cancel_tests をもう一度叩いて再実行。プロセスを殺す必要はない
+- 生成物をテストで検査するとき、生成側が LF で書き git が作業コピーを CRLF に戻すと、
+  次のチェックアウト以降そのテストが永久に落ちる。比較は改行を正規化する
+- .ps1 の BOM 落ち。再発。日本語を含む PowerShell は BOM 付き UTF-8 でないと CP932 で読まれる
+- 検証せずに手順を書いて3回踏んだ（.editorconfig、フック、run_tests --mode all）。
+  「発火するところまで確認する」が守れていない
+
+#### 未着手
+
+- ビルドを一度も通していない。Unity 6.3 移行以降ずっと。
+  PlayTests の asmdef がビルドから除外されるかも未確認（defineConstraints だけ書いて確かめていない）
+- 20分プレイして氾濫を見る。今日まで誰も到達したことのない挙動
+- クラフト画面の目視確認（Legendsword / Speedneckless で素材スロット3・4が隠れるか）
+- quests / rewards の保存欠陥。roots と同じ形で残っている
+- 図が実際に描画されるか未確認。GitHub で開いて確かめる
+- AGENTS.md が55行で、冒頭に書いた50行の目安を超えた。次に足すときは分割
+- git lfs prune（未参照の LFS オブジェクト約461MB）
+
 ### 8/26
 
 **やったこと**

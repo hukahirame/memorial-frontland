@@ -164,3 +164,33 @@ ask は GUID を伴う資産操作（delete/move/rename_asset）、git push、Pr
 **帰結** — permission ルールは前方一致でありサンドボックスではない。
 確実な担保は authoring_root（サーバ側）、confirm=true（サーバ側）、
 コミット済みの Git 状態と物理バックアップの3つ。deny は床上げであって天井ではない。
+
+### [D-009] 構造の確認は、生成した差分図と手で維持する現状図の二段で行う
+status: Accepted
+scope: docs/dependencies-diagrams, docs/dependencies-diff-diagrams, tools/diagram-diff.ps1
+
+**背景** — 複数クラスをまたぐ変更のあと、何がどう繋がり直したのかが
+git diff からは読み取れない。行の増減しか見えず、依存の増減が見えない。
+一方で全型を1枚の図にすると読めない（Legacy はルート直下だけで35型ある）。
+
+**検討した選択肢** — (a) 全体図を1枚生成する (b) クラスごとに近傍図を生成する
+(c) 差分図を生成し、現状図は人が維持する。
+(a) は読めない。(b) は64節になり、変更のたびに無関係な節まで動いて diff が濁った。
+
+**決定** — (c)。役割を2つに分ける。
+
+  docs/dependencies-diff-diagrams/  変更で何が動いたかの図。生成物。
+  docs/dependencies-diagrams/       今どうなっているかの図。人が維持する。
+
+素データ（graph.txt）は DependencyGraphTests が生成し、ソースとズレたら失敗する。
+差分図は tools/diagram-diff.ps1 が graph.txt の前の版と今を比べて作る。
+現状図は機能のスライス単位で人が切る。どう切るかは機械に決められないため。
+
+**帰結** — 手で維持する現状図は放っておけば腐る。腐り方のうち2つを
+SliceDiagramTests が見張る。実在しない依存が描かれていないこと、
+Domain / Game の型がどれかのスライスに出ていること。
+どう切るか（何を1枚にまとめるか）は見ない。そこは人の判断で、
+機械が正解を持てない。
+
+判断が誤りだった場合の検出条件: スライスが機能と対応しなくなり、
+1枚に10型以上入るようになったとき。そこで切り直す。

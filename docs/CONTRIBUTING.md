@@ -105,8 +105,30 @@ AI との対話で決まったことは、書かなければ消えます。
 |---|---|
 | `docs/DECISIONS.md` | なぜそう作られているか。判断の記録 |
 | `docs/conventions.md` | 機械で強制できない取り決め |
+| `docs/domain-class-diagram.md` | Domain 層のクラス図（生成物） |
+| `docs/dependencies-diagrams/` | 今どうなっているか。機能のスライスごと（人が維持） |
+| `docs/dependencies-diff-diagrams/` | 変更で何が動いたか（生成物） |
 | `/AGENTS.md` | エージェントへの実行指示 |
 | `/README.md` | プロジェクトの概要（外部向け） |
 
 各ファイルの冒頭に、何を書き何を書かないかのコメントがあります。
+
+生成物は手で編集しません。`dotnet test` が型とソースから作り直し、
+ズレていれば書き換えたうえで失敗します。
+
+## 構造の変化を見る 🔍
+
+複数クラスをまたぐ変更のあと、依存がどう動いたかを1枚の図にします。
+git diff では読み取れないため（[D-009]）。
+
+```
+dotnet test tests/Domain.Tests/Domain.Tests.csproj   # 素データを最新にする
+./tools/diagram-diff.ps1                             # 差分図を出す
+```
+
+差分図は `docs/dependencies-diff-diagrams/` に出ます。**それを見て
+`docs/dependencies-diagrams/` の現状図を手で直します。** 直し忘れは
+SliceDiagramTests が検出します（実在しない依存、どのスライスにも無い型）。
+
+比較元は既定で HEAD。`-Ref origin/main -Name roots-registry` のように指定もできます。
 書く前にそれを読んでください。
