@@ -14,8 +14,14 @@ Unity Editor に対して以下を順に実行し、結果を報告する。
    domain reload 中の接続エラーは想定内なので無視してよい。
    failed=true なら errors 配列を読んで報告し、テストには進まない。
 
-3. `unity command run_tests --mode all --async_tests true` を実行し、
-   `unity command test_status` を completed になるまでポーリングする。
+3. テストを editor と playmode で別々に実行する。`--mode all` は
+   `--async_tests` に対応していない（error に理由が入るが、外側の
+   「成功」は true のままなので必ず error を読むこと）。
+
+       unity command run_tests --mode editor   --async_tests true
+       unity command run_tests --mode playmode --async_tests true
+
+   どちらも `unity command test_status` を completed になるまでポーリングする。
    $ARGUMENTS が指定されていれば `--filter $ARGUMENTS` を付ける。
    `--timeout` は付けないこと。CLI 側のキャンセルで Pipeline が詰まる。
 
