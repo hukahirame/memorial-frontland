@@ -16,10 +16,9 @@ public class SaveSystem : MonoBehaviour
         if (File.Exists(filePath)) Load();
     }
 
-    private void Update()
-    {
-       if (Input.GetKeyUp(KeyCode.Space)) Save();
-    }
+    //Domain 分割の間はセーブを止めている。Save() は残してあるので呼べば動く
+    //再開するときは Space を使わないこと。Player2 のジャンプと同じキーで、
+    //ジャンプのたびに保存されていた（Player2.cs の Jump も GetKeyUp(Space)）
 
     public void Save()
     {
