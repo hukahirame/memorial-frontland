@@ -5,14 +5,21 @@ using System;
 public class RewardUI : MonoBehaviour
 {
     public static int rewardUI_show = 0; //0：非表示　1：失敗　2：成功
-    public static int rewardUI_index = -1; //roots[r_i][i]
+    public static int rewardUI_index = -1; //quests の添字。QuestManager が入れる
     [SerializeField] TextMeshProUGUI toptxt;
     [SerializeField] TextMeshProUGUI sidetxt;
     [SerializeField] TextMeshProUGUI resulttxt;
     public void InputInfo()
     {
-        toptxt.text = "「" + RootsManager.roots[rewardUI_index][0] + "」のクエスト結果";
-        sidetxt.text = "◎危険度：" + RootsManager.parameta[rewardUI_index][1] + "\n\n";
+        //rewardUI_index は quests の添字。旧コードは同じ値で roots も引いており、
+        //クエスト数が根源数を超えると別の根源を指すか例外になっていた
+        if (rewardUI_index < 0 || rewardUI_index >= QuestManager.quests.Count) return;
+
+        var root = RootsManager.Roots.Find(QuestManager.quests[rewardUI_index][1]);
+        if (root == null) return;
+
+        toptxt.text = "「" + root.Name + "」のクエスト結果";
+        sidetxt.text = "◎危険度：" + root.Danger + "\n\n";
 
         if (rewardUI_show == 1)
         {
@@ -23,7 +30,7 @@ public class RewardUI : MonoBehaviour
             resulttxt.text = "成功";
             resulttxt.color = new Color(170, 0, 0, 255);
 
-            int now_progress = RootsManager.parameta[rewardUI_index][0];
+            int now_progress = root.Progress;
             sidetxt.text += string.Format("◎攻略度　{0} % → {1} %\n\n", now_progress, now_progress + 15);
             sidetxt.text += "【報酬】\n";
             for (int i = 0; i < QuestManager.rewards[rewardUI_index].Length / 2; i += 2)
@@ -67,12 +74,9 @@ public class RewardUI : MonoBehaviour
             {
                 if (QuestManager.rewards[index][i].IndexOf("progress") != -1)
                 {
-                    int index_rm = -1;
-                    for (int j = 0; j < RootsManager.roots.Count; j++)
-                    {
-                        if (RootsManager.roots[j][2] == QuestManager.quests[index][1]) index_rm = j;
-                        if (index_rm != -1) RootsManager.parameta[index_rm][0] += int.Parse(QuestManager.rewards[index][i + 1]);
-                    }
+                    //旧コードは一致後もループを回し続け、残り回数ぶん加算を繰り返していた
+                    var rewarded = RootsManager.Roots.Find(QuestManager.quests[index][1]);
+                    if (rewarded != null) rewarded.Gain(int.Parse(QuestManager.rewards[index][i + 1]));
                 }
                 else if (QuestManager.rewards[index][i].IndexOf("coin") != -1)
                 {

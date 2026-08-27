@@ -150,7 +150,7 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
         for (int i = 0; i < quests.Count; i++) { if (quests[i][0] == ordered_id) index = i; }
         if (index == -1) return;
 
-       string bigstr = "「" + RootsManager.roots.Find(root => root[2] == quests[index][1])[0] + "」調査クエスト\n\n";
+       string bigstr = "「" + RootsManager.Roots.Find(quests[index][1]).Name + "」調査クエスト\n\n";
         bigstr += "根源を探し出し、破壊する";
         if (ordered_id.IndexOf("Y") == 0) bigstr.Replace("調査", "決壊");
 
@@ -193,7 +193,7 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
 
             if((type == "X") || (type == "Y"))
             {
-                string txt = "「" + RootsManager.roots.Find(root => root[2] == quests[i][1])[0] + "」調査クエスト\n\n";
+                string txt = "「" + RootsManager.Roots.Find(quests[i][1]).Name + "」調査クエスト\n\n";
                 txt += "根源を探し出し、破壊する";
                 if (type == "Y") txt = txt.Replace("調査","決壊");
                 transform.parent.Find("BigText").gameObject.GetComponent<BigText>().Bigtxt_Anim(txt,"達成");

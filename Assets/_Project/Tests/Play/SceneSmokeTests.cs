@@ -6,6 +6,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using MemorialFloor.Domain;
 
 //シーンが起動し、遷移しても例外を出さないことだけを見る。
 //ゲームの正しさは見ない。参照割り当ての抜けを捕まえるための網。
@@ -63,9 +64,11 @@ public class SceneSmokeTests
 
         //Start のたびに Add され、Clear されない静的リスト
         ClearStaticList("GameManager", "items");
-        ClearStaticList("RootsManager", "roots");
-        ClearStaticList("RootsManager", "pos");
-        ClearStaticList("RootsManager", "parameta");
+
+        //根源は Domain 側。RootsManager だけ Assembly-CSharp なので名前で引く
+        var roots = StaticField("RootsManager", "Roots").GetValue(null) as RootRegistry;
+        Assert.IsNotNull(roots, "RootsManager.Roots が RootRegistry ではない");
+        roots.Clear();
 
         yield return null;
     }

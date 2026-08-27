@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using MemorialFloor.Domain;
 
 public class OF_Spawner : MonoBehaviour
 {
@@ -17,7 +18,7 @@ public class OF_Spawner : MonoBehaviour
     public static int spawnerhp = 100;
 
     public Vector4 expos; //XL,XS,ZL,ZS
-    private int index = -1;
+    private Root root;
 
  //   private GameObject tower1;
  //   private GameObject tower1_down;
@@ -32,7 +33,7 @@ public class OF_Spawner : MonoBehaviour
         gameObject.tag = "MainSpawner";
         spawnrange = Random.Range(6f, 12f);
         expos = FindObjectOfType<SceneStarter>().exposition;
-        index = RootsManager.roots.FindIndex(s => s[2] == GameManager.entered_scene);
+        root = RootsManager.Roots.Find(GameManager.entered_scene);
 
         seeker = GameObject.Find("Seeker");
         seeker.transform.parent = transform;
@@ -75,12 +76,12 @@ public class OF_Spawner : MonoBehaviour
     {
         Debug.Log("Spawn");
         Invoke("Spawn", Random.Range(15, 30));
-        if ((RootsManager.parameta[index][0] >= 50) && (Random.Range(0, 100) > 50)) return;
+        if ((root != null) && (root.Progress >= 50) && (Random.Range(0, 100) > 50)) return;
         if (Random.Range(0, 100) < 3 * n) return;
 
         var obj = Instantiate(enemy, pos, Quaternion.identity);
         seeker.gameObject.SetActive(false);
-        if (RootsManager.parameta[index][0] >= 30)
+        if ((root != null) && (root.Progress >= 30))
         {
             var s = obj.transform.Find("Canvas").Find("Slider").GetComponent<Slider>();
             s.value -= s.value * 0.2f;

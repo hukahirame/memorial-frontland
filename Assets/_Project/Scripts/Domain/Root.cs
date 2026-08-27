@@ -71,7 +71,19 @@ namespace MemorialFloor.Domain
         /// <summary>日付が変わったときの変化。蓄積値が増え、攻略度が減る</summary>
         public void AdvanceDay()
         {
+            AccumulateDaily();
+            DecayProgressDaily();
+        }
+
+        /// <summary>日次の蓄積値の増加。氾濫判定はこの直後に行われる</summary>
+        public void AccumulateDaily()
+        {
             Accumulation += DailyAccumulationGain;
+        }
+
+        /// <summary>日次の攻略度の減少</summary>
+        public void DecayProgressDaily()
+        {
             Progress = Clamp0(Progress - DailyProgressLoss);
         }
 
@@ -141,6 +153,12 @@ namespace MemorialFloor.Domain
         public void AdvanceDay()
         {
             for (int i = 0; i < _roots.Count; i++) _roots[i].AdvanceDay();
+        }
+
+        /// <summary>全て捨てる。新規開始とテストの後始末で使う</summary>
+        public void Clear()
+        {
+            _roots.Clear();
         }
     }
 }

@@ -170,6 +170,19 @@ namespace MemorialFloor.Domain.Tests
         }
 
         [Test]
+        public void 全て捨てると空になる()
+        {
+            var registry = new RootRegistry();
+            registry.TryAdd(NewRoot("Root1"));
+            registry.TryAdd(NewRoot("Root2"));
+
+            registry.Clear();
+
+            Assert.AreEqual(0, registry.Count);
+            Assert.IsNull(registry.Find("Root1"));
+        }
+
+        [Test]
         public void 一日経つと全ての根源が進む()
         {
             var registry = new RootRegistry();

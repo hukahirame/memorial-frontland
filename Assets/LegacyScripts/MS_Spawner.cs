@@ -13,7 +13,6 @@ public class MS_Spawner : MonoBehaviour
 
     public static bool spawnable = false;
     public Vector4 expos; //XL,XS,ZL,ZS
-    private int index = -1;
 
     public void Spawn()
     {
@@ -37,12 +36,9 @@ public class MS_Spawner : MonoBehaviour
         else
         {
             seeker.SetActive(false);
-            var obj = Instantiate(enemy, spawnpos, Quaternion.identity);
-            if (RootsManager.parameta[index][0] >= 30)
-            {
-                var s = obj.transform.Find("Canvas").Find("Slider").GetComponent<Slider>();
-                s.value -= s.value * 0.2f;
-            }
+            //MainSite に対応する根源は無いため、攻略度による弱体化は行わない。
+            //旧コードは index が -1 のまま parameta[-1] を読んでおり、到達すれば必ず例外だった
+            Instantiate(enemy, spawnpos, Quaternion.identity);
 
             Invoke("Spawn", Random.Range(15, 30));
         }

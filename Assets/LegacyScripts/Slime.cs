@@ -86,12 +86,8 @@ public class Slime : MonoBehaviour
             d.GetComponent<Rigidbody>().AddForce(v, ForceMode.Impulse);
         }
         GameObject.FindWithTag("QuestManager").GetComponent<QuestManager>().SyncQuest(gameObject.name);
-        int index = RootsManager.roots.FindIndex(i => i[2] == GameManager.entered_scene);
-        if (index != -1)
-        {
-            RootsManager.parameta[index][2] -= 3;
-            if (RootsManager.parameta[index][2] < 0) RootsManager.parameta[index][2] = 0;
-        }
+        var root = RootsManager.Roots.Find(GameManager.entered_scene);
+        if (root != null) root.Calm(3);
         Destroy(gameObject);
     }
 }

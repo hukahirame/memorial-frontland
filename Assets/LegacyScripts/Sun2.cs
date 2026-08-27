@@ -77,13 +77,13 @@ public class Sun2 : MonoBehaviour
 
     private void DayStart() //夜明け後
     {
-        int i, j;
-        for (i = 0; i < RootsManager.roots.Count; i++)
+        int j;
+        foreach (var root in RootsManager.Roots.All)
         {
             bool NoMainQuest = true;
-            for (j = 0; j < QuestManager.quests.Count; j++) //前半：root[i]に紐つくquest[j]を探す
+            for (j = 0; j < QuestManager.quests.Count; j++) //前半：rootに紐つくquest[j]を探す
             {
-                if (QuestManager.quests[j][1] == RootsManager.roots[i][2]) //根源対象クエ探査
+                if (QuestManager.quests[j][1] == root.Id) //根源対象クエ探査
                 {
                     if (QuestManager.quests[j][0].IndexOfAny(new char[] { 'X', 'Y' }) == 0)
                     {
@@ -94,20 +94,20 @@ public class Sun2 : MonoBehaviour
             }
             if (NoMainQuest) //後半：無かった場合、保留→作成
             {
-                if (questplan.Contains(RootsManager.roots[i][2]))
+                if (questplan.Contains(root.Id))
                 {
-                    QuestManager.CreateQuest("X", RootsManager.roots[i][2], "MainSpawner", "1");
+                    QuestManager.CreateQuest("X", root.Id, "MainSpawner", "1");
                     QuestManager.rewards.Add(new string[] { "coin", "100", "progress", "15" });
-                    questplan.Remove(RootsManager.roots[i][2]);
+                    questplan.Remove(root.Id);
 
-                    QuestManager.CreateQuest("S", RootsManager.roots[i][2], "Slime", "3");
+                    QuestManager.CreateQuest("S", root.Id, "Slime", "3");
                     QuestManager.rewards.Add(new string[] { "coin", "100" });
 
                     GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("新クエストが発生しました");
                 }
                 else //夜明け1回目
                 {
-                    questplan.Add(RootsManager.roots[i][2]);
+                    questplan.Add(root.Id);
                 }
             }
         }

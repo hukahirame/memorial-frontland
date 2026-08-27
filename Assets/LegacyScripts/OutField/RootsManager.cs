@@ -1,58 +1,42 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
+using MemorialFloor.Domain;
 
 public class RootsManager : MonoBehaviour
 {
-    //private int CHILDPLUS = 2;
+    /// <summary>根源の唯一の置き場。追加・検索・日次更新はここを通す</summary>
+    public static readonly RootRegistry Roots = new RootRegistry();
 
-    public static List<string[]> roots = new List<string[]>(); // 根源名、シード値、ID
-    public static List<float[]> pos = new List<float[]>(); // スポナーX、スポナーY、スポナーZ、RM上のX、RM上のY
-    public static List<int[]> parameta = new List<int[]>(); // 攻略度、危険度、蓄積値
-
-    [SerializeField] private FieldCreator creator;
     [SerializeField] private GameObject rootset;
-    [SerializeField] private Text power;
     [SerializeField] private Text capacity; //この辺はRMから変更
-    [SerializeField] private GameObject slime;
-
-    private int d;
 
     void Start()
     {
-        RootCreate("はじまりの根源","01010101","Root1", new float[] { -100, -100, -100, 0, -100 }, new int[] { 0, 1000, 0 });
-        RootCreate("水の根源", "02020202", "Root2", new float[] { -100, -100, -100, 200, -100 }, new int[] { 0, 2000, 0 });
-
+        RootCreate("はじまりの根源", "01010101", "Root1", 0f, -100f, 1000);
+        RootCreate("水の根源", "02020202", "Root2", 200f, -100f, 2000);
     }
 
-    public void RootCreate(string name, string seed, string id, float[] t, int[] p) //3日前後で1回実行
+    public void RootCreate(string name, string seed, string id, float uiX, float uiY, int danger) //3日前後で1回実行
     {
-        var fss = creator.SeedCreate(); // fss.seed, fss.spownerpos.y, fss.uipos.xなど
-        roots.Add(new string[] { name, seed, id });
-        //pos.Add(new float[] { fss.spownerpos.x, fss.spownerpos.y, fss.spownerpos.z, fss.uipos.x, fss.uipos.y });
-        pos.Add(t);
-        parameta.Add(p);
-        //RootUIShow();
+        //既に同じ ID があれば何もしない。MainSite に戻るたび Start が再実行されるため
+        Roots.TryAdd(new Root(id, name, seed, danger, uiX, uiY));
     }
 
     public void RootUIShow() //RootButton(UI)を全て生成
     {
-        foreach(var ui in roots) //既存UIを全削除
+        foreach (var root in Roots.All) //既存UIを全削除
         {
-            if (transform.Find(ui[2]) != null) Destroy(transform.Find(ui[2]));
+            var existing = transform.Find(root.Id);
+            if (existing != null) Destroy(existing.gameObject);
         }
-        for (int i = 0; i < roots.Count; i++)
+
+        foreach (var root in Roots.All)
         {
-            /*if (transform.Find(roots[i][2]) != null)
-            {
-                 return;
-            }*/
-            Vector3 rootUIpos = new Vector3(pos[i][3], pos[i][4], 0);
+            Vector3 rootUIpos = new Vector3(root.UiX, root.UiY, 0);
             GameObject rootUI = Instantiate(rootset, transform.position + rootUIpos, Quaternion.identity, transform);
-            rootUI.name = roots[i][2];
+            rootUI.name = root.Id;
             var str = rootUI.transform.Find("Text").GetComponent<Text>();
-            str.text = "危険度 " + parameta[i][1] + "　攻略度 " + parameta[i][0] + "％";
+            str.text = "危険度 " + root.Danger + "　攻略度 " + root.Progress + "％";
         }
     }
 
@@ -68,43 +52,40 @@ public class RootsManager : MonoBehaviour
 
     public void Dayover() //夜12時
     {
-        d++;
-
-        for (int i = 0; i < roots.Count; i++)
+        foreach (var root in Roots.All)
         {
-            if (Random.Range(1, 3) >= 2) RootTrick(roots[i][1]);
+            if (Random.Range(1, 3) >= 2) RootTrick(root.Seed);
         }
 
-        for (int i = 0; i < roots.Count; i++) // 蓄積値増加
+        //氾濫判定は蓄積値の増加直後、攻略度の減少より前に行う（元の順序）
+        foreach (var root in Roots.All)
         {
-            parameta[i][2] += 10;
-            StampedeJudge(i);
+            root.AccumulateDaily();
+            StampedeJudge(root);
         }
 
-        for(int i = 0;i < roots.Count; i++) //攻略度減少
-        {
-            parameta[i][0] -= 3;
-            if (parameta[i][0] < 0) parameta[i][0] = 0;
-        }
+        foreach (var root in Roots.All) root.DecayProgressDaily();
     }
 
-    public void StampedeJudge(int i) // 蓄積値更新時
+    public void StampedeJudge(Root root) // 蓄積値更新時
     {
-        if (parameta[i][2] >= 100) //【氾濫】
+        switch (root.Level)
         {
-            Transform ms = GameObject.FindWithTag("MainSpawner").transform;
+            case AccumulationLevel.Stampede: //【氾濫】
+                Transform ms = GameObject.FindWithTag("MainSpawner").transform;
 
-            for (int f = 0; f < 5; f++)
-            {
-                if (GameManager.entered_scene == "MainSite") ms.GetComponent<MS_Spawner>().Spawn();
-                else                                         ms.GetComponent<OF_Spawner>().Spawn();
-            }
-            capacity.text = "-";
-            capacity.color = Color.black;
+                for (int f = 0; f < 5; f++)
+                {
+                    if (GameManager.entered_scene == "MainSite") ms.GetComponent<MS_Spawner>().Spawn();
+                    else                                         ms.GetComponent<OF_Spawner>().Spawn();
+                }
+                capacity.text = "-"; capacity.color = Color.black;
+                break;
+
+            case AccumulationLevel.High:    capacity.text = "高"; capacity.color = Color.red;    break;
+            case AccumulationLevel.Medium:  capacity.text = "中"; capacity.color = Color.yellow; break;
+            case AccumulationLevel.Small:   capacity.text = "小"; capacity.color = Color.green;  break;
+            default:                        capacity.text = "微"; capacity.color = Color.blue;   break;
         }
-        else if (parameta[i][2] >= 75) { capacity.text = "高"; capacity.color = Color.red; }
-        else if (parameta[i][2] >= 40) { capacity.text = "中"; capacity.color = Color.yellow; }
-        else if (parameta[i][2] >= 15) { capacity.text = "小"; capacity.color = Color.green; }
-        else if (parameta[i][2] >= 0) { capacity.text = "微"; capacity.color = Color.blue; }
     }
 }

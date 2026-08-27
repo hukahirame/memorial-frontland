@@ -64,17 +64,16 @@ public class SceneStarter : MonoBehaviour //シーン起動時の処理全般。
 
     private void SpawnerDecide()
     {
-        int index = RootsManager.roots.FindIndex(r => r[2] == GameManager.entered_scene);
+        var root = RootsManager.Roots.Find(GameManager.entered_scene);
+        if (root == null) return;
 
-        if (RootsManager.pos[index][0] == -100)
+        if (!root.HasSpawnPoint)
         {
             var candidates = GameObject.FindGameObjectsWithTag("SpawnerCandidate");
             var candidate = candidates[Random.Range(0, candidates.Length)];
             candidate.AddComponent<OF_Spawner>();
             Vector3 targetpos = candidate.transform.position;
-            RootsManager.pos[index][0] = targetpos.x;
-            RootsManager.pos[index][1] = targetpos.y;
-            RootsManager.pos[index][2] = targetpos.z;
+            root.PlaceSpawnPoint(targetpos.x, targetpos.y, targetpos.z);
         }
     }
 

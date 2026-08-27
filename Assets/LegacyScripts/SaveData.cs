@@ -10,7 +10,9 @@ public class SaveData
 
     public string entered_scene;
     public int daytime;
-    public List<string[]> roots = new List<string[]>();
+    //roots は保存していない。JsonUtility は List<string[]> を保存できず、実際の
+    //セーブファイルにキー自体が無かった。読み込み時に空リストで上書きして根源を
+    //消していたため、同期ごと外した。quests / rewards も同じ理由で保存されていない
     public List<string[]> quests = new List<string[]>();
     public List<string[]> rewards = new List<string[]>();
 
@@ -30,7 +32,6 @@ public class SaveData
         playerhp = (int)Player2.playerhp.value;
         entered_scene = GameManager.entered_scene;
         daytime = Sun2.daytime;
-        roots = RootsManager.roots;
         quests = QuestManager.quests;
         rewards = QuestManager.rewards;
 
@@ -73,7 +74,6 @@ public class SaveData
         Player2.playerhp.value = playerhp;
         GameManager.entered_scene = entered_scene;
         Sun2.daytime = daytime;
-        RootsManager.roots = roots;
         QuestManager.quests = quests;
         QuestManager.rewards = rewards;
 
