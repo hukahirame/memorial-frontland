@@ -39,7 +39,7 @@
 
 ## 使用技術 / 開発環境
 
-- **エンジン**: Unity 2022
+- **エンジン**: Unity 6.3 LTS（6000.3.22f1）。2022.3.5f1 から移行
 - **言語**: C#
 - **対象プラットフォーム**: Android, Windows
 - **バージョン管理**: Gitで管理(昔はUVCSを使用)
@@ -57,7 +57,7 @@
 本リポジトリは、**コードとプロジェクト構成の閲覧を目的**として公開しています。
 
 - ライセンスの都合上、サードパーティの Unity Asset Store アセット（キャラクター素材・背景・フォント等）は含まれていません。そのため、clone しても動作しません。
-- 自作のスクリプト（`Assets/Scripts/`）とプロジェクト設定（`ProjectSettings/`、`Packages/`）のみを収録しています。
+- 自作のスクリプト（`Assets/_Project/`、`Assets/LegacyScripts/`）とプロジェクト設定（`ProjectSettings/`、`Packages/`）のみを収録しています。
 - 本リポジトリのコードは [LICENSE](LICENSE) の条件下にあります（閲覧のみ可・全権留保。複製・改変・再配布・組み込みには事前の許諾が必要です）。
 <!-- - 実際のプレイは上記の WebGL 体験版からご確認ください。-->
 
@@ -67,11 +67,19 @@
 
 ```
 Assets/
-  Scripts/          自作スクリプト
-    Craft/          クラフトシステム
-    Inventory/      インベントリシステム
-    OutField/       フィールド生成
-    TextLabel/      テキスト表示
-ProjectSettings/    Unity プロジェクト設定
-Packages/           パッケージ依存定義
+  _Project/           移行済みのコードと資産
+    Scripts/Domain/   Unity に依存しないゲームロジック
+    Scripts/Game/     Unity に依存する実装
+    Data/             ScriptableObject（クラフトのレシピ等）
+    Scenes/           シーン
+    Tests/Domain/     Domain 層のテスト
+  LegacyScripts/      未整理のスクリプト（順次 _Project へ移す）
+    Craft/            クラフトシステム
+    Inventory/        インベントリシステム
+    OutField/         フィールド生成
+    TextLabel/        テキスト表示
+tests/                dotnet からも回す Domain テスト
+docs/                 設計判断・コーディング規約
+ProjectSettings/      Unity プロジェクト設定
+Packages/             パッケージ依存定義
 ```
