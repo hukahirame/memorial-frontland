@@ -94,7 +94,7 @@ public class RootsManager : MonoBehaviour
         {
             Transform ms = GameObject.FindWithTag("MainSpawner").transform;
 
-            for (int f = 0; f < 5; i++)
+            for (int f = 0; f < 5; f++)
             {
                 if (GameManager.entered_scene == "MainSite") ms.GetComponent<MS_Spawner>().Spawn();
                 else                                         ms.GetComponent<OF_Spawner>().Spawn();
