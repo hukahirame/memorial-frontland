@@ -25,6 +25,10 @@ Editor が閉じていると全コマンドが失敗する。その場合は起�
 - シーン構造: `unity command list_open_scenes` / `unity command get_scene_hierarchy`
 - 画面確認: `unity command capture_game_view`
 - ビルド: `unity command build` → `unity command build_status`（非同期）
+- テスト: `unity command run_tests --mode <editor|playmode|all> --async_tests true`
+  → `test_status` をポーリング。`--timeout` は付けない（キャンセルで詰まる）
+  詰まり: `test_status` が running かつ `editor_status` の playMode が stopped。
+  `cancel_tests` を叩いてから再実行すれば戻る（プロセスを殺す必要はない）
 - 静的解析: `unity command audit` → `unity command audit_status`
 
 ## 絶対禁止
