@@ -39,6 +39,7 @@ Editor が閉じていると全コマンドが失敗する。その場合は起�
 
 - `docs/JOURNAL.md` を読むこと（時系列ログ。未整理の卓上案や覆された前提を
   採用済みと誤読する。判断の正典は `docs/DECISIONS.md`）
+- `docs/dependencies-diagrams`,`docs/dependencies-diff-diagrams`を読むこと
 - `ProjectSettings/` の直接編集、`.meta` の手動生成、prefab の手動マージ
 - ファイルの移動・リネームをエクスプローラや `git mv` で行うこと（GUID が壊れる）
 - `scripts/eval` / `scripts/hotreload` グループの実行（任意コード実行に相当）
