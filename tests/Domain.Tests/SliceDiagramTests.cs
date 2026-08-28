@@ -2,132 +2,82 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using NUnit.Framework;
 
 namespace MemorialFloor.Domain.Tests
 {
     /// <summary>
-    /// docs/dependencies-diagrams/ は人が手で維持する現状確認用の図。
-    /// 放っておくと腐るので、腐り方を2つだけ機械で見張る。
+    /// docs/dependencies-diagrams/ の現状図が、今のソースと一致するか見る。
     ///
-    ///   - 実在しない依存が描かれていないか
-    ///   - Domain / Game の型が、どのスライスにも出ていないことはないか
-    ///
-    /// どう切るか（何を1枚にまとめるか）は人の判断なので、そこは見ない。
+    /// この図は SliceDiagramGenerator が作る。人が手で直すと次の実行で消えるので、
+    /// 直したいことがあるならソースか SKILL.md のスライス表を変えること。
+    /// 例外は「覚え書き」の節で、そこだけは作り直しても引き継ぐ。
     /// </summary>
     public class SliceDiagramTests
     {
-        private const string SliceDir = "docs/dependencies-diagrams";
-        private const string GraphFile = "docs/dependencies-diagrams/graph.txt";
+        [Test]
+        public void 現状図がソースと一致する()
+        {
+            var expected = SliceDiagramGenerator.GenerateAll();
+            var stale = new List<string>();
+
+            foreach (var pair in expected.OrderBy(p => p.Key, StringComparer.Ordinal))
+            {
+                string path = Path.Combine(Dir(), pair.Key);
+                string actual = File.Exists(path) ? File.ReadAllText(path) : null;
+
+                // 改行コードは比較しない。git が作業コピーを CRLF に戻すため、
+                // 生成側の LF とそのままでは永久に一致しない
+                if (Normalize(actual) == Normalize(pair.Value)) continue;
+
+                File.WriteAllText(path, pair.Value.Replace("\n", Environment.NewLine));
+                stale.Add(pair.Key);
+            }
+
+            Assert.IsEmpty(stale,
+                "現状図が古かったため書き直した。差分を見て、意図した構造変化か確かめること。" +
+                Environment.NewLine + string.Join(Environment.NewLine, stale));
+        }
 
         [Test]
-        public void スライス図に実在しない依存が描かれていない()
+        public void 現状図に元を失ったファイルが残っていない()
         {
-            var (layers, edges, cofile) = ReadGraph();
-            var wrong = new List<string>();
+            var expected = SliceDiagramGenerator.GenerateAll();
 
-            foreach (var (name, from, to) in SliceEdges())
-            {
-                if (edges.Contains(from + " -> " + to)) continue;
-                if (edges.Contains(to + " -> " + from)) continue;
-                if (cofile.Contains(Pair(from, to))) continue;
+            var orphans = Directory.GetFiles(Dir(), "*.md")
+                                   .Select(Path.GetFileName)
+                                   .Where(f => !expected.ContainsKey(f))
+                                   .OrderBy(f => f, StringComparer.Ordinal)
+                                   .ToList();
 
-                wrong.Add(name + ": " + from + " --> " + to);
-            }
-
-            Assert.IsEmpty(wrong,
-                "ソースに無い依存が図に描かれている。" +
-                "コードが変わったなら図を直し、図が正しいならコードを疑うこと。" +
-                Environment.NewLine + string.Join(Environment.NewLine, wrong));
+            Assert.IsEmpty(orphans,
+                "対応する Domain のソースが無い図が残っている。" +
+                "ファイルを消したか改名したなら、この図も消すこと。" +
+                Environment.NewLine + string.Join(", ", orphans));
         }
 
         [Test]
-        public void DomainとGameの型がどれかのスライスに出ている()
+        public void すべての型がどれかのスライスの核に入っている()
         {
-            var (layers, _, _) = ReadGraph();
+            var uncovered = SliceDiagramGenerator.UncoveredTypes();
 
-            var drawn = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var (_, from, to) in SliceEdges()) { drawn.Add(from); drawn.Add(to); }
-
-            var missing = layers
-                .Where(kv => kv.Value == "Domain" || kv.Value == "Game")
-                .Select(kv => kv.Key)
-                .Where(t => !drawn.Contains(t))
-                .OrderBy(t => t, StringComparer.Ordinal)
-                .ToList();
-
-            Assert.IsEmpty(missing,
-                "どのスライス図にも出てこない型がある。" +
-                "新しく作った型は docs/dependencies-diagrams/ のどれかに足すこと。" +
-                Environment.NewLine + string.Join(", ", missing));
+            Assert.IsEmpty(uncovered,
+                "どのスライスの核にも入っていない型がある。地図に穴が開くので、" +
+                "SKILL.md のスライス表のどれかに足すこと。" +
+                Environment.NewLine + string.Join(", ", uncovered));
         }
 
-        private static string Pair(string a, string b)
+        private static string Dir()
         {
-            return string.CompareOrdinal(a, b) < 0 ? a + " " + b : b + " " + a;
+            string dir = Path.Combine(DependencyGraphGenerator.RepositoryRoot(),
+                                      SliceDiagramGenerator.OutputDir.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(dir);
+            return dir;
         }
 
-        private static (Dictionary<string, string>, HashSet<string>, HashSet<string>) ReadGraph()
+        private static string Normalize(string text)
         {
-            string path = Path.Combine(RepositoryRoot(), GraphFile);
-            Assert.IsTrue(File.Exists(path), GraphFile + " が無い。先に dotnet test を実行すること");
-
-            var layers = new Dictionary<string, string>(StringComparer.Ordinal);
-            var edges = new HashSet<string>(StringComparer.Ordinal);
-            var cofile = new HashSet<string>(StringComparer.Ordinal);
-            string section = "";
-
-            foreach (var raw in File.ReadAllLines(path))
-            {
-                string line = raw.Trim();
-                if (line.Length == 0 || line.StartsWith("#")) continue;
-                if (line.StartsWith("[")) { section = line; continue; }
-
-                if (section == "[types]")
-                {
-                    var parts = line.Split(' ');
-                    layers[parts[0]] = parts[1];
-                }
-                else if (section == "[edges]")
-                {
-                    // 行は "A -> B assoc" の4語。ここでは種類を見ないので落とす
-                    var parts = line.Split(' ');
-                    edges.Add(parts[0] + " -> " + parts[2]);
-                }
-                else if (section == "[cofile]")
-                {
-                    var types = line.Split(' ');
-                    foreach (var a in types)
-                        foreach (var b in types)
-                            if (a != b) cofile.Add(Pair(a, b));
-                }
-            }
-
-            return (layers, edges, cofile);
-        }
-
-        private static IEnumerable<(string File, string From, string To)> SliceEdges()
-        {
-            string dir = Path.Combine(RepositoryRoot(), SliceDir);
-
-            foreach (var file in Directory.GetFiles(dir, "*.md").OrderBy(f => f, StringComparer.Ordinal))
-            {
-                foreach (var raw in File.ReadAllLines(file))
-                {
-                    var m = Regex.Match(raw, @"^\s+([A-Za-z_][A-Za-z0-9_]*)\s+-->\s+([A-Za-z_][A-Za-z0-9_]*)\s*$");
-                    if (m.Success) yield return (Path.GetFileName(file), m.Groups[1].Value, m.Groups[2].Value);
-                }
-            }
-        }
-
-        private static string RepositoryRoot()
-        {
-            var dir = new DirectoryInfo(AppContext.BaseDirectory);
-            while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, "docs"))) dir = dir.Parent;
-
-            Assert.IsNotNull(dir, "docs/ を持つ階層が見つからない");
-            return dir.FullName;
+            return text == null ? null : text.Replace("\r\n", "\n");
         }
     }
 }

@@ -4,7 +4,7 @@
 #
 # ソースの字面から拾っているので厳密ではない。
 # - var で受けている依存は型名が現れないので出ない
-# - 同一ファイルに宣言された型どうしには辺が出ない。[cofile] が補う
+# - 同一ファイルに宣言された型どうしには辺が出ない。[files] が補う
 # - メソッド本体の中の参照はファイル単位。弱い依存 dep として記録する
 # - 複数行にまたがる宣言は拾えない
 
@@ -74,12 +74,62 @@ Weapon Legacy class
 WeaponBox Legacy class
 Wink Legacy class
 
-[cofile]
-AccumulationLevel Root RootRegistry
-AddOutcome AddResult Inventory RemoveOutcome RemoveResult
-FieldCreator FirstSeedSet
-Ingredient Recipe
-IngredientEntry RecipeDefinition
+[files]
+Assets/LegacyScripts/Allmaity.cs Allmaity
+Assets/LegacyScripts/BranchFallSystem.cs BranchFallSystem
+Assets/LegacyScripts/CloseManager.cs CloseManager
+Assets/LegacyScripts/Craft/Craft.cs Craft
+Assets/LegacyScripts/Craft/CraftButton.cs CraftButton
+Assets/LegacyScripts/Craft/Craft_set.cs Craft_set
+Assets/LegacyScripts/DamageSet.cs DamageSet
+Assets/LegacyScripts/Dropitem.cs Dropitem
+Assets/LegacyScripts/DynamicLayer.cs DynamicLayer
+Assets/LegacyScripts/Enemy.cs Enemy
+Assets/LegacyScripts/ExchangeButton.cs ExchangeButton
+Assets/LegacyScripts/GameManager.cs GameManager
+Assets/LegacyScripts/Inventory/CloseInventory.cs CloseInventory
+Assets/LegacyScripts/Inventory/Info_set.cs Info_set
+Assets/LegacyScripts/Inventory/Inventbutton.cs Inventbutton
+Assets/LegacyScripts/Inventory/PlayerInventory.cs PlayerInventory
+Assets/LegacyScripts/Inventory/WeaponBox.cs WeaponBox
+Assets/LegacyScripts/JoystickEffect.cs JoystickEffect
+Assets/LegacyScripts/JoystickEffect_ATK.cs JoystickEffect_ATK
+Assets/LegacyScripts/MS_Spawner.cs MS_Spawner
+Assets/LegacyScripts/MainCamera.cs MainCamera
+Assets/LegacyScripts/MapButton.cs MapButton
+Assets/LegacyScripts/OutField/FieldCreator.cs FieldCreator FirstSeedSet
+Assets/LegacyScripts/OutField/OF_Spawner.cs OF_Spawner
+Assets/LegacyScripts/OutField/OutField.cs OutField
+Assets/LegacyScripts/OutField/RootUI.cs RootUI
+Assets/LegacyScripts/OutField/RootsManager.cs RootsManager
+Assets/LegacyScripts/OutField/Seeker.cs Seeker
+Assets/LegacyScripts/Player2.cs Player2
+Assets/LegacyScripts/PlayerDeath.cs PlayerDeath
+Assets/LegacyScripts/PlayerHp.cs PlayerHp
+Assets/LegacyScripts/QuestButton.cs QuestButton
+Assets/LegacyScripts/QuestManager.cs QuestManager
+Assets/LegacyScripts/RewardUI.cs RewardUI
+Assets/LegacyScripts/SaveData.cs SaveData
+Assets/LegacyScripts/SaveSystem.cs SaveSystem
+Assets/LegacyScripts/SceneFinisher.cs SceneFinisher
+Assets/LegacyScripts/SceneStarter.cs SceneStarter
+Assets/LegacyScripts/SideJab.cs SideJab
+Assets/LegacyScripts/Slime.cs Slime
+Assets/LegacyScripts/SortingDebuger.cs SortingDebuger
+Assets/LegacyScripts/SpawnerCandidate.cs SpawnerCandidate
+Assets/LegacyScripts/Sun2.cs Sun2
+Assets/LegacyScripts/TempAudio.cs TempAudio
+Assets/LegacyScripts/TextLabel/BigText.cs BigText
+Assets/LegacyScripts/TextLabel/MiddleText.cs MiddleText
+Assets/LegacyScripts/Title.cs Title
+Assets/LegacyScripts/UpDownUI.cs UpDownUI
+Assets/LegacyScripts/ViewSecurer.cs ViewSecurer
+Assets/LegacyScripts/Weapon.cs Weapon
+Assets/LegacyScripts/Wink.cs Wink
+Assets/_Project/Scripts/Domain/Inventory.cs AddOutcome AddResult Inventory RemoveOutcome RemoveResult
+Assets/_Project/Scripts/Domain/Recipe.cs Ingredient Recipe
+Assets/_Project/Scripts/Domain/Root.cs AccumulationLevel Root RootRegistry
+Assets/_Project/Scripts/Game/Craft/RecipeDefinition.cs IngredientEntry RecipeDefinition
 
 [edges]
 AddResult -> AddOutcome assoc

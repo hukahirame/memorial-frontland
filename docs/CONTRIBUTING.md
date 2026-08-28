@@ -106,7 +106,7 @@ AI との対話で決まったことは、書かなければ消えます。
 | `docs/DECISIONS.md` | なぜそう作られているか。判断の記録 |
 | `docs/conventions.md` | 機械で強制できない取り決め |
 | `docs/domain-class-diagram.md` | Domain 層のクラス図（生成物） |
-| `docs/dependencies-diagrams/` | 今どうなっているか。機能のスライスごと（人が維持） |
+| `docs/dependencies-diagrams/` | 今どうなっているか。関心事ごとに11枚（生成物） |
 | `docs/dependencies-diff-diagrams/` | 変更で何が動いたか（生成物） |
 | `/AGENTS.md` | エージェントへの実行指示 |
 | `/README.md` | プロジェクトの概要（外部向け） |
@@ -126,10 +126,14 @@ dotnet test tests/Domain.Tests/Domain.Tests.csproj   # 素データを最新に�
 ./tools/diagram-diff.ps1                             # 差分図を出す
 ```
 
-差分図は `docs/dependencies-diff-diagrams/` に出ます。**それを見て
-`docs/dependencies-diagrams/` の現状図を手で直します。** 直し忘れは
-SliceDiagramTests が検出します（実在しない依存、どのスライスにも無い型）。
+差分図は `docs/dependencies-diff-diagrams/` に出ます。**現状図
+（`docs/dependencies-diagrams/`）は `dotnet test` が作り直すので手で触りません**（[D-011]）。
+古ければ書き直したうえで失敗するので、1回目で更新され2回目で緑になります。
+
+型を足したときだけ、skill のスライス表のどれかの行に足します。すべての型が
+ちょうど1つのスライスの核に入っていることをテストが見張るので、忘れると落ちます。
+表はコードの索引を兼ねています。
 
 ファイル名の付け方、図の書式、比較元に `graph.txt` が無い場合の手順は
-`.claude/skills/structure-diff/SKILL.md` にあります。
+`.claude/skills/class-diff-diagram/SKILL.md` にあります。
 書く前にそれを読んでください。

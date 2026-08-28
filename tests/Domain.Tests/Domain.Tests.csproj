@@ -33,6 +33,7 @@
     <Compile Include="DomainDiagramTests.cs" />
     <Compile Include="DependencyGraphGenerator.cs" />
     <Compile Include="DependencyGraphTests.cs" />
+    <Compile Include="SliceDiagramGenerator.cs" />
     <Compile Include="SliceDiagramTests.cs" />
   </ItemGroup>
 

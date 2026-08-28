@@ -47,7 +47,7 @@ namespace MemorialFloor.Domain.Tests
         public static string Generate()
         {
             var types = new Dictionary<string, TypeInfo>(StringComparer.Ordinal);
-            var cofile = new SortedSet<string>(StringComparer.Ordinal);
+            var files = new SortedSet<string>(StringComparer.Ordinal);
             var bodies = new List<string>();
 
             foreach (var (layer, rel) in Roots)
@@ -62,8 +62,13 @@ namespace MemorialFloor.Domain.Tests
                     bodies.Add(body);
 
                     var declared = ParseFile(body, layer, types);
-                    if (declared.Count > 1)
-                        cofile.Add(string.Join(" ", declared.OrderBy(t => t, StringComparer.Ordinal)));
+                    if (declared.Count == 0) continue;
+
+                    // ファイル名も残す。関心事スライスは「1ファイル = 1枚」で切るため、
+                    // 型がどのファイルに宣言されたかが分からないと図を作れない
+                    string path = rel + "/" + file.Substring(dir.Length + 1)
+                                                  .Replace(Path.DirectorySeparatorChar, '/');
+                    files.Add(path + " " + string.Join(" ", declared.OrderBy(t => t, StringComparer.Ordinal)));
                 }
             }
 
@@ -83,7 +88,7 @@ namespace MemorialFloor.Domain.Tests
                 }
             }
 
-            return Render(types, cofile);
+            return Render(types, files);
         }
 
         /// <summary>docs/ を持つ階層まで遡る。dotnet と CI で作業ディレクトリが違うため</summary>
@@ -97,7 +102,7 @@ namespace MemorialFloor.Domain.Tests
             return dir.FullName;
         }
 
-        private static string Render(Dictionary<string, TypeInfo> types, SortedSet<string> cofile)
+        private static string Render(Dictionary<string, TypeInfo> types, SortedSet<string> files)
         {
             var sb = new StringBuilder();
             sb.Append("# 機械用の素データ。tools/diagram-diff.ps1 が読む。\n");
@@ -106,7 +111,7 @@ namespace MemorialFloor.Domain.Tests
             sb.Append("#\n");
             sb.Append("# ソースの字面から拾っているので厳密ではない。\n");
             sb.Append("# - var で受けている依存は型名が現れないので出ない\n");
-            sb.Append("# - 同一ファイルに宣言された型どうしには辺が出ない。[cofile] が補う\n");
+            sb.Append("# - 同一ファイルに宣言された型どうしには辺が出ない。[files] が補う\n");
             sb.Append("# - メソッド本体の中の参照はファイル単位。弱い依存 dep として記録する\n");
             sb.Append("# - 複数行にまたがる宣言は拾えない\n");
 
@@ -114,8 +119,8 @@ namespace MemorialFloor.Domain.Tests
             foreach (var t in types.Values.OrderBy(t => t.Name, StringComparer.Ordinal))
                 sb.Append(t.Name + " " + t.Layer + " " + t.Kind + "\n");
 
-            sb.Append("\n[cofile]\n");
-            foreach (var line in cofile) sb.Append(line + "\n");
+            sb.Append("\n[files]\n");
+            foreach (var line in files) sb.Append(line + "\n");
 
             var edges = new SortedSet<string>(StringComparer.Ordinal);
             foreach (var t in types.Values)

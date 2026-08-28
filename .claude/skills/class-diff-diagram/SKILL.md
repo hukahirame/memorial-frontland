@@ -1,6 +1,6 @@
 ---
 name: class-diff-diagram
-description: 型の増減と、型どうしの参照の変化を、人が目で確認するための図を作る。git diff は行の増減しか見せず「どのクラスを参照しなくなったか」が読めないため、構造の変化は図で見る。docs/dependencies-diff-diagrams/ に差分図を生成し、docs/dependencies-diagrams/ の現状図を更新するところまでを含む。クラスや enum の追加・削除・改名、フィールド・プロパティ・引数・戻り値の型の変更、レイヤ間の移動、参照の張り替えを行ったとき、およびそうした変更をコミットする前に使う。メソッドの本体だけ、テストだけ、コメントや文字列だけの変更では依存が動かないので使わない。
+description: 型の増減と、型どうしの参照の変化を、人が目で確認するための図を作る。git diff は行の増減しか見せず「どのクラスを参照しなくなったか」が読めないため、構造の変化は図で見る。docs/dependencies-diff-diagrams/ に差分図を生成するところまでを含む（docs/dependencies-diagrams/ の現状図は dotnet test が作り直す）。クラスや enum の追加・削除・改名、フィールド・プロパティ・引数・戻り値の型の変更、レイヤ間の移動、参照の張り替えを行ったとき、およびそうした変更をコミットする前に使う。メソッドの本体だけ、テストだけ、コメントや文字列だけの変更では依存が動かないので使わない。
 ---
 
 # クラスの構造の差分を図にする
@@ -31,13 +31,13 @@ git diff は行の増減しか見せない。「RootsManager を参照しなく�
 ## 手順 🔧
 
 ```
-dotnet test tests/Domain.Tests/Domain.Tests.csproj   # 素データを更新（1回目は失敗するのが正常）
+dotnet test tests/Domain.Tests/Domain.Tests.csproj   # 素データと現状図を更新（1回目は失敗するのが正常）
 dotnet test tests/Domain.Tests/Domain.Tests.csproj   # 緑を確認
 ./tools/diagram-diff.ps1 -Name <slug>                # 差分図を出す
 ```
 
-出た図を読み、`docs/dependencies-diagrams/` の該当スライスを手で直す。
-直したら `dotnet test` をもう一度走らせ、`SliceDiagramTests` が緑になることを確認する。
+現状図は `dotnet test` が作り直すので手で触らない。差分図だけが script の仕事で、
+これは「いつの版と比べるか」を人が決めるため自動化できない。
 
 比較元のコミットにまだ素データが無い場合は、その版を `git worktree` で別の場所に
 展開し、今の `DependencyGraphTests.cs` と最小の csproj だけを持ち込んで走らせると
@@ -46,7 +46,7 @@ dotnet test tests/Domain.Tests/Domain.Tests.csproj   # 緑を確認
 ## ファイル名 📄
 
 ```
-docs/dependencies-diff-diagrams/YYYY-MM-DD-<slug>.md
+docs/dependencies-diff-diagrams/MMDD_<slug>.md
 ```
 
 - `<slug>` は変更の主題。kebab-case（`roots-registry`, `quest-log`）
@@ -140,10 +140,12 @@ docs/dependencies-diff-diagrams/YYYY-MM-DD-<slug>.md
 | 抽出（第1部） | `tests/Domain.Tests/DependencyGraphGenerator.cs` |
 | 抽出の検査 | `tests/Domain.Tests/DependencyGraphTests.cs` |
 | 比較と描画（第2部） | `tools/diagram-diff.ps1` |
+| 現状図の生成（第3部） | `tests/Domain.Tests/SliceDiagramGenerator.cs` |
+| 現状図の検査 | `tests/Domain.Tests/SliceDiagramTests.cs` |
 | 差分図の文言 | この skill の TEMPLATE ブロック。script が読む |
+| 現状図の見出し | この skill の SLICES ブロック。生成器が読む |
 | 素データ | `docs/dependencies-diagrams/graph.txt` |
 | 現状図 | `docs/dependencies-diagrams/*.md` |
-| 現状図の検査 | `tests/Domain.Tests/SliceDiagramTests.cs` |
 | 差分図 | `docs/dependencies-diff-diagrams/*.md` |
 | Domain のクラス図 | `docs/domain-class-diagram.md`（`DomainDiagramTests.cs` が生成）|
 
@@ -242,7 +244,7 @@ enum 値         <名前>                            Stampede
 
 ```
 [types]     <型> <層> <種別>
-[cofile]    同一ファイルに宣言された型を空白区切りで（2つ以上のときだけ）
+[files]     <相対パス> そのファイルが宣言する型を空白区切りで
 [edges]     <From> -> <To> <assoc|dep>
 [members]   <型>|<メンバ名>|<表示>
 ```
@@ -308,6 +310,40 @@ PowerShell の `@{}` は大文字小文字を区別せず、`roots` と `Roots` 
 
 **8. 変化がゼロならファイルを作らない。** 空の図が溜まると読む気が失せる。
 
+### 第3部 現状図 — 素データからスライスへ
+
+**1. 核を解く** SLICES ブロックの各行の第1欄を型の並びに直す。
+`.cs` で終わる語は `[files]` の道の後方一致で引き、そのファイルが宣言する型に
+展開する。当たらない、または2つ以上に当たるなら落とす。
+それ以外は型名として扱い、`[types]` に無ければ落とす。
+同じ型が2行の核に入っていても落とす。どちらを見ればよいか決まらなくなるため。
+
+**2. 抜けを見る** `[types]` のうちどの核にも入っていない型を挙げる。
+1つでもあれば落とす。地図に穴が開いたまま気づかなくなるため。
+
+**3. 辺を選ぶ** `[edges]` のうち、From か To の少なくとも一方が核のもの。
+核を通らない周辺どうしの辺は落とす。Domain を中心に見る図なので、
+それを描くと目的から外れて読めなくなる。
+
+**4. 節点を決める** 核と、3で選んだ辺の両端。
+
+**5. 並べる** 層は Domain, Game, Legacy の順。層の中と辺は名前の昇順。
+並びが安定していないと差分が読めない。
+
+**6. 描く** Domain と Game は `subgraph`、Legacy は素で置く。
+`assoc` は `==>`、`dep` は `-.->`。層ごとに `classDef` で色を付ける。
+
+核のラベルは 型名 / 区切り線 / 属性 / 区切り線 / 操作 を `<br/>` で繋ぐ。
+括弧があれば操作。区切り線の長さは一番長い行に合わせる。全行が公開なので
+行頭の `+` は情報を持たない。落として横幅を稼ぐ。
+**色は付けない。** `classDef` の `color:` に mermaid が `!important` を付けるので、
+ここで `span` を巻いても上書きされる。層の色がそのまま文字色になる。
+
+**7. 覚え書きを引き継ぐ** 既にある同名のファイルから `## 覚え書き` 以降をそのまま
+写す。無ければ空の節を置く。
+
+**8. 出力** `docs/dependencies-diagrams/<出力名>`。
+
 ### 精度の測り方
 
 Domain 層だけは**リフレクションという独立した正解**がある
@@ -331,36 +367,82 @@ Legacy と Game には正解が無い。リフレクションが使えないこ�
 ### 盲点
 
 - `var` で受けている依存は型名が字面に現れないので出ない
-- 同一ファイルに宣言された型どうしには辺が出ない。`[cofile]` 節が補う
+- 同一ファイルに宣言された型どうしには辺が出ない。`[files]` 節が補う
 - 複数行にまたがる宣言は拾えない
 - `partial` は分割されたファイルごとに別々に見える
 - 本体参照はファイル単位。1ファイル複数型のときは実際より多く出る
 
 ## 現状図の書式 📊
 
-`docs/dependencies-diagrams/` は差分図とは形を変える。**`graph LR` の箱のまま**、
-メンバを載せない。全体像を掴むためのもので、メンバが載ると1枚に収まらなくなる。
-変化の軸を持たないので、上の記法のうち色と記号が遊ぶ。用途が違うので形も違う。
+`docs/dependencies-diagrams/` は**自動生成**。`SliceDiagramGenerator` が素データから
+作り、`dotnet test` のたびに作り直す。手で図を直しても次の実行で消える。
 
-- 1ファイル1機能スライス。ファイル名は機能の英語 kebab（`inventory.md`）
-- 冒頭に HTML コメントで「手で維持する」ことと更新手順
-- `# <日本語の機能名> <絵文字>`、その下に1〜2行の説明
+差分図とは形を変える。**`graph LR` の箱のまま**、メンバは**核の公開分だけ**載せる。
+公開分だけなのは、この図が「この関心事が外に何を差し出しているか」を見るものだから。
+中の作りは差分図とテストで見る。核以外に載せないのは、Legacy の公開フィールドで
+箱が埋まって、境界を示すという周辺の役割が消えるため。
+
+### 切り方
+
+核を名指しし、その周りを機械が描く。核の指定は**ファイルか型の並び**。
+
+- **ファイルで指定** … Domain / Game はこちら。ファイル分割そのものが関心事の
+  区切りなので、判断が要らず、ファイルを分ければ図が自動で追従する
+- **型で指定** … Legacy はこちら。47ファイルのうち35が root 直下に平置きで、
+  ディレクトリもファイルも関心事の区切りになっていない。**構造が無いから
+  Legacy なのであって**、そこから切り方を導こうとするのは順序が逆
+
+- **核** … 上で名指しした型
+- **周辺** … 核と辺で繋がっている型
+- **辺** … 少なくとも片端が核のもの。核を通らない Legacy 間の関係は描かない
+- **メンバ** … Domain / Game の核の公開分だけ。`enum` の値は記号が付かないので全部が公開。
+  Legacy に載せないのは、公開フィールドの多くが Inspector への口であって
+  設計ではないため。並べても関心事の輪郭が見えない
+- 線は差分図と同じ意味。太線 `==>` が保持する関係、点線 `-.->` が本体の中で使うだけ
 - Domain と Game は `subgraph` で囲み、Legacy は素で置く
-- 図のあとに2〜4行の補足。なぜこの形か、どのスライスと接するか
-- **1枚10型まで。** 超えたら切り直す（[D-009] の検出条件）
 
 Legacy は主役ではない。Domain / Game に触れている分だけ境界として置く。
 
+### 人が決めるところ
+
+**核の名指しと、見出しと、一行説明。**下の表がその実体で、生成器が読む。
+型を足したらどれかの行に足す。足さないとテストが落ちる。
+すべての型がちょうど1つの核に入っていることを機械が見張るので、表は
+コードの索引でもある。
+
+<!-- SLICES:BEGIN -->
+```text
+# <核: ファイルか型を空白区切り> | <出力名> | <見出し> | <一行説明>
+Domain/Root.cs RootsManager RootUI                                                                    | roots.md     | 根源 🌳 | 根源の素性と、攻略度・危険度・蓄積値の規則。
+Domain/Inventory.cs PlayerInventory Inventbutton CloseInventory Info_set WeaponBox                    | inventory.md | 持ち物 🎒 | 所持品の追加・削除。スロットと重ねの規則を持つ。
+Domain/Recipe.cs RecipeDefinition.cs Craft CraftButton Craft_set ExchangeButton                       | craft.md     | クラフト 🔨 | レシピの定義と、素材が足りているかの判定。
+QuestManager QuestButton RewardUI                                                                     | quest.md     | クエスト 📜 | 依頼の受注と達成判定、報酬の受け渡し。
+Sun2                                                                                                  | day.md       | 日の進行 ☀️ | 1日を進める側。根源とクエストとセーブを同時に叩く。
+SaveSystem SaveData                                                                                   | save.md      | セーブ 💾 | 進行状況の保存と復元。
+Player2 PlayerHp PlayerDeath Weapon SideJab JoystickEffect JoystickEffect_ATK Allmaity Wink DamageSet | player.md    | プレイヤー 🚶 | 操作、体力、攻撃、死亡。
+Enemy Slime Seeker MS_Spawner OF_Spawner SpawnerCandidate                                             | enemy.md     | 敵とスポーン 👾 | 敵の出現位置と追跡、被弾。
+FieldCreator FirstSeedSet OutField BranchFallSystem Dropitem                                          | field.md     | 外フィールド 🌲 | 地形の生成と、木を切って素材が落ちるまで。
+GameManager SceneStarter SceneFinisher Title MapButton                                                | scene.md     | シーン遷移 🚪 | どのシーンに入り、何を持ち越すか。
+MainCamera DynamicLayer ViewSecurer SortingDebuger TempAudio UpDownUI CloseManager BigText MiddleText | staging.md   | 表示と演出 🎥 | カメラ、重ね順、効果音、共通の文字表示。
+```
+<!-- SLICES:END -->
+
+図のあとの `## 覚え書き` だけは手書きで、作り直しても引き継ぐ。そこには構造ではなく
+**規則**を書く。構造は図が持っているので、文でも書くと二重になって片方が腐る。
+
 ## 検査 ✅
 
-現状図は手で維持するので腐る。腐り方を2つだけ機械が見張る。
+現状図は生成物なので、腐るのではなく**ずれる**。ずれは `dotnet test` が見張る。
 
 | テスト | 何を見るか |
 |---|---|
-| `スライス図に実在しない依存が描かれていない` | 図がコードについて嘘をついていないか |
-| `DomainとGameの型がどれかのスライスに出ている` | 新しい型を図に入れ忘れていないか |
+| `依存の素データがソースと一致する` | 素データが古くないか |
+| `現状図がソースと一致する` | 現状図が古くないか。古ければ書き直して落ちる |
+| `現状図に元を失ったファイルが残っていない` | 表から消した行の図が残っていないか |
+| `すべての型がどれかのスライスの核に入っている` | 地図に穴が開いていないか |
 
-**どう切るかは見ない。** 何を1枚にまとめるかは人の判断で、機械が正解を持てない。
+書き直してから落とすのは、**直す手間を無くしつつ、変化には気づかせる**ため。
+1回目で落ちて図が更新され、2回目で緑になる。差分を見るのはその間。
 
 ## 素データの限界 ⚠️
 
@@ -369,6 +451,6 @@ UnityEngine 依存でリフレクションが使えないため。
 
 - `var` で受けている依存は型名が現れないので出ない
 - 同一ファイルに宣言された型どうしには辺が出ない（`AddResult` は `Inventory.cs` にある）。
-  `[cofile]` 節がそれを補う。知らないと検査が誤判定する
+  `[files]` 節がそれを補う。知らないと検査が誤判定する
 - フィールドと局所変数は波括弧の深さで区別する。フィールドは必ず型が明示されるので
   （`var` フィールドは書けない）、一般の参照検出より確実に取れる
