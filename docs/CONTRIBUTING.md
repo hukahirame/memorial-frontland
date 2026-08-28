@@ -105,7 +105,6 @@ AI との対話で決まったことは、書かなければ消えます。
 |---|---|
 | `docs/DECISIONS.md` | なぜそう作られているか。判断の記録 |
 | `docs/conventions.md` | 機械で強制できない取り決め |
-| `docs/domain-class-diagram.md` | Domain 層のクラス図（生成物） |
 | `docs/dependencies-diagrams/` | 今どうなっているか。関心事ごとに11枚（生成物） |
 | `docs/dependencies-diff-diagrams/` | 変更で何が動いたか（生成物） |
 | `/AGENTS.md` | エージェントへの実行指示 |
