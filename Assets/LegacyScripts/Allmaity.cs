@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using MemorialFloor.Domain;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
@@ -54,9 +55,9 @@ public class Allmaity : MonoBehaviour // Allmaityボタン
             //本来は自動生成シーンなので target.Substring(3) == roots[index][2]
             if (target.IndexOf("Roots") != -1)
             {
-                int index = QuestManager.quests.FindIndex(q => q[0] == QuestManager.ordered_id);
-                target = target.Replace("Roots", QuestManager.quests[index][1]);
-
+                //受注中が無ければ FindIndex が -1 を返し、次の行で例外になっていた
+                Quest ordered = QuestManager.Quests.Find(QuestManager.ordered_id);
+                if (ordered != null) target = target.Replace("Roots", ordered.RootId);
             }
 
             GameManager.SceneTrans(target.Substring(3));

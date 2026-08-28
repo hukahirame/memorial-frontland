@@ -78,32 +78,18 @@ public class Sun2 : MonoBehaviour
 
     private void DayStart() //夜明け後
     {
-        int j;
         foreach (var root in RootsManager.Roots.All)
         {
-            bool NoMainQuest = true;
-            for (j = 0; j < QuestManager.quests.Count; j++) //前半：rootに紐つくquest[j]を探す
+            if (!QuestManager.Quests.HasMainFor(root.Id)) //前半：rootに紐つく調査か決壊を探す
             {
-                if (QuestManager.quests[j][1] == root.Id) //根源対象クエ探査
+                if (questplan.Contains(root.Id)) //後半：無かった場合、保留→作成
                 {
-                    if (QuestId.Is(QuestManager.quests[j][0], QuestKind.Main)
-                        || QuestId.Is(QuestManager.quests[j][0], QuestKind.Breach))
-                    {
-                        NoMainQuest = false;
-                        break;
-                    }
-                }
-            }
-            if (NoMainQuest) //後半：無かった場合、保留→作成
-            {
-                if (questplan.Contains(root.Id))
-                {
-                    QuestManager.CreateQuest("X", root.Id, "MainSpawner", "1");
-                    QuestManager.rewards.Add(new string[] { "coin", "100", "progress", "15" });
+                    QuestManager.Quests.Create(QuestKind.Main, root.Id, "MainSpawner", 1,
+                        new[] { new Reward("coin", 100), new Reward("progress", 15) });
                     questplan.Remove(root.Id);
 
-                    QuestManager.CreateQuest("S", root.Id, "Slime", "3");
-                    QuestManager.rewards.Add(new string[] { "coin", "100" });
+                    QuestManager.Quests.Create(QuestKind.Sub, root.Id, "Slime", 3,
+                        new[] { new Reward("coin", 100) });
 
                     GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("新クエストが発生しました");
                 }
@@ -117,14 +103,14 @@ public class Sun2 : MonoBehaviour
     }
     private void Proto()
     {
-        QuestManager.CreateQuest("X", "Root1", "MainSpawner", "1");
-        QuestManager.rewards.Add(new string[] { "coin", "100", "progress", "15" });
+        QuestManager.Quests.Create(QuestKind.Main, "Root1", "MainSpawner", 1,
+            new[] { new Reward("coin", 100), new Reward("progress", 15) });
 
-        QuestManager.CreateQuest("S", "Root1", "Slime", "3");
-        QuestManager.rewards.Add(new string[] { "coin", "100" });
+        QuestManager.Quests.Create(QuestKind.Sub, "Root1", "Slime", 3,
+            new[] { new Reward("coin", 100) });
 
         GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("新クエストが発生しました");
-        Debug.Log("新クエスト発生:" + QuestManager.quests);
+        Debug.Log("新クエスト発生:" + QuestManager.Quests.Count);
     }
 
 }

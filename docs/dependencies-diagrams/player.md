@@ -11,6 +11,9 @@
 
 ```mermaid
 graph LR
+  subgraph Domain
+    Quest
+  end
   Allmaity
   BigText
   DamageSet
@@ -38,6 +41,7 @@ graph LR
   Wink
   Allmaity -.-> GameManager
   Allmaity -.-> MiddleText
+  Allmaity -.-> Quest
   Allmaity -.-> QuestManager
   Enemy ==> Player2
   Info_set -.-> Player2
@@ -66,6 +70,7 @@ graph LR
   classDef domain fill:#e8f0fe,stroke:#1967d2,color:#174ea6;
   classDef game   fill:#fef7e0,stroke:#b06000,color:#8a5300;
   classDef legacy fill:#f1f3f4,stroke:#5f6368,color:#202124;
+  class Quest domain;
   class Allmaity,BigText,DamageSet,Enemy,GameManager,Info_set,JoystickEffect,JoystickEffect_ATK,MiddleText,OF_Spawner,Player2,PlayerDeath,PlayerHp,PlayerInventory,QuestManager,RewardUI,SaveData,SceneStarter,SideJab,Slime,SpawnerCandidate,TempAudio,Weapon,WeaponBox,Wink legacy;
 ```
 

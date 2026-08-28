@@ -38,6 +38,18 @@ classDiagram
         +CountOf(string) int
         +Remove(string) RemoveResult
     }
+    class Quest {
+        +int Amount
+        +string Id
+        +bool IsComplete
+        +QuestKind Kind
+        +int Progress
+        +IReadOnlyList~Reward~ Rewards
+        +string RootId
+        +string Target
+        +Advance() void
+        +SetProgress(int) void
+    }
     class QuestId {
     }
     class QuestKind {
@@ -48,6 +60,15 @@ classDiagram
         Common
     }
     class QuestProgress {
+    }
+    class QuestRegistry {
+        +IReadOnlyList~Quest~ All
+        +int Count
+        +Clear() void
+        +Create(QuestKind, string, string, int, IReadOnlyList~Reward~) Quest
+        +Find(string) Quest
+        +HasMainFor(string) bool
+        +Remove(string) bool
     }
     class Recipe {
         +IReadOnlyList~Ingredient~ Ingredients
@@ -65,6 +86,11 @@ classDiagram
         +RemoveOutcome Outcome
         +int SlotIndex
         +int Stock
+    }
+    class Reward {
+        <<struct>>
+        +int Amount
+        +string Kind
     }
     class Root {
         +int DailyAccumulationGain$
@@ -100,6 +126,11 @@ classDiagram
     AddResult --> AddOutcome
     Inventory ..> AddResult
     Inventory ..> RemoveResult
+    Quest --> QuestKind
+    Quest --> Reward
+    QuestRegistry --> Quest
+    QuestRegistry ..> QuestKind
+    QuestRegistry ..> Reward
     Recipe --> Ingredient
     Recipe ..> Inventory
     RemoveResult --> RemoveOutcome

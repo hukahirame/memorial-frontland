@@ -1,4 +1,6 @@
-﻿namespace MemorialFloor.Domain
+﻿using System.Collections.Generic;
+
+namespace MemorialFloor.Domain
 {
     /// <summary>
     /// クエストの種別。ID の先頭1文字に埋め込まれている。
@@ -87,6 +89,151 @@
         public static bool IsComplete(int current, int target)
         {
             return current >= target;
+        }
+    }
+
+    /// <summary>
+    /// クエストの報酬1種。Legacy は string[] の偶数番を種類、奇数番を量として
+    /// 数えていた。歩幅を間違えた側が半分しか表示しないという食い違いが起きていた。
+    /// </summary>
+    public readonly struct Reward
+    {
+        /// <summary>coin、progress、またはアイテムID</summary>
+        public string Kind { get; }
+        public int Amount { get; }
+
+        public Reward(string kind, int amount)
+        {
+            Kind = kind;
+            Amount = amount;
+        }
+    }
+
+    /// <summary>
+    /// クエスト1つ。Legacy は string[5] の位置で意味を決めていた。
+    /// 対応はコメント1行にしか書かれておらず、38箇所が [3] [4] と直に読んでいた。
+    /// </summary>
+    public sealed class Quest
+    {
+        public string Id { get; }
+        public QuestKind Kind { get; }
+
+        /// <summary>対象の根源 Id。共通クエストでは Common が入る</summary>
+        public string RootId { get; }
+
+        /// <summary>討伐や収集の対象。Slime、MainSpawner など</summary>
+        public string Target { get; }
+
+        /// <summary>目標量</summary>
+        public int Amount { get; }
+
+        /// <summary>現在量。Amount を超えない</summary>
+        public int Progress { get; private set; }
+
+        public IReadOnlyList<Reward> Rewards { get; }
+
+        public Quest(string id, string rootId, string target, int amount, IReadOnlyList<Reward> rewards)
+        {
+            Id = id;
+            Kind = QuestId.TryReadKind(id, out QuestKind kind) ? kind : QuestKind.Main;
+            RootId = rootId;
+            Target = target;
+            Amount = amount;
+            Rewards = rewards ?? new List<Reward>();
+        }
+
+        public bool IsComplete
+        {
+            get { return QuestProgress.IsComplete(Progress, Amount); }
+        }
+
+        /// <summary>1つ進める。目標を超えない</summary>
+        public void Advance()
+        {
+            Progress = QuestProgress.Advance(Progress, Amount);
+        }
+
+        /// <summary>読み込みなど、途中の値をそのまま入れるとき。目標で頭打ちにする</summary>
+        public void SetProgress(int value)
+        {
+            Progress = QuestProgress.Clamp(value, Amount);
+        }
+    }
+
+    /// <summary>
+    /// クエストの唯一の窓口。
+    ///
+    /// Legacy は quests と rewards という2本の並行リストを、6箇所で
+    /// 「CreateQuest の直後に rewards.Add」という書き方の約束だけで揃えていた。
+    /// 対にすることを型で強制する。
+    /// </summary>
+    public sealed class QuestRegistry
+    {
+        private readonly List<Quest> _quests = new List<Quest>();
+
+        public IReadOnlyList<Quest> All
+        {
+            get { return _quests; }
+        }
+
+        public int Count
+        {
+            get { return _quests.Count; }
+        }
+
+        /// <summary>
+        /// 採番して追加する。Legacy は「その種別の現在数」を番号にしていたため、
+        /// 達成して消したあとに作ると同じ Id が生まれていた。空き番号を探す。
+        /// </summary>
+        public Quest Create(QuestKind kind, string rootId, string target, int amount, IReadOnlyList<Reward> rewards)
+        {
+            char letter = QuestId.LetterOf(kind);
+
+            int number = 0;
+            while (Find(letter + number.ToString()) != null) number++;
+
+            Quest quest = new Quest(letter + number.ToString(), rootId, target, amount, rewards);
+            _quests.Add(quest);
+
+            return quest;
+        }
+
+        /// <summary>見つからなければ null</summary>
+        public Quest Find(string id)
+        {
+            for (int i = 0; i < _quests.Count; i++)
+            {
+                if (_quests[i].Id == id) return _quests[i];
+            }
+
+            return null;
+        }
+
+        /// <summary>達成して片付けるとき。報酬も一緒に消える</summary>
+        public bool Remove(string id)
+        {
+            Quest quest = Find(id);
+            if (quest == null) return false;
+
+            return _quests.Remove(quest);
+        }
+
+        /// <summary>その根源に、調査か決壊のクエストが既にあるか</summary>
+        public bool HasMainFor(string rootId)
+        {
+            for (int i = 0; i < _quests.Count; i++)
+            {
+                if (_quests[i].RootId != rootId) continue;
+                if (_quests[i].Kind == QuestKind.Main || _quests[i].Kind == QuestKind.Breach) return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>全て捨てる。新規開始とテストの後始末で使う</summary>
+        public void Clear()
+        {
+            _quests.Clear();
         }
     }
 }

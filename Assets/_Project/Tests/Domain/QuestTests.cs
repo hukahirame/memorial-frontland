@@ -1,4 +1,5 @@
-﻿using MemorialFloor.Domain;
+﻿using System.Linq;
+using MemorialFloor.Domain;
 using NUnit.Framework;
 
 namespace MemorialFloor.Domain.Tests
@@ -86,6 +87,88 @@ namespace MemorialFloor.Domain.Tests
             Assert.AreEqual(0, QuestProgress.Clamp(-1, 3));
             Assert.AreEqual(2, QuestProgress.Clamp(2, 3));
             Assert.AreEqual(3, QuestProgress.Clamp(5, 3));
+        }
+    }
+
+    public class QuestRegistryTests
+    {
+        private static readonly Reward[] NoReward = new Reward[0];
+
+        [Test]
+        public void 採番は種別の文字と連番になる()
+        {
+            QuestRegistry registry = new QuestRegistry();
+
+            Assert.AreEqual("X0", registry.Create(QuestKind.Main, "Root1", "MainSpawner", 1, NoReward).Id);
+            Assert.AreEqual("X1", registry.Create(QuestKind.Main, "Root2", "MainSpawner", 1, NoReward).Id);
+            Assert.AreEqual("S0", registry.Create(QuestKind.Sub, "Root1", "Slime", 3, NoReward).Id);
+        }
+
+        [Test]
+        public void 消したあとに作ると空き番号が埋まる()
+        {
+            // Legacy は「その種別の現在数」を番号にしていたため、X0 を消したあとに
+            // 作るとまた X0 になり、既にある X1 と衝突する順序があった
+            QuestRegistry registry = new QuestRegistry();
+            registry.Create(QuestKind.Main, "Root1", "MainSpawner", 1, NoReward);
+            registry.Create(QuestKind.Main, "Root2", "MainSpawner", 1, NoReward);
+
+            Assert.IsTrue(registry.Remove("X0"));
+
+            Assert.AreEqual("X0", registry.Create(QuestKind.Main, "Root3", "MainSpawner", 1, NoReward).Id);
+            Assert.AreEqual(1, registry.All.Count(q => q.Id == "X0"), "Id が重複した");
+        }
+
+        [Test]
+        public void 報酬はクエストと一緒に消える()
+        {
+            QuestRegistry registry = new QuestRegistry();
+            registry.Create(QuestKind.Main, "Root1", "MainSpawner", 1,
+                            new[] { new Reward("coin", 100), new Reward("progress", 15) });
+
+            Assert.AreEqual(2, registry.Find("X0").Rewards.Count);
+
+            registry.Remove("X0");
+            Assert.IsNull(registry.Find("X0"));
+            Assert.AreEqual(0, registry.Count);
+        }
+
+        [Test]
+        public void 根源ごとに調査か決壊があるかを見る()
+        {
+            QuestRegistry registry = new QuestRegistry();
+            registry.Create(QuestKind.Sub, "Root1", "Slime", 3, NoReward);
+
+            Assert.IsFalse(registry.HasMainFor("Root1"));
+
+            registry.Create(QuestKind.Breach, "Root1", "MainSpawner", 1, NoReward);
+            Assert.IsTrue(registry.HasMainFor("Root1"));
+            Assert.IsFalse(registry.HasMainFor("Root2"));
+        }
+
+        [Test]
+        public void 進捗は目標で頭打ちになる()
+        {
+            QuestRegistry registry = new QuestRegistry();
+            Quest quest = registry.Create(QuestKind.Sub, "Root1", "Slime", 2, NoReward);
+
+            quest.Advance();
+            Assert.IsFalse(quest.IsComplete);
+
+            quest.Advance();
+            Assert.IsTrue(quest.IsComplete);
+
+            quest.Advance();
+            Assert.AreEqual(2, quest.Progress);
+        }
+
+        [Test]
+        public void 種別は_Id_から決まる()
+        {
+            QuestRegistry registry = new QuestRegistry();
+
+            Assert.AreEqual(QuestKind.Breach, registry.Create(QuestKind.Breach, "Root1", "MainSpawner", 1, NoReward).Kind);
+            Assert.AreEqual(QuestKind.Common, registry.Create(QuestKind.Common, "Common", "Slime", 5, NoReward).Kind);
         }
     }
 }

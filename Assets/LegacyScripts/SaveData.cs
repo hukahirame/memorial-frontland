@@ -10,12 +10,9 @@ public class SaveData
 
     public string entered_scene;
     public int daytime;
-    //roots は保存していない。JsonUtility は List<string[]> を保存できず、実際の
-    //セーブファイルにキー自体が無かった。読み込み時に空リストで上書きして根源を
-    //消していたため、同期ごと外した。quests / rewards も同じ理由で保存されていない
-    public List<string[]> quests = new List<string[]>();
-    public List<string[]> rewards = new List<string[]>();
-
+    //roots と quests は保存していない。JsonUtility は List<string[]> を保存できず、
+    //実際のセーブファイルにキー自体が無かった。それでも読み込み時には空リストで
+    //上書きしていたので、ロードするたびに根源とクエストが消えていた。同期ごと外す
     public int coin;
     public Vector3 respawn;
     public List<string> items = new List<string>();
@@ -32,9 +29,6 @@ public class SaveData
         playerhp = (int)Player2.playerhp.value;
         entered_scene = GameManager.entered_scene;
         daytime = Sun2.daytime;
-        quests = QuestManager.quests;
-        rewards = QuestManager.rewards;
-
         SyncDynamic();
     }
 
@@ -74,9 +68,6 @@ public class SaveData
         Player2.playerhp.value = playerhp;
         GameManager.entered_scene = entered_scene;
         Sun2.daytime = daytime;
-        QuestManager.quests = quests;
-        QuestManager.rewards = rewards;
-
         LoadDynamic();
     }
 

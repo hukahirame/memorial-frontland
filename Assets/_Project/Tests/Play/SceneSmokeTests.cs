@@ -70,6 +70,12 @@ public class SceneSmokeTests
         Assert.IsNotNull(roots, "RootsManager.Roots が RootRegistry ではない");
         roots.Clear();
 
+        //クエストも同じ。QuestManager.Start が毎回2本足すので、消さないと溜まる
+        var quests = StaticField("QuestManager", "Quests").GetValue(null) as QuestRegistry;
+        Assert.IsNotNull(quests, "QuestManager.Quests が QuestRegistry ではない");
+        quests.Clear();
+        SetStatic("QuestManager", "ordered_id", "");
+
         yield return null;
     }
 

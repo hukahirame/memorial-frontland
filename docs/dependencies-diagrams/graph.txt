@@ -45,15 +45,18 @@ Player2 Legacy class
 PlayerDeath Legacy class
 PlayerHp Legacy class
 PlayerInventory Legacy class
+Quest Domain class
 QuestButton Legacy class
 QuestId Domain class
 QuestKind Domain enum
 QuestManager Legacy class
 QuestProgress Domain class
+QuestRegistry Domain class
 Recipe Domain class
 RecipeDefinition Game class
 RemoveOutcome Domain enum
 RemoveResult Domain struct
+Reward Domain struct
 RewardUI Legacy class
 Root Domain class
 RootRegistry Domain class
@@ -130,7 +133,7 @@ Assets/LegacyScripts/ViewSecurer.cs ViewSecurer
 Assets/LegacyScripts/Weapon.cs Weapon
 Assets/LegacyScripts/Wink.cs Wink
 Assets/_Project/Scripts/Domain/Inventory.cs AddOutcome AddResult Inventory RemoveOutcome RemoveResult
-Assets/_Project/Scripts/Domain/Quest.cs QuestId QuestKind QuestProgress
+Assets/_Project/Scripts/Domain/Quest.cs Quest QuestId QuestKind QuestProgress QuestRegistry Reward
 Assets/_Project/Scripts/Domain/Recipe.cs Ingredient Recipe
 Assets/_Project/Scripts/Domain/Root.cs AccumulationLevel Root RootRegistry
 Assets/_Project/Scripts/Game/Craft/RecipeDefinition.cs IngredientEntry RecipeDefinition
@@ -139,6 +142,7 @@ Assets/_Project/Scripts/Game/Craft/RecipeDefinition.cs IngredientEntry RecipeDef
 AddResult -> AddOutcome assoc
 Allmaity -> GameManager dep
 Allmaity -> MiddleText dep
+Allmaity -> Quest dep
 Allmaity -> QuestManager dep
 CloseInventory -> TempAudio dep
 Craft -> Craft_set dep
@@ -196,6 +200,8 @@ PlayerInventory -> Inventbutton dep
 PlayerInventory -> Inventory dep
 PlayerInventory -> Player2 dep
 PlayerInventory -> RemoveOutcome dep
+Quest -> QuestKind assoc
+Quest -> Reward assoc
 QuestButton -> GameManager dep
 QuestButton -> MiddleText dep
 QuestButton -> QuestId dep
@@ -204,11 +210,15 @@ QuestButton -> QuestManager dep
 QuestId -> QuestKind dep
 QuestManager -> BigText dep
 QuestManager -> GameManager dep
-QuestManager -> QuestId dep
-QuestManager -> QuestKind dep
-QuestManager -> QuestProgress dep
+QuestManager -> Quest dep
+QuestManager -> QuestKind assoc
+QuestManager -> QuestRegistry assoc
+QuestManager -> Reward dep
 QuestManager -> RewardUI dep
 QuestManager -> RootsManager dep
+QuestRegistry -> Quest assoc
+QuestRegistry -> QuestKind dep
+QuestRegistry -> Reward dep
 Recipe -> Ingredient assoc
 Recipe -> Inventory dep
 RecipeDefinition -> Ingredient dep
@@ -216,8 +226,9 @@ RecipeDefinition -> IngredientEntry assoc
 RecipeDefinition -> Recipe dep
 RemoveResult -> RemoveOutcome assoc
 RewardUI -> PlayerInventory dep
+RewardUI -> Quest dep
 RewardUI -> QuestManager dep
-RewardUI -> QuestProgress dep
+RewardUI -> Reward dep
 RewardUI -> Root dep
 RewardUI -> RootsManager dep
 Root -> AccumulationLevel assoc
@@ -235,7 +246,6 @@ RootsManager -> RootRegistry assoc
 SaveData -> GameManager dep
 SaveData -> Player2 dep
 SaveData -> PlayerInventory dep
-SaveData -> QuestManager dep
 SaveData -> Sun2 dep
 SaveSystem -> SaveData assoc
 SceneFinisher -> GameManager dep
@@ -257,9 +267,9 @@ Slime -> QuestManager dep
 Slime -> Root dep
 Slime -> RootsManager dep
 Sun2 -> MiddleText dep
-Sun2 -> QuestId dep
 Sun2 -> QuestKind dep
 Sun2 -> QuestManager dep
+Sun2 -> Reward dep
 Sun2 -> RootsManager dep
 Weapon -> DamageSet dep
 Weapon -> OF_Spawner dep
@@ -542,6 +552,17 @@ PlayerInventory|items|+ List<string> items
 PlayerInventory|maxstocks|+ List<int> maxstocks
 PlayerInventory|stocks|+ List<int> stocks
 PlayerInventory|wi_button|+ GameObject wi_button
+Quest|Advance|+ Advance()
+Quest|Amount|+ int Amount
+Quest|Id|+ string Id
+Quest|IsComplete|+ bool IsComplete
+Quest|Kind|+ QuestKind Kind
+Quest|Progress|+ int Progress
+Quest|Quest|+ Quest(string, string, string, int, IReadOnlyList<Reward>)
+Quest|Rewards|+ IReadOnlyList<Reward> Rewards
+Quest|RootId|+ string RootId
+Quest|SetProgress|+ SetProgress(int)
+Quest|Target|+ string Target
 QuestButton|Alert|- Alert()
 QuestButton|QuestOrder|+ QuestOrder()
 QuestButton|Start|- Start()
@@ -553,21 +574,31 @@ QuestKind|Breach|Breach
 QuestKind|Common|Common
 QuestKind|Main|Main
 QuestKind|Sub|Sub
-QuestManager|ClearUI|- ClearUI(int, string)
-QuestManager|CreateQuest|+ CreateQuest(string, string, string, string)
+QuestManager|ClearUI|- ClearUI(string, string)
+QuestManager|Headline|- Headline(Quest) string
+QuestManager|Quests|+ QuestRegistry Quests
+QuestManager|RewardName|+ RewardName(string) string
+QuestManager|ShowOrder|- QuestKind[] ShowOrder
 QuestManager|ShowQuestUI|+ ShowQuestUI(string)
+QuestManager|ShownAtOnce|- int ShownAtOnce
 QuestManager|StartQuest|+ StartQuest()
 QuestManager|Start|- Start()
-QuestManager|SyncQuestSub|+ SyncQuestSub(int, QuestKind)
+QuestManager|SyncQuestSub|+ SyncQuestSub(Quest)
 QuestManager|SyncQuest|+ SyncQuest(string)
 QuestManager|ordered_id|+ string ordered_id
 QuestManager|progress|+ Text progress
 QuestManager|questUI|+ GameObject questUI
-QuestManager|quests|+ List<string[]> quests
-QuestManager|rewards|+ List<string[]> rewards
 QuestProgress|Advance|+ Advance(int, int) int
 QuestProgress|Clamp|+ Clamp(int, int) int
 QuestProgress|IsComplete|+ IsComplete(int, int) bool
+QuestRegistry|All|+ IReadOnlyList<Quest> All
+QuestRegistry|Clear|+ Clear()
+QuestRegistry|Count|+ int Count
+QuestRegistry|Create|+ Create(QuestKind, string, string, int, IReadOnlyList<Reward>) Quest
+QuestRegistry|Find|+ Find(string) Quest
+QuestRegistry|HasMainFor|+ HasMainFor(string) bool
+QuestRegistry|Remove|+ Remove(string) bool
+QuestRegistry|_quests|- List<Quest> _quests
 Recipe|CanCraftWith|+ CanCraftWith(Inventory) bool
 Recipe|Ingredients|+ IReadOnlyList<Ingredient> Ingredients
 Recipe|ProductId|+ string ProductId
@@ -582,10 +613,14 @@ RemoveResult|Outcome|+ RemoveOutcome Outcome
 RemoveResult|RemoveResult|+ RemoveResult(RemoveOutcome, int, int)
 RemoveResult|SlotIndex|+ int SlotIndex
 RemoveResult|Stock|+ int Stock
+Reward|Amount|+ int Amount
+Reward|Kind|+ string Kind
+Reward|Reward|+ Reward(string, int)
 RewardUI|FinQuest|+ FinQuest()
+RewardUI|Grant|- Grant(Quest, Reward)
 RewardUI|InputInfo|+ InputInfo()
 RewardUI|resulttxt|+ TextMeshProUGUI resulttxt
-RewardUI|rewardUI_index|+ int rewardUI_index
+RewardUI|rewardUI_id|+ string rewardUI_id
 RewardUI|rewardUI_show|+ int rewardUI_show
 RewardUI|sidetxt|+ TextMeshProUGUI sidetxt
 RewardUI|toptxt|+ TextMeshProUGUI toptxt
@@ -644,10 +679,8 @@ SaveData|entered_scene|+ string entered_scene
 SaveData|items|+ List<string> items
 SaveData|maxstocks|+ List<int> maxstocks
 SaveData|playerhp|+ int playerhp
-SaveData|quests|+ List<string[]> quests
 SaveData|respawns|+ List<Vector3> respawns
 SaveData|respawn|+ Vector3 respawn
-SaveData|rewards|+ List<string[]> rewards
 SaveData|saveObjectsPos|+ List<Vector3> saveObjectsPos
 SaveData|saveObjectsScene|+ List<string> saveObjectsScene
 SaveData|saveObjects|+ List<string> saveObjects

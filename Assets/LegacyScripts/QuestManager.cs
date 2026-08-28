@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using MemorialFloor.Domain;
 using TMPro;
 using UnityEngine;
@@ -9,8 +6,17 @@ using UnityEngine.UI;
 
 public class QuestManager : MonoBehaviour // タスク風にクエ管理。成功判定も行う
 {
-    public static List<string[]> quests = new List<string[]>(); // ID、対象根源、対象、目標量、現在量
-    public static List<string[]> rewards = new List<string[]>(); //報酬群。（クエ数）行（報酬の種類数 ×2）列
+    //追加・検索・削除の唯一の窓口。参照を持ち回らず、使うときにここから引く。
+    //以前は quests と rewards という2本の並行リストを、6箇所で
+    //「CreateQuest の直後に rewards.Add」という書き方の約束だけで揃えていた
+    public static readonly QuestRegistry Quests = new QuestRegistry();
+
+    /// <summary>一度に表示するクエストの数</summary>
+    private const int ShownAtOnce = 4;
+
+    /// <summary>表示順。決壊、調査、サブの順に並べる</summary>
+    private static readonly QuestKind[] ShowOrder =
+        { QuestKind.Breach, QuestKind.Main, QuestKind.Sub };
 
     // entered_sceneはGameManagerにあります
     public static string ordered_id = ""; // クエ中不変。QBから受注
@@ -21,204 +27,139 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
 
     void Start()
     {
-        CreateQuest("X", "Root1", "MainSpawner", "1");
-        rewards.Add(new string[] {"coin", "100", "progress", "15"});
-        CreateQuest("X", "Root2", "MainSpawner", "1");
-        rewards.Add(new string[] { "coin", "200", "progress", "15" });
-    }
-
-    public static void CreateQuest(string type, string root, string target, string amount)
-    {
-        // タイプ、クエ対象根源ID(又はCommon)、対象、目標量
-
-        int count = quests.Count(q => q[0].Contains(type));
-        /*
-        for (int i = 0; i < quests.Count; i++) //唯一のIDを調べる
-        {
-            string j = i.ToString();
-            if (quests.FindIndex(quest => quest[0] == (type + j) ) == -1)
-            {
-                type += j;
-                break;
-            }
-        }*/
-        quests.Add(new string[] { type + count.ToString(), root, target, amount, "0" });
+        Quests.Create(QuestKind.Main, "Root1", "MainSpawner", 1,
+                      new[] { new Reward("coin", 100), new Reward("progress", 15) });
+        Quests.Create(QuestKind.Main, "Root2", "MainSpawner", 1,
+                      new[] { new Reward("coin", 200), new Reward("progress", 15) });
     }
 
     public void ShowQuestUI(string root) //QuestUI(ボタン)の生成 + 情報入力
     {
-        //----------------書き直し
-        int n = 0;
-        int[] result = new int[quests.Count];
-        string type = "Y";
-        Array.Fill(result, -1);
-        /*
-        for (int t = 0; t < 4; t++) //表示順ソート：result[0]にY、result[1]にX、その後にSが続く
+        List<Quest> shown = new List<Quest>();
+
+        foreach (QuestKind kind in ShowOrder)
         {
-            for (int r = 0; r < quests.Count; r++)
+            foreach (Quest quest in Quests.All)
             {
-                if ((quests[r][1] == root) && (quests[r][0].IndexOf(type) != -1)) //対象根源確認＋type抽出
-                {
-                    result[n] = r;
-                    n++;
-                }
-            }
-            if (t == 0) type = "X"; //Xは２つ以上存在できない
-            if (t == 1) type = "S";
-        }
-        n = 0;
-        */
-        Debug.Log("クエスト数:" + quests.Count);
-        for(int t = 0; (n < 4 && t < 10); t++) //4個発見 or 表示Sがなくなる で終了
-        {
-            bool ToNext = true;
-            for (int r = 0; r < quests.Count; r++)
-            {
-                Debug.Log("表示クエ：type " +type + " 場所 "+ quests[r][1] + " 正誤 " + quests[r][0].IndexOf(type) +" 非既出 "+ !Array.Exists(result, x => x == r));
-                if ((quests[r][1] == root) && (quests[r][0].IndexOf(type) != -1) && !Array.Exists(result, x => x == r)) //対象根源、type、非既出
-                {
-                    result[n] = r;
-                    Debug.Log("ShowQuestUI_result[" + n + "]　" + result[n]);
-                    n++;
-                    ToNext = false;
-                }
-            }
-            if(ToNext)
-            {
-                if (type == "Y") type = "X";
-                else if (type == "X") type = "S";
-                else if(type == "S") break;
+                if (shown.Count >= ShownAtOnce) break;
+                if (quest.RootId != root || quest.Kind != kind) continue;
+
+                shown.Add(quest);
             }
         }
 
-        for (int i = 0; i < n; i++) //resultの個数分、UI生成
+        Debug.Log("クエスト数:" + Quests.Count + " 表示:" + shown.Count);
+
+        foreach (Quest quest in shown)
         {
-            GameObject obj = Instantiate(questUI, transform.Find("QuestTopPosition").GetChild(n-1).position, Quaternion.identity, transform);
-            obj.name = quests[result[i]][0];
-            // obj.transform.Find("HeadImage").GetComponent<Image>().sprite = Resources.Load<Sprite>("HeadImage_"+quests[result[i]][0].SubString(0,1));
-            var slider = transform.Find(quests[result[i]][0]).Find("Slider_IconType_03_basic_WhiteFill").GetComponent<Slider>();
-            slider.maxValue = float.Parse(quests[result[i]][3]);
-            slider.value = float.Parse(quests[result[i]][4]);
+            GameObject obj = Instantiate(questUI,
+                transform.Find("QuestTopPosition").GetChild(shown.Count - 1).position,
+                Quaternion.identity, transform);
+            obj.name = quest.Id;
+
+            Slider slider = transform.Find(quest.Id).Find("Slider_IconType_03_basic_WhiteFill").GetComponent<Slider>();
+            slider.maxValue = quest.Amount;
+            slider.value = quest.Progress;
 
             TextMeshProUGUI t = obj.transform.Find("TypeText").GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI b = obj.transform.Find("BodyText").GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI r = obj.transform.Find("RewardText").GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI s = obj.transform.Find("StatusText").GetComponent<TextMeshProUGUI>();
 
-            string id = quests[result[i]][0];
-
-            if (QuestId.Is(id, QuestKind.Main))
+            if (quest.Kind == QuestKind.Main)
             {
                 t.text = "【調査クエスト】";
                 b.text += "根源を探し出し、破壊する"; //クエ目的記入
             }
-            else if (QuestId.Is(id, QuestKind.Breach)) t.text = "【決壊クエスト】";
-            else if (QuestId.Is(id, QuestKind.Sub))
+            else if (quest.Kind == QuestKind.Breach) t.text = "【決壊クエスト】";
+            else if (quest.Kind == QuestKind.Sub)
             {
                 t.text = "【サブクエスト】";
-                b.text += quests[result[i]][2] + "を" + quests[result[i]][3] + "体討伐する"; //クエ目的記入
+                b.text += quest.Target + "を" + quest.Amount + "体討伐する"; //クエ目的記入
             }
 
+            //旧コードは r.text.Replace(...) の戻り値を捨てていたので、
+            //progress はいつまでも「攻略度」にならなかった
+            foreach (Reward reward in quest.Rewards)
+                r.text += RewardName(reward.Kind) + " x " + reward.Amount + "\n";
 
-            for (int j = 0; j < rewards[result[i]].Length; j++)
+            if (quest.Kind == QuestKind.Sub || quest.Kind == QuestKind.Common)
             {
-                if (j % 2 == 0) r.text += rewards[result[i]][j] + " x ";
-                else r.text += rewards[result[i]][j] + "\n";
-
-                if (rewards[result[i]][j] == "progress") r.text.Replace("progress","攻略度");
-            } //クエ報酬記入
-
-            if (QuestId.Is(obj.name, QuestKind.Sub) || QuestId.Is(obj.name, QuestKind.Common))
-            {
-                if (QuestId.Is(obj.name, QuestKind.Sub)) t.text = "【サブクエスト】";
-                else t.text = "【共通クエスト】";
+                t.text = quest.Kind == QuestKind.Sub ? "【サブクエスト】" : "【共通クエスト】";
 
                 obj.GetComponent<Button>().interactable = false;
                 s.text = "";
             }
-            else if (ordered_id == id)
+            else if (ordered_id == quest.Id)
             {
-                //ここは result[i] 番のクエストの話をしている。添字が i になっていて、
-                //別のクエストの進捗を見て「達成済み」と出していた
-                if (QuestProgress.IsComplete(int.Parse(quests[result[i]][4]), int.Parse(quests[result[i]][3]))) s.text = "達成済み";
-                else if (GameManager.entered_scene == quests[result[i]][1]) s.text = "クエスト中";
+                if (quest.IsComplete) s.text = "達成済み";
+                else if (GameManager.entered_scene == quest.RootId) s.text = "クエスト中";
                 else s.text = "受注済み";
             }
-           
         }
+    }
+
+    public static string RewardName(string kind)
+    {
+        return kind == "progress" ? "攻略度" : kind;
     }
 
     public void StartQuest() //クエ受注後に侵入で開始。受注処理はQB。メインのみ
     {
         //SceneStarterより起動
-        int index = -1;
-        for (int i = 0; i < quests.Count; i++) { if (quests[i][0] == ordered_id) index = i; }
-        if (index == -1) return;
+        Quest quest = Quests.Find(ordered_id);
+        if (quest == null) return;
 
-       string bigstr = "「" + RootsManager.Roots.Find(quests[index][1]).Name + "」調査クエスト\n\n";
-        bigstr += "根源を探し出し、破壊する";
-        //Replace は新しい文字列を返す。受け取っていなかったので決壊に変わっていなかった
-        if (QuestId.Is(ordered_id, QuestKind.Breach)) bigstr = bigstr.Replace("調査", "決壊");
-
-        RewardUI.rewardUI_index = index;
-        transform.parent.Find("BigText").gameObject.GetComponent<BigText>().Bigtxt_Anim(bigstr, "開始");
+        RewardUI.rewardUI_id = quest.Id;
+        transform.parent.Find("BigText").gameObject.GetComponent<BigText>()
+                 .Bigtxt_Anim(Headline(quest), "開始");
 
         //クエスト物生成
     }
 
+    /// <summary>達成時と開始時に出す見出し。旧コードは Replace の戻り値を捨てていて、
+    /// 開始側だけ決壊クエストが「調査」のままだった</summary>
+    private static string Headline(Quest quest)
+    {
+        string text = "「" + RootsManager.Roots.Find(quest.RootId).Name + "」調査クエスト\n\n";
+        text += "根源を探し出し、破壊する";
+
+        return quest.Kind == QuestKind.Breach ? text.Replace("調査", "決壊") : text;
+    }
+
     public void SyncQuest(string target) // クエ進捗追加、外部から呼ぶ
     {
-        for (int i = 0; i < quests.Count; i++)
+        foreach (Quest quest in Quests.All)
         {
-            if (quests[i][2] != target) { }
-            else if (QuestId.Is(quests[i][0], QuestKind.Sub) && (quests[i][1] == GameManager.entered_scene)) //サブクエ
-            {
-                SyncQuestSub(i, QuestKind.Sub);
-            }
-            else if (QuestId.Is(quests[i][0], QuestKind.Common)) //共通
-            {
-                SyncQuestSub(i, QuestKind.Common);
-            }
-            else if (quests[i][0] == ordered_id) //メインクエ
-            {
-                if (QuestId.TryReadKind(ordered_id, out QuestKind kind)) SyncQuestSub(i, kind);
-            }
+            if (quest.Target != target) continue;
+
+            if (quest.Kind == QuestKind.Sub && quest.RootId == GameManager.entered_scene) SyncQuestSub(quest);
+            else if (quest.Kind == QuestKind.Common) SyncQuestSub(quest);
+            else if (quest.Id == ordered_id) SyncQuestSub(quest);
         }
     }
 
-    public void SyncQuestSub(int i, QuestKind kind)
+    public void SyncQuestSub(Quest quest)
     {
-        //進めるのと目標で頭打ちにするのを QuestProgress に寄せた。
-        //以前は頭打ちを達成処理の中でやっていて、UI 側の文字列比較がそれに依存していた
-        int target = int.Parse(quests[i][3]);
-        int progress = QuestProgress.Advance(int.Parse(quests[i][4]), target);
-        quests[i][4] = progress.ToString();
+        quest.Advance();
+        if (!quest.IsComplete) return;
 
-        if (QuestProgress.IsComplete(progress, target)) //達成処理
+        if (quest.Kind == QuestKind.Main || quest.Kind == QuestKind.Breach)
         {
-            var t = GameObject.FindWithTag("QuestManager").transform.Find(quests[i][0]);
-           // t.Find("ClearStamp").localScale = new Vector3(1, 1, 1);
-           // t.Find("StatusText").GetComponent<TextMeshProUGUI>().text = "達成済み";
+            transform.parent.Find("BigText").gameObject.GetComponent<BigText>()
+                     .Bigtxt_Anim(Headline(quest), "達成");
 
-            if (kind == QuestKind.Main || kind == QuestKind.Breach)
-            {
-                string txt = "「" + RootsManager.Roots.Find(quests[i][1]).Name + "」調査クエスト\n\n";
-                txt += "根源を探し出し、破壊する";
-                if (kind == QuestKind.Breach) txt = txt.Replace("調査","決壊");
-                transform.parent.Find("BigText").gameObject.GetComponent<BigText>().Bigtxt_Anim(txt,"達成");
-
-                RewardUI.rewardUI_show = 2; //帰還後UI表示フラグ
-            }
+            RewardUI.rewardUI_show = 2; //帰還後UI表示フラグ
         }
     }
 
     //FinQuest()はRewardUIへ移行しました
 
-    private void ClearUI(int index, string type)
+    private void ClearUI(string id, string type)
     {
         Transform ui;
-        if(type == "Common") { ui = transform.parent.Find("Task").Find(quests[index][0]); }
-        else { ui = transform.Find(quests[index][0]); }
+        if (type == "Common") { ui = transform.parent.Find("Task").Find(id); }
+        else { ui = transform.Find(id); }
         Destroy(ui);
     }
 }

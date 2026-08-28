@@ -12,9 +12,12 @@
 ```mermaid
 graph LR
   subgraph Domain
+    Quest["Quest<br/>_________________________________________________________<br/>int Amount<br/>string Id<br/>bool IsComplete<br/>QuestKind Kind<br/>int Progress<br/>IReadOnlyList&lt;Reward&gt; Rewards<br/>string RootId<br/>string Target<br/>_________________________________________________________<br/>Advance()<br/>Quest(string, string, string, int, IReadOnlyList&lt;Reward&gt;)<br/>SetProgress(int)"]
     QuestId["QuestId<br/>___________________________________<br/>Is(string, QuestKind) bool<br/>LetterOf(QuestKind) char<br/>TryReadKind(string, QuestKind) bool"]
     QuestKind["QuestKind<br/>_________<br/>Breach<br/>Common<br/>Main<br/>Sub"]
     QuestProgress["QuestProgress<br/>_________________________<br/>Advance(int, int) int<br/>Clamp(int, int) int<br/>IsComplete(int, int) bool"]
+    QuestRegistry["QuestRegistry<br/>___________________________________________________________________<br/>IReadOnlyList&lt;Quest&gt; All<br/>int Count<br/>___________________________________________________________________<br/>Clear()<br/>Create(QuestKind, string, string, int, IReadOnlyList&lt;Reward&gt;) Quest<br/>Find(string) Quest<br/>HasMainFor(string) bool<br/>Remove(string) bool"]
+    Reward["Reward<br/>___________________<br/>int Amount<br/>string Kind<br/>___________________<br/>Reward(string, int)"]
     Root
   end
   Allmaity
@@ -30,14 +33,16 @@ graph LR
   RewardUI
   RootUI
   RootsManager
-  SaveData
   SceneStarter
   Slime
   Sun2
+  Allmaity -.-> Quest
   Allmaity -.-> QuestManager
   Enemy -.-> QuestManager
   OF_Spawner -.-> QuestManager
   PlayerDeath -.-> RewardUI
+  Quest ==> QuestKind
+  Quest ==> Reward
   QuestButton -.-> GameManager
   QuestButton -.-> MiddleText
   QuestButton -.-> QuestId
@@ -46,29 +51,33 @@ graph LR
   QuestId -.-> QuestKind
   QuestManager -.-> BigText
   QuestManager -.-> GameManager
-  QuestManager -.-> QuestId
-  QuestManager -.-> QuestKind
-  QuestManager -.-> QuestProgress
+  QuestManager -.-> Quest
+  QuestManager ==> QuestKind
+  QuestManager ==> QuestRegistry
+  QuestManager -.-> Reward
   QuestManager -.-> RewardUI
   QuestManager -.-> RootsManager
+  QuestRegistry ==> Quest
+  QuestRegistry -.-> QuestKind
+  QuestRegistry -.-> Reward
   RewardUI -.-> PlayerInventory
+  RewardUI -.-> Quest
   RewardUI -.-> QuestManager
-  RewardUI -.-> QuestProgress
+  RewardUI -.-> Reward
   RewardUI -.-> Root
   RewardUI -.-> RootsManager
   RootUI -.-> QuestManager
-  SaveData -.-> QuestManager
   SceneStarter -.-> QuestManager
   SceneStarter -.-> RewardUI
   Slime -.-> QuestManager
-  Sun2 -.-> QuestId
   Sun2 -.-> QuestKind
   Sun2 -.-> QuestManager
+  Sun2 -.-> Reward
   classDef domain fill:#e8f0fe,stroke:#1967d2,color:#174ea6;
   classDef game   fill:#fef7e0,stroke:#b06000,color:#8a5300;
   classDef legacy fill:#f1f3f4,stroke:#5f6368,color:#202124;
-  class QuestId,QuestKind,QuestProgress,Root domain;
-  class Allmaity,BigText,Enemy,GameManager,MiddleText,OF_Spawner,PlayerDeath,PlayerInventory,QuestButton,QuestManager,RewardUI,RootUI,RootsManager,SaveData,SceneStarter,Slime,Sun2 legacy;
+  class Quest,QuestId,QuestKind,QuestProgress,QuestRegistry,Reward,Root domain;
+  class Allmaity,BigText,Enemy,GameManager,MiddleText,OF_Spawner,PlayerDeath,PlayerInventory,QuestButton,QuestManager,RewardUI,RootUI,RootsManager,SceneStarter,Slime,Sun2 legacy;
 ```
 
 ## 覚え書き

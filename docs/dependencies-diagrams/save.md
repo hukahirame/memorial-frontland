@@ -15,7 +15,6 @@ graph LR
   OF_Spawner
   Player2
   PlayerInventory
-  QuestManager
   SaveData
   SaveSystem
   SceneFinisher
@@ -26,7 +25,6 @@ graph LR
   SaveData -.-> GameManager
   SaveData -.-> Player2
   SaveData -.-> PlayerInventory
-  SaveData -.-> QuestManager
   SaveData -.-> Sun2
   SaveSystem ==> SaveData
   SceneFinisher -.-> SaveData
@@ -36,7 +34,7 @@ graph LR
   classDef domain fill:#e8f0fe,stroke:#1967d2,color:#174ea6;
   classDef game   fill:#fef7e0,stroke:#b06000,color:#8a5300;
   classDef legacy fill:#f1f3f4,stroke:#5f6368,color:#202124;
-  class GameManager,OF_Spawner,Player2,PlayerInventory,QuestManager,SaveData,SaveSystem,SceneFinisher,SceneStarter,Sun2 legacy;
+  class GameManager,OF_Spawner,Player2,PlayerInventory,SaveData,SaveSystem,SceneFinisher,SceneStarter,Sun2 legacy;
 ```
 
 ## 覚え書き
