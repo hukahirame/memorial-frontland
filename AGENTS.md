@@ -33,7 +33,7 @@ Editor が閉じていると全コマンドが失敗する。その場合は起�
 
 ## クラスを変えた後
 
-`structure-diff` スキルを使う。手順と書式はそこにある（[D-009]）。
+現状図は `dotnet test` が作り直す。切り方は docs/dependencies-diagrams/slices.txt（[D-011] [D-012]）。
 
 ## 禁止
 

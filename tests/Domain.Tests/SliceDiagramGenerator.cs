@@ -14,12 +14,14 @@ namespace MemorialFloor.Domain.Tests
     /// 切り方は「Domain のソースファイル1つ = 図1枚」。ファイル分割そのものが
     /// 関心事の区切りなので、どこで切るかに人の判断を要らなくできる。
     ///
-    /// 人が決めるのは見出しと一行説明だけで、それは SKILL.md のスライス表にある。
+    /// 人が決めるのは切り方と見出しだけで、それは docs/dependencies-diagrams/slices.txt にある。
     /// </summary>
     public static class SliceDiagramGenerator
     {
         public const string OutputDir = "docs/dependencies-diagrams";
-        public const string SkillPath = ".claude/skills/class-diff-diagram/SKILL.md";
+
+        /// <summary>切り方の定義。人が触る唯一の入力</summary>
+        public const string TablePath = "docs/dependencies-diagrams/slices.txt";
 
         /// <summary>ここから下は手書き。作り直しても残す</summary>
         public const string NoteHeading = "## 覚え書き";
@@ -124,7 +126,7 @@ namespace MemorialFloor.Domain.Tests
 
             var sb = new StringBuilder();
             sb.Append("<!-- 自動生成。図を手で直さない。dotnet test が作り直す。\n");
-            sb.Append("     見出しと一行説明は " + SkillPath + " のスライス表にある。\n");
+            sb.Append("     切り方と見出しは " + TablePath + " にある。\n");
             sb.Append("     末尾の覚え書きの節だけが手書きで、作り直しても消えない。\n");
             sb.Append("     枠の色: 青 = Domain / 橙 = Game / 灰 = Legacy（境界として置いているだけ）\n");
             sb.Append("     メンバは Domain / Game の核の公開分だけ。Legacy の中身は載せない。\n");
@@ -246,24 +248,18 @@ namespace MemorialFloor.Domain.Tests
         }
 
         // ------------------------------------------------------------------
-        // SKILL.md のスライス表
+        // スライス表
         // ------------------------------------------------------------------
 
         private static List<Slice> ReadSliceTable()
         {
             string path = Path.Combine(DependencyGraphGenerator.RepositoryRoot(),
-                                       SkillPath.Replace('/', Path.DirectorySeparatorChar));
+                                       TablePath.Replace('/', Path.DirectorySeparatorChar));
             if (!File.Exists(path))
-                throw new FileNotFoundException(SkillPath + " が無い。スライス表の実体はそこにある。");
-
-            string text = File.ReadAllText(path).Replace("\r\n", "\n");
-            var block = Regex.Match(text, @"<!-- SLICES:BEGIN -->\s*```text\n(.*?)\n```\s*<!-- SLICES:END -->",
-                                    RegexOptions.Singleline);
-            if (!block.Success)
-                throw new InvalidOperationException(SkillPath + " に SLICES:BEGIN / END のブロックが無い。");
+                throw new FileNotFoundException(TablePath + " が無い。スライスの切り方の実体はそこにある。");
 
             var table = new List<Slice>();
-            foreach (var raw in block.Groups[1].Value.Split('\n'))
+            foreach (var raw in File.ReadAllText(path).Replace("\r\n", "\n").Split('\n'))
             {
                 string line = raw.Trim();
                 if (line.Length == 0 || line.StartsWith("#", StringComparison.Ordinal)) continue;

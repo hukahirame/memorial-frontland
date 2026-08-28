@@ -10,7 +10,7 @@ namespace MemorialFloor.Domain.Tests
     /// docs/dependencies-diagrams/ の現状図が、今のソースと一致するか見る。
     ///
     /// この図は SliceDiagramGenerator が作る。人が手で直すと次の実行で消えるので、
-    /// 直したいことがあるならソースか SKILL.md のスライス表を変えること。
+    /// 直したいことがあるならソースか docs/dependencies-diagrams/slices.txt を変えること。
     /// 例外は「覚え書き」の節で、そこだけは作り直しても引き継ぐ。
     /// </summary>
     public class SliceDiagramTests
@@ -63,7 +63,7 @@ namespace MemorialFloor.Domain.Tests
 
             Assert.IsEmpty(uncovered,
                 "どのスライスの核にも入っていない型がある。地図に穴が開くので、" +
-                "SKILL.md のスライス表のどれかに足すこと。" +
+                "docs/dependencies-diagrams/slices.txt のどれかの行に足すこと。" +
                 Environment.NewLine + string.Join(", ", uncovered));
         }
 

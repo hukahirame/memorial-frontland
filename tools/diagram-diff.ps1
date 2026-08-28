@@ -7,7 +7,7 @@
   変化に触れている型だけを出す。git diff では
   「どのクラスを参照しなくなったか」が読み取れないため。
 
-  記法は .claude/skills/class-diff-diagram/SKILL.md に定義がある。
+  図の外側の文言は tools/diagram-diff-template.txt にある。
     色    緑=追加  赤=削除  灰=変わっていない（辺と箱の枠）
     線種  太線=関連（フィールドで保持）  点線=依存（signature に出るだけ）
     メンバの文字色  緑=追加  赤=削除  橙=変更
@@ -46,20 +46,18 @@ $Sep = [char]1
 
 $graphPath = "docs/dependencies-diagrams/graph.txt"
 $outDir = "docs/dependencies-diff-diagrams"
-$skillPath = ".claude/skills/class-diff-diagram/SKILL.md"
+$templatePath = "tools/diagram-diff-template.txt"
 
-# 図の外側の文言（見出し・件数・凡例・締め）は skill の雛形が唯一の実体。
-# ここに写しを持たないので、ズレようがない。見つからなければ止める
+# 図の外側の文言（見出し・凡例・注釈）の実体。同じ字を2箇所に写したくないので、
+# 見つからなければ止める。先頭の # で始まる行は覚え書きなので落とす
 function Read-Template {
-    if (-not (Test-Path $skillPath)) { throw "$skillPath が無い。雛形の実体はそこにある。" }
+    if (-not (Test-Path $templatePath)) { throw "$templatePath が無い。雛形の実体はそこにある。" }
 
     # -Encoding UTF8 を必ず付ける。PowerShell 5.1 は BOM 無しのファイルを
     # システムのコードページ（日本語環境では CP932）で読み、日本語が化ける
-    $text = Get-Content $skillPath -Raw -Encoding UTF8
-    $m = [regex]::Match($text, '(?s)<!-- TEMPLATE:BEGIN -->\s*```text\r?\n(.*?)\r?\n```\s*<!-- TEMPLATE:END -->')
-    if (-not $m.Success) { throw "$skillPath に TEMPLATE:BEGIN / END のブロックが無い。" }
+    $lines = Get-Content $templatePath -Encoding UTF8 | Where-Object { $_ -notmatch '^#' }
 
-    return $m.Groups[1].Value
+    return ($lines -join "`n").Trim("`n")
 }
 
 $template = Read-Template

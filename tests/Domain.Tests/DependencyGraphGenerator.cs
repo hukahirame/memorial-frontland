@@ -9,7 +9,7 @@ namespace MemorialFloor.Domain.Tests
 {
     /// <summary>
     /// _Project と LegacyScripts のソースから、型・メンバ・依存を書き出す生成器。
-    /// 手順は .claude/skills/class-diff-diagram/SKILL.md の「アルゴリズム 第1部」が正典。
+    /// 手順の解説は .claude/skills/class-diff-diagram/broken.md（停止中の skill）にある。
     /// 食い違ったらこちらを直す。
     ///
     /// Legacy は UnityEngine 依存でリフレクションが使えないため、ソースを字面で解析する。

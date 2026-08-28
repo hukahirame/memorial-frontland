@@ -1,5 +1,5 @@
 <!-- 自動生成。図を手で直さない。dotnet test が作り直す。
-     見出しと一行説明は .claude/skills/class-diff-diagram/SKILL.md のスライス表にある。
+     切り方と見出しは docs/dependencies-diagrams/slices.txt にある。
      末尾の覚え書きの節だけが手書きで、作り直しても消えない。
      枠の色: 青 = Domain / 橙 = Game / 灰 = Legacy（境界として置いているだけ）
      メンバは Domain / Game の核の公開分だけ。Legacy の中身は載せない。

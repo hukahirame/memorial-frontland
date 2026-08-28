@@ -134,6 +134,7 @@ dotnet test tests/Domain.Tests/Domain.Tests.csproj   # 素データを最新に�
 ちょうど1つのスライスの核に入っていることをテストが見張るので、忘れると落ちます。
 表はコードの索引を兼ねています。
 
-ファイル名の付け方、図の書式、比較元に `graph.txt` が無い場合の手順は
-`.claude/skills/class-diff-diagram/SKILL.md` にあります。
-書く前にそれを読んでください。
+スライスの切り方は `docs/dependencies-diagrams/slices.txt` が定義です。
+差分図の書式と抽出のアルゴリズムの解説は
+`.claude/skills/class-diff-diagram/broken.md` にありますが、この skill は
+費用に見合わないため停止中です。置き換えを用意するまで呼びません。
