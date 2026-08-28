@@ -46,6 +46,23 @@ $Sep = [char]1
 
 $graphPath = "docs/dependencies-diagrams/graph.txt"
 $outDir = "docs/dependencies-diff-diagrams"
+$skillPath = ".claude/skills/class-diff-diagram/SKILL.md"
+
+# 図の外側の文言（見出し・件数・凡例・締め）は skill の雛形が唯一の実体。
+# ここに写しを持たないので、ズレようがない。見つからなければ止める
+function Read-Template {
+    if (-not (Test-Path $skillPath)) { throw "$skillPath が無い。雛形の実体はそこにある。" }
+
+    # -Encoding UTF8 を必ず付ける。PowerShell 5.1 は BOM 無しのファイルを
+    # システムのコードページ（日本語環境では CP932）で読み、日本語が化ける
+    $text = Get-Content $skillPath -Raw -Encoding UTF8
+    $m = [regex]::Match($text, '(?s)<!-- TEMPLATE:BEGIN -->\s*```text\r?\n(.*?)\r?\n```\s*<!-- TEMPLATE:END -->')
+    if (-not $m.Success) { throw "$skillPath に TEMPLATE:BEGIN / END のブロックが無い。" }
+
+    return $m.Groups[1].Value
+}
+
+$template = Read-Template
 
 function New-OrdinalMap {
     # PowerShell の @{} は大文字小文字を区別しない。roots と Roots が同じ鍵になり、
@@ -91,11 +108,11 @@ if (-not (Test-Path $graphPath)) {
     throw "$graphPath が無い。先に dotnet test tests/Domain.Tests/Domain.Tests.csproj を実行すること。"
 }
 
-$new = Read-Graph (Get-Content $graphPath -Raw)
+$new = Read-Graph (Get-Content $graphPath -Raw -Encoding UTF8)
 
 if ($BaseFile) {
     if (-not (Test-Path $BaseFile)) { throw "$BaseFile が無い。" }
-    $oldText = Get-Content $BaseFile -Raw
+    $oldText = Get-Content $BaseFile -Raw -Encoding UTF8
     if ($Ref -eq "HEAD") { $Ref = (Split-Path $BaseFile -Leaf) }
 } else {
     $oldText = (git show "${Ref}:${graphPath}" 2>$null) -join "`n"
@@ -241,18 +258,6 @@ if (-not $Name) { $Name = "$stamp-$($Ref -replace '[^A-Za-z0-9_.-]', '_')" }
 $out = Join-Path $outDir "$Name.md"
 
 $lines = New-Object System.Collections.Generic.List[string]
-$lines.Add("<!-- tools/diagram-diff.ps1 が生成する。手で編集しない -->")
-$lines.Add("")
-$lines.Add("# 依存の差分  $Ref -> 作業ツリー  ($stamp)")
-$lines.Add("")
-$lines.Add("型 +$($newTypes.Count) / -$($goneTypes.Count)　　辺 +$($addedEdges.Count) / -$($goneEdges.Count) / 種類変化 $($changedEdges.Count)　　メンバが動いた型 $($changedMemberTypes.Count)")
-$lines.Add("")
-$lines.Add("**色が変化** — 緑が追加、赤が削除、橙が関連と依存の入れ替わり、灰が変わっていない")
-$lines.Add("**線種が関係** — 太線が関連（フィールドで保持）、点線が依存（signature に出るだけ）")
-# 単一引用符。PowerShell はバッククォートを制御文字として食う
-$lines.Add('緑の枠が現れた型、赤の枠が消えた型。塗りは白で統一。')
-$lines.Add('メンバは文字色で示す。緑が追加、赤が削除、橙が変更。')
-$lines.Add("")
 $lines.Add('```mermaid')
 $lines.Add("graph LR")
 
@@ -325,11 +330,21 @@ if ($goneTypes.Count -gt 0) {
 }
 
 $lines.Add('```')
-$lines.Add("")
-$lines.Add("この図を見て ``docs/dependencies-diagrams/`` の現状図を更新すること。")
+
+# 図の外側の文言は skill の雛形が実体。ここには写しを持たない
+$page = ($template.
+    Replace("{REF}", $Ref).
+    Replace("{DATE}", $stamp).
+    Replace("{TYPE_ADD}", $newTypes.Count).
+    Replace("{TYPE_DEL}", $goneTypes.Count).
+    Replace("{EDGE_ADD}", $addedEdges.Count).
+    Replace("{EDGE_DEL}", $goneEdges.Count).
+    Replace("{EDGE_CHG}", $changedEdges.Count).
+    Replace("{MEMBER_TYPES}", $changedMemberTypes.Count).
+    Replace("{DIAGRAM}", ($lines -join "`r`n")))
 
 if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }
-Set-Content -Path $out -Value ($lines -join "`r`n") -Encoding utf8
+Set-Content -Path $out -Value $page -Encoding utf8
 
 Write-Output "型 +$($newTypes.Count) / -$($goneTypes.Count)　辺 +$($addedEdges.Count) / -$($goneEdges.Count) / 種類変化 $($changedEdges.Count)　メンバが動いた型 $($changedMemberTypes.Count)"
 Write-Output "-> $out"

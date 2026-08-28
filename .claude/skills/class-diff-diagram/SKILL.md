@@ -103,6 +103,36 @@ docs/dependencies-diff-diagrams/YYYY-MM-DD-<slug>.md
 - 戻り値が `void` の操作は戻り値を書かない。過半数が `void` で情報にならない
 - 変化した型どうしの変わっていない辺は灰の細線で添える（位置関係のため）
 
+## 生成物の雛形 📝
+
+差分図の md は下の雛形で書き出す。**`tools/diagram-diff.ps1` はこのブロックを
+読んで使う。**写しを持たないので、ここを直せば出力が変わる。
+
+`{}` の中だけ生成時に差し替える。`{DIAGRAM}` には mermaid のブロックが入る。
+ブロックが見つからなければ生成は止まる（黙って空の凡例を出さない）。
+
+<!-- TEMPLATE:BEGIN -->
+```text
+<!-- tools/diagram-diff.ps1 が生成する。手で編集しない -->
+
+# 依存の差分  {REF} -> 作業ツリー  ({DATE})
+
+型 +{TYPE_ADD} / -{TYPE_DEL}　　辺 +{EDGE_ADD} / -{EDGE_DEL} / 種類変化 {EDGE_CHG}　　メンバが動いた型 {MEMBER_TYPES}
+
+**色が変化** — 緑が追加、赤が削除、橙が関連と依存の入れ替わり、灰が変わっていない
+**線種が関係** — 太線が関連（フィールドで保持）、点線が依存（signature に出るだけ）
+緑の枠が現れた型、赤の枠が消えた型。塗りは白で統一。
+メンバは文字色で示す。緑が追加、赤が削除、橙が変更。
+
+{DIAGRAM}
+
+この図を見て `docs/dependencies-diagrams/` の現状図を更新すること。
+```
+<!-- TEMPLATE:END -->
+
+凡例が記法の表と重複しているのは意図的。図を単体で人に見せたとき、
+凡例が無いと読めないため。実体は雛形だけなので二重管理にはならない。
+
 ## 置き場 📁
 
 | | |
@@ -110,6 +140,7 @@ docs/dependencies-diff-diagrams/YYYY-MM-DD-<slug>.md
 | 抽出（第1部） | `tests/Domain.Tests/DependencyGraphGenerator.cs` |
 | 抽出の検査 | `tests/Domain.Tests/DependencyGraphTests.cs` |
 | 比較と描画（第2部） | `tools/diagram-diff.ps1` |
+| 差分図の文言 | この skill の TEMPLATE ブロック。script が読む |
 | 素データ | `docs/dependencies-diagrams/graph.txt` |
 | 現状図 | `docs/dependencies-diagrams/*.md` |
 | 現状図の検査 | `tests/Domain.Tests/SliceDiagramTests.cs` |
