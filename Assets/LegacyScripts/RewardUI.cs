@@ -53,7 +53,7 @@ public class RewardUI : MonoBehaviour
         int n = 0;
         for (int i = 0; i < QuestManager.quests.Count; i++)
         {
-            if (int.Parse(QuestManager.quests[i][4]) >= int.Parse(QuestManager.quests[i][3]))
+            if (QuestProgress.IsComplete(int.Parse(QuestManager.quests[i][4]), int.Parse(QuestManager.quests[i][3])))
             {
                 index_array[n] = i;
                 Debug.Log("クエストクリア：" + QuestManager.quests[i][0]);

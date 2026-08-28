@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using MemorialFloor.Domain;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -85,7 +86,8 @@ public class Sun2 : MonoBehaviour
             {
                 if (QuestManager.quests[j][1] == root.Id) //根源対象クエ探査
                 {
-                    if (QuestManager.quests[j][0].IndexOfAny(new char[] { 'X', 'Y' }) == 0)
+                    if (QuestId.Is(QuestManager.quests[j][0], QuestKind.Main)
+                        || QuestId.Is(QuestManager.quests[j][0], QuestKind.Breach))
                     {
                         NoMainQuest = false;
                         break;

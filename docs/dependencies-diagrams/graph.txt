@@ -46,7 +46,10 @@ PlayerDeath Legacy class
 PlayerHp Legacy class
 PlayerInventory Legacy class
 QuestButton Legacy class
+QuestId Domain class
+QuestKind Domain enum
 QuestManager Legacy class
+QuestProgress Domain class
 Recipe Domain class
 RecipeDefinition Game class
 RemoveOutcome Domain enum
@@ -127,6 +130,7 @@ Assets/LegacyScripts/ViewSecurer.cs ViewSecurer
 Assets/LegacyScripts/Weapon.cs Weapon
 Assets/LegacyScripts/Wink.cs Wink
 Assets/_Project/Scripts/Domain/Inventory.cs AddOutcome AddResult Inventory RemoveOutcome RemoveResult
+Assets/_Project/Scripts/Domain/Quest.cs QuestId QuestKind QuestProgress
 Assets/_Project/Scripts/Domain/Recipe.cs Ingredient Recipe
 Assets/_Project/Scripts/Domain/Root.cs AccumulationLevel Root RootRegistry
 Assets/_Project/Scripts/Game/Craft/RecipeDefinition.cs IngredientEntry RecipeDefinition
@@ -194,9 +198,15 @@ PlayerInventory -> Player2 dep
 PlayerInventory -> RemoveOutcome dep
 QuestButton -> GameManager dep
 QuestButton -> MiddleText dep
+QuestButton -> QuestId dep
+QuestButton -> QuestKind dep
 QuestButton -> QuestManager dep
+QuestId -> QuestKind dep
 QuestManager -> BigText dep
 QuestManager -> GameManager dep
+QuestManager -> QuestId dep
+QuestManager -> QuestKind dep
+QuestManager -> QuestProgress dep
 QuestManager -> RewardUI dep
 QuestManager -> RootsManager dep
 Recipe -> Ingredient assoc
@@ -207,6 +217,7 @@ RecipeDefinition -> Recipe dep
 RemoveResult -> RemoveOutcome assoc
 RewardUI -> PlayerInventory dep
 RewardUI -> QuestManager dep
+RewardUI -> QuestProgress dep
 RewardUI -> Root dep
 RewardUI -> RootsManager dep
 Root -> AccumulationLevel assoc
@@ -246,6 +257,8 @@ Slime -> QuestManager dep
 Slime -> Root dep
 Slime -> RootsManager dep
 Sun2 -> MiddleText dep
+Sun2 -> QuestId dep
+Sun2 -> QuestKind dep
 Sun2 -> QuestManager dep
 Sun2 -> RootsManager dep
 Weapon -> DamageSet dep
@@ -532,18 +545,29 @@ PlayerInventory|wi_button|+ GameObject wi_button
 QuestButton|Alert|- Alert()
 QuestButton|QuestOrder|+ QuestOrder()
 QuestButton|Start|- Start()
+QuestId|Is|+ Is(string, QuestKind) bool
+QuestId|LetterOf|+ LetterOf(QuestKind) char
+QuestId|Letters|- string Letters
+QuestId|TryReadKind|+ TryReadKind(string, QuestKind) bool
+QuestKind|Breach|Breach
+QuestKind|Common|Common
+QuestKind|Main|Main
+QuestKind|Sub|Sub
 QuestManager|ClearUI|- ClearUI(int, string)
 QuestManager|CreateQuest|+ CreateQuest(string, string, string, string)
 QuestManager|ShowQuestUI|+ ShowQuestUI(string)
 QuestManager|StartQuest|+ StartQuest()
 QuestManager|Start|- Start()
-QuestManager|SyncQuestSub|+ SyncQuestSub(int, string)
+QuestManager|SyncQuestSub|+ SyncQuestSub(int, QuestKind)
 QuestManager|SyncQuest|+ SyncQuest(string)
 QuestManager|ordered_id|+ string ordered_id
 QuestManager|progress|+ Text progress
 QuestManager|questUI|+ GameObject questUI
 QuestManager|quests|+ List<string[]> quests
 QuestManager|rewards|+ List<string[]> rewards
+QuestProgress|Advance|+ Advance(int, int) int
+QuestProgress|Clamp|+ Clamp(int, int) int
+QuestProgress|IsComplete|+ IsComplete(int, int) bool
 Recipe|CanCraftWith|+ CanCraftWith(Inventory) bool
 Recipe|Ingredients|+ IReadOnlyList<Ingredient> Ingredients
 Recipe|ProductId|+ string ProductId

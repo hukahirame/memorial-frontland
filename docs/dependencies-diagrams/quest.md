@@ -12,6 +12,9 @@
 ```mermaid
 graph LR
   subgraph Domain
+    QuestId["QuestId<br/>___________________________________<br/>Is(string, QuestKind) bool<br/>LetterOf(QuestKind) char<br/>TryReadKind(string, QuestKind) bool"]
+    QuestKind["QuestKind<br/>_________<br/>Breach<br/>Common<br/>Main<br/>Sub"]
+    QuestProgress["QuestProgress<br/>_________________________<br/>Advance(int, int) int<br/>Clamp(int, int) int<br/>IsComplete(int, int) bool"]
     Root
   end
   Allmaity
@@ -37,13 +40,20 @@ graph LR
   PlayerDeath -.-> RewardUI
   QuestButton -.-> GameManager
   QuestButton -.-> MiddleText
+  QuestButton -.-> QuestId
+  QuestButton -.-> QuestKind
   QuestButton -.-> QuestManager
+  QuestId -.-> QuestKind
   QuestManager -.-> BigText
   QuestManager -.-> GameManager
+  QuestManager -.-> QuestId
+  QuestManager -.-> QuestKind
+  QuestManager -.-> QuestProgress
   QuestManager -.-> RewardUI
   QuestManager -.-> RootsManager
   RewardUI -.-> PlayerInventory
   RewardUI -.-> QuestManager
+  RewardUI -.-> QuestProgress
   RewardUI -.-> Root
   RewardUI -.-> RootsManager
   RootUI -.-> QuestManager
@@ -51,11 +61,13 @@ graph LR
   SceneStarter -.-> QuestManager
   SceneStarter -.-> RewardUI
   Slime -.-> QuestManager
+  Sun2 -.-> QuestId
+  Sun2 -.-> QuestKind
   Sun2 -.-> QuestManager
   classDef domain fill:#e8f0fe,stroke:#1967d2,color:#174ea6;
   classDef game   fill:#fef7e0,stroke:#b06000,color:#8a5300;
   classDef legacy fill:#f1f3f4,stroke:#5f6368,color:#202124;
-  class Root domain;
+  class QuestId,QuestKind,QuestProgress,Root domain;
   class Allmaity,BigText,Enemy,GameManager,MiddleText,OF_Spawner,PlayerDeath,PlayerInventory,QuestButton,QuestManager,RewardUI,RootUI,RootsManager,SaveData,SceneStarter,Slime,Sun2 legacy;
 ```
 

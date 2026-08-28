@@ -11,6 +11,10 @@
 
 ```mermaid
 graph LR
+  subgraph Domain
+    QuestId
+    QuestKind
+  end
   MiddleText
   QuestManager
   RootsManager
@@ -18,11 +22,14 @@ graph LR
   Sun2
   SaveData -.-> Sun2
   Sun2 -.-> MiddleText
+  Sun2 -.-> QuestId
+  Sun2 -.-> QuestKind
   Sun2 -.-> QuestManager
   Sun2 -.-> RootsManager
   classDef domain fill:#e8f0fe,stroke:#1967d2,color:#174ea6;
   classDef game   fill:#fef7e0,stroke:#b06000,color:#8a5300;
   classDef legacy fill:#f1f3f4,stroke:#5f6368,color:#202124;
+  class QuestId,QuestKind domain;
   class MiddleText,QuestManager,RootsManager,SaveData,Sun2 legacy;
 ```
 

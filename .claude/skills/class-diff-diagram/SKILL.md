@@ -46,7 +46,7 @@ dotnet test tests/Domain.Tests/Domain.Tests.csproj   # 緑を確認
 ## ファイル名 📄
 
 ```
-docs/dependencies-diff-diagrams/MMDD_<slug>.md
+docs/dependencies-diff-diagrams/YYYY-MM-DD-<slug>.md
 ```
 
 - `<slug>` は変更の主題。kebab-case（`roots-registry`, `quest-log`）
@@ -395,9 +395,22 @@ Legacy と Game には正解が無い。リフレクションが使えないこ�
 - **核** … 上で名指しした型
 - **周辺** … 核と辺で繋がっている型
 - **辺** … 少なくとも片端が核のもの。核を通らない Legacy 間の関係は描かない
-- **メンバ** … Domain / Game の核の公開分だけ。`enum` の値は記号が付かないので全部が公開。
-  Legacy に載せないのは、公開フィールドの多くが Inspector への口であって
-  設計ではないため。並べても関心事の輪郭が見えない
+- **メンバ** … Domain / Game の核の公開分だけ。`enum` の値は記号が付かないので全部が公開
+
+Legacy に載せないのは実測で決めた。この図の目的は**スライス内のクラス間の関係**を
+読むこと。そこで「型がスライス内の別のクラスであるメンバ」＝辺の正体を数えたところ、
+`quest` `scene` `enemy` `staging` は 0、`player` は55メンバ中1だった。
+辺のほとんどが `dep`（本体からの参照）で、Legacy のクラスは互いをフィールドで
+持たず、シングルトン・`Find`・`GetComponent`・static で繋がっているためである。
+`RootsManager` が `Slime` を使う関係は `- GameObject slime` として現れ、型に情報が無い。
+載せても Inspector の配線が並ぶだけで、関係の理解には効かない。
+
+Domain は逆で、`roots` は42メンバ中3つが辺の正体を持ち、残りも
+「この関心事が外に何を差し出しているか」という別の価値がある。
+
+なお Legacy の関係が読み解けないのはメンバが無いからではなく、**関係が型に
+載っていない**から。改善するなら載せるべきは辺の張られ方だが、今の抽出器では
+取れない。`dep` が `assoc` に変わっていくこと自体が分離の進捗の指標になる
 - 線は差分図と同じ意味。太線 `==>` が保持する関係、点線 `-.->` が本体の中で使うだけ
 - Domain と Game は `subgraph` で囲み、Legacy は素で置く
 
@@ -416,7 +429,7 @@ Legacy は主役ではない。Domain / Game に触れている分だけ境界�
 Domain/Root.cs RootsManager RootUI                                                                    | roots.md     | 根源 🌳 | 根源の素性と、攻略度・危険度・蓄積値の規則。
 Domain/Inventory.cs PlayerInventory Inventbutton CloseInventory Info_set WeaponBox                    | inventory.md | 持ち物 🎒 | 所持品の追加・削除。スロットと重ねの規則を持つ。
 Domain/Recipe.cs RecipeDefinition.cs Craft CraftButton Craft_set ExchangeButton                       | craft.md     | クラフト 🔨 | レシピの定義と、素材が足りているかの判定。
-QuestManager QuestButton RewardUI                                                                     | quest.md     | クエスト 📜 | 依頼の受注と達成判定、報酬の受け渡し。
+Domain/Quest.cs QuestManager QuestButton RewardUI                                                                   | quest.md     | クエスト 📜 | 依頼の受注と達成判定、報酬の受け渡し。
 Sun2                                                                                                  | day.md       | 日の進行 ☀️ | 1日を進める側。根源とクエストとセーブを同時に叩く。
 SaveSystem SaveData                                                                                   | save.md      | セーブ 💾 | 進行状況の保存と復元。
 Player2 PlayerHp PlayerDeath Weapon SideJab JoystickEffect JoystickEffect_ATK Allmaity Wink DamageSet | player.md    | プレイヤー 🚶 | 操作、体力、攻撃、死亡。

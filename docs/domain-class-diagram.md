@@ -38,6 +38,17 @@ classDiagram
         +CountOf(string) int
         +Remove(string) RemoveResult
     }
+    class QuestId {
+    }
+    class QuestKind {
+        <<enumeration>>
+        Main
+        Breach
+        Sub
+        Common
+    }
+    class QuestProgress {
+    }
     class Recipe {
         +IReadOnlyList~Ingredient~ Ingredients
         +string ProductId

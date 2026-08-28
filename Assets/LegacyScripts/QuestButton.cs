@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using MemorialFloor.Domain;
 using UnityEngine;
 using TMPro;
 
@@ -23,7 +24,7 @@ public class QuestButton : MonoBehaviour
             return;
         }
 
-        if (QuestManager.ordered_id.IndexOf("X") != -1) //メイン受注条件
+        if (QuestId.Is(QuestManager.ordered_id, QuestKind.Main)) //メイン受注条件
         {
             GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("これ以上受注できません");
             return;
