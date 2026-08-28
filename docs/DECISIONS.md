@@ -305,3 +305,21 @@ Legacy を核とする図は大きい。最大で25節点になった（player.m
 
 Legacy の公開メンバは載せない。多くが Inspector への口であって設計ではなく、
 並べても関心事の輪郭が見えないため。
+
+## 2026-08-29
+
+[軽い記録] class-diff-diagram skill を使用停止にした。クレジット消費が費用に
+見合わないため。置き換えを用意するまで呼ばない。SKILL.md は broken.md に改名済み
+（skill として登録されない）。差分図の生成も止まる。
+
+[軽い記録] 上に伴い、skill の中にあった2つの表を外へ出した。
+docs/dependencies-diagrams/slices.txt（スライスの切り方）と
+tools/diagram-diff-template.txt（差分図の文言）。
+[D-011] は skill を正典としたが、それは skill が在ることを前提にしていた。
+手順の解説と違い、これらは動くものが読む入力なので、skill の生死に
+左右されてはいけなかった。[D-009] [D-011] [D-012] に残る SKILL.md への
+道は、当時の記録としてそのままにする。
+
+[軽い記録] 現状図の自動生成（SliceDiagramTests）は止めていない。dotnet test の
+中で動き、追加の費用が無いため。切り方の定義は slices.txt に移った。
+
