@@ -118,7 +118,7 @@ MapButton -> RootsManager dep
 OF_Spawner -> GameManager dep
 OF_Spawner -> MiddleText dep
 OF_Spawner -> QuestManager dep
-OF_Spawner -> Root assoc
+OF_Spawner -> Root dep
 OF_Spawner -> RootsManager dep
 OF_Spawner -> SaveData dep
 OF_Spawner -> SaveSystem dep
@@ -157,11 +157,13 @@ RecipeDefinition -> Recipe dep
 RemoveResult -> RemoveOutcome assoc
 RewardUI -> PlayerInventory dep
 RewardUI -> QuestManager dep
+RewardUI -> Root dep
 RewardUI -> RootsManager dep
 Root -> AccumulationLevel assoc
 RootRegistry -> Root assoc
 RootUI -> AccumulationLevel dep
 RootUI -> QuestManager dep
+RootUI -> Root dep
 RootUI -> RootsManager dep
 RootsManager -> AccumulationLevel dep
 RootsManager -> GameManager dep
@@ -183,6 +185,7 @@ SceneStarter -> OF_Spawner dep
 SceneStarter -> Player2 dep
 SceneStarter -> QuestManager dep
 SceneStarter -> RewardUI dep
+SceneStarter -> Root dep
 SceneStarter -> RootsManager dep
 SceneStarter -> SaveData dep
 SceneStarter -> SaveSystem dep
@@ -190,6 +193,7 @@ Seeker -> OF_Spawner dep
 Slime -> GameManager dep
 Slime -> Player2 assoc
 Slime -> QuestManager dep
+Slime -> Root dep
 Slime -> RootsManager dep
 Sun2 -> MiddleText dep
 Sun2 -> QuestManager dep
@@ -418,7 +422,6 @@ OF_Spawner|expos|+ Vector4 expos
 OF_Spawner|loadEnemiesName|+ List<string> loadEnemiesName
 OF_Spawner|loadEnemiesPos|+ List<Vector3> loadEnemiesPos
 OF_Spawner|n|- int n
-OF_Spawner|root|- Root root
 OF_Spawner|seeker_cs|- Seeker seeker_cs
 OF_Spawner|seeker|+ GameObject seeker
 OF_Spawner|spawnable|+ bool spawnable

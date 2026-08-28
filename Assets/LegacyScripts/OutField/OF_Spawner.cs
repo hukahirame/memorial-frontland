@@ -18,7 +18,6 @@ public class OF_Spawner : MonoBehaviour
     public static int spawnerhp = 100;
 
     public Vector4 expos; //XL,XS,ZL,ZS
-    private Root root;
 
  //   private GameObject tower1;
  //   private GameObject tower1_down;
@@ -33,7 +32,6 @@ public class OF_Spawner : MonoBehaviour
         gameObject.tag = "MainSpawner";
         spawnrange = Random.Range(6f, 12f);
         expos = FindObjectOfType<SceneStarter>().exposition;
-        root = RootsManager.Roots.Find(GameManager.entered_scene);
 
         seeker = GameObject.Find("Seeker");
         seeker.transform.parent = transform;
@@ -76,6 +74,10 @@ public class OF_Spawner : MonoBehaviour
     {
         Debug.Log("Spawn");
         Invoke("Spawn", Random.Range(15, 30));
+
+        //根源は保持せず使うときに引く。参照を握るとレジストリが唯一の窓口でなくなり、
+        //中身を入れ替えたときに古い Root を指したまま生き残る
+        Root root = RootsManager.Roots.Find(GameManager.entered_scene);
         if ((root != null) && (root.Progress >= 50) && (Random.Range(0, 100) > 50)) return;
         if (Random.Range(0, 100) < 3 * n) return;
 

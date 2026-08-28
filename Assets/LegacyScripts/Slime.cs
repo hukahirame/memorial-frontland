@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.UI;
+using MemorialFloor.Domain;
 
 public class Slime : MonoBehaviour
 {
@@ -86,7 +87,7 @@ public class Slime : MonoBehaviour
             d.GetComponent<Rigidbody>().AddForce(v, ForceMode.Impulse);
         }
         GameObject.FindWithTag("QuestManager").GetComponent<QuestManager>().SyncQuest(gameObject.name);
-        var root = RootsManager.Roots.Find(GameManager.entered_scene);
+        Root root = RootsManager.Roots.Find(GameManager.entered_scene);
         if (root != null) root.Calm(3);
         Destroy(gameObject);
     }

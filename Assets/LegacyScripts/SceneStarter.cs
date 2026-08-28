@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using MemorialFloor.Domain;
 
 public class SceneStarter : MonoBehaviour //シーン起動時の処理全般。ODLに含まず、〇〇STとして設置
 {
@@ -64,7 +65,7 @@ public class SceneStarter : MonoBehaviour //シーン起動時の処理全般。
 
     private void SpawnerDecide()
     {
-        var root = RootsManager.Roots.Find(GameManager.entered_scene);
+        Root root = RootsManager.Roots.Find(GameManager.entered_scene);
         if (root == null) return;
 
         if (!root.HasSpawnPoint)

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using TMPro;
+using MemorialFloor.Domain;
 using System;
 
 public class RewardUI : MonoBehaviour
@@ -15,7 +16,7 @@ public class RewardUI : MonoBehaviour
         //クエスト数が根源数を超えると別の根源を指すか例外になっていた
         if (rewardUI_index < 0 || rewardUI_index >= QuestManager.quests.Count) return;
 
-        var root = RootsManager.Roots.Find(QuestManager.quests[rewardUI_index][1]);
+        Root root = RootsManager.Roots.Find(QuestManager.quests[rewardUI_index][1]);
         if (root == null) return;
 
         toptxt.text = "「" + root.Name + "」のクエスト結果";
@@ -75,7 +76,7 @@ public class RewardUI : MonoBehaviour
                 if (QuestManager.rewards[index][i].IndexOf("progress") != -1)
                 {
                     //旧コードは一致後もループを回し続け、残り回数ぶん加算を繰り返していた
-                    var rewarded = RootsManager.Roots.Find(QuestManager.quests[index][1]);
+                    Root rewarded = RootsManager.Roots.Find(QuestManager.quests[index][1]);
                     if (rewarded != null) rewarded.Gain(int.Parse(QuestManager.rewards[index][i + 1]));
                 }
                 else if (QuestManager.rewards[index][i].IndexOf("coin") != -1)

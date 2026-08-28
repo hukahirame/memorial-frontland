@@ -18,7 +18,7 @@ public class RootUI : MonoBehaviour
 
     public void Show_QM()
     {
-        var root = RootsManager.Roots.Find(gameObject.name); // UI の名前が根源 ID
+        Root root = RootsManager.Roots.Find(gameObject.name); // UI の名前が根源 ID
         if (root == null) return;
 
         qm.position = center.position;

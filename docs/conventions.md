@@ -65,6 +65,27 @@ GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>();
 transform.GetChild(CHILDPLUS + index).Find("Text").GetComponent<Text>().text = ...
 ```
 
+## 型の明示 📐  [D-010]
+
+### Domain / Game の型を受ける変数は型を明示する
+
+`var` を使わない。**Legacy 側でも従う。**
+
+```csharp
+// ❌ NG
+var root = RootsManager.Roots.Find(GameManager.entered_scene);
+
+// ✅ OK
+Root root = RootsManager.Roots.Find(GameManager.entered_scene);
+```
+
+### 右辺から型が明らかなときは `var` でよい
+
+```csharp
+var recipes = new Dictionary<string, Recipe>();   // ✅ new が型を言っている
+var index = 0;                                    // ✅
+```
+
 ## フィールドの公開 🔓  [D-007]
 
 書き換え可能な public インスタンスフィールドを作らない。
