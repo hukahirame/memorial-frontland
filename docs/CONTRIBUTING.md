@@ -130,5 +130,6 @@ dotnet test tests/Domain.Tests/Domain.Tests.csproj   # 素データを最新に�
 `docs/dependencies-diagrams/` の現状図を手で直します。** 直し忘れは
 SliceDiagramTests が検出します（実在しない依存、どのスライスにも無い型）。
 
-比較元は既定で HEAD。`-Ref origin/main -Name roots-registry` のように指定もできます。
+ファイル名の付け方、図の書式、比較元に `graph.txt` が無い場合の手順は
+`.claude/skills/structure-diff/SKILL.md` にあります。
 書く前にそれを読んでください。

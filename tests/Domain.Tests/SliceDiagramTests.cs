@@ -91,7 +91,9 @@ namespace MemorialFloor.Domain.Tests
                 }
                 else if (section == "[edges]")
                 {
-                    edges.Add(line);
+                    // 行は "A -> B assoc" の4語。ここでは種類を見ないので落とす
+                    var parts = line.Split(' ');
+                    edges.Add(parts[0] + " -> " + parts[2]);
                 }
                 else if (section == "[cofile]")
                 {

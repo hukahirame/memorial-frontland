@@ -1,77 +1,78 @@
 # 機械用の素データ。tools/diagram-diff.ps1 が読む。
 # 人が読む図は docs/dependencies-diagrams/ と docs/dependencies-diff-diagrams/。
-# DependencyGraphTests が生成する。手で編集しない。
+# DependencyGraphGenerator が生成する。手で編集しない。
 #
 # ソースの字面から拾っているので厳密ではない。
-# - ファイル単位で参照を拾い、宣言する型すべてに割り当てる
 # - var で受けている依存は型名が現れないので出ない
-# - コメントと文字列リテラルは除いてから照合している
+# - 同一ファイルに宣言された型どうしには辺が出ない。[cofile] が補う
+# - メソッド本体の中の参照はファイル単位。弱い依存 dep として記録する
+# - 複数行にまたがる宣言は拾えない
 
 [types]
-AccumulationLevel Domain
-AddOutcome Domain
-AddResult Domain
-Allmaity Legacy
-BigText Legacy
-BranchFallSystem Legacy
-CloseInventory Legacy
-CloseManager Legacy
-Craft Legacy
-CraftButton Legacy
-Craft_set Legacy
-DamageSet Legacy
-Dropitem Legacy
-DynamicLayer Legacy
-Enemy Legacy
-ExchangeButton Legacy
-FieldCreator Legacy
-FirstSeedSet Legacy
-GameManager Legacy
-Info_set Legacy
-Ingredient Domain
-IngredientEntry Game
-Inventbutton Legacy
-Inventory Domain
-JoystickEffect Legacy
-JoystickEffect_ATK Legacy
-MS_Spawner Legacy
-MainCamera Legacy
-MapButton Legacy
-MiddleText Legacy
-OF_Spawner Legacy
-OutField Legacy
-Player2 Legacy
-PlayerDeath Legacy
-PlayerHp Legacy
-PlayerInventory Legacy
-QuestButton Legacy
-QuestManager Legacy
-Recipe Domain
-RecipeDefinition Game
-RemoveOutcome Domain
-RemoveResult Domain
-RewardUI Legacy
-Root Domain
-RootRegistry Domain
-RootUI Legacy
-RootsManager Legacy
-SaveData Legacy
-SaveSystem Legacy
-SceneFinisher Legacy
-SceneStarter Legacy
-Seeker Legacy
-SideJab Legacy
-Slime Legacy
-SortingDebuger Legacy
-SpawnerCandidate Legacy
-Sun2 Legacy
-TempAudio Legacy
-Title Legacy
-UpDownUI Legacy
-ViewSecurer Legacy
-Weapon Legacy
-WeaponBox Legacy
-Wink Legacy
+AccumulationLevel Domain enum
+AddOutcome Domain enum
+AddResult Domain struct
+Allmaity Legacy class
+BigText Legacy class
+BranchFallSystem Legacy class
+CloseInventory Legacy class
+CloseManager Legacy class
+Craft Legacy class
+CraftButton Legacy class
+Craft_set Legacy class
+DamageSet Legacy class
+Dropitem Legacy class
+DynamicLayer Legacy class
+Enemy Legacy class
+ExchangeButton Legacy class
+FieldCreator Legacy class
+FirstSeedSet Legacy struct
+GameManager Legacy class
+Info_set Legacy class
+Ingredient Domain struct
+IngredientEntry Game class
+Inventbutton Legacy class
+Inventory Domain class
+JoystickEffect Legacy class
+JoystickEffect_ATK Legacy class
+MS_Spawner Legacy class
+MainCamera Legacy class
+MapButton Legacy class
+MiddleText Legacy class
+OF_Spawner Legacy class
+OutField Legacy class
+Player2 Legacy class
+PlayerDeath Legacy class
+PlayerHp Legacy class
+PlayerInventory Legacy class
+QuestButton Legacy class
+QuestManager Legacy class
+Recipe Domain class
+RecipeDefinition Game class
+RemoveOutcome Domain enum
+RemoveResult Domain struct
+RewardUI Legacy class
+Root Domain class
+RootRegistry Domain class
+RootUI Legacy class
+RootsManager Legacy class
+SaveData Legacy class
+SaveSystem Legacy class
+SceneFinisher Legacy class
+SceneStarter Legacy class
+Seeker Legacy class
+SideJab Legacy class
+Slime Legacy class
+SortingDebuger Legacy class
+SpawnerCandidate Legacy class
+Sun2 Legacy class
+TempAudio Legacy class
+Title Legacy class
+UpDownUI Legacy class
+ViewSecurer Legacy class
+Weapon Legacy class
+WeaponBox Legacy class
+Wink Legacy class
 
 [cofile]
 AccumulationLevel Root RootRegistry
@@ -81,111 +82,583 @@ Ingredient Recipe
 IngredientEntry RecipeDefinition
 
 [edges]
-Allmaity -> GameManager
-Allmaity -> MiddleText
-Allmaity -> QuestManager
-CloseInventory -> TempAudio
-Craft -> Craft_set
-Craft -> Inventory
-Craft -> PlayerInventory
-Craft -> Recipe
-Craft -> RecipeDefinition
-CraftButton -> Craft
-Craft_set -> GameManager
-Dropitem -> PlayerInventory
-Enemy -> Player2
-Enemy -> QuestManager
-ExchangeButton -> RootsManager
-ExchangeButton -> TempAudio
-GameManager -> SceneFinisher
-Info_set -> GameManager
-Info_set -> Player2
-Info_set -> PlayerInventory
-Info_set -> TempAudio
-Info_set -> Weapon
-Ingredient -> Inventory
-IngredientEntry -> Ingredient
-IngredientEntry -> Recipe
-Inventbutton -> GameManager
-Inventbutton -> Info_set
-JoystickEffect -> Player2
-MapButton -> RootsManager
-OF_Spawner -> GameManager
-OF_Spawner -> MiddleText
-OF_Spawner -> QuestManager
-OF_Spawner -> Root
-OF_Spawner -> RootsManager
-OF_Spawner -> SaveData
-OF_Spawner -> SaveSystem
-OF_Spawner -> SceneStarter
-OF_Spawner -> Seeker
-Player2 -> Allmaity
-Player2 -> PlayerDeath
-Player2 -> SideJab
-Player2 -> TempAudio
-Player2 -> Weapon
-Player2 -> Wink
-PlayerDeath -> BigText
-PlayerDeath -> GameManager
-PlayerDeath -> Player2
-PlayerDeath -> RewardUI
-PlayerDeath -> Wink
-PlayerInventory -> AddOutcome
-PlayerInventory -> GameManager
-PlayerInventory -> Info_set
-PlayerInventory -> Inventbutton
-PlayerInventory -> Inventory
-PlayerInventory -> Player2
-PlayerInventory -> RemoveOutcome
-QuestButton -> GameManager
-QuestButton -> MiddleText
-QuestButton -> QuestManager
-QuestManager -> BigText
-QuestManager -> GameManager
-QuestManager -> RewardUI
-QuestManager -> RootsManager
-Recipe -> Inventory
-RecipeDefinition -> Ingredient
-RecipeDefinition -> Recipe
-RewardUI -> PlayerInventory
-RewardUI -> QuestManager
-RewardUI -> RootsManager
-RootUI -> AccumulationLevel
-RootUI -> QuestManager
-RootUI -> RootsManager
-RootsManager -> AccumulationLevel
-RootsManager -> GameManager
-RootsManager -> MS_Spawner
-RootsManager -> OF_Spawner
-RootsManager -> Root
-RootsManager -> RootRegistry
-SaveData -> GameManager
-SaveData -> Player2
-SaveData -> PlayerInventory
-SaveData -> QuestManager
-SaveData -> Sun2
-SaveSystem -> SaveData
-SceneFinisher -> GameManager
-SceneFinisher -> SaveData
-SceneFinisher -> SaveSystem
-SceneStarter -> GameManager
-SceneStarter -> OF_Spawner
-SceneStarter -> Player2
-SceneStarter -> QuestManager
-SceneStarter -> RewardUI
-SceneStarter -> RootsManager
-SceneStarter -> SaveData
-SceneStarter -> SaveSystem
-Seeker -> OF_Spawner
-Slime -> GameManager
-Slime -> Player2
-Slime -> QuestManager
-Slime -> RootsManager
-Sun2 -> MiddleText
-Sun2 -> QuestManager
-Sun2 -> RootsManager
-Weapon -> DamageSet
-Weapon -> OF_Spawner
-Weapon -> SpawnerCandidate
-Weapon -> TempAudio
-Weapon -> WeaponBox
+AddResult -> AddOutcome assoc
+Allmaity -> GameManager dep
+Allmaity -> MiddleText dep
+Allmaity -> QuestManager dep
+CloseInventory -> TempAudio dep
+Craft -> Craft_set dep
+Craft -> Inventory dep
+Craft -> PlayerInventory assoc
+Craft -> Recipe assoc
+Craft -> RecipeDefinition assoc
+CraftButton -> Craft assoc
+Craft_set -> GameManager dep
+Dropitem -> PlayerInventory assoc
+Enemy -> Player2 assoc
+Enemy -> QuestManager dep
+ExchangeButton -> RootsManager dep
+ExchangeButton -> TempAudio dep
+FieldCreator -> FirstSeedSet dep
+GameManager -> SceneFinisher dep
+Info_set -> GameManager dep
+Info_set -> Player2 dep
+Info_set -> PlayerInventory dep
+Info_set -> TempAudio dep
+Info_set -> Weapon dep
+Ingredient -> Inventory dep
+IngredientEntry -> Ingredient dep
+IngredientEntry -> Recipe dep
+Inventbutton -> GameManager dep
+Inventbutton -> Info_set dep
+Inventory -> AddResult dep
+Inventory -> RemoveResult dep
+JoystickEffect -> Player2 dep
+MapButton -> RootsManager dep
+OF_Spawner -> GameManager dep
+OF_Spawner -> MiddleText dep
+OF_Spawner -> QuestManager dep
+OF_Spawner -> Root assoc
+OF_Spawner -> RootsManager dep
+OF_Spawner -> SaveData dep
+OF_Spawner -> SaveSystem dep
+OF_Spawner -> SceneStarter dep
+OF_Spawner -> Seeker assoc
+Player2 -> Allmaity assoc
+Player2 -> PlayerDeath dep
+Player2 -> SideJab dep
+Player2 -> TempAudio dep
+Player2 -> Weapon dep
+Player2 -> Wink dep
+PlayerDeath -> BigText dep
+PlayerDeath -> GameManager dep
+PlayerDeath -> Player2 assoc
+PlayerDeath -> RewardUI dep
+PlayerDeath -> Wink dep
+PlayerInventory -> AddOutcome dep
+PlayerInventory -> GameManager dep
+PlayerInventory -> Info_set dep
+PlayerInventory -> Inventbutton dep
+PlayerInventory -> Inventory dep
+PlayerInventory -> Player2 dep
+PlayerInventory -> RemoveOutcome dep
+QuestButton -> GameManager dep
+QuestButton -> MiddleText dep
+QuestButton -> QuestManager dep
+QuestManager -> BigText dep
+QuestManager -> GameManager dep
+QuestManager -> RewardUI dep
+QuestManager -> RootsManager dep
+Recipe -> Ingredient assoc
+Recipe -> Inventory dep
+RecipeDefinition -> Ingredient dep
+RecipeDefinition -> IngredientEntry assoc
+RecipeDefinition -> Recipe dep
+RemoveResult -> RemoveOutcome assoc
+RewardUI -> PlayerInventory dep
+RewardUI -> QuestManager dep
+RewardUI -> RootsManager dep
+Root -> AccumulationLevel assoc
+RootRegistry -> Root assoc
+RootUI -> AccumulationLevel dep
+RootUI -> QuestManager dep
+RootUI -> RootsManager dep
+RootsManager -> AccumulationLevel dep
+RootsManager -> GameManager dep
+RootsManager -> MS_Spawner dep
+RootsManager -> OF_Spawner dep
+RootsManager -> Root dep
+RootsManager -> RootRegistry assoc
+SaveData -> GameManager dep
+SaveData -> Player2 dep
+SaveData -> PlayerInventory dep
+SaveData -> QuestManager dep
+SaveData -> Sun2 dep
+SaveSystem -> SaveData assoc
+SceneFinisher -> GameManager dep
+SceneFinisher -> SaveData dep
+SceneFinisher -> SaveSystem dep
+SceneStarter -> GameManager dep
+SceneStarter -> OF_Spawner dep
+SceneStarter -> Player2 dep
+SceneStarter -> QuestManager dep
+SceneStarter -> RewardUI dep
+SceneStarter -> RootsManager dep
+SceneStarter -> SaveData dep
+SceneStarter -> SaveSystem dep
+Seeker -> OF_Spawner dep
+Slime -> GameManager dep
+Slime -> Player2 assoc
+Slime -> QuestManager dep
+Slime -> RootsManager dep
+Sun2 -> MiddleText dep
+Sun2 -> QuestManager dep
+Sun2 -> RootsManager dep
+Weapon -> DamageSet dep
+Weapon -> OF_Spawner dep
+Weapon -> SpawnerCandidate dep
+Weapon -> TempAudio dep
+Weapon -> WeaponBox dep
+
+[members]
+AccumulationLevel|High|High
+AccumulationLevel|Medium|Medium
+AccumulationLevel|Minimal|Minimal
+AccumulationLevel|Small|Small
+AccumulationLevel|Stampede|Stampede
+AddOutcome|NoSpace|NoSpace
+AddOutcome|Placed|Placed
+AddOutcome|Stacked|Stacked
+AddResult|AddResult|+ AddResult(AddOutcome, int, int)
+AddResult|Outcome|+ AddOutcome Outcome
+AddResult|SlotIndex|+ int SlotIndex
+AddResult|Stock|+ int Stock
+Allmaity|Allmaity_Play|+ Allmaity_Play(int)
+Allmaity|Prepare_Button|+ Prepare_Button(string)
+Allmaity|Trash_Button|+ Trash_Button(string)
+Allmaity|rect|+ RectTransform rect
+BigText|Bigtxt_Anim2|- Bigtxt_Anim2() IEnumerator
+BigText|Bigtxt_Anim|+ Bigtxt_Anim(string, string)
+BigText|flame|+ int flame
+BigText|image1|+ Image image1
+BigText|image2|+ Image image2
+BigText|txt1|+ TextMeshProUGUI txt1
+BigText|txt2|+ TextMeshProUGUI txt2
+BigText|waittime|+ float waittime
+BranchFallSystem|BranchDrop|- BranchDrop()
+BranchFallSystem|Start|- Start()
+BranchFallSystem|branch|- Sprite branch
+BranchFallSystem|dropcapsule|- GameObject dropcapsule
+BranchFallSystem|minusrange|- Vector3 minusrange
+BranchFallSystem|plusrange|- Vector3 plusrange
+CloseInventory|CloseClick|+ CloseClick()
+CloseInventory|OpenClick|+ OpenClick()
+CloseInventory|center|+ RectTransform center
+CloseInventory|rt|+ RectTransform rt
+CloseManager|CloseClick|+ CloseClick()
+CloseManager|OpenClick|+ OpenClick()
+CloseManager|center|+ RectTransform center
+CloseManager|deleteLength|+ int deleteLength
+CloseManager|rt|+ RectTransform rt
+Craft|Awake|- Awake()
+Craft|CraftStart|+ CraftStart()
+Craft|Craftprepare2|+ Craftprepare2(string)
+Craft|CurrentInventory|- CurrentInventory() Inventory
+Craft|Image1|+ Image Image1
+Craft|Image2|+ Image Image2
+Craft|Image3|+ Image Image3
+Craft|Image4|+ Image Image4
+Craft|Put_Materials|- Put_Materials(string)
+Craft|SetSlotActive|- SetSlotActive(int, bool)
+Craft|SlotCount|- int SlotCount
+Craft|Start|- Start()
+Craft|WidgetsPerSlot|- int WidgetsPerSlot
+Craft|current|- Recipe current
+Craft|demand1|+ Text demand1
+Craft|demand2|+ Text demand2
+Craft|demand3|+ Text demand3
+Craft|demand4|+ Text demand4
+Craft|demandTexts|- Text[] demandTexts
+Craft|dropcapsule|+ GameObject dropcapsule
+Craft|icons|- Image[] icons
+Craft|material1|+ Text material1
+Craft|material2|+ Text material2
+Craft|material3|+ Text material3
+Craft|material4|+ Text material4
+Craft|materialTexts|- Text[] materialTexts
+Craft|matset|+ Transform matset
+Craft|pi|+ PlayerInventory pi
+Craft|recipeDefinitions|+ RecipeDefinition[] recipeDefinitions
+Craft|recipes|- Dictionary<string, Recipe> recipes
+Craft|set|+ GameObject set
+Craft|supply1|+ Text supply1
+Craft|supply2|+ Text supply2
+Craft|supply3|+ Text supply3
+Craft|supply4|+ Text supply4
+Craft|supplyTexts|- Text[] supplyTexts
+CraftButton|CraftPrepare1|+ CraftPrepare1()
+CraftButton|craft|+ Craft craft
+Craft_set|Put_Info|+ Put_Info(string)
+Craft_set|button|+ Button button
+Craft_set|mainImage|+ Image mainImage
+Craft_set|nametxt|+ Text nametxt
+Craft_set|txt|+ Text txt
+DamageSet|Start|- Start()
+DamageSet|Text|+ Text(int)
+DamageSet|Update|- Update()
+DamageSet|d|- int d
+DamageSet|origin|- Vector3 origin
+DamageSet|timer|- float timer
+DamageSet|txt|+ Text txt
+Dropitem|FixedUpdate|- FixedUpdate()
+Dropitem|OnDestroy|- OnDestroy()
+Dropitem|OnTriggerEnter|- OnTriggerEnter(Collider)
+Dropitem|Start|- Start()
+Dropitem|durability|- int durability
+Dropitem|pi|- PlayerInventory pi
+DynamicLayer|LayerProcess|- LayerProcess()
+DynamicLayer|Start|- Start()
+DynamicLayer|enumerator|- enumerator() IEnumerator
+DynamicLayer|isGroup|+ bool isGroup
+DynamicLayer|recent_z|- float recent_z
+DynamicLayer|sr|+ SpriteRenderer sr
+DynamicLayer|unique_values|- int[] unique_values
+DynamicLayer|unique_value|- int unique_value
+Enemy|Death|- Death()
+Enemy|FixedUpdate|- FixedUpdate()
+Enemy|Level|+ int Level
+Enemy|OnTriggerEnter|- OnTriggerEnter(Collider)
+Enemy|RandomAction|- RandomAction()
+Enemy|Start|- Start()
+Enemy|ValueChange|+ ValueChange()
+Enemy|anim|- Animator anim
+Enemy|attitude|- Vector3 attitude
+Enemy|dropcapsule|+ GameObject dropcapsule
+Enemy|drops|+ List<string> drops
+Enemy|hp|+ Slider hp
+Enemy|move|- bool move
+Enemy|power|+ float power
+Enemy|p|- Player2 p
+Enemy|rb|- Rigidbody rb
+Enemy|speed|+ float speed
+ExchangeButton|Anim_Exchange1|- Anim_Exchange1() IEnumerator
+ExchangeButton|Anim_Exchange2|- Anim_Exchange2() IEnumerator
+ExchangeButton|Exchange_UI|+ Exchange_UI()
+ExchangeButton|center|+ RectTransform center
+ExchangeButton|is_pi|+ bool is_pi
+ExchangeButton|pi|+ RectTransform pi
+ExchangeButton|rm|+ RectTransform rm
+FieldCreator|SeedCreate|+ SeedCreate() FirstSeedSet
+FirstSeedSet|seed|+ string seed
+FirstSeedSet|spownerpos|+ Vector3 spownerpos
+FirstSeedSet|uipos|+ Vector2 uipos
+GameManager|Awake|- Awake()
+GameManager|GM_singleton|- bool GM_singleton
+GameManager|P_singleton|- bool P_singleton
+GameManager|SceneTrans|+ SceneTrans(string)
+GameManager|coin|+ TextMeshProUGUI coin
+GameManager|entered_scene|+ string entered_scene
+GameManager|itemdata|+ TextAsset itemdata
+GameManager|items|+ List<string[]> items
+GameManager|maincanvas|+ Transform maincanvas
+GameManager|origin_player|+ GameObject origin_player
+Info_set|Delete_Info|+ Delete_Info()
+Info_set|Install|+ Install()
+Info_set|Show_Info2|+ Show_Info2(string) int
+Info_set|Start|- Start()
+Info_set|buttonsprite|+ Sprite buttonsprite
+Info_set|button|+ Button button
+Info_set|index|- int index
+Info_set|mainImage|+ Image mainImage
+Info_set|nametxt|+ Text nametxt
+Info_set|txt|+ Text txt
+Info_set|weapon1|+ Sprite weapon1
+Info_set|weapon2|+ Sprite weapon2
+Ingredient|Amount|+ int Amount
+Ingredient|DisplayName|+ string DisplayName
+Ingredient|Ingredient|+ Ingredient(string, string, int)
+Ingredient|ItemId|+ string ItemId
+IngredientEntry|amount|+ int amount
+IngredientEntry|displayName|+ string displayName
+IngredientEntry|itemId|+ string itemId
+Inventbutton|Ready|+ Ready(string, int)
+Inventbutton|Show_Info|+ Show_Info()
+Inventbutton|image|- Image image
+Inventbutton|target|- string target
+Inventbutton|txt|- Text txt
+Inventory|Add|+ Add(string, System.Func<int>) AddResult
+Inventory|Add|+ Add(string, int) AddResult
+Inventory|CountOf|+ CountOf(string) int
+Inventory|EmptySlot|+ string EmptySlot
+Inventory|Inventory|+ Inventory(IList<string>, IList<int>, IList<int>)
+Inventory|Remove|+ Remove(string) RemoveResult
+Inventory|SlotCount|+ int SlotCount
+Inventory|_items|- IList<string> _items
+Inventory|_maxStocks|- IList<int> _maxStocks
+Inventory|_stocks|- IList<int> _stocks
+JoystickEffect|Update|- Update()
+JoystickEffect|down|+ GameObject down
+JoystickEffect|left|+ GameObject left
+JoystickEffect|right|+ GameObject right
+JoystickEffect|up|+ GameObject up
+JoystickEffect_ATK|Update|- Update()
+JoystickEffect_ATK|down|+ GameObject down
+JoystickEffect_ATK|joystick|+ FixedJoystick joystick
+JoystickEffect_ATK|left|+ GameObject left
+JoystickEffect_ATK|right|+ GameObject right
+JoystickEffect_ATK|up|+ GameObject up
+MS_Spawner|Spawn2|- Spawn2()
+MS_Spawner|Spawn|+ Spawn()
+MS_Spawner|enemy|+ GameObject enemy
+MS_Spawner|expos|+ Vector4 expos
+MS_Spawner|seeker|+ GameObject seeker
+MS_Spawner|spawnable|+ bool spawnable
+MS_Spawner|spawnpos|- Vector3 spawnpos
+MS_Spawner|spawnrange|+ float spawnrange
+MainCamera|FixedUpdate|- FixedUpdate()
+MainCamera|Start|- Start()
+MainCamera|playerpos|- Transform playerpos
+MapButton|MapClick|+ MapClick()
+MiddleText|Midtxt_Anim2|- Midtxt_Anim2() IEnumerator
+MiddleText|Midtxt_Anim|+ Midtxt_Anim(string)
+MiddleText|Start|- Start()
+MiddleText|c|- Coroutine c
+MiddleText|flame|+ int flame
+MiddleText|image|+ Image image
+MiddleText|origin|- Vector3 origin
+MiddleText|txt|+ TextMeshProUGUI txt
+MiddleText|waittime|+ float waittime
+OF_Spawner|Spawn2|+ Spawn2(Vector3)
+OF_Spawner|SpawnerBreak|+ SpawnerBreak(int)
+OF_Spawner|Spawn|+ Spawn()
+OF_Spawner|Stampede|+ Stampede(int)
+OF_Spawner|Start|- Start()
+OF_Spawner|enemy|+ GameObject enemy
+OF_Spawner|expos|+ Vector4 expos
+OF_Spawner|loadEnemiesName|+ List<string> loadEnemiesName
+OF_Spawner|loadEnemiesPos|+ List<Vector3> loadEnemiesPos
+OF_Spawner|n|- int n
+OF_Spawner|root|- Root root
+OF_Spawner|seeker_cs|- Seeker seeker_cs
+OF_Spawner|seeker|+ GameObject seeker
+OF_Spawner|spawnable|+ bool spawnable
+OF_Spawner|spawnerhp|+ int spawnerhp
+OF_Spawner|spawnrange|+ float spawnrange
+OutField|Start|- Start()
+OutField|Update|- Update()
+Player2|ATK_singleton|- bool ATK_singleton
+Player2|AttackDown|+ AttackDown()
+Player2|AttackModeFinish|- AttackModeFinish()
+Player2|AttackUp|+ AttackUp()
+Player2|Attack|+ Attack() IEnumerator
+Player2|HpChange|+ HpChange()
+Player2|Jump|+ Jump()
+Player2|OnTriggerEnter|- OnTriggerEnter(Collider)
+Player2|OnTriggerExit|- OnTriggerExit(Collider)
+Player2|PlayerHurt_Graphic|- PlayerHurt_Graphic() IEnumerator
+Player2|Player_Hurt|+ Player_Hurt(int, Vector3)
+Player2|Start|- Start()
+Player2|Update|- Update()
+Player2|allmaity|+ Allmaity allmaity
+Player2|animator|+ Animator animator
+Player2|atk_mode|- bool atk_mode
+Player2|body|+ Transform body
+Player2|character|+ Character character
+Player2|cool|+ bool cool
+Player2|expos|+ Vector4 expos
+Player2|footstep|+ AudioSource footstep
+Player2|horizontalKey|+ float horizontalKey
+Player2|joystick_atk|+ FixedJoystick joystick_atk
+Player2|joystick|+ FixedJoystick joystick
+Player2|jumpbutton|+ Button jumpbutton
+Player2|on_ground|+ bool on_ground
+Player2|playerhp|+ Slider playerhp
+Player2|playerrb|+ Rigidbody playerrb
+Player2|speed|+ float speed
+Player2|tempaudio|+ AudioSource tempaudio
+Player2|verticalKey|+ float verticalKey
+Player2|weapon|+ Transform weapon
+PlayerDeath|DeathMainProcess|+ DeathMainProcess()
+PlayerDeath|ReviveMainProcess|- ReviveMainProcess() IEnumerator
+PlayerDeath|p|- Player2 p
+PlayerHp|Update|- Update()
+PlayerHp|ValueChange|+ ValueChange()
+PlayerHp|slider|+ Slider slider
+PlayerHp|time|- float time
+PlayerHp|txt|+ TextMeshProUGUI txt
+PlayerInventory|CHILDPLUS|- int CHILDPLUS
+PlayerInventory|GetMaxStock|- GetMaxStock(string) int
+PlayerInventory|LoadInventory|+ LoadInventory(string, int) int
+PlayerInventory|Start|- Start()
+PlayerInventory|UnloadInventory|+ UnloadInventory(string)
+PlayerInventory|buttonsprite|+ Sprite buttonsprite
+PlayerInventory|items|+ List<string> items
+PlayerInventory|maxstocks|+ List<int> maxstocks
+PlayerInventory|stocks|+ List<int> stocks
+PlayerInventory|wi_button|+ GameObject wi_button
+QuestButton|Alert|- Alert()
+QuestButton|QuestOrder|+ QuestOrder()
+QuestButton|Start|- Start()
+QuestManager|ClearUI|- ClearUI(int, string)
+QuestManager|CreateQuest|+ CreateQuest(string, string, string, string)
+QuestManager|ShowQuestUI|+ ShowQuestUI(string)
+QuestManager|StartQuest|+ StartQuest()
+QuestManager|Start|- Start()
+QuestManager|SyncQuestSub|+ SyncQuestSub(int, string)
+QuestManager|SyncQuest|+ SyncQuest(string)
+QuestManager|ordered_id|+ string ordered_id
+QuestManager|progress|+ Text progress
+QuestManager|questUI|+ GameObject questUI
+QuestManager|quests|+ List<string[]> quests
+QuestManager|rewards|+ List<string[]> rewards
+Recipe|CanCraftWith|+ CanCraftWith(Inventory) bool
+Recipe|Ingredients|+ IReadOnlyList<Ingredient> Ingredients
+Recipe|ProductId|+ string ProductId
+Recipe|Recipe|+ Recipe(string, IReadOnlyList<Ingredient>)
+RecipeDefinition|ToDomain|+ ToDomain() Recipe
+RecipeDefinition|ingredients|+ List<IngredientEntry> ingredients
+RecipeDefinition|productId|+ string productId
+RemoveOutcome|Decremented|Decremented
+RemoveOutcome|NotFound|NotFound
+RemoveOutcome|SlotCleared|SlotCleared
+RemoveResult|Outcome|+ RemoveOutcome Outcome
+RemoveResult|RemoveResult|+ RemoveResult(RemoveOutcome, int, int)
+RemoveResult|SlotIndex|+ int SlotIndex
+RemoveResult|Stock|+ int Stock
+RewardUI|FinQuest|+ FinQuest()
+RewardUI|InputInfo|+ InputInfo()
+RewardUI|resulttxt|+ TextMeshProUGUI resulttxt
+RewardUI|rewardUI_index|+ int rewardUI_index
+RewardUI|rewardUI_show|+ int rewardUI_show
+RewardUI|sidetxt|+ TextMeshProUGUI sidetxt
+RewardUI|toptxt|+ TextMeshProUGUI toptxt
+Root|AccumulateDaily|+ AccumulateDaily()
+Root|Accumulation|+ int Accumulation
+Root|AdvanceDay|+ AdvanceDay()
+Root|Calm|+ Calm(int)
+Root|Clamp0|- Clamp0(int) int
+Root|DailyAccumulationGain|+ int DailyAccumulationGain
+Root|DailyProgressLoss|+ int DailyProgressLoss
+Root|Danger|+ int Danger
+Root|DecayProgressDaily|+ DecayProgressDaily()
+Root|Gain|+ Gain(int)
+Root|HasSpawnPoint|+ bool HasSpawnPoint
+Root|Id|+ string Id
+Root|Level|+ AccumulationLevel Level
+Root|Name|+ string Name
+Root|PlaceSpawnPoint|+ PlaceSpawnPoint(float, float, float)
+Root|Progress|+ int Progress
+Root|Root|+ Root(string, string, string, int, float, float)
+Root|Seed|+ string Seed
+Root|SpawnX|+ float SpawnX
+Root|SpawnY|+ float SpawnY
+Root|SpawnZ|+ float SpawnZ
+Root|UiX|+ float UiX
+Root|UiY|+ float UiY
+RootRegistry|AdvanceDay|+ AdvanceDay()
+RootRegistry|All|+ IReadOnlyList<Root> All
+RootRegistry|Clear|+ Clear()
+RootRegistry|Count|+ int Count
+RootRegistry|Find|+ Find(string) Root
+RootRegistry|TryAdd|+ TryAdd(Root) bool
+RootRegistry|_roots|- List<Root> _roots
+RootUI|Show_QM|+ Show_QM()
+RootUI|Start|- Start()
+RootUI|center|- Transform center
+RootUI|qm|- Transform qm
+RootsManager|Dayover|+ Dayover()
+RootsManager|RootCreate|+ RootCreate(string, string, string, float, float, int)
+RootsManager|RootDecode|+ RootDecode(string)
+RootsManager|RootTrick|- RootTrick(string)
+RootsManager|RootUIShow|+ RootUIShow()
+RootsManager|Roots|+ RootRegistry Roots
+RootsManager|StampedeJudge|+ StampedeJudge(Root)
+RootsManager|Start|- Start()
+RootsManager|capacity|+ Text capacity
+RootsManager|rootset|+ GameObject rootset
+SaveData|LoadDynamic|+ LoadDynamic()
+SaveData|LoadStatic|+ LoadStatic()
+SaveData|SyncDynamic|+ SyncDynamic()
+SaveData|SyncStatic|+ SyncStatic()
+SaveData|coin|+ int coin
+SaveData|daytime|+ int daytime
+SaveData|enemies|+ List<string> enemies
+SaveData|entered_scene|+ string entered_scene
+SaveData|items|+ List<string> items
+SaveData|maxstocks|+ List<int> maxstocks
+SaveData|playerhp|+ int playerhp
+SaveData|quests|+ List<string[]> quests
+SaveData|respawns|+ List<Vector3> respawns
+SaveData|respawn|+ Vector3 respawn
+SaveData|rewards|+ List<string[]> rewards
+SaveData|saveObjectsPos|+ List<Vector3> saveObjectsPos
+SaveData|saveObjectsScene|+ List<string> saveObjectsScene
+SaveData|saveObjects|+ List<string> saveObjects
+SaveData|stocks|+ List<int> stocks
+SaveSystem|Awake|- Awake()
+SaveSystem|Load2|- Load2() IEnumerator
+SaveSystem|Load|+ Load()
+SaveSystem|Save|+ Save()
+SaveSystem|filePath|- string filePath
+SaveSystem|savedata|+ SaveData savedata
+SceneFinisher|SceneFinish|+ SceneFinish()
+SceneFinisher|type|+ string type
+SceneStarter|JumpReset|- JumpReset(Player2)
+SceneStarter|SpawnerDecide|- SpawnerDecide()
+SceneStarter|Start|- Start()
+SceneStarter|exposition|+ Vector4 exposition
+SceneStarter|playerspowner|+ Transform playerspowner
+SceneStarter|type|+ string type
+Seeker|SeekPosition|+ SeekPosition(float, Vector4)
+Seeker|SetPosition|- SetPosition()
+Seeker|Start|- Start()
+SideJab|SideJabPlay|+ SideJabPlay(int) IEnumerator
+Slime|Death|- Death()
+Slime|FixedUpdate|- FixedUpdate()
+Slime|Level|+ int Level
+Slime|OnCollisionEnter|- OnCollisionEnter(Collision)
+Slime|RandomAction|- RandomAction()
+Slime|Start|- Start()
+Slime|anim|- Animator anim
+Slime|attitude|- Vector3 attitude
+Slime|dropcapsule|+ GameObject dropcapsule
+Slime|drops|+ List<string> drops
+Slime|hp|+ Slider hp
+Slime|isDead|- bool isDead
+Slime|move|- bool move
+Slime|power|+ float power
+Slime|p|- Player2 p
+Slime|rb|- Rigidbody rb
+Slime|speed|+ float speed
+SortingDebuger|Start|- Start()
+SpawnerCandidate|Candidate|+ Candidate(int)
+SpawnerCandidate|hp|- int hp
+Sun2|DayStart|- DayStart()
+Sun2|Proto|- Proto()
+Sun2|Start|- Start()
+Sun2|SunAround|- SunAround() IEnumerator
+Sun2|SunEvent|- SunEvent(bool)
+Sun2|aroundtime|+ float aroundtime
+Sun2|daytime|+ int daytime
+Sun2|lighting|+ Light lighting
+Sun2|maxIntensity|- float maxIntensity
+Sun2|minIntensity|- float minIntensity
+Sun2|now|- float now
+Sun2|questplan|+ List<string> questplan
+Sun2|state|- float state
+TempAudio|Start|- Start()
+TempAudio|TempAudioPlay|+ TempAudioPlay(string)
+TempAudio|clips|+ List<AudioClip> clips
+TempAudio|tempaudio|- AudioSource tempaudio
+Title|Load|+ Load()
+Title|Start|- Start()
+Title|colorset|- colorset() IEnumerator
+Title|txt|+ TextMeshProUGUI txt
+UpDownUI|Start|- Start()
+UpDownUI|UpDown|- UpDown() IEnumerator
+UpDownUI|mode|- int mode
+UpDownUI|rect|+ RectTransform rect
+ViewSecurer|OnTriggerEnter|- OnTriggerEnter(Collider)
+ViewSecurer|OnTriggerExit|- OnTriggerExit(Collider)
+ViewSecurer|alpha|+ float alpha
+ViewSecurer|target|- Color target
+Weapon|AttackWeaponProcess|+ AttackWeaponProcess(float) IEnumerator
+Weapon|OnTriggerEnter|- OnTriggerEnter(Collider)
+Weapon|Start|- Start()
+Weapon|box|- BoxCollider box
+Weapon|damage_set|+ GameObject damage_set
+Weapon|knockback|+ float knockback
+Weapon|power|+ int power
+Weapon|pw_durability|+ Slider pw_durability
+WeaponBox|Start|- Start()
+WeaponBox|Weapon_App|+ Weapon_App(string)
+WeaponBox|Weapon_Des|+ Weapon_Des()
+Wink|DeathEyesClose|+ DeathEyesClose(float)
+Wink|Update|- Update()
+Wink|close|+ Sprite close
+Wink|deatheyes|+ SpriteRenderer deatheyes
+Wink|is_close|- bool is_close
+Wink|open|+ Sprite open
+Wink|play_eyeclose|+ bool play_eyeclose
+Wink|sr|+ SpriteRenderer sr
+Wink|time|- float time

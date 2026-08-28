@@ -31,6 +31,7 @@
     <Compile Include="../../Assets/_Project/Tests/Domain/**/*.cs" />
     <!-- dotnet 専用。Unity 側に置くと UnityEngine 非依存の前提が崩れる -->
     <Compile Include="DomainDiagramTests.cs" />
+    <Compile Include="DependencyGraphGenerator.cs" />
     <Compile Include="DependencyGraphTests.cs" />
     <Compile Include="SliceDiagramTests.cs" />
   </ItemGroup>

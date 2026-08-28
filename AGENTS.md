@@ -33,7 +33,7 @@ Editor が閉じていると全コマンドが失敗する。その場合は起�
 
 ## クラスを変えた後
 
-変えた後は `dotnet test tests/Domain.Tests/Domain.Tests.csproj` で素データを更新し、`./tools/diagram-diff.ps1` で差分図を出し、現状図を直す（[D-009]）。
+`structure-diff` スキルを使う。手順と書式はそこにある（[D-009]）。
 
 ## 禁止
 

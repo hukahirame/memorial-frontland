@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "diagram-preview",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "C:/Users/tokut/AppData/Local/Temp/claude/C--Users-tokut-Cloud-Repositories-Memorial-Floor/565f4ad9-cfad-4877-8076-27169f1a5faf/scratchpad/preview"],
+      "port": 8765
+    }
+  ]
+}
