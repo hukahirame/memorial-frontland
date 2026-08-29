@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <!--
     Unity を起動せずに Domain 層を検証するためのプロジェクト。
@@ -31,9 +31,8 @@
     <Compile Include="../../Assets/_Project/Tests/Domain/**/*.cs" />
     <!-- dotnet 専用。Unity 側に置くと UnityEngine 非依存の前提が崩れる -->
     <Compile Include="DependencyGraphGenerator.cs" />
-    <Compile Include="DependencyGraphTests.cs" />
-    <Compile Include="SliceDiagramGenerator.cs" />
-    <Compile Include="SliceDiagramTests.cs" />
+    <Compile Include="SliceTable.cs" />
+    <Compile Include="SliceCoverageTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

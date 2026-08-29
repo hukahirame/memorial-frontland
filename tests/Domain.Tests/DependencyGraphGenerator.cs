@@ -20,7 +20,6 @@ namespace MemorialFloor.Domain.Tests
     /// </summary>
     public static class DependencyGraphGenerator
     {
-        public const string OutputPath = "docs/dependencies-diagrams/graph.txt";
 
         private static readonly (string Layer, string Path)[] Roots =
         {

@@ -1,0 +1,18 @@
+﻿# 関心事スライスの定義。SliceCoverageTests が読む。
+#
+# すべての型がちょうど1つの核に入っていること。入っていない型があるとテストが落ちる。
+# 核がファイルなら、そのファイルが宣言する型に展開する（道の後方一致）。
+# 型名ならその型そのもの。この表はコードの索引でもある。
+#
+# <核: ファイルか型を空白区切り> | <名前> | <一行説明>
+Domain/Root.cs RootsManager RootUI                                                                    | 根源 🌳 | 根源の素性と、攻略度・危険度・蓄積値の規則。
+Domain/Inventory.cs PlayerInventory Inventbutton CloseInventory Info_set WeaponBox                    | 持ち物 🎒 | 所持品の追加・削除。スロットと重ねの規則を持つ。
+Domain/Recipe.cs RecipeDefinition.cs Craft CraftButton Craft_set ExchangeButton                       | クラフト 🔨 | レシピの定義と、素材が足りているかの判定。
+Domain/Quest.cs QuestManager QuestButton RewardUI                                                     | クエスト 📜 | 依頼の受注と達成判定、報酬の受け渡し。
+Domain/Day.cs Sun2                                                                                    | 日の進行 ☀️ | 1日を進める側。根源とクエストとセーブを同時に叩く。
+SaveSystem SaveData                                                                                   | セーブ 💾 | 進行状況の保存と復元。
+Player2 PlayerHp PlayerDeath Weapon SideJab JoystickEffect JoystickEffect_ATK Allmaity Wink DamageSet | プレイヤー 🚶 | 操作、体力、攻撃、死亡。
+Enemy Slime Seeker MS_Spawner OF_Spawner SpawnerCandidate                                             | 敵とスポーン 👾 | 敵の出現位置と追跡、被弾。
+FieldCreator FirstSeedSet OutField BranchFallSystem Dropitem                                          | 外フィールド 🌲 | 地形の生成と、木を切って素材が落ちるまで。
+GameManager SceneStarter SceneFinisher Title MapButton                                                | シーン遷移 🚪 | どのシーンに入り、何を持ち越すか。
+MainCamera DynamicLayer ViewSecurer SortingDebuger TempAudio UpDownUI CloseManager BigText MiddleText | 表示と演出 🎥 | カメラ、重ね順、効果音、共通の文字表示。

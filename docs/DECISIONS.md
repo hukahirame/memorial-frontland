@@ -1,4 +1,4 @@
-# 判断記録（ADR）
+﻿# 判断記録（ADR）
 
 <!--
 このファイルの目的:
@@ -163,7 +163,7 @@ scope: Assets/_Project/Tests/
 この理由が失われると規則が恣意的に見えるため、必ず参照できる状態に保つこと。
 
 ## [D-009] 構造の確認は、生成した差分図と手で維持する現状図の二段で行う
-status: Superseded by [D-011]（二段構成は残る。現状図を人が維持する部分だけが覆る）
+status: Superseded by [D-017]（[D-011] が現状図の維持を覆し、[D-017] が図そのものを廃止した）
 date: 2026-08-28
 scope: docs/dependencies-diagrams, docs/dependencies-diff-diagrams, tools/diagram-diff.ps1
 
@@ -227,7 +227,7 @@ Legacy 全体を書き換える必要もない。
 再び見つかったとき。そのときは (c) を検討する。
 
 ## [D-011] 現状図も生成する。切り方は Domain のファイル分割に従う
-status: Accepted
+status: Superseded by [D-017]
 date: 2026-08-28
 scope: docs/dependencies-diagrams, tests/Domain.Tests/SliceDiagramGenerator.cs, .claude/skills/class-diff-diagram
 
@@ -273,7 +273,7 @@ scope: docs/dependencies-diagrams, tests/Domain.Tests/SliceDiagramGenerator.cs, 
 [D-009] が `structure-diff/` と書いているのは誤りで、この名前が正しい。
 
 ## [D-012] Legacy の関心事は表で名指しする。ファイル構成からは導かない
-status: Accepted
+status: Superseded by [D-017]
 date: 2026-08-28
 scope: docs/dependencies-diagrams, .claude/skills/class-diff-diagram
 
@@ -421,3 +421,31 @@ static のフラグとリストが残り、2本目以降が落ちるため（[D-
 の一方向依存による）。改名がコンパイルではなく実行時に落ちる点はスモークテスト
 として許容する。判断が誤りだった場合の検出条件: 例外は出ないが壊れている
 不具合を、この網が続けて見逃すこと。
+
+## [D-017] 依存を図にする仕組みを廃止し、型の被覆検査だけ残す
+status: Accepted
+date: 2026-08-30
+scope: docs/slices.txt, tests/Domain.Tests/
+
+**背景** — 現状図11枚と差分図を生成し、`dotnet test` が作り直していた。
+図は人間が読むためのもので、エージェントには読ませない前提だった（AGENTS.md の禁止）。
+つまり生成物の読み手は1人しかおらず、その1人も参照していなかった。
+一方で生成器は 712 行あり、C# の読み取りを正規表現で行っていた。
+
+**検討した選択肢** —
+(a) 図の生成を続ける。→ 却下。**読み手が実際に読んでいない生成物は、
+正しさを誰も検証しないまま古くなる。**図の再生成が毎回の差分に出るぶん、
+コミットの意味を薄める代償だけが残る。
+(b) 検査ごと全部やめる。→ 却下。型を足したとき関心事への割り当てを忘れる事故は
+実際に起きており（`Day.cs` の3型）、検査がそれを止めた。**出力をやめる判断は、
+その出力を作る過程で得ていた検査までやめる理由にはならない。**
+
+**決定** — 現状図・差分図の生成を廃止する。`docs/dependencies-diagrams/`、
+`docs/dependencies-diff-diagrams/`、`tools/diagram-diff.ps1` を削除する。
+スライス表は `docs/slices.txt` に移し、「すべての型がちょうど1つの核に入っている」
+検査だけを残す。`DependencyGraphGenerator.Generate()` は検査が型の一覧を得るために
+残すが、ファイルには書き出さない。
+
+**帰結** — 構造の変化を1枚で見る手段が無くなる。git diff から読み取るしかない。
+判断が誤りだった場合の検出条件: 複数クラスをまたぐ変更で「何を参照しなくなったか」が
+分からず、同じ調査を繰り返すこと。
