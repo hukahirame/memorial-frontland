@@ -28,7 +28,7 @@ public class SaveData
     {
         playerhp = (int)Player2.playerhp.value;
         entered_scene = GameManager.entered_scene;
-        daytime = Sun2.daytime;
+        daytime = Sun2.Cycle.ElapsedSeconds;
         SyncDynamic();
     }
 
@@ -67,7 +67,7 @@ public class SaveData
     {
         Player2.playerhp.value = playerhp;
         GameManager.entered_scene = entered_scene;
-        Sun2.daytime = daytime;
+        Sun2.Cycle.SetElapsed(daytime);
         LoadDynamic();
     }
 

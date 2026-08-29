@@ -1,16 +1,18 @@
 ﻿using MemorialFloor.Domain;
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
 
 public class Sun2 : MonoBehaviour
 {
-    public static int daytime = 60;//零時からの経過時間(秒)
-    public float aroundtime = 120; // 1日のゲーム内時間(秒)
-    private float now = 0;
-    private float state = 0;
+    /// <summary>1日の経過。所有者はここ1つ（QuestManager.Quests と同じ形）</summary>
+    public static readonly DayCycle Cycle = new DayCycle();
 
-    public static List<string> questplan = new List<string>();
+    /// <summary>調査クエストの発行計画。シーンを跨いで持ち越す</summary>
+    public static readonly DayPlan Plan = new DayPlan();
+
+    // 名前を変えるとシーンの値が外れるため、公開をやめても名前は据え置く（[D-007]）
+    [SerializeField] private float aroundtime = 120; // 1日のゲーム内時間(秒)
+
     [SerializeField] private Light lighting;
 
     private float maxIntensity = 1.8f;
@@ -21,96 +23,44 @@ public class Sun2 : MonoBehaviour
         StartCoroutine(SunAround());
     }
 
-    IEnumerator SunAround()
+    private IEnumerator SunAround()
     {
         while (true)
         {
-            now = daytime / (aroundtime / 24); //0～24.0時
-
-            if (daytime >= aroundtime) //零時
+            if (Cycle.IsDayOver(aroundtime)) //零時
             {
-                daytime = 0;
+                Cycle.Reset();
                 GameObject.FindWithTag("RootsManager").GetComponent<RootsManager>().Dayover();
             }
-            else if (Mathf.FloorToInt(now) == 4) //夜明け
-            {
-                SunEvent(true);
-            }
-            else if (Mathf.FloorToInt(now) == 5) //デイリー更新 + 夜明け終了
-            {
-                lighting.intensity = maxIntensity;
-                DayStart();
-            }
-            else if (Mathf.FloorToInt(now) == 16) //日没
-            {
-                SunEvent(false);
-            }
-            else if (Mathf.FloorToInt(now) == 17) //日没終了
-            {
-                lighting.intensity = minIntensity;
-            }
+
+            lighting.intensity = DayClock.LightIntensity(
+                Cycle.HourAt(aroundtime), minIntensity, maxIntensity);
+
             yield return new WaitForSeconds(1f);
-            daytime++;
+            Cycle.Advance();
+
+            //5時の境界を跨いだ刻みだけ。旧実装は5時台の毎秒（実5秒＝約5回）呼んでいた
+            if (Cycle.Entered(DayClock.MorningHour, aroundtime)) DayStart();
         }
     }
-
-    private void SunEvent(bool sunbreak) //毎秒呼出
-    {
-        state = now - Mathf.Floor(now); //nowの小数部分
-
-        if (sunbreak) lighting.intensity = 1.5f * state + minIntensity;
-        else lighting.intensity = -1.5f * state + maxIntensity;
-    }
-   /* IEnumerator SunEvent(bool sunbreak)
-    {
-        state = now - Mathf.Floor(now);
-
-        if (sunbreak) lighting.intensity = 1.5f * state + minIntensity;
-        else          lighting.intensity = -1.5f * state + maxIntensity;
-
-        if (state > 0.79f)//最後分
-        {
-            yield return new WaitForSeconds(1f);
-            lighting.intensity = sunbreak ? maxIntensity : minIntensity;
-        }
-        yield return null;
-    }*/
 
     private void DayStart() //夜明け後
     {
-        foreach (var root in RootsManager.Roots.All)
+        foreach (Root root in RootsManager.Roots.All)
         {
-            if (!QuestManager.Quests.HasMainFor(root.Id)) //前半：rootに紐つく調査か決壊を探す
-            {
-                if (questplan.Contains(root.Id)) //後半：無かった場合、保留→作成
-                {
-                    QuestManager.Quests.Create(QuestKind.Main, root.Id, "MainSpawner", 1,
-                        new[] { new Reward("coin", 100), new Reward("progress", 15) });
-                    questplan.Remove(root.Id);
+            //その根源に調査か決壊が既にあるなら何もしない
+            if (QuestManager.Quests.HasMainFor(root.Id)) continue;
 
-                    QuestManager.Quests.Create(QuestKind.Sub, root.Id, "Slime", 3,
-                        new[] { new Reward("coin", 100) });
+            //1度保留してから発行する。初回の夜明けでは積むだけ
+            if (!Plan.ShouldIssue(root.Id)) continue;
 
-                    GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("新クエストが発生しました");
-                }
-                else //夜明け1回目
-                {
-                    questplan.Add(root.Id);
-                }
-            }
+            QuestManager.Quests.Create(QuestKind.Main, root.Id, "MainSpawner", 1,
+                new[] { new Reward("coin", 100), new Reward("progress", 15) });
+
+            QuestManager.Quests.Create(QuestKind.Sub, root.Id, "Slime", 3,
+                new[] { new Reward("coin", 100) });
+
+            GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("新クエストが発生しました");
         }
-
     }
-    private void Proto()
-    {
-        QuestManager.Quests.Create(QuestKind.Main, "Root1", "MainSpawner", 1,
-            new[] { new Reward("coin", 100), new Reward("progress", 15) });
-
-        QuestManager.Quests.Create(QuestKind.Sub, "Root1", "Slime", 3,
-            new[] { new Reward("coin", 100) });
-
-        GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("新クエストが発生しました");
-        Debug.Log("新クエスト発生:" + QuestManager.Quests.Count);
-    }
-
 }
