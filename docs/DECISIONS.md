@@ -10,22 +10,28 @@ AIとの対話や口頭で決まったことは記録しないと消える。そ
   [軽い記録] 箇条書き1〜3行。判断の質を問わない。整形しない。
              例: ライブラリ選定の小さいもの、局所的な方針
 
-  [重い記録] 「### [決定] タイトル」の見出しを立て、下記テンプレで書く。
+  [重い記録] 「## [D-XXX] タイトル」の見出しを立て、下記テンプレで書く。
              目安は「構造を変える」「後戻りが高コスト」「同じ説明を2回した」
 
 昇格: 軽い記録が2回以上参照されたら、重い記録として書き直す。
       元の行は消さず「→ 下記[決定]参照」を追記する。
 
-追記のみ。過去のエントリは書き換えない。判断が変わったら新しく書く。
-新しい日付を上に追加する。
+追記のみ。過去のエントリは書き換えない。判断が変わったら新しく書き、
+古い方を status: Superseded by [D-YYY] にする。
+
+並びは D 番号の昇順。日付では区切らない。日付は各項目の date: が持つ。
+ID は既存の最大値 + 1。欠番・再利用はしない。
+date: は判断した日。過去の判断を後から起票したときは記録した日を入れ、
+判断した日と典拠のコミットを **背景** に書く。
 
 このファイルが読みづらくなったら（目安500行、または目的の記録を
 Ctrl+Fで探し始めたら）docs/decisions/ に分割する。
 その分割自体もこのファイルに記録すること。
 
 --- 重い記録のテンプレート ---
-### [決定] タイトル
-status: Proposed | Accepted | Superseded by <日付・タイトル>
+## [D-XXX] タイトル
+status: Proposed | Accepted | Superseded by [D-YYY]
+date: YYYY-MM-DD
 scope: 影響を受けるパス（CIの存在チェック対象）
 
 **背景** — なぜ今決める必要があるか。このセクションだけで状況が再現できること
@@ -34,10 +40,93 @@ scope: 影響を受けるパス（CIの存在チェック対象）
 **帰結** — 良い面、悪い面、監視すべき兆候（判断が誤りだった場合の検出条件）
 -->
 
-## 2026-08-25
-
-### [D-006] `static` を状態置き場にしない
+## [D-001] Unity 6.3 LTS (6000.3.22f1) を採用する
 status: Accepted
+date: 2026-08-23
+scope: ProjectSettings/ProjectVersion.txt, Packages/
+
+**背景** — 2022.3.5f1 で開発していたが、Unity CLI / com.unity.pipeline による
+エージェント連携が Unity 6.0 以降を必須要件としていた。
+**検討した選択肢** — (a) 2022 に留まりエージェント連携を諦める (b) Unity 6.3 LTS へ移行。
+移行コストが懸案だったが、調査の結果 URP は未割り当て（Built-in RP 運用）で、
+最大の難所である URP 14→17 の RenderGraph 移行を回避できることが判明した。
+**決定** — (b)。6000.3.22f1 へ移行。
+**帰結** — API Updater が velocity→linearVelocity、PhysicMaterial→PhysicsMaterial を自動修正。
+vHierarchy が内部 API 変更で InvalidCastException を出したため削除した（[D-002] 参照）。
+Play 通し・ビルド検証は未実施。壊れていた場合の検出はここが最初の砦になる。
+
+## [D-002] バージョン管理を Git に一本化し、UVCS を廃止する
+status: Accepted
+date: 2026-08-23
+scope: Packages/manifest.json, .plasticignore, README.md
+
+**背景** — UVCS と Git を併用していたが、1プロジェクトを2リポジトリに分けると
+コード変更とアセット変更のアトミックなコミットが不可能になり、
+「この時点の状態」を再現できなくなる。
+**検討した選択肢** — (a) UVCS の GitSync による併用 (b) Git 単独。
+(a) は機能としては成立するが、PR / Actions / CODEOWNERS を前提にした設計と噛み合わない。
+**決定** — (b)。com.unity.collab-proxy を削除し .plasticignore を除去。
+**帰結** — third-party アセット 4.3 GB は .gitignore 対象のため Git では復旧できない。
+物理バックアップが唯一の防御手段になる。UVCS 側のリポジトリ本体は削除していない。
+
+## [D-003] エージェント制御を Unity 公式の Pipeline に委ね、自作の実行コマンド制限を撤回する
+status: Accepted
+date: 2026-08-25
+scope: AGENTS.md, .claude/settings.json, CODEOWNERS
+
+**背景** — 以前、エージェントの書き込み権限を `[CliCommand]` ホワイトリスト方式で
+物理的に制限する方針を採っていた。これは当時、公式のエージェント制御面が
+存在しなかったため、その不在を自作で埋める判断だった。
+2026年7月に Unity CLI + com.unity.pipeline が公開され、前提が変わった。
+**検討した選択肢** — (a) 自作ホワイトリストを維持 (b) 公式機構に委ねる。
+(a) は公式機構と二重管理になり、かつ実装が存在しない（asmdef 0件、テスト0件の段階で
+統治規則だけが積み上がっていた）。
+**決定** — (b)。`set_authoring_root` による書き込み範囲の封じ込めと、
+破壊的コマンドの `confirm=true` 強制を担保とする。
+**帰結** — 公式機構は Unity 側で保守されるため腐らない。ただし com.unity.pipeline は
+experimental (0.5.0-exp.1) で破壊的変更があり得る。
+判断が誤りだった場合の検出条件: Pipeline の仕様変更で authoring_root や confirm が
+弱くなったとき。その時点で (a) の再検討が要る。
+
+## [D-004] エージェントの権限は「不可逆な操作のみ」を対象に絞る
+status: Accepted
+date: 2026-08-25
+scope: .claude/settings.json, AGENTS.md
+
+**背景** — 当初、`eval` / `reload_file` / `package_add` / `build` などを広く禁止する
+deny リストを設計したが、過剰であることが判明した。
+**検討した選択肢** — (a) 広範な deny (b) 不可逆な操作のみに絞る。
+(a) の問題は、`eval` を禁止してもエージェントは .cs を書いて `recompile` できるため
+能力が減らず、経路が回りくどくなるだけだったこと。禁止に見えて何も守っていない。
+**決定** — (b)。deny は `set_authoring_root` の変更と破壊的 git 操作のみ。
+ask は GUID を伴う資産操作（delete/move/rename_asset）、git push、ProjectSettings 編集。
+**帰結** — permission ルールは前方一致でありサンドボックスではない。
+確実な担保は authoring_root（サーバ側）、confirm=true（サーバ側）、
+コミット済みの Git 状態と物理バックアップの3つ。deny は床上げであって天井ではない。
+
+## [D-005] シーン内の参照割り当てはエージェントが行う
+status: Accepted
+date: 2026-08-25
+scope: Assets/_Project/Scenes/, .claude/settings.json
+
+**背景** — スクリプトに `[SerializeField]` を足すと、Inspector での参照割り当てが必ず発生する。
+手作業は面倒なうえ、ドラッグ先を間違えても静かに壊れる（実行するまで気づかない）。
+`Craft` に `recipeDefinitions` を追加した際に実際に発生した。
+**検討した選択肢** — (a) 人間が Inspector で行う (b) エージェントが
+`unity command set_component_properties` で行う。
+シーン内コンポーネントへの値設定は deny にも ask にも入っておらず、境界が未定義だった。
+**決定** — (b)。シーン内コンポーネントへの値・参照の設定は、確認を取らずに実行してよい。
+**帰結** — [D-004] の「不可逆な操作のみ止める」に照らして矛盾しない。
+値の設定は Undo 1ステップで戻せ、シーンは Git 追跡下なので `git restore` でも戻せる。
+差分も読める。今回の割り当ては +5 −2 行で、`recipeDefinitions` の追加と
+`craftdata` の削除がそのまま現れた。シーン全体が再シリアライズされる場合
+（エディタのバージョン更新時など）を除き、変更箇所だけが差分に出る。
+そのため変更履歴用の専用ログは設けない。git の差分とコミットメッセージが記録になる。
+GUID を動かす操作（`move_asset` / `rename_asset` / `delete_asset`）は引き続き ask のまま。
+
+## [D-006] `static` を状態置き場にしない
+status: Accepted
+date: 2026-08-25
 scope: docs/conventions.md, Assets/_Project/
 
 **背景** — 既存コードは可変な状態の多くを static フィールドに置いている
@@ -51,8 +140,9 @@ scope: docs/conventions.md, Assets/_Project/
 Legacy は据え置き、機能を移行するときに従う。
 検出は将来 Analyzer に落とせる見込みがあり、落ちたら conventions.md から削除する。
 
-### [D-007] public 可変フィールドを避ける。ただし ScriptableObject は例外
+## [D-007] public 可変フィールドを避ける。ただし ScriptableObject は例外
 status: Accepted
+date: 2026-08-25
 scope: docs/conventions.md, .editorconfig, tests/Domain.Tests/
 
 **背景** — 今日見つけた問題の多くが「public な状態に外から直接触れる」ことに
@@ -70,8 +160,9 @@ Unity のコンパイルは .NET SDK を通らないため、Game 層は検出�
 （不変性・読み方・生成コードが同じ）であり、`exclude_structs` という設定の例外を
 足さずに済む方を選んだ。等価な選択肢が2つあるなら、設定を足さない方を採る。
 
-### [D-008] テストメソッド名は日本語の平叙文にする
+## [D-008] テストメソッド名は日本語の平叙文にする
 status: Accepted
+date: 2026-08-25
 scope: Assets/_Project/Tests/
 
 **背景** — エージェントが実装とテストの両方を書く。テストはエージェントの理解を
@@ -85,88 +176,10 @@ scope: Assets/_Project/Tests/
 振る舞いだけを書き、メソッド名や引数など呼び出し方は含めない。
 **帰結** — 人間はテスト一覧を眺めるだけで、エージェントの理解と仕様のずれに気づける。
 この理由が失われると規則が恣意的に見えるため、必ず参照できる状態に保つこと。
-### [D-005] シーン内の参照割り当てはエージェントが行う
-status: Accepted
-scope: Assets/_Project/Scenes/, .claude/settings.json
 
-**背景** — スクリプトに `[SerializeField]` を足すと、Inspector での参照割り当てが必ず発生する。
-手作業は面倒なうえ、ドラッグ先を間違えても静かに壊れる（実行するまで気づかない）。
-`Craft` に `recipeDefinitions` を追加した際に実際に発生した。
-**検討した選択肢** — (a) 人間が Inspector で行う (b) エージェントが
-`unity command set_component_properties` で行う。
-シーン内コンポーネントへの値設定は deny にも ask にも入っておらず、境界が未定義だった。
-**決定** — (b)。シーン内コンポーネントへの値・参照の設定は、確認を取らずに実行してよい。
-**帰結** — [D-004] の「不可逆な操作のみ止める」に照らして矛盾しない。
-値の設定は Undo 1ステップで戻せ、シーンは Git 追跡下なので `git restore` でも戻せる。
-差分も読める。今回の割り当ては +5 −2 行で、`recipeDefinitions` の追加と
-`craftdata` の削除がそのまま現れた。シーン全体が再シリアライズされる場合
-（エディタのバージョン更新時など）を除き、変更箇所だけが差分に出る。
-そのため変更履歴用の専用ログは設けない。git の差分とコミットメッセージが記録になる。
-GUID を動かす操作（`move_asset` / `rename_asset` / `delete_asset`）は引き続き ask のまま。
-## 2026-08-23
-
-### [D-001] Unity 6.3 LTS (6000.3.22f1) を採用する
-status: Accepted
-scope: ProjectSettings/ProjectVersion.txt, Packages/
-
-**背景** — 2022.3.5f1 で開発していたが、Unity CLI / com.unity.pipeline による
-エージェント連携が Unity 6.0 以降を必須要件としていた。
-**検討した選択肢** — (a) 2022 に留まりエージェント連携を諦める (b) Unity 6.3 LTS へ移行。
-移行コストが懸案だったが、調査の結果 URP は未割り当て（Built-in RP 運用）で、
-最大の難所である URP 14→17 の RenderGraph 移行を回避できることが判明した。
-**決定** — (b)。6000.3.22f1 へ移行。
-**帰結** — API Updater が velocity→linearVelocity、PhysicMaterial→PhysicsMaterial を自動修正。
-vHierarchy が内部 API 変更で InvalidCastException を出したため削除した（[D-002] 参照）。
-Play 通し・ビルド検証は未実施。壊れていた場合の検出はここが最初の砦になる。
-
-### [D-002] バージョン管理を Git に一本化し、UVCS を廃止する
-status: Accepted
-scope: Packages/manifest.json, .plasticignore, README.md
-
-**背景** — UVCS と Git を併用していたが、1プロジェクトを2リポジトリに分けると
-コード変更とアセット変更のアトミックなコミットが不可能になり、
-「この時点の状態」を再現できなくなる。
-**検討した選択肢** — (a) UVCS の GitSync による併用 (b) Git 単独。
-(a) は機能としては成立するが、PR / Actions / CODEOWNERS を前提にした設計と噛み合わない。
-**決定** — (b)。com.unity.collab-proxy を削除し .plasticignore を除去。
-**帰結** — third-party アセット 4.3 GB は .gitignore 対象のため Git では復旧できない。
-物理バックアップが唯一の防御手段になる。UVCS 側のリポジトリ本体は削除していない。
-
-### [D-003] エージェント制御を Unity 公式の Pipeline に委ね、自作の実行コマンド制限を撤回する
-status: Accepted
-scope: AGENTS.md, .claude/settings.json, CODEOWNERS
-
-**背景** — 以前、エージェントの書き込み権限を `[CliCommand]` ホワイトリスト方式で
-物理的に制限する方針を採っていた。これは当時、公式のエージェント制御面が
-存在しなかったため、その不在を自作で埋める判断だった。
-2026年7月に Unity CLI + com.unity.pipeline が公開され、前提が変わった。
-**検討した選択肢** — (a) 自作ホワイトリストを維持 (b) 公式機構に委ねる。
-(a) は公式機構と二重管理になり、かつ実装が存在しない（asmdef 0件、テスト0件の段階で
-統治規則だけが積み上がっていた）。
-**決定** — (b)。`set_authoring_root` による書き込み範囲の封じ込めと、
-破壊的コマンドの `confirm=true` 強制を担保とする。
-**帰結** — 公式機構は Unity 側で保守されるため腐らない。ただし com.unity.pipeline は
-experimental (0.5.0-exp.1) で破壊的変更があり得る。
-判断が誤りだった場合の検出条件: Pipeline の仕様変更で authoring_root や confirm が
-弱くなったとき。その時点で (a) の再検討が要る。
-
-### [D-004] エージェントの権限は「不可逆な操作のみ」を対象に絞る
-status: Accepted
-scope: .claude/settings.json, AGENTS.md
-
-**背景** — 当初、`eval` / `reload_file` / `package_add` / `build` などを広く禁止する
-deny リストを設計したが、過剰であることが判明した。
-**検討した選択肢** — (a) 広範な deny (b) 不可逆な操作のみに絞る。
-(a) の問題は、`eval` を禁止してもエージェントは .cs を書いて `recompile` できるため
-能力が減らず、経路が回りくどくなるだけだったこと。禁止に見えて何も守っていない。
-**決定** — (b)。deny は `set_authoring_root` の変更と破壊的 git 操作のみ。
-ask は GUID を伴う資産操作（delete/move/rename_asset）、git push、ProjectSettings 編集。
-**帰結** — permission ルールは前方一致でありサンドボックスではない。
-確実な担保は authoring_root（サーバ側）、confirm=true（サーバ側）、
-コミット済みの Git 状態と物理バックアップの3つ。deny は床上げであって天井ではない。
-
-### [D-009] 構造の確認は、生成した差分図と手で維持する現状図の二段で行う
+## [D-009] 構造の確認は、生成した差分図と手で維持する現状図の二段で行う
 status: Superseded by [D-011]（二段構成は残る。現状図を人が維持する部分だけが覆る）
+date: 2026-08-28
 scope: docs/dependencies-diagrams, docs/dependencies-diff-diagrams, tools/diagram-diff.ps1
 
 **背景** — 複数クラスをまたぐ変更のあと、何がどう繋がり直したのかが
@@ -199,8 +212,9 @@ Domain / Game の型がどれかのスライスに出ていること。
 判断が誤りだった場合の検出条件: スライスが機能と対応しなくなり、
 1枚に10型以上入るようになったとき。そこで切り直す。
 
-### [D-010] 層をまたぐ変数は型を明示する。var を使わない
+## [D-010] 層をまたぐ変数は型を明示する。var を使わない
 status: Accepted
+date: 2026-08-28
 scope: docs/conventions.md, .editorconfig, Assets/LegacyScripts
 
 **背景** — `var root = RootsManager.Roots.Find(...)` と書くと、ソースの字面に
@@ -227,8 +241,9 @@ Legacy 全体を書き換える必要もない。
 （[D-007] と同じ構図）。判断が誤りだった場合の検出条件: 図に出ない依存が
 再び見つかったとき。そのときは (c) を検討する。
 
-### [D-011] 現状図も生成する。切り方は Domain のファイル分割に従う
+## [D-011] 現状図も生成する。切り方は Domain のファイル分割に従う
 status: Accepted
+date: 2026-08-28
 scope: docs/dependencies-diagrams, tests/Domain.Tests/SliceDiagramGenerator.cs, .claude/skills/class-diff-diagram
 
 **背景** — [D-009] は現状図を人が維持する形にした。理由は「どう切るかは機械に
@@ -272,8 +287,9 @@ scope: docs/dependencies-diagrams, tests/Domain.Tests/SliceDiagramGenerator.cs, 
 手順と書式は `.claude/skills/class-diff-diagram/SKILL.md`。
 [D-009] が `structure-diff/` と書いているのは誤りで、この名前が正しい。
 
-### [D-012] Legacy の関心事は表で名指しする。ファイル構成からは導かない
+## [D-012] Legacy の関心事は表で名指しする。ファイル構成からは導かない
 status: Accepted
+date: 2026-08-28
 scope: docs/dependencies-diagrams, .claude/skills/class-diff-diagram
 
 **背景** — [D-011] は「Domain のファイル1つ = 図1枚」で切った。Domain には
@@ -306,26 +322,9 @@ Legacy を核とする図は大きい。最大で25節点になった（player.m
 Legacy の公開メンバは載せない。多くが Inspector への口であって設計ではなく、
 並べても関心事の輪郭が見えないため。
 
-## 2026-08-29
-
-[軽い記録] class-diff-diagram skill を使用停止にした。クレジット消費が費用に
-見合わないため。置き換えを用意するまで呼ばない。SKILL.md は broken.md に改名済み
-（skill として登録されない）。差分図の生成も止まる。
-
-[軽い記録] 上に伴い、skill の中にあった2つの表を外へ出した。
-docs/dependencies-diagrams/slices.txt（スライスの切り方）と
-tools/diagram-diff-template.txt（差分図の文言）。
-[D-011] は skill を正典としたが、それは skill が在ることを前提にしていた。
-手順の解説と違い、これらは動くものが読む入力なので、skill の生死に
-左右されてはいけなかった。[D-009] [D-011] [D-012] に残る SKILL.md への
-道は、当時の記録としてそのままにする。
-
-[軽い記録] 現状図の自動生成（SliceDiagramTests）は止めていない。dotnet test の
-中で動き、追加の費用が無いため。切り方の定義は slices.txt に移った。
-
-
-### [D-013] クラス図の生成に PlantUmlClassDiagramGenerator を使わない
+## [D-013] クラス図の生成に PlantUmlClassDiagramGenerator を使わない
 status: Accepted
+date: 2026-08-29
 scope: docs/dependencies-diagrams, tests/Domain.Tests/
 
 **背景** — 現状図は SliceDiagramTests が生成しているが、C# の読み取りは
@@ -357,8 +356,9 @@ Mermaid は GitHub と VS Code が標準で描くため閲覧環境の要求が�
 DependencyGraphGenerator が式形式メンバ・ネストしたジェネリクス・複数行
 シグネチャのいずれかを取りこぼし、図が実態とずれること。そのとき (b) を実装する。
 
-### [D-014] Domain を UnityEngine 非依存にし、asmdef で物理強制する
+## [D-014] Domain を UnityEngine 非依存にし、asmdef で物理強制する
 status: Accepted
+date: 2026-08-29
 scope: Assets/_Project/Scripts/Domain/, Assets/_Project/Scripts/Game/, .github/workflows/domain-tests.yml
 
 **背景** — 2026-08-25（4c5cc3a）の判断を後から起票する。`Assets/_Project/Scripts`
@@ -384,8 +384,9 @@ scope: Assets/_Project/Scripts/Domain/, Assets/_Project/Scripts/Game/, .github/w
 をリフレクションで呼んでいる（[D-016] 参照）。判断が誤りだった場合の検出条件:
 リフレクション経由の呼び出しが増え、改名がコンパイルで止まらなくなること。
 
-### [D-015] ゲーム設計は Notion に置く。docs/GDD.md は消さずに残す
+## [D-015] ゲーム設計は Notion に置く。docs/GDD.md は消さずに残す
 status: Accepted
+date: 2026-08-29
 scope: docs/GDD.md, README.md
 
 **背景** — 2026-08-27（c4df091）の判断を後から起票する。分厚い GDD は複数人の
@@ -409,8 +410,9 @@ DECISIONS.md へ移す。`docs/GDD.md` は残す。
 見直す。判断が誤りだった場合の検出条件: Notion を参照しないとコードの意図が
 読めない箇所が現れること。そのとき DECISIONS.md へ移す。
 
-### [D-016] PlayMode テストは判定せず、例外が出ないことだけを見る
+## [D-016] PlayMode テストは判定せず、例外が出ないことだけを見る
 status: Accepted
+date: 2026-08-29
 scope: Assets/_Project/Tests/Play/
 
 **背景** — 2026-08-27（9b1233e）の判断を後から起票する。Domain 分割が作る壊れ方は

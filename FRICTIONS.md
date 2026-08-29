@@ -93,10 +93,16 @@
   コマンドは `.claude/commands/` のみ。フックは settings.json から実行可能
   コマンドを呼ぶ仕組みで、.md をプロンプトとして解釈しない。adr.md が
   これで動いていなかった
-- **AGENTS.md の `## 禁止` に「`docs/dependencies-diagrams` を読むこと」が入っている。**
-  意図と逆に読める。置き場所かコミット `bb6920c` のメッセージのどちらかが誤り
-- `.claude/commands/adr.md` の出力テンプレが DECISIONS.md の実形式と不一致。
-  手順1の `grep "^## \[D-"` が 0 件を返す。実際の見出しは `### [D-`
+- **禁止の理由を書かないと、禁止そのものが誤りに見える。**AGENTS.md の
+  「`docs/dependencies-diagrams` を読むこと」は意図どおりの禁止（人間が読む用の
+  生成物）だが、1つ上の JOURNAL の行だけが括弧で理由を持ち、この行は持たなかった。
+  **理由の無い1行だけが浮き、誤記だと判断してしまった。**
+  → 直した。理由を括弧で追記し、同じ様式に揃えた
+- `.claude/commands/adr.md` の出力テンプレが DECISIONS.md の実形式と不一致だった。
+  手順1の `grep "^## \[D-"` が 0 件を返し、**既存 ID を1つも見ずに採番しかけた。**
+  **無言で 0 件を返す grep は、成功と区別がつかない。**
+  → 直した。DECISIONS.md 側を日付節のない `## [D-XXX]` の平坦な一覧に変え、
+  adr.md をそれに合わせた。日付は各項目の `date:` が持つ
 - Unity のプロセスは `unity pipeline list` の PID で特定する。
   `Get-Process` の先頭は AssetImportWorker のことがある
 - フリーズの判定は CPU ではなくログ行数。非フォアグラウンドだと無限ループでも
