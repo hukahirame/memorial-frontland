@@ -10,7 +10,7 @@ public class Sun2 : MonoBehaviour
     /// <summary>調査クエストの発行計画。シーンを跨いで持ち越す</summary>
     public static readonly DayPlan Plan = new DayPlan();
 
-    // 名前を変えるとシーンの値が外れるため、公開をやめても名前は据え置く（[D-007]）
+    // 名前を変えるとシーンに保存済みの値が外れる。公開をやめても名前は据え置くこと
     [SerializeField] private float aroundtime = 120; // 1日のゲーム内時間(秒)
 
     [SerializeField] private Light lighting;
@@ -39,7 +39,7 @@ public class Sun2 : MonoBehaviour
             yield return new WaitForSeconds(1f);
             Cycle.Advance();
 
-            //5時の境界を跨いだ刻みだけ。旧実装は5時台の毎秒（実5秒＝約5回）呼んでいた
+            //5時の境界を跨いだ刻みだけ。5時台の毎秒ではない
             if (Cycle.Entered(DayClock.MorningHour, aroundtime)) DayStart();
         }
     }

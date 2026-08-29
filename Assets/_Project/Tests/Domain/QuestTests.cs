@@ -46,8 +46,7 @@ namespace MemorialFloor.Domain.Tests
         [Test]
         public void 種別の判定は先頭だけを見る()
         {
-            // Legacy は部分一致で見ていた。連番が数字である限り同じ答えになるが、
-            // 規則としては先頭だけが正しい
+            // 部分一致では連番の数字にも当たる。先頭だけを見る
             Assert.IsTrue(QuestId.Is("S3", QuestKind.Sub));
             Assert.IsFalse(QuestId.Is("X3", QuestKind.Sub));
             Assert.IsFalse(QuestId.Is("", QuestKind.Main));
@@ -76,8 +75,7 @@ namespace MemorialFloor.Domain.Tests
             Assert.IsFalse(QuestProgress.IsComplete(2, 3));
             Assert.IsTrue(QuestProgress.IsComplete(3, 3));
 
-            // 切り詰めを通っていない値でも達成と判定する。Legacy の UI 側は
-            // 文字列の等値で見ていたため、ここが崩れると達成が消えていた
+            // 切り詰めを通っていない値でも達成と判定する
             Assert.IsTrue(QuestProgress.IsComplete(4, 3));
         }
 
@@ -107,8 +105,8 @@ namespace MemorialFloor.Domain.Tests
         [Test]
         public void 消したあとに作ると空き番号が埋まる()
         {
-            // Legacy は「その種別の現在数」を番号にしていたため、X0 を消したあとに
-            // 作るとまた X0 になり、既にある X1 と衝突する順序があった
+            // 「その種別の現在数」を番号にすると、X0 を消したあとに作った X0 が
+            // 既にある X1 と衝突する
             QuestRegistry registry = new QuestRegistry();
             registry.Create(QuestKind.Main, "Root1", "MainSpawner", 1, NoReward);
             registry.Create(QuestKind.Main, "Root2", "MainSpawner", 1, NoReward);

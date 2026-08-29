@@ -6,9 +6,7 @@ using UnityEngine.UI;
 
 public class QuestManager : MonoBehaviour // タスク風にクエ管理。成功判定も行う
 {
-    //追加・検索・削除の唯一の窓口。参照を持ち回らず、使うときにここから引く。
-    //以前は quests と rewards という2本の並行リストを、6箇所で
-    //「CreateQuest の直後に rewards.Add」という書き方の約束だけで揃えていた
+    //追加・検索・削除の唯一の窓口。参照を持ち回らず、使うときにここから引く
     public static readonly QuestRegistry Quests = new QuestRegistry();
 
     /// <summary>一度に表示するクエストの数</summary>
@@ -78,8 +76,6 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
                 b.text += quest.Target + "を" + quest.Amount + "体討伐する"; //クエ目的記入
             }
 
-            //旧コードは r.text.Replace(...) の戻り値を捨てていたので、
-            //progress はいつまでも「攻略度」にならなかった
             foreach (Reward reward in quest.Rewards)
                 r.text += RewardName(reward.Kind) + " x " + reward.Amount + "\n";
 
@@ -117,8 +113,7 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
         //クエスト物生成
     }
 
-    /// <summary>達成時と開始時に出す見出し。旧コードは Replace の戻り値を捨てていて、
-    /// 開始側だけ決壊クエストが「調査」のままだった</summary>
+    /// <summary>達成時と開始時に出す見出し。決壊クエストは見出しを差し替える</summary>
     private static string Headline(Quest quest)
     {
         string text = "「" + RootsManager.Roots.Find(quest.RootId).Name + "」調査クエスト\n\n";

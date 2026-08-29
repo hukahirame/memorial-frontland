@@ -4,11 +4,7 @@ namespace MemorialFloor.Domain
 {
     /// <summary>
     /// 1日の時刻の規則。経過秒と1日の長さだけで決まる。
-    ///
-    /// Legacy はこの計算を coroutine の中に置き、毎秒の else if 連鎖で分岐していた。
-    /// 1時間が実 5 秒あるため「5時ちょうど」の枝が1日に約5回成立し、
-    /// 一度だけ起こしたい処理まで5回走っていた。区間で起きるもの（明るさの補間）と
-    /// 境界で1度だけ起きるもの（デイリー更新）をここで分ける。
+    /// 区間で続くもの（明るさの補間）と、境界で1度だけ起きるもの（Entered）を分けている。
     /// </summary>
     public static class DayClock
     {
@@ -42,7 +38,7 @@ namespace MemorialFloor.Domain
 
         /// <summary>
         /// その時刻の境界を今のひと刻みで跨いだか。1日に1度だけ真になる。
-        /// 「その時刻台にいるか」ではない。その判定は5回連続で真になる
+        /// 「その時刻台にいるか」ではない。1時間は複数の刻みにまたがる
         /// </summary>
         public static bool Entered(int hour, int previousSeconds, int currentSeconds, float secondsPerDay)
         {
@@ -50,10 +46,7 @@ namespace MemorialFloor.Domain
                 && HourAt(currentSeconds, secondsPerDay) >= hour;
         }
 
-        /// <summary>
-        /// その時刻の明るさ。夜明けと日没は区間の中で線形に動く。
-        /// Legacy の 1.5f という係数は max - min のことだった
-        /// </summary>
+        /// <summary>その時刻の明るさ。夜明けと日没は区間の中で線形に動く</summary>
         public static float LightIntensity(float hour, float min, float max)
         {
             if (hour < SunriseHour) return min;
@@ -69,9 +62,7 @@ namespace MemorialFloor.Domain
     }
 
     /// <summary>
-    /// 1日の経過。零時からの秒だけを持つ。所有者は1つ。
-    ///
-    /// Legacy は Sun2.daytime という public static int だった（[D-006] の実例）。
+    /// 1日の経過。零時からの秒だけを持つ。
     /// 1日の長さは Inspector で変えるため、ここには持たず呼ぶ側から渡す。
     /// </summary>
     public sealed class DayCycle
@@ -122,10 +113,7 @@ namespace MemorialFloor.Domain
 
     /// <summary>
     /// 調査クエストの発行計画。根源ごとに、1度保留してから発行する。
-    ///
-    /// Legacy は Sun2.questplan という public static List だった。
-    /// 「1回目は積むだけ、2回目に作る」という書き方で1日ぶん遅らせる意図だったが、
-    /// デイリー更新が1日に約5回走っていたため、遅れは1秒に潰れていた。
+    /// 保留を挟むぶん、発行は次の呼び出しまで遅れる。
     /// </summary>
     public sealed class DayPlan
     {

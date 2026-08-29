@@ -36,8 +36,7 @@ public class MS_Spawner : MonoBehaviour
         else
         {
             seeker.SetActive(false);
-            //MainSite に対応する根源は無いため、攻略度による弱体化は行わない。
-            //旧コードは index が -1 のまま parameta[-1] を読んでおり、到達すれば必ず例外だった
+            //MainSite に対応する根源は無いため、攻略度による弱体化は行わない
             Instantiate(enemy, spawnpos, Quaternion.identity);
 
             Invoke("Spawn", Random.Range(15, 30));

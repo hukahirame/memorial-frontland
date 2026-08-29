@@ -35,8 +35,6 @@ namespace MemorialFloor.Domain.Tests
         [Test]
         public void 境界を跨ぐのは1日に1度だけ()
         {
-            // Legacy は「5時台にいるか」で見ていた。1時間が実5秒あるため
-            // 25〜29秒の5回とも真になり、1度だけ起こしたい処理が5回走っていた
             int crossed = 0;
             for (int t = 0; t < 120; t++)
             {

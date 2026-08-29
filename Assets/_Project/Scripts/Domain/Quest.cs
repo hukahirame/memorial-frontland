@@ -25,10 +25,7 @@ namespace MemorialFloor.Domain
 
     /// <summary>
     /// クエストの ID。「種別1文字 + 連番」という文字列である。
-    ///
-    /// Legacy はこの文字列を4通りの書き方で読み直していた。
-    /// 先頭一致、部分一致、2文字のどちらか、先頭1文字の切り出し。
-    /// 連番が数字なので今はどれも同じ答えを出すが、規則が4つあること自体が危うい。
+    /// 読み方はここに集める。ID を直に切り出して種別を判定しない。
     /// </summary>
     public static class QuestId
     {
@@ -63,11 +60,7 @@ namespace MemorialFloor.Domain
 
     /// <summary>
     /// クエストの進捗。目標量と現在量の関係だけを持つ。
-    ///
-    /// Legacy では達成を2箇所で判定していた。進捗を進める側は int に直して
-    /// 「以上」で見て、UI 側は文字列の等値で見ていた。後者が成り立つのは
-    /// 前者が達成時に現在量を目標量へ切り詰めているからで、離れた2箇所の
-    /// 暗黙の約束に支えられていた。ここに集めて約束を1つにする。
+    /// 達成の判定はここだけで行う。表示側で別に判定しない。
     /// </summary>
     public static class QuestProgress
     {
@@ -93,8 +86,7 @@ namespace MemorialFloor.Domain
     }
 
     /// <summary>
-    /// クエストの報酬1種。Legacy は string[] の偶数番を種類、奇数番を量として
-    /// 数えていた。歩幅を間違えた側が半分しか表示しないという食い違いが起きていた。
+    /// クエストの報酬1種。種類と量を対で持つ。
     /// </summary>
     public readonly struct Reward
     {
@@ -110,8 +102,7 @@ namespace MemorialFloor.Domain
     }
 
     /// <summary>
-    /// クエスト1つ。Legacy は string[5] の位置で意味を決めていた。
-    /// 対応はコメント1行にしか書かれておらず、38箇所が [3] [4] と直に読んでいた。
+    /// クエスト1つ。
     /// </summary>
     public sealed class Quest
     {
@@ -161,11 +152,7 @@ namespace MemorialFloor.Domain
     }
 
     /// <summary>
-    /// クエストの唯一の窓口。
-    ///
-    /// Legacy は quests と rewards という2本の並行リストを、6箇所で
-    /// 「CreateQuest の直後に rewards.Add」という書き方の約束だけで揃えていた。
-    /// 対にすることを型で強制する。
+    /// クエストの唯一の窓口。報酬はクエストと対にして持つ。
     /// </summary>
     public sealed class QuestRegistry
     {
@@ -182,8 +169,8 @@ namespace MemorialFloor.Domain
         }
 
         /// <summary>
-        /// 採番して追加する。Legacy は「その種別の現在数」を番号にしていたため、
-        /// 達成して消したあとに作ると同じ Id が生まれていた。空き番号を探す。
+        /// 採番して追加する。番号は空きを前から探す。
+        /// 「その種別の現在数」を番号にすると、消したあとに Id が衝突する。
         /// </summary>
         public Quest Create(QuestKind kind, string rootId, string target, int amount, IReadOnlyList<Reward> rewards)
         {
