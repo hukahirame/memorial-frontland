@@ -31,10 +31,6 @@ Editor が閉じていると全コマンドが失敗する。その場合は起�
   `cancel_tests` を叩いてから再実行すれば戻る（プロセスを殺す必要はない）
 - 静的解析: `unity command audit` → `unity command audit_status`
 
-## クラスを変えた後
-
-現状図は `dotnet test` が作り直す。切り方は docs/dependencies-diagrams/slices.txt（[D-011] [D-012]）。
-
 ## 禁止
 
 - `docs/JOURNAL.md` を読むこと（時系列ログ。未整理の卓上案や覆された前提を
