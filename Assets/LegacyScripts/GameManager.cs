@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using MemorialFloor.Domain;
 using UnityEngine;
 using System.IO;
 using TMPro;
@@ -17,7 +18,11 @@ public class GameManager : MonoBehaviour
     private static bool P_singleton = false;
     public static string entered_scene = "MainSite";
 
-    public static TextMeshProUGUI coin;
+    /// <summary>所持金。所有者はここ1つ（QuestManager.Quests と同じ形）</summary>
+    public static readonly Wallet Coins = new Wallet();
+
+    // シーンの CoinText が 1000 で始まっていたので、その値を引き継ぐ
+    [SerializeField] private int startingCoins = 1000;
 
     void Awake()
     {
@@ -26,6 +31,10 @@ public class GameManager : MonoBehaviour
             DontDestroyOnLoad(gameObject);
             DontDestroyOnLoad(maincanvas);
             GM_singleton = true;
+
+            Coins.SetAmount(startingCoins);
+            maincanvas.Find("Status_Gold").Find("CoinText")
+                      .GetComponent<TextMeshProUGUI>().text = Coins.Amount.ToString();
         }
         else
         {
@@ -34,8 +43,6 @@ public class GameManager : MonoBehaviour
         }
 
         if(P_singleton == false) { origin_player.SetActive(true); P_singleton = true; }
-
-        coin = maincanvas.Find("Status_Gold").Find("CoinText").GetComponent<TextMeshProUGUI>();
 
         StringReader reader = new StringReader(itemdata.text); // TextAssetをStringReaderに変換
         while (reader.Peek() != -1)

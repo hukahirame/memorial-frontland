@@ -10,9 +10,8 @@ public class SaveData
 
     public string entered_scene;
     public int daytime;
-    //roots と quests は保存していない。JsonUtility は List<string[]> を保存できず、
-    //実際のセーブファイルにキー自体が無かった。それでも読み込み時には空リストで
-    //上書きしていたので、ロードするたびに根源とクエストが消えていた。同期ごと外す
+    //roots と quests は保存していない。JsonUtility が List<string[]> を保存できないため。
+    //保存を再開するなら、先に入れ子を持たない形へ直すこと
     public int coin;
     public Vector3 respawn;
     public List<string> items = new List<string>();
@@ -39,7 +38,7 @@ public class SaveData
         stocks = pi.stocks;
         maxstocks = pi.maxstocks;
 
-        coin = int.Parse(GameObject.Find("CoinText").GetComponent<TextMeshProUGUI>().text);
+        coin = GameManager.Coins.Amount;
         respawn = GameObject.FindWithTag("Player").transform.position;
 
         enemies.Clear();
@@ -78,7 +77,9 @@ public class SaveData
         pi.stocks = stocks;
         pi.maxstocks = maxstocks;
 
-        GameObject.Find("CoinText").GetComponent<TextMeshProUGUI>().text = coin.ToString();
+        GameManager.Coins.SetAmount(coin);
+        GameObject.Find("CoinText").GetComponent<TextMeshProUGUI>().text =
+            GameManager.Coins.Amount.ToString();
         GameObject.FindWithTag("Player").transform.position = respawn;
         
         //enemies関連は、MainSpawner生成が遅れるため、そっちで処理

@@ -8,6 +8,8 @@ using UnityEngine.SceneManagement;
 
 public class PlayerDeath : MonoBehaviour
 {
+    private const int DeathPenalty = 100;
+
     private Player2 p;
 
     public void DeathMainProcess()
@@ -46,8 +48,9 @@ public class PlayerDeath : MonoBehaviour
             RewardUI.rewardUI_show = 1;
         }
 
-        TextMeshProUGUI coin = GameObject.Find("CoinText").GetComponent<TextMeshProUGUI>();
-        if(int.Parse(coin.text) > 100) coin.text = (int.Parse(coin.text) - 100).ToString();
+        GameManager.Coins.Spend(DeathPenalty);
+        GameObject.Find("CoinText").GetComponent<TextMeshProUGUI>().text =
+            GameManager.Coins.Amount.ToString();
         Player2.playerhp.value = (int)(Player2.playerhp.maxValue * 0.05);
         transform.position = new Vector3(-2, 0.65f, -2);
 
