@@ -1,4 +1,4 @@
-# 決定記録
+# 判断記録（ADR）
 
 <!--
 このファイルの目的:
@@ -323,3 +323,114 @@ tools/diagram-diff-template.txt（差分図の文言）。
 [軽い記録] 現状図の自動生成（SliceDiagramTests）は止めていない。dotnet test の
 中で動き、追加の費用が無いため。切り方の定義は slices.txt に移った。
 
+
+### [D-013] クラス図の生成に PlantUmlClassDiagramGenerator を使わない
+status: Accepted
+scope: docs/dependencies-diagrams, tests/Domain.Tests/
+
+**背景** — 現状図は SliceDiagramTests が生成しているが、C# の読み取りは
+DependencyGraphGenerator.cs の正規表現に依存している（384行中13箇所）。構文木を
+使う既製ツールに置き換えられないか、PlantUmlClassDiagramGenerator（dotnet の
+ローカルツール。コマンド名 puml-gen）を入れて試した。
+
+**検討した選択肢** —
+(a) 図の生成そのものを puml-gen に置き換える。→ 却下。`-createAssociation` を
+付けて初めて関連線が出るが、その線はコレクション型を節点として作る。private
+フィールドも関連線になる。保持と使用の区別（太線・点線）が無い。**型の構造を
+そのまま図にする道具は、図に出したい関係と型の構造が一致しない限り使えない。**
+ここでは「Quest が Reward を持つ」が「Quest → ``IReadOnlyList`1`` → Reward」に化ける。
+
+(b) 抽出だけ puml-gen に任せ、.puml を中間表現として Mermaid 生成に食わせる。
+→ 今回は採らない。``IReadOnlyList`1`` から要素型を取り出す正規化を自前で書く必要が
+あり、**正規表現が消えるのではなく置き場所が変わるだけになる**。構文解析の
+堅牢さと引き換えに、出力の正規化という別の脆さを買うことになる。
+
+(c) 描画のため Java と Graphviz を各人の環境に入れる。→ (a) を却下したので不要。
+Mermaid は GitHub と VS Code が標準で描くため閲覧環境の要求が発生しない。
+**閲覧に追加インストールを要する形式は、閲覧されなくなる。**
+
+**決定** — 現状図・差分図の生成に puml-gen を使わない。図の形式は Mermaid の
+ままとする。抽出エンジンとしての利用（b）は、正規表現が実際に取りこぼした
+事例が出てから再検討する。
+
+**帰結** — 正規表現による C# 読み取りが残る。判断が誤りだった場合の検出条件:
+DependencyGraphGenerator が式形式メンバ・ネストしたジェネリクス・複数行
+シグネチャのいずれかを取りこぼし、図が実態とずれること。そのとき (b) を実装する。
+
+### [D-014] Domain を UnityEngine 非依存にし、asmdef で物理強制する
+status: Accepted
+scope: Assets/_Project/Scripts/Domain/, Assets/_Project/Scripts/Game/, .github/workflows/domain-tests.yml
+
+**背景** — 2026-08-25（4c5cc3a）の判断を後から起票する。`Assets/_Project/Scripts`
+を分割するにあたり、Domain がエンジンに依存しないことをどう担保するかを決める
+必要があった。
+
+**検討した選択肢** —
+(a) 名前空間とレビューで分ける。→ 却下。`using UnityEngine` を1行足した時点で
+崩れ、しかも**崩れたことが誰にも通知されない**。強制力の無い層分けは、破った
+コストがゼロなので必ず破られる。
+(b) 単一アセンブリのまま置く。→ 却下。Domain のテストに Unity Editor の起動が
+必要になる。**エンジンを起動しないと回らないテストは、CI でも手元でも回す頻度が
+落ちる。**
+
+**決定** — Domain の asmdef は `noEngineReferences: true`、`references: []` とする。
+依存は Game → Domain の一方向のみ。Domain は UnityEngine を参照しない。
+
+**帰結** — Domain だけを素の `dotnet test` で回せるようになり、CI
+（domain-tests.yml）は Unity を起動しない。
+代償として、asmdef 側から Legacy（Assembly-CSharp）を参照できない。参照は
+一方向で、Legacy への asmdef 付与は HeroEditor が gitignore されているため今は
+行えない。この制約は既に実害を出しており、PlayMode テストは `GameManager.SceneTrans`
+をリフレクションで呼んでいる（[D-016] 参照）。判断が誤りだった場合の検出条件:
+リフレクション経由の呼び出しが増え、改名がコンパイルで止まらなくなること。
+
+### [D-015] ゲーム設計は Notion に置く。docs/GDD.md は消さずに残す
+status: Accepted
+scope: docs/GDD.md, README.md
+
+**背景** — 2026-08-27（c4df091）の判断を後から起票する。分厚い GDD は複数人の
+ズレを防ぐ道具であり、現在1人では防ぐべきズレが無い。実際 Inventory と Craft の
+Domain 分離で仕様のすり合わせは起きたが、着地したのはテスト名と ScriptableObject
+のフィールドで、GDD は要らなかった。
+
+**検討した選択肢** —
+(a) 分厚い GDD をリポジトリで維持する。→ 却下。**読み手のいない文書は更新されず、
+更新されない文書は誤りを配る。**
+(b) `docs/GDD.md` を削除する。→ 却下。消すと「一度考えて、置かないと決めた」
+事実が失われる。**却下の記録が無い決定は、同じ議論をゼロからやり直す。**
+
+**決定** — ゲーム設計は Notion（個人 Wiki）に置く。柱とコアループはそのトップ
+ページ。リポジトリ側の正典は従来どおり、挙動 = テスト / 数値 = ScriptableObject /
+理由 = DECISIONS.md とする。Notion での議論がコードの形を決めるなら、その時点で
+DECISIONS.md へ移す。`docs/GDD.md` は残す。
+
+**帰結** — 設計の一部がリポジトリ外の外部サービスに載る。公開リポジトリからは
+辿れず、Notion が失われれば設計意図も失われる。複数人になった時点で方針を
+見直す。判断が誤りだった場合の検出条件: Notion を参照しないとコードの意図が
+読めない箇所が現れること。そのとき DECISIONS.md へ移す。
+
+### [D-016] PlayMode テストは判定せず、例外が出ないことだけを見る
+status: Accepted
+scope: Assets/_Project/Tests/Play/
+
+**背景** — 2026-08-27（9b1233e）の判断を後から起票する。Domain 分割が作る壊れ方は
+「コンパイルは通るが Play すると null」であり、EditMode / dotnet テストでは
+素通りする。一方 Legacy は static と `DontDestroyOnLoad` での持ち回りに依存して
+おり、細かい判定を書ける状態にない。
+
+**検討した選択肢** —
+(a) 挙動を判定する PlayMode テストを書く。→ 却下。**テストは触れた構造を固定
+する。** 作り直す予定の Legacy の内部状態に判定を書けば、リファクタのたびに
+テストを直すことになり、リファクタを妨げる資産になる。
+(b) PlayMode テストを持たない。→ 却下。(a) の理由は「判定を書かない」根拠には
+なるが、「網を張らない」根拠にはならない。起動時の null は最も安く捕まえられる。
+
+**決定** — PlayMode テストは判定を書かず、例外が出ないことだけを見る。Unity Test
+Framework が LogError と例外を自動で失敗にするため、これだけで網になる。TearDown
+は「Play を押し直した直後の状態に戻す」まで行う。オブジェクトの破棄では足りない。
+static のフラグとリストが残り、2本目以降が落ちるため（[D-006] の実例）。
+
+**帰結** — シーン遷移は `GameManager.SceneTrans` をリフレクションで呼ぶ（[D-014]
+の一方向依存による）。改名がコンパイルではなく実行時に落ちる点はスモークテスト
+として許容する。判断が誤りだった場合の検出条件: 例外は出ないが壊れている
+不具合を、この網が続けて見逃すこと。
