@@ -1,38 +1,46 @@
-# 🗂️ 現在の状態
+﻿# 🗂️ 現在の状態
 
 > 上書き専用。
 
 ## 🎯 いま
 
-判断の記録と受け皿の整備。コードには触っていない。
+Legacy から Domain への切り出しと、その順序を測る仕組みの整備。
 
-- `docs/DECISIONS.md` が 16 件（D-013〜D-016 を追加）。455 行
-- 目安の 500 行が近い。超えたら `docs/decisions/` へ分割し、それ自体も記録する
+- Domain は 8 型ファイル。dotnet 86 件 / Unity EditMode 84 件
+- 次にどこへ手を付けるかは `docs/dependency-list.md` の fan-out 昇順で読む
 
 ## ✅ 完了
 
-- 旧 Domain クラス図を廃止。`docs/domain-class-diagram.md`、`DomainDiagramTests.cs`、
-  csproj のエントリ、CONTRIBUTING の記載を削除（`1b258c5`）。`dotnet test` 57 件成功
-- STATE.md / FRICTIONS.md を新設（`fddd401`）
-- PlantUmlClassDiagramGenerator を評価し、図の生成には使わないと決定（[D-013]）
-- 過去の判断を遡及起票。asmdef 分離 [D-014] / Notion [D-015] / PlayMode の網 [D-016]
-- `.claude/hooks/adr.md` を `.claude/commands/` へ移設。フック配下では読まれていなかった
-- AGENTS.md の禁止に理由を追記。dep-diagrams は人間が読む用で、禁止は意図どおりだった
-- DECISIONS.md を日付節のない `## [D-XXX]` の平坦な一覧に再構成。日付は各項目の
-  `date:` へ移した。旧節は実態とずれており、D-003 / D-004 は 08-23 ではなく
-  Pipeline 導入の 08-25、D-009〜D-012 は 08-28 が正しい
-- adr.md の出力テンプレを上記の形式に合わせた。手順1の grep が 0 件から 34 件になった
+- **[D-006] が名指しした 5 つのうち 4 つを解消。**
+  `RootsManager.roots` → `RootRegistry` / `QuestManager.quests` → `QuestRegistry` /
+  `Sun2.daytime` → `DayCycle` / `Player2.playerhp` → `Health`
+- 所持金を `Wallet` へ。UI の文字列が正典で `int.Parse` が 5 箇所あった
+- 体力を `Health` へ。UI の Slider が正典で値が黙って丸められていた
+- 日の進行を `DayClock` / `DayCycle` / `DayPlan` へ
+- 依存図の生成を廃止し、型の被覆検査だけ残した（[D-017]）
+- ソースの解析を正規表現から Roslyn へ（537 行 → 191 行）
+- **Legacy を 11 フォルダに分割。**直下 35 件が 0 件に。51 件すべて GUID 保持
+- `docs/dependency-list.md` を生成。フォルダ間の fan-in / fan-out
 
 ## ⏭️ 次
 
-- `docs/conventions.md` に文字コードの節が無い。`138caed` に規則が揃っている
-- `.config/dotnet-tools.json` の去就。[D-013] で図には使わないと決めたので、
-  残す理由は抽出エンジンとしての再検討のみ。`fd8c7aa` で追跡対象に入れた
-- **AGENTS.md が 55 行。**冒頭の目安は 50 行。次に足すときは層ごとへの分割を検討する
+- **`warnaserror`。**アナライザは既に走っているが警告が CI を落とさない。
+  いま警告 0 件なので、上げるなら無料の今
+- **移行の次の候補**（fan-out 昇順より）
+  - `Legacy/OutField` — 出 1 / 入 0。中身が空で移行ではなく削除。
+    4 クラスともシーンに貼り付いているので剥がす作業が先
+  - `Legacy/Craft` — 出 6 / **入 0**。誰からも参照されておらず波及しない
+- `docs/slices.txt` の Legacy の核が型名の羅列のまま。フォルダができたので
+  `Legacy/Player` のような指定へ寄せられるが、`Resolve` のフォルダ対応が要る
+- `Root.cs:5` のコメントに「二重定義されていたものを1つにした」が残っている
+- `docs/conventions.md` に文字コードの節が無い（規則は `138caed` に揃っている）
+- `GameManager.entered_scene` — [D-006] が名指しした最後の 1 つ
 
 ## 🚧 ブロッカー
 
 - **ビルドを一度も通していない。**Unity 6.3 移行以降ずっと。
-  PlayTests の asmdef がビルドから除外されるかも未確認
-- 人の目でしか確認できないものが残っている。20 分プレイして氾濫を見る、
-  クラフト画面の素材スロット、GitHub 上での図の描画
+  `PlayTests` の asmdef がビルドから除外されるかも未確認
+- **実機でしか確かめられないものが 2 件。**どちらもテストでは検証できない
+  - シーンを跨いだときの体力。`1f4bfdc` で挙動が変わった可能性がある
+  - クエストの発行が翌日になる件（`dd810a1`）
+- 20 分プレイして氾濫を見る / クラフト画面の素材スロット
