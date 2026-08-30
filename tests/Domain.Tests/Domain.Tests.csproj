@@ -33,6 +33,8 @@
     <Compile Include="SourceIndex.cs" />
     <Compile Include="SliceTable.cs" />
     <Compile Include="SliceCoverageTests.cs" />
+    <Compile Include="DependencyList.cs" />
+    <Compile Include="DependencyListTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

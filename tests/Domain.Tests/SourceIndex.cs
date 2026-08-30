@@ -31,6 +31,20 @@ namespace MemorialFloor.Domain.Tests
             /// <summary>リポジトリからの道 -> そのファイルが宣言する型名</summary>
             public readonly Dictionary<string, List<string>> Files =
                 new Dictionary<string, List<string>>(StringComparer.Ordinal);
+
+            /// <summary>型名 -> 節。節は「層/直下のフォルダ」。直下のファイルは層そのもの</summary>
+            public readonly Dictionary<string, string> Owner =
+                new Dictionary<string, string>(StringComparer.Ordinal);
+
+            /// <summary>節 -> そこから名前を出している型。宣言も含むので使う側で除く</summary>
+            public readonly Dictionary<string, HashSet<string>> Mentions =
+                new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+
+            /// <summary>節の一覧</summary>
+            public IEnumerable<string> Nodes
+            {
+                get { return Owner.Values.Distinct().OrderBy(n => n, StringComparer.Ordinal); }
+            }
         }
 
         public static Index Build()
@@ -54,11 +68,36 @@ namespace MemorialFloor.Domain.Tests
                                                   .Replace(Path.DirectorySeparatorChar, '/');
 
                     index.Files[path] = declared;
-                    foreach (string name in declared) index.Layers[name] = layer;
+
+                    string rest = path.Substring(rel.Length + 1);
+                    string node = rest.Contains("/") ? layer + "/" + rest.Split('/')[0] : layer;
+
+                    foreach (string name in declared)
+                    {
+                        index.Layers[name] = layer;
+                        index.Owner[name] = node;
+                    }
+
+                    if (!index.Mentions.ContainsKey(node))
+                        index.Mentions[node] = new HashSet<string>(StringComparer.Ordinal);
+
+                    foreach (string name in Mentioned(File.ReadAllText(file)))
+                        index.Mentions[node].Add(name);
                 }
             }
 
             return index;
+        }
+
+        /// <summary>そのソースが名前を出している識別子。コメントと文字列は構文木の外なので入らない</summary>
+        private static IEnumerable<string> Mentioned(string source)
+        {
+            return CSharpSyntaxTree.ParseText(source)
+                                   .GetRoot()
+                                   .DescendantNodes()
+                                   .OfType<SimpleNameSyntax>()
+                                   .Select(node => node.Identifier.ValueText)
+                                   .Distinct(StringComparer.Ordinal);
         }
 
         /// <summary>そのソースが宣言する型の名前。class / struct / interface / enum / record</summary>
