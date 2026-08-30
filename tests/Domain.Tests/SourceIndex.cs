@@ -36,9 +36,9 @@ namespace MemorialFloor.Domain.Tests
             public readonly Dictionary<string, string> Owner =
                 new Dictionary<string, string>(StringComparer.Ordinal);
 
-            /// <summary>節 -> そこから名前を出している型。宣言も含むので使う側で除く</summary>
-            public readonly Dictionary<string, HashSet<string>> Mentions =
-                new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+            /// <summary>節 -> そこで名前が出た識別子と、その回数</summary>
+            public readonly Dictionary<string, Dictionary<string, int>> Mentions =
+                new Dictionary<string, Dictionary<string, int>>(StringComparer.Ordinal);
 
             /// <summary>節の一覧</summary>
             public IEnumerable<string> Nodes
@@ -79,25 +79,28 @@ namespace MemorialFloor.Domain.Tests
                     }
 
                     if (!index.Mentions.ContainsKey(node))
-                        index.Mentions[node] = new HashSet<string>(StringComparer.Ordinal);
+                        index.Mentions[node] = new Dictionary<string, int>(StringComparer.Ordinal);
 
+                    Dictionary<string, int> seen = index.Mentions[node];
                     foreach (string name in Mentioned(File.ReadAllText(file)))
-                        index.Mentions[node].Add(name);
+                        seen[name] = seen.ContainsKey(name) ? seen[name] + 1 : 1;
                 }
             }
 
             return index;
         }
 
-        /// <summary>そのソースが名前を出している識別子。コメントと文字列は構文木の外なので入らない</summary>
+        /// <summary>
+        /// そのソースが名前を出している識別子。出るたびに1つ返す。
+        /// コメントと文字列は構文木の外なので入らない
+        /// </summary>
         private static IEnumerable<string> Mentioned(string source)
         {
             return CSharpSyntaxTree.ParseText(source)
                                    .GetRoot()
                                    .DescendantNodes()
                                    .OfType<SimpleNameSyntax>()
-                                   .Select(node => node.Identifier.ValueText)
-                                   .Distinct(StringComparer.Ordinal);
+                                   .Select(node => node.Identifier.ValueText);
         }
 
         /// <summary>そのソースが宣言する型の名前。class / struct / interface / enum / record</summary>
