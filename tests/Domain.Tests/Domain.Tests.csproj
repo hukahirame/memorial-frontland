@@ -30,12 +30,13 @@
     <Compile Include="../../Assets/_Project/Scripts/Domain/**/*.cs" />
     <Compile Include="../../Assets/_Project/Tests/Domain/**/*.cs" />
     <!-- dotnet 専用。Unity 側に置くと UnityEngine 非依存の前提が崩れる -->
-    <Compile Include="DependencyGraphGenerator.cs" />
+    <Compile Include="SourceIndex.cs" />
     <Compile Include="SliceTable.cs" />
     <Compile Include="SliceCoverageTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
     <PackageReference Include="NUnit" Version="3.14.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
