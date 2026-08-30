@@ -18,7 +18,7 @@ public class SceneStarter : MonoBehaviour //シーン起動時の処理全般。
         p.expos = exposition;
 
         Player2.playerrb = pt.GetComponent<Rigidbody>();
-        Player2.playerhp = GameObject.FindWithTag("HpSlider").GetComponent<Slider>();
+        Player2.BindHpView(GameObject.FindWithTag("HpSlider").GetComponent<Slider>());
 
         SaveData sd = GameObject.Find("GameManager").GetComponent<SaveSystem>().savedata;
         for (int i = 0; i < sd.saveObjects.Count; i++)

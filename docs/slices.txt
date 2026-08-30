@@ -12,7 +12,7 @@ Domain/Quest.cs QuestManager QuestButton RewardUI                               
 Domain/Day.cs Sun2                                                                                    | 日の進行 ☀️ | 1日を進める側。根源とクエストとセーブを同時に叩く。
 Domain/Wallet.cs                                                                                      | 所持金 💰 | 受け取りと支払い。表示ではなくここが正典。
 SaveSystem SaveData                                                                                   | セーブ 💾 | 進行状況の保存と復元。
-Player2 PlayerHp PlayerDeath Weapon SideJab JoystickEffect JoystickEffect_ATK Allmaity Wink DamageSet | プレイヤー 🚶 | 操作、体力、攻撃、死亡。
+Domain/Health.cs Player2 PlayerHp PlayerDeath Weapon SideJab JoystickEffect JoystickEffect_ATK Allmaity Wink DamageSet | プレイヤー 🚶 | 操作、体力、攻撃、死亡。
 Enemy Slime Seeker MS_Spawner OF_Spawner SpawnerCandidate                                             | 敵とスポーン 👾 | 敵の出現位置と追跡、被弾。
 FieldCreator FirstSeedSet OutField BranchFallSystem Dropitem                                          | 外フィールド 🌲 | 地形の生成と、木を切って素材が落ちるまで。
 GameManager SceneStarter SceneFinisher Title MapButton                                                | シーン遷移 🚪 | どのシーンに入り、何を持ち越すか。

@@ -25,7 +25,7 @@ public class SaveData
 
     public void SyncStatic() //SaveSystem.Save()の中で最初に実行
     {
-        playerhp = (int)Player2.playerhp.value;
+        playerhp = Player2.Hp.Current;
         entered_scene = GameManager.entered_scene;
         daytime = Sun2.Cycle.ElapsedSeconds;
         SyncDynamic();
@@ -64,7 +64,8 @@ public class SaveData
 
     public void LoadStatic()
     {
-        Player2.playerhp.value = playerhp;
+        Player2.Hp.SetCurrent(playerhp);
+        Player2.RefreshHpView();
         GameManager.entered_scene = entered_scene;
         Sun2.Cycle.SetElapsed(daytime);
         LoadDynamic();

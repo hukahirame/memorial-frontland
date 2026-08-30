@@ -48,11 +48,14 @@ public class Info_set : MonoBehaviour
         button.gameObject.SetActive(false);
     }
 
+    private const int SlimejellyHeal = 5;
+
     public void Install()
     {
         if (nametxt.text == "スライムゼリー")
         {
-            Player2.playerhp.value += 5;
+            Player2.Hp.Heal(SlimejellyHeal);
+            Player2.RefreshHpView();
             GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>().UnloadInventory("Slimejelly");
         }
         else if (nametxt.text.IndexOf("鉄") != -1) 

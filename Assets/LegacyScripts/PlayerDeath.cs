@@ -9,6 +9,7 @@ using UnityEngine.SceneManagement;
 public class PlayerDeath : MonoBehaviour
 {
     private const int DeathPenalty = 100;
+    private const int RevivePercent = 5;
 
     private Player2 p;
 
@@ -51,7 +52,8 @@ public class PlayerDeath : MonoBehaviour
         GameManager.Coins.Spend(DeathPenalty);
         GameObject.Find("CoinText").GetComponent<TextMeshProUGUI>().text =
             GameManager.Coins.Amount.ToString();
-        Player2.playerhp.value = (int)(Player2.playerhp.maxValue * 0.05);
+        Player2.Hp.SetCurrent(Player2.Hp.Max * RevivePercent / 100);
+        Player2.RefreshHpView();
         transform.position = new Vector3(-2, 0.65f, -2);
 
     }

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Assets.HeroEditor.Common.Scripts.CharacterScripts;
+using MemorialFloor.Domain;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -24,6 +25,10 @@ public class Player2 : MonoBehaviour
     public static float horizontalKey;
     public static float verticalKey;
 
+    /// <summary>体力。所有者はここ1つ。Slider は表示であって正典ではない</summary>
+    public static readonly Health Hp = new Health();
+
+    /// <summary>体力の表示。シーンごとに取り直す</summary>
     public static Slider playerhp;
     [SerializeField] Button jumpbutton;
     [SerializeField] AudioSource footstep;
@@ -35,7 +40,7 @@ public class Player2 : MonoBehaviour
     void Start()
     {
         playerrb = GetComponent<Rigidbody>();
-        playerhp = GameObject.FindWithTag("HpSlider").GetComponent<Slider>();
+        BindHpView(GameObject.FindWithTag("HpSlider").GetComponent<Slider>());
         DontDestroyOnLoad(gameObject);
 
         /* if (PL_singleton == false)
@@ -170,14 +175,40 @@ public class Player2 : MonoBehaviour
         
     }
 
+    /// <summary>表示を差し替える。上限と初期値は最初に見つけた Slider から一度だけ取る</summary>
+    public static void BindHpView(Slider view)
+    {
+        playerhp = view;
+        if (view == null) return;
+
+        if (!Hp.IsReady)
+        {
+            Hp.SetMax((int)view.maxValue);
+            Hp.SetCurrent((int)view.value);
+        }
+
+        RefreshHpView();
+    }
+
+    /// <summary>Health の値を表示へ書き出す</summary>
+    public static void RefreshHpView()
+    {
+        if (playerhp == null) return;
+
+        playerhp.value = Hp.Current;
+
+        Transform label = playerhp.transform.Find("Text_Value");
+        if (label != null)
+            label.GetComponent<TextMeshProUGUI>().text = Hp.Current + "/" + Hp.Max;
+    }
+
     public void Player_Hurt(int damage, Vector3 direction) // 現状、ノックバックはほぼ固定
     {
-        playerhp.value -= damage;
-        var t = playerhp.transform.Find("Text_Value").GetComponent<TextMeshProUGUI>();
-        t.text = playerhp.value.ToString() + "/" + playerhp.maxValue.ToString();
+        Hp.Take(damage);
+        RefreshHpView();
         playerrb.AddForce(direction.normalized * 100, ForceMode.Impulse);
         StartCoroutine(PlayerHurt_Graphic());
-        if (playerhp.value <= 0) GetComponent<PlayerDeath>().DeathMainProcess();//死
+        if (Hp.IsDead) GetComponent<PlayerDeath>().DeathMainProcess();//死
         /*{
             cool = true;
             character.SetState(CharacterState.DeathB);
