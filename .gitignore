@@ -1,4 +1,4 @@
-# ===== Whitelist: Assets配下は原則すべて無視し、自作分だけ明示的に許可する =====
+﻿# ===== Whitelist: Assets配下は原則すべて無視し、自作分だけ明示的に許可する =====
 # /[Aa]ssets/* は「直下の各エントリ」を除外する。Git は除外されたディレクトリの
 # 中を走査しないため、再包含は必ず直下から順に、ディレクトリと .meta を対で書く
 # （.meta を忘れると GUID が振り直される）。
@@ -102,3 +102,5 @@ desktop.ini
 # エージェント作業開始時の作業ツリー記録（手元のデバッグ用。共有しない）
 /.claude/editor-changes.log
 /.claude/.unity-checkpoint-state
+# 時系列ログ（手元の作業記録。判断の正典は docs/DECISIONS.md）
+/docs/JOURNAL.md
