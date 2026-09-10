@@ -1,4 +1,4 @@
-# 規約
+﻿# 規約
 
 <!--
 掲載基準は「機械で強制できず、かつ揺れると実害があるもの」のみ。
@@ -104,6 +104,12 @@ public IReadOnlyList<string> Items => _items;
 
 **例外: ScriptableObject と `[Serializable]` のデータ入れ物は public フィールドで良い。**
 その代わり SO は読み取り専用として扱い、実行中に書き換えない。
+
+## ゲームデータの置き場 🗄️  [D-019]
+
+入れ子・可変長・他アセットへの参照があるものは ScriptableObject。
+平坦で行数が多く一括編集するものは CSV に置き、Domain で解析する。
+迷ったら ScriptableObject。
 
 ## 命名 🏷️
 
