@@ -14,13 +14,14 @@
 | 節 | ↑ | ↓ |
 |---|---|---|
 | 🟦 `Domain` | **0** | **9** |
+| 🟩 `Inventory` | **0** | **2** |
 | 🟩 `Staging` | **0** | **6** |
 | 🟩 `Craft` | **1** | **1** |
-| 🟨 `OutField` | **1** | **0** |
+| 🟩 `OutField` | **1** | **0** |
 | 🟨 `Day` | **4** | **1** |
-| 🟨 `Inventory` | **4** | **5** |
 | 🟨 `Roots` | **4** | **5** |
 | 🟨 `Save` | **4** | **2** |
+| 🟨 `Inventory` | **5** | **4** |
 | 🟨 `Quest` | **5** | **5** |
 | 🟨 `Craft` | **6** | **0** |
 | 🟨 `Player` | **6** | **4** |
@@ -46,6 +47,15 @@
 ↑ 🟦 `Domain` **4** — Ingredient **2**, Recipe **2**  
 
 ↓ 🟨 `Craft` **1** — RecipeDefinition **1**  
+
+### 🟩Inventory 🎒 
+
+↓ 🟩 `OutField` **2** — IItemReceiver **2**  
+↓ 🟨 `Inventory` **1** — IItemReceiver **1**  
+
+### 🟩OutField 🌲 
+
+↑ 🟩 `Inventory` **2** — IItemReceiver **2**  
 
 ### 🟩Staging 🎥 
 
@@ -91,19 +101,15 @@
 ### 🟨Inventory 🎒 
 
 ↑ 🟦 `Domain` **6** — AddOutcome **2**, Inventory **2**, RemoveOutcome **2**  
+↑ 🟩 `Inventory` **1** — IItemReceiver **1**  
 ↑ 🟩 `Staging` **3** — TempAudio **3**  
 ↑ 🟨 `Player` **6** — Player2 **4**, Weapon **2**  
 ↑ 🟨 `Scene` **12** — GameManager **12**  
 
 ↓ 🟨 `Craft` **1** — PlayerInventory **1**  
-↓ 🟨 `OutField` **2** — PlayerInventory **2**  
 ↓ 🟨 `Player` **1** — WeaponBox **1**  
 ↓ 🟨 `Quest` **1** — PlayerInventory **1**  
 ↓ 🟨 `Save` **4** — PlayerInventory **4**  
-
-### 🟨OutField 🌲 
-
-↑ 🟨 `Inventory` **2** — PlayerInventory **2**  
 
 ### 🟨Player 🚶 
 

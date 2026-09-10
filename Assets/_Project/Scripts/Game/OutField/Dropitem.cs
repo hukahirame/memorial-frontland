@@ -1,10 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using MemorialFloor.Game;
 using UnityEngine;
 
 public class Dropitem : MonoBehaviour
 {
-    private PlayerInventory pi;
+    private IItemReceiver pi;
     private int durability = 0;
 
     private void Start()
@@ -21,7 +22,7 @@ public class Dropitem : MonoBehaviour
     {
         if (collision.gameObject.layer == 8)
         {
-            if (pi == null) pi = GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>();
+            if (pi == null) pi = GameObject.FindWithTag("PlayerInventory").GetComponent<IItemReceiver>();
 
             if (pi.LoadInventory(GetComponent<SpriteRenderer>().sprite.name, durability) == 1) Destroy(gameObject);
         }

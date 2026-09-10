@@ -2,8 +2,9 @@
 using UnityEngine;
 using UnityEngine.UI;
 using MemorialFloor.Domain;
+using MemorialFloor.Game;
 
-public class PlayerInventory : MonoBehaviour
+public class PlayerInventory : MonoBehaviour, IItemReceiver
 {
     private int CHILDPLUS = 5; //Inventory直下、Boxまでのobjの個数
 
