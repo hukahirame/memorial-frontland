@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using MemorialFloor.Domain;
+using UnityEngine;
 using System;
 using System.Collections.Generic;
 using TMPro;
@@ -14,9 +15,7 @@ public class SaveData
     //保存を再開するなら、先に入れ子を持たない形へ直すこと
     public int coin;
     public Vector3 respawn;
-    public List<string> items = new List<string>();
-    public List<int> stocks = new List<int>();
-    public List<int> maxstocks = new List<int>();
+    public List<ItemSlot> slots = new List<ItemSlot>();
     public List<string> enemies = new List<string>(); //現シーンのみ
     public List<Vector3> respawns = new List<Vector3>(); //現シーンのみ
     public List<string> saveObjects = new List<string>();
@@ -34,9 +33,7 @@ public class SaveData
     public void SyncDynamic()
     {
         PlayerInventory pi = GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>();
-        items = pi.items;
-        stocks = pi.stocks;
-        maxstocks = pi.maxstocks;
+        slots = new List<ItemSlot>(pi.Slots);
 
         coin = GameManager.Coins.Amount;
         respawn = GameObject.FindWithTag("Player").transform.position;
@@ -74,9 +71,7 @@ public class SaveData
     public void LoadDynamic()
     {
         PlayerInventory pi = GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>();
-        pi.items = items;
-        pi.stocks = stocks;
-        pi.maxstocks = maxstocks;
+        pi.ReplaceSlots(slots);
 
         GameManager.Coins.SetAmount(coin);
         GameObject.Find("CoinText").GetComponent<TextMeshProUGUI>().text =

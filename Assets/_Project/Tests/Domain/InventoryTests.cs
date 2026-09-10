@@ -5,23 +5,15 @@ namespace MemorialFloor.Domain.Tests
 {
     public class InventoryTests
     {
-        private List<string> _items;
-        private List<int> _stocks;
-        private List<int> _maxStocks;
+        private List<ItemSlot> _slots;
 
         /// <summary>空きスロットを slotCount 個持つインベントリを作る</summary>
         private Inventory CreateEmpty(int slotCount)
         {
-            _items = new List<string>();
-            _stocks = new List<int>();
-            _maxStocks = new List<int>();
-            for (int i = 0; i < slotCount; i++)
-            {
-                _items.Add(Inventory.EmptySlot);
-                _stocks.Add(0);
-                _maxStocks.Add(0);
-            }
-            return new Inventory(_items, _stocks, _maxStocks);
+            _slots = new List<ItemSlot>();
+            for (int i = 0; i < slotCount; i++) _slots.Add(new ItemSlot());
+
+            return new Inventory(_slots);
         }
 
         [Test]
@@ -34,8 +26,8 @@ namespace MemorialFloor.Domain.Tests
             Assert.AreEqual(AddOutcome.Placed, r.Outcome);
             Assert.AreEqual(0, r.SlotIndex);
             Assert.AreEqual(1, r.Stock);
-            Assert.AreEqual("Branch", _items[0]);
-            Assert.AreEqual(10, _maxStocks[0]);
+            Assert.AreEqual("Branch", _slots[0].ItemId);
+            Assert.AreEqual(10, _slots[0].MaxStock);
         }
 
         [Test]
@@ -49,7 +41,7 @@ namespace MemorialFloor.Domain.Tests
             Assert.AreEqual(AddOutcome.Stacked, r.Outcome);
             Assert.AreEqual(0, r.SlotIndex);
             Assert.AreEqual(2, r.Stock);
-            Assert.AreEqual(Inventory.EmptySlot, _items[1], "2つ目のスロットは消費されない");
+            Assert.AreEqual(Inventory.EmptySlot, _slots[1].ItemId, "2つ目のスロットは消費されない");
         }
 
         [Test]
@@ -63,7 +55,7 @@ namespace MemorialFloor.Domain.Tests
 
             Assert.AreEqual(AddOutcome.Placed, r.Outcome);
             Assert.AreEqual(1, r.SlotIndex);
-            Assert.AreEqual(2, _stocks[0], "元のスロットは上限のまま");
+            Assert.AreEqual(2, _slots[0].Stock, "元のスロットは上限のまま");
         }
 
         [Test]
@@ -76,7 +68,7 @@ namespace MemorialFloor.Domain.Tests
 
             Assert.AreEqual(AddOutcome.NoSpace, r.Outcome);
             Assert.AreEqual(-1, r.SlotIndex);
-            Assert.AreEqual("Branch", _items[0], "既存スロットは書き換えられない");
+            Assert.AreEqual("Branch", _slots[0].ItemId, "既存スロットは書き換えられない");
         }
 
         [Test]
@@ -90,7 +82,7 @@ namespace MemorialFloor.Domain.Tests
 
             Assert.AreEqual(RemoveOutcome.Decremented, r.Outcome);
             Assert.AreEqual(1, r.Stock);
-            Assert.AreEqual("Branch", _items[0]);
+            Assert.AreEqual("Branch", _slots[0].ItemId);
         }
 
         [Test]
@@ -102,8 +94,8 @@ namespace MemorialFloor.Domain.Tests
             var r = inv.Remove("Branch");
 
             Assert.AreEqual(RemoveOutcome.SlotCleared, r.Outcome);
-            Assert.AreEqual(Inventory.EmptySlot, _items[0]);
-            Assert.AreEqual(0, _maxStocks[0]);
+            Assert.AreEqual(Inventory.EmptySlot, _slots[0].ItemId);
+            Assert.AreEqual(0, _slots[0].MaxStock);
         }
 
         [Test]
@@ -127,7 +119,7 @@ namespace MemorialFloor.Domain.Tests
             var r = inv.Remove("Branch");
 
             Assert.AreEqual(1, r.SlotIndex);
-            Assert.AreEqual(1, _stocks[0], "先頭のスロットは減らない");
+            Assert.AreEqual(1, _slots[0].Stock, "先頭のスロットは減らない");
         }
     }
 }

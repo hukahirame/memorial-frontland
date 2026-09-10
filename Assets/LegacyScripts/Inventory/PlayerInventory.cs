@@ -8,12 +8,33 @@ public class PlayerInventory : MonoBehaviour, IItemReceiver
 {
     private int CHILDPLUS = 5; //Inventory直下、Boxまでのobjの個数
 
-    public List<string> items = new List<string>();
-    public List<int> stocks = new List<int>();
-    public List<int> maxstocks = new List<int>();
+    [Tooltip("スロット数。起動時にこの数まで空きスロットを用意する")]
+    [SerializeField] private int slotCount = 5;
+
+    [SerializeField] private List<ItemSlot> slots = new List<ItemSlot>();
+
+    /// <summary>保存と復元のための口。並びは書き換えず、中身を入れ替える</summary>
+    public IReadOnlyList<ItemSlot> Slots => slots;
 
     public GameObject wi_button; // 装備時に、ibから情報のみ代入
     [SerializeField] private Sprite buttonsprite;
+
+    void Awake()
+    {
+        while (slots.Count < slotCount) slots.Add(new ItemSlot());
+    }
+
+    /// <summary>読み込んだ内容で埋め直す。参照は差し替えない</summary>
+    public void ReplaceSlots(List<ItemSlot> loaded)
+    {
+        slots.Clear();
+        if (loaded != null) slots.AddRange(loaded);
+
+        while (slots.Count < slotCount) slots.Add(new ItemSlot());
+    }
+
+    /// <summary>格納規則。並びを直接書き換える</summary>
+    public Inventory Inventory => new Inventory(slots);
 
     void Start()
     {
@@ -25,13 +46,12 @@ public class PlayerInventory : MonoBehaviour, IItemReceiver
     }
 
     // 格納規則は MemorialFloor.Domain.Inventory 側。ここは効果適用と表示のみ。
-    // SaveData.LoadDynamic() がリスト参照ごと差し替えるため、Inventory は保持せず都度生成する。
 
     public int LoadInventory(string s, int durability)
     {
         if (s == "Speedneckless") Player2.speed += 0.3f; //所持しているだけで加速する
 
-        var result = new Inventory(items, stocks, maxstocks).Add(s, () => GetMaxStock(s)); //新規配置時のみ評価される
+        var result = Inventory.Add(s, () => GetMaxStock(s)); //新規配置時のみ評価される
 
         switch (result.Outcome)
         {
@@ -61,7 +81,7 @@ public class PlayerInventory : MonoBehaviour, IItemReceiver
     {
         if (s == "Speedneckless") Player2.speed -= 0.3f;
 
-        var result = new Inventory(items, stocks, maxstocks).Remove(s);
+        var result = Inventory.Remove(s);
         if (result.Outcome == RemoveOutcome.NotFound) return;
 
         transform.GetChild(CHILDPLUS + result.SlotIndex).Find("Text").GetComponent<Text>().text = result.Stock.ToString();

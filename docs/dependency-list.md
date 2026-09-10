@@ -13,16 +13,16 @@
 
 | 節 | ↑ | ↓ |
 |---|---|---|
-| 🟦 `Domain` | **0** | **9** |
+| 🟦 `Domain` | **0** | **10** |
 | 🟩 `Inventory` | **0** | **2** |
 | 🟩 `Staging` | **0** | **6** |
 | 🟩 `Craft` | **1** | **1** |
 | 🟩 `OutField` | **1** | **0** |
 | 🟨 `Day` | **4** | **1** |
 | 🟨 `Roots` | **4** | **5** |
-| 🟨 `Save` | **4** | **2** |
 | 🟨 `Inventory` | **5** | **4** |
 | 🟨 `Quest` | **5** | **5** |
+| 🟨 `Save` | **5** | **2** |
 | 🟨 `Craft` | **6** | **0** |
 | 🟨 `Player` | **6** | **4** |
 | 🟨 `Scene` | **6** | **7** |
@@ -36,10 +36,11 @@
 ↓ 🟨 `Craft` **6** — Recipe **3**, Inventory **2**, ItemDefinition **1**  
 ↓ 🟨 `Day` **12** — Reward **3**, DayClock **2**, DayCycle **2**, DayPlan **2**, QuestKind **2**, Root **1**  
 ↓ 🟨 `Enemy` **2** — Root **2**  
-↓ 🟨 `Inventory` **9** — ItemDefinition **3**, AddOutcome **2**, Inventory **2**, RemoveOutcome **2**  
+↓ 🟨 `Inventory` **17** — ItemSlot **6**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
 ↓ 🟨 `Player` **3** — Health **2**, Quest **1**  
 ↓ 🟨 `Quest` **46** — QuestKind **19**, Quest **14**, Reward **8**, QuestRegistry **2**, Root **2**, QuestId **1**  
 ↓ 🟨 `Roots` **13** — AccumulationLevel **8**, Root **3**, RootRegistry **2**  
+↓ 🟨 `Save` **3** — ItemSlot **3**  
 ↓ 🟨 `Scene` **5** — ItemCatalog **2**, Wallet **2**, Root **1**  
 
 ### 🟩Craft 🔨 
@@ -100,7 +101,7 @@
 
 ### 🟨Inventory 🎒 
 
-↑ 🟦 `Domain` **9** — ItemDefinition **3**, AddOutcome **2**, Inventory **2**, RemoveOutcome **2**  
+↑ 🟦 `Domain` **17** — ItemSlot **6**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
 ↑ 🟩 `Inventory` **1** — IItemReceiver **1**  
 ↑ 🟩 `Staging` **3** — TempAudio **3**  
 ↑ 🟨 `Player` **6** — Player2 **4**, Weapon **2**  
@@ -154,6 +155,7 @@
 
 ### 🟨Save 💾 
 
+↑ 🟦 `Domain` **3** — ItemSlot **3**  
 ↑ 🟨 `Day` **2** — Sun2 **2**  
 ↑ 🟨 `Inventory` **4** — PlayerInventory **4**  
 ↑ 🟨 `Player` **3** — Player2 **3**  

@@ -1,7 +1,20 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace MemorialFloor.Domain
 {
+    /// <summary>
+    /// スロット1つぶん。空きは ItemId が空文字。
+    /// Unity の Inspector と JsonUtility が読むため、public フィールドで持つ（[D-007] の例外）。
+    /// </summary>
+    [Serializable]
+    public sealed class ItemSlot
+    {
+        public string ItemId = Inventory.EmptySlot;
+        public int Stock;
+        public int MaxStock;
+    }
+
     public enum AddOutcome
     {
         /// <summary>既存スロットに積まれた</summary>
@@ -52,25 +65,21 @@ namespace MemorialFloor.Domain
 
     /// <summary>
     /// スロット制インベントリの格納規則。表示・入出力は扱わない。
-    /// 空きスロットは itemId が空文字で表される。
-    /// 呼び出し元のリストを直接書き換えるため、リストを保持せず都度生成すること。
+    /// 空きスロットは ItemId が空文字で表される。
+    /// 渡されたスロットの並びを直接書き換える。
     /// </summary>
     public sealed class Inventory
     {
         public const string EmptySlot = "";
 
-        private readonly IList<string> _items;
-        private readonly IList<int> _stocks;
-        private readonly IList<int> _maxStocks;
+        private readonly IList<ItemSlot> _slots;
 
-        public Inventory(IList<string> items, IList<int> stocks, IList<int> maxStocks)
+        public Inventory(IList<ItemSlot> slots)
         {
-            _items = items;
-            _stocks = stocks;
-            _maxStocks = maxStocks;
+            _slots = slots;
         }
 
-        public int SlotCount => _items.Count;
+        public int SlotCount => _slots.Count;
 
         /// <summary>
         /// アイテムを1個追加する。同名で上限未満のスロットがあればそこに積み、
@@ -87,23 +96,23 @@ namespace MemorialFloor.Domain
         /// </summary>
         public AddResult Add(string itemId, System.Func<int> maxStockForNewSlot)
         {
-            for (int i = 0; i < _items.Count; i++)
+            for (int i = 0; i < _slots.Count; i++)
             {
-                if (_items[i] == itemId && _stocks[i] < _maxStocks[i])
+                if (_slots[i].ItemId == itemId && _slots[i].Stock < _slots[i].MaxStock)
                 {
-                    _stocks[i]++;
-                    return new AddResult(AddOutcome.Stacked, i, _stocks[i]);
+                    _slots[i].Stock++;
+                    return new AddResult(AddOutcome.Stacked, i, _slots[i].Stock);
                 }
             }
 
-            for (int i = 0; i < _items.Count; i++)
+            for (int i = 0; i < _slots.Count; i++)
             {
-                if (_items[i] == EmptySlot)
+                if (_slots[i].ItemId == EmptySlot)
                 {
-                    _items[i] = itemId;
-                    _stocks[i]++;
-                    _maxStocks[i] = maxStockForNewSlot();
-                    return new AddResult(AddOutcome.Placed, i, _stocks[i]);
+                    _slots[i].ItemId = itemId;
+                    _slots[i].Stock++;
+                    _slots[i].MaxStock = maxStockForNewSlot();
+                    return new AddResult(AddOutcome.Placed, i, _slots[i].Stock);
                 }
             }
 
@@ -116,9 +125,9 @@ namespace MemorialFloor.Domain
         public int CountOf(string itemId)
         {
             int total = 0;
-            for (int i = 0; i < _items.Count; i++)
+            for (int i = 0; i < _slots.Count; i++)
             {
-                if (_items[i] == itemId) total += _stocks[i];
+                if (_slots[i].ItemId == itemId) total += _slots[i].Stock;
             }
             return total;
         }
@@ -129,9 +138,9 @@ namespace MemorialFloor.Domain
         public RemoveResult Remove(string itemId)
         {
             int index = -1;
-            for (int i = _items.Count - 1; i >= 0; i--)
+            for (int i = _slots.Count - 1; i >= 0; i--)
             {
-                if (_items[i] == itemId)
+                if (_slots[i].ItemId == itemId)
                 {
                     index = i;
                     break;
@@ -140,15 +149,15 @@ namespace MemorialFloor.Domain
 
             if (index < 0) return new RemoveResult(RemoveOutcome.NotFound, -1, 0);
 
-            _stocks[index]--;
-            if (_stocks[index] <= 0)
+            _slots[index].Stock--;
+            if (_slots[index].Stock <= 0)
             {
-                _items[index] = EmptySlot;
-                _maxStocks[index] = 0;
+                _slots[index].ItemId = EmptySlot;
+                _slots[index].MaxStock = 0;
                 return new RemoveResult(RemoveOutcome.SlotCleared, index, 0);
             }
 
-            return new RemoveResult(RemoveOutcome.Decremented, index, _stocks[index]);
+            return new RemoveResult(RemoveOutcome.Decremented, index, _slots[index].Stock);
         }
     }
 }

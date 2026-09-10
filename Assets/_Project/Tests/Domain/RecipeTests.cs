@@ -6,22 +6,15 @@ namespace MemorialFloor.Domain.Tests
     public class RecipeTests
     {
         private Inventory _inventory;
-        private List<string> _items;
-        private List<int> _stocks;
-        private List<int> _maxStocks;
+        private List<ItemSlot> _slots;
 
         private Inventory CreateInventory(params (string id, int stock)[] slots)
         {
-            _items = new List<string>();
-            _stocks = new List<int>();
-            _maxStocks = new List<int>();
+            _slots = new List<ItemSlot>();
             foreach (var s in slots)
-            {
-                _items.Add(s.id);
-                _stocks.Add(s.stock);
-                _maxStocks.Add(999);
-            }
-            _inventory = new Inventory(_items, _stocks, _maxStocks);
+                _slots.Add(new ItemSlot { ItemId = s.id, Stock = s.stock, MaxStock = 999 });
+
+            _inventory = new Inventory(_slots);
             return _inventory;
         }
 

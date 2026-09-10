@@ -126,6 +126,5 @@ public class Craft : MonoBehaviour//Craftchildから実行。対応するsetを�
         }
     }
 
-    // PlayerInventory はロード時にリスト参照ごと差し替わるため、都度生成する
-    private Inventory CurrentInventory() => new Inventory(pi.items, pi.stocks, pi.maxstocks);
+    private Inventory CurrentInventory() => pi.Inventory;
 }
