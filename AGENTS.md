@@ -19,24 +19,20 @@ Editor が閉じていると全コマンドが失敗する。その場合は起�
 - コマンド一覧: `unity command`
 - グループ絞り込み: `unity command --tag <tag> --detail full`
 
-## よく使うコマンド
+## テストの実行
 
-- Console: `unity command console --level error --tail 50`
-- シーン構造: `unity command list_open_scenes` / `unity command get_scene_hierarchy`
-- 画面確認: `unity command capture_game_view`
-- ビルド: `unity command build` → `unity command build_status`（非同期）
-- テスト: `unity command run_tests --mode <editor|playmode> --async_tests true`
-  → `test_status` をポーリング。`--timeout` は付けない（キャンセルで詰まる）
-  詰まり: `test_status` が running かつ `editor_status` の playMode が stopped。
-  `cancel_tests` を叩いてから再実行すれば戻る（プロセスを殺す必要はない）
-- 静的解析: `unity command audit` → `unity command audit_status`
+`run_tests --mode <editor|playmode> --async_tests true` → `test_status` をポーリング。
+
+- `--timeout` は付けない。キャンセルで Pipeline がゲートを握ったまま空回りする
+- 詰まりの判定は `test_status` が running かつ `editor_status` の playMode が stopped。
+  `cancel_tests` を叩いてから再実行すれば戻る。プロセスは殺さなくてよい
 
 ## 禁止
 
 - `docs/JOURNAL.md` を読むこと（時系列ログ。未整理の卓上案や覆された前提を
   採用済みと誤読する。判断の正典は `docs/DECISIONS.md`）
+- `.meta` を伴わないファイル移動、および GUID を照合しない移動（[D-018]）
 - `ProjectSettings/` の直接編集、`.meta` の手動生成、prefab の手動マージ
-- ファイルの移動・リネームをエクスプローラや `git mv` で行うこと（GUID が壊れる）
 - `scripts/eval` / `scripts/hotreload` グループの実行（任意コード実行に相当）
 - `switch_build_target`（全再インポート + domain reload を伴う。人間の明示指示時のみ）
 - `set_authoring_root` の変更（`Assets/_Project` に固定。third-party 保護のため）
