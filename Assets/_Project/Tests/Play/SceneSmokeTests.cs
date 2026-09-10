@@ -62,9 +62,6 @@ public class SceneSmokeTests
         SetStatic("GameManager", "P_singleton", false);
         SetStatic("GameManager", "entered_scene", "MainSite");
 
-        //Start のたびに Add され、Clear されない静的リスト
-        ClearStaticList("GameManager", "items");
-
         //根源は Domain 側。RootsManager だけ Assembly-CSharp なので名前で引く
         var roots = StaticField("RootsManager", "Roots").GetValue(null) as RootRegistry;
         Assert.IsNotNull(roots, "RootsManager.Roots が RootRegistry ではない");
@@ -127,11 +124,4 @@ public class SceneSmokeTests
         StaticField(typeName, fieldName).SetValue(null, value);
     }
 
-    private static void ClearStaticList(string typeName, string fieldName)
-    {
-        var list = StaticField(typeName, fieldName).GetValue(null) as IList;
-        Assert.IsNotNull(list, typeName + "." + fieldName + " がリストではない");
-
-        list.Clear();
-    }
 }
