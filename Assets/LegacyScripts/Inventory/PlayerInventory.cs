@@ -52,10 +52,9 @@ public class PlayerInventory : MonoBehaviour, IItemReceiver
 
     private int GetMaxStock(string s) //最大ストック数の取得
     {
-        int i;
-        for (i = 0; i < GameManager.items.Count; i++)
-            if (GameManager.items[i][0] == s) break;
-        return int.Parse(GameManager.items[i][2]);
+        ItemDefinition item = GameManager.Items.Find(s);
+
+        return item == null ? 0 : item.MaxStock;
     }
 
     public void UnloadInventory(string s)

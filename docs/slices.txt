@@ -6,7 +6,7 @@
 #
 # <核: ファイルか型を空白区切り> | <名前> | <一行説明>
 Domain/Root.cs RootsManager RootUI                                                                    | 根源 🌳 | 根源の素性と、攻略度・危険度・蓄積値の規則。
-Domain/Inventory.cs IItemReceiver PlayerInventory Inventbutton CloseInventory Info_set WeaponBox                    | 持ち物 🎒 | 所持品の追加・削除。スロットと重ねの規則を持つ。
+Domain/Inventory.cs Domain/ItemCatalog.cs IItemReceiver PlayerInventory Inventbutton CloseInventory Info_set WeaponBox                    | 持ち物 🎒 | 所持品の追加・削除。スロットと重ねの規則を持つ。
 Domain/Recipe.cs RecipeDefinition.cs Craft CraftButton Craft_set ExchangeButton                       | クラフト 🔨 | レシピの定義と、素材が足りているかの判定。
 Domain/Quest.cs QuestManager QuestButton RewardUI                                                     | クエスト 📜 | 依頼の受注と達成判定、報酬の受け渡し。
 Domain/Day.cs Sun2                                                                                    | 日の進行 ☀️ | 1日を進める側。根源とクエストとセーブを同時に叩く。

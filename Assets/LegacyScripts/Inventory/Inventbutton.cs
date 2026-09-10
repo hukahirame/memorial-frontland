@@ -1,4 +1,5 @@
 ﻿using UnityEngine.UI;
+using MemorialFloor.Domain;
 using UnityEngine;
 
 public class Inventbutton : MonoBehaviour //インベントリのボタン本体に付ける
@@ -19,8 +20,8 @@ public class Inventbutton : MonoBehaviour //インベントリのボタン本体
             txt.text = "";
             transform.Find("Slider").localScale = Vector3.one;
             Slider ds = transform.Find("Slider").GetComponent<Slider>();
-            for (int i = 0; i < GameManager.items.Count; i++) //最大耐久値の取得
-                if (GameManager.items[i][0] == s) { ds.maxValue = float.Parse(GameManager.items[i][3]); break; }
+            ItemDefinition item = GameManager.Items.Find(s); //最大耐久値の取得
+            if (item != null) ds.maxValue = item.MaxDurability;
             ds.value = durability;
         }
         target = s;

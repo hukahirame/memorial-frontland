@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using MemorialFloor.Domain;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,7 +14,7 @@ public class Info_set : MonoBehaviour
 
     [SerializeField] private Sprite weapon1;
     [SerializeField] private Sprite weapon2;
-    private int index = -1; 
+    private ItemDefinition current;
 
     void Start()
     {
@@ -22,14 +23,14 @@ public class Info_set : MonoBehaviour
 
     public int Show_Info2(string s)　// アイテム情報フレームへの代入
     {
-        index = -1;
-        for (int i = 0; index == -1; i++)
-            if (GameManager.items[i][0] == s) index = i;
-        nametxt.text = GameManager.items[index][1];
-        txt.text = GameManager.items[index][10];
+        current = GameManager.Items.Find(s);
+        if (current == null) return 0;
+
+        nametxt.text = current.Name;
+        txt.text = current.Description;
         mainImage.sprite = Resources.Load<Sprite>(s);
 
-        if (int.Parse(GameManager.items[index][4]) == 1)
+        if (current.Installable)
             button.gameObject.SetActive(true); // 設置ボタン
         else button.gameObject.SetActive(false);
 
@@ -73,9 +74,9 @@ public class Info_set : MonoBehaviour
         else //設置
         {
             Vector3 installpos = GameObject.FindWithTag("Player").transform.position + Vector3.down * 0.4f;
-            var o = Instantiate((GameObject)Resources.Load(GameManager.items[index][0] + "_obj"), installpos, Quaternion.identity);
+            var o = Instantiate((GameObject)Resources.Load(current.ItemId + "_obj"), installpos, Quaternion.identity);
           //  SceneStarter.saveobjects.Add(new string[] { o.name.Substring(0,o.name.Length-7), GameManager.entered_scene, installpos.x.ToString(), installpos.y.ToString(), installpos.z.ToString() });
-            GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>().UnloadInventory(GameManager.items[index][0]);
+            GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>().UnloadInventory(current.ItemId);
         }
     }
 }

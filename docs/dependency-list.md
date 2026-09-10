@@ -33,14 +33,14 @@
 ### 🟦Domain 💠 
 
 ↓ 🟩 `Craft` **4** — Ingredient **2**, Recipe **2**  
-↓ 🟨 `Craft` **5** — Recipe **3**, Inventory **2**  
+↓ 🟨 `Craft` **6** — Recipe **3**, Inventory **2**, ItemDefinition **1**  
 ↓ 🟨 `Day` **12** — Reward **3**, DayClock **2**, DayCycle **2**, DayPlan **2**, QuestKind **2**, Root **1**  
 ↓ 🟨 `Enemy` **2** — Root **2**  
-↓ 🟨 `Inventory` **6** — AddOutcome **2**, Inventory **2**, RemoveOutcome **2**  
+↓ 🟨 `Inventory` **9** — ItemDefinition **3**, AddOutcome **2**, Inventory **2**, RemoveOutcome **2**  
 ↓ 🟨 `Player` **3** — Health **2**, Quest **1**  
 ↓ 🟨 `Quest` **46** — QuestKind **19**, Quest **14**, Reward **8**, QuestRegistry **2**, Root **2**, QuestId **1**  
 ↓ 🟨 `Roots` **13** — AccumulationLevel **8**, Root **3**, RootRegistry **2**  
-↓ 🟨 `Scene` **3** — Wallet **2**, Root **1**  
+↓ 🟨 `Scene` **5** — ItemCatalog **2**, Wallet **2**, Root **1**  
 
 ### 🟩Craft 🔨 
 
@@ -68,12 +68,12 @@
 
 ### 🟨Craft 🔨 
 
-↑ 🟦 `Domain` **5** — Recipe **3**, Inventory **2**  
+↑ 🟦 `Domain` **6** — Recipe **3**, Inventory **2**, ItemDefinition **1**  
 ↑ 🟩 `Craft` **1** — RecipeDefinition **1**  
 ↑ 🟩 `Staging` **2** — TempAudio **2**  
 ↑ 🟨 `Inventory` **1** — PlayerInventory **1**  
 ↑ 🟨 `Roots` **1** — RootsManager **1**  
-↑ 🟨 `Scene` **4** — GameManager **4**  
+↑ 🟨 `Scene` **1** — GameManager **1**  
 
 ### 🟨Day ☀️ 
 
@@ -100,11 +100,11 @@
 
 ### 🟨Inventory 🎒 
 
-↑ 🟦 `Domain` **6** — AddOutcome **2**, Inventory **2**, RemoveOutcome **2**  
+↑ 🟦 `Domain` **9** — ItemDefinition **3**, AddOutcome **2**, Inventory **2**, RemoveOutcome **2**  
 ↑ 🟩 `Inventory` **1** — IItemReceiver **1**  
 ↑ 🟩 `Staging` **3** — TempAudio **3**  
 ↑ 🟨 `Player` **6** — Player2 **4**, Weapon **2**  
-↑ 🟨 `Scene` **12** — GameManager **12**  
+↑ 🟨 `Scene` **3** — GameManager **3**  
 
 ↓ 🟨 `Craft` **1** — PlayerInventory **1**  
 ↓ 🟨 `Player` **1** — WeaponBox **1**  
@@ -164,16 +164,16 @@
 
 ### 🟨Scene 🚪 
 
-↑ 🟦 `Domain` **3** — Wallet **2**, Root **1**  
+↑ 🟦 `Domain` **5** — ItemCatalog **2**, Wallet **2**, Root **1**  
 ↑ 🟨 `Enemy` **1** — OF_Spawner **1**  
 ↑ 🟨 `Player` **5** — Player2 **5**  
 ↑ 🟨 `Quest` **3** — RewardUI **2**, QuestManager **1**  
 ↑ 🟨 `Roots` **2** — RootsManager **2**  
 ↑ 🟨 `Save` **4** — SaveData **2**, SaveSystem **2**  
 
-↓ 🟨 `Craft` **4** — GameManager **4**  
+↓ 🟨 `Craft` **1** — GameManager **1**  
 ↓ 🟨 `Enemy` **3** — GameManager **2**, SceneStarter **1**  
-↓ 🟨 `Inventory` **12** — GameManager **12**  
+↓ 🟨 `Inventory` **3** — GameManager **3**  
 ↓ 🟨 `Player` **5** — GameManager **5**  
 ↓ 🟨 `Quest` **5** — GameManager **5**  
 ↓ 🟨 `Roots` **1** — GameManager **1**  
