@@ -1,9 +1,11 @@
-{
+﻿{
     "name": "MemorialFloor.Game",
     "rootNamespace": "MemorialFloor.Game",
     "references": [
         "MemorialFloor.Domain",
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "Unity.ProBuilder"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

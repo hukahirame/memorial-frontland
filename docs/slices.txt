@@ -16,4 +16,4 @@ Domain/Health.cs Player2 PlayerHp PlayerDeath Weapon SideJab JoystickEffect Joys
 Enemy Slime Seeker MS_Spawner OF_Spawner SpawnerCandidate                                             | 敵とスポーン 👾 | 敵の出現位置と追跡、被弾。
 FieldCreator FirstSeedSet OutField BranchFallSystem Dropitem                                          | 外フィールド 🌲 | 地形の生成と、木を切って素材が落ちるまで。
 GameManager SceneStarter SceneFinisher Title MapButton                                                | シーン遷移 🚪 | どのシーンに入り、何を持ち越すか。
-MainCamera DynamicLayer ViewSecurer SortingDebuger TempAudio UpDownUI CloseManager BigText MiddleText | 表示と演出 🎥 | カメラ、重ね順、効果音、共通の文字表示。
+MainCamera DynamicLayer ViewSecurer TempAudio UpDownUI CloseManager BigText MiddleText | 表示と演出 🎥 | カメラ、重ね順、効果音、共通の文字表示。
