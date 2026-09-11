@@ -7,8 +7,8 @@
 Legacy から Domain / Game への切り出し。順序は `docs/dependency-list.md` の
 fan-out 昇順で読む。
 
-- Domain 8 ファイル / Game 14 ファイル / Legacy 38 ファイル・9 フォルダ
-- dotnet 93 件 / Unity EditMode 91 件
+- Domain 9 ファイル / Game 15 ファイル / Legacy 38 ファイル・9 フォルダ
+- dotnet 105 件 / Unity EditMode 103 件 / PlayMode 3 件
 - ADR 20 件・511 行。目安の 500 行を超えたので `docs/decisions/` への分割が近い
 
 ## ✅ 完了
@@ -18,6 +18,11 @@ fan-out 昇順で読む。
 - 根源 `RootRegistry` / クエスト `QuestRegistry` / 日の進行 `DayClock` `DayCycle` `DayPlan`
 - 所持金 `Wallet` — UI の文字列が正典で `int.Parse` が 5 箇所あった
 - 体力 `Health` — UI の Slider が正典で値が黙って丸められていた
+- インベントリの並行 3 リストを `ItemSlot` 1 本に。保存の形が揃い、参照ごとの
+  差し替えも消えた
+- 敵の湧きとドロップの規則を `SpawnRule` `ActionRule` へ。`IRandom` で乱数を
+  差し替えられるようにし、境界をテストで固定した
+- 拠点と候補の耐久を `Health` に。`OF_Spawner.spawnerhp` の public static を解消
 - アイテム原簿 `ItemCatalog` — `List<string[]>` の添字読みが 5 ファイル 15 箇所。
   見つからないと配列の末尾を越えて例外になるバグごと解消
 
@@ -38,8 +43,13 @@ fan-out 昇順で読む。
 
 ## ⏭️ 次
 
-- **`SaveData` の並行 3 リスト**（`items` / `stocks` / `maxstocks`）。
-  `Inventory` の Registry 化はここが前提。ただし `Save()` の呼び出しは今も 0 件
+- **セーブの修正。**根源とクエストが保存されていない。`ItemSlot` で形は
+  分かったので、`RootSave` / `QuestSave` を同じ形にすれば塞がる。ただし Domain の
+  `Root` / `Quest` は get-only プロパティで `JsonUtility` が読めず、DTO が要る。
+  実機でしか検証できないため、ビルドとプレイ確認の後に置く
+- **`Enemy` / `Slime` の HP が Slider のまま。**`Weapon` が相手の Slider を直接
+  減算しているため、`IDamageable` を入れてダメージ経路を変える必要がある。
+  ダメージが通らなくなるとゲームが成立しないので、プレイ確認の後
 - **`GameManager` の責務分解。**`Items` `Coins` シングルトン管理 シーン遷移を
   1 つで抱えており、fan-in 7 の原因になっている
 - `Root.cs:5` のコメントに「二重定義されていた」が残っている（コメント整理の取りこぼし）
