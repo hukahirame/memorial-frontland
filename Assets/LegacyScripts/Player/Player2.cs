@@ -252,17 +252,20 @@ public class Player2 : MonoBehaviour
         SideJab sj = GetComponentInChildren<SideJab>();
 
 
-        if ((Mathf.Abs(joystick_atk.Horizontal) > 0.5f) && (joystick_atk.Horizontal * sj.transform.localScale.x > 0))//突き
+        AttackKind kind = AttackRule.Choose(
+            joystick_atk.Horizontal, joystick_atk.Vertical, sj.transform.localScale.x);
+
+        if (kind == AttackKind.Thrust)
         {
-            if (joystick_atk.Vertical > 0.5) StartCoroutine(sj.SideJabPlay(1));
-            if (joystick_atk.Vertical < -0.5) StartCoroutine(sj.SideJabPlay(-1));
+            int swing = AttackRule.ThrustDirection(joystick_atk.Vertical);
+            if (swing != 0) StartCoroutine(sj.SideJabPlay(swing));
             character.Jab();
         }
-        else if ((Mathf.Abs(joystick_atk.Horizontal) < 0.5f) && (Mathf.Abs(joystick_atk.Vertical) < 0.5f)) //ケサ
+        else if (kind == AttackKind.Slash)
         {
             character.Slash();
         }
-        else //ステップ
+        else
         {
             playerrb.AddForce(new Vector3(joystick_atk.Horizontal * 3, 1, joystick_atk.Vertical * 3) * playerrb.mass, ForceMode.Impulse);
             yield return new WaitForSeconds(0.8f);

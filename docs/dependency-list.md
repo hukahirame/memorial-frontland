@@ -40,7 +40,7 @@
 ↓ 🟨 `Day` **12** — Reward **3**, DayClock **2**, DayCycle **2**, DayPlan **2**, QuestKind **2**, Root **1**  
 ↓ 🟨 `Enemy` **23** — Health **6**, SpawnRule **4**, DropChance **3**, EnemyAction **3**, ActionRule **2**, Root **2**, DropRule **1**, FallRule **1**, FieldBounds **1**  
 ↓ 🟨 `Inventory` **17** — ItemSlot **6**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
-↓ 🟨 `Player` **5** — Health **2**, FieldBounds **1**, Nudge **1**, Quest **1**  
+↓ 🟨 `Player` **10** — AttackKind **3**, AttackRule **2**, Health **2**, FieldBounds **1**, Nudge **1**, Quest **1**  
 ↓ 🟨 `Quest` **46** — QuestKind **19**, Quest **14**, Reward **8**, QuestRegistry **2**, Root **2**, QuestId **1**  
 ↓ 🟨 `Roots` **13** — AccumulationLevel **8**, Root **3**, RootRegistry **2**  
 ↓ 🟨 `Save` **3** — ItemSlot **3**  
@@ -130,7 +130,7 @@
 
 ### 🟨Player 🚶 
 
-↑ 🟦 `Domain` **5** — Health **2**, FieldBounds **1**, Nudge **1**, Quest **1**  
+↑ 🟦 `Domain` **10** — AttackKind **3**, AttackRule **2**, Health **2**, FieldBounds **1**, Nudge **1**, Quest **1**  
 ↑ 🟩 `Enemy` **1** — IDamageable **1**  
 ↑ 🟩 `OutField` **1** — Exposition **1**  
 ↑ 🟩 `Staging` **6** — TempAudio **4**, BigText **1**, MiddleText **1**  
