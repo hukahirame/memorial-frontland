@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using MemorialFloor.Domain;
+using MemorialFloor.Game;
 
 public class OF_Spawner : MonoBehaviour
 {
@@ -15,7 +16,11 @@ public class OF_Spawner : MonoBehaviour
     private Seeker seeker_cs;
 
     public static bool spawnable = false;
-    public static int spawnerhp = 100;
+
+    [Tooltip("拠点の耐久。スポナーごとに個別に持つ")]
+    [SerializeField] private int maxHp = 100;
+
+    private readonly Health health = new Health();
 
     public Vector4 expos; //XL,XS,ZL,ZS
 
@@ -24,6 +29,12 @@ public class OF_Spawner : MonoBehaviour
 
     public List<string> loadEnemiesName = new List<string>();
     public List<Vector3> loadEnemiesPos = new List<Vector3>();
+
+    void Awake()
+    {
+        health.SetMax(maxHp);
+        health.SetCurrent(maxHp);
+    }
 
     void Start()
     {
@@ -78,15 +89,14 @@ public class OF_Spawner : MonoBehaviour
         //根源は保持せず使うときに引く。参照を握るとレジストリが唯一の窓口でなくなり、
         //中身を入れ替えたときに古い Root を指したまま生き残る
         Root root = RootsManager.Roots.Find(GameManager.entered_scene);
-        if ((root != null) && (root.Progress >= 50) && (Random.Range(0, 100) > 50)) return;
-        if (Random.Range(0, 100) < 3 * n) return;
+        if (SpawnRule.ShouldSuppress(root, n, UnityRandom.Shared)) return;
 
         var obj = Instantiate(enemy, pos, Quaternion.identity);
         seeker.gameObject.SetActive(false);
-        if ((root != null) && (root.Progress >= 30))
+        if (SpawnRule.ShouldWeaken(root))
         {
             var s = obj.transform.Find("Canvas").Find("Slider").GetComponent<Slider>();
-            s.value -= s.value * 0.2f;
+            s.value -= s.value * SpawnRule.WeakenRatio;
         }
         n++;
     }
@@ -109,8 +119,8 @@ public class OF_Spawner : MonoBehaviour
 
     public void SpawnerBreak(int damage)
     {
-        spawnerhp -= damage;
-        if(spawnerhp <= 0)
+        health.Take(damage);
+        if (health.IsDead)
         {
             GameObject.Find("GameManager").GetComponent<AudioSource>().clip =(AudioClip) Resources.Load("dark city");
             GameObject.Find("GameManager").GetComponent<AudioSource>().Play();

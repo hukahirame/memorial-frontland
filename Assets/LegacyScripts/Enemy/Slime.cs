@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using MemorialFloor.Game;
 using UnityEngine;
 using UnityEngine.UI;
 using MemorialFloor.Domain;
@@ -9,6 +10,8 @@ public class Slime : MonoBehaviour
     public float speed;  //種類により変わるが、基本初期値はここで決める
     public float power;
     public int Level;
+    private const int SlimecoreDropPercent = 10;
+
     public List<string> drops = new List<string>(); // ドロップアイテム群
     public GameObject dropcapsule;
     public Slider hp;
@@ -47,15 +50,15 @@ public class Slime : MonoBehaviour
     private void RandomAction()
     {
         if (isDead) return;
-        int act = Random.Range(0, 101);
+        EnemyAction act = ActionRule.Choose(UnityRandom.Shared);
 
         move = false;
         attitude = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
-        if (act <= 60) //待機 60%
+        if (act == EnemyAction.Wait)
         {
             Invoke("RandomAction", Random.Range(1.5f, 2f));
         }
-        else if (act <= 80) //移動 20%
+        else if (act == EnemyAction.Move)
         {
             move = true;
             Invoke("RandomAction", Random.Range(0.5f, 2.5f));
@@ -78,7 +81,7 @@ public class Slime : MonoBehaviour
 
     private void Death() //死亡モーション終了時
     {
-        if (Random.Range(0, 100) < 10) drops.Add("Slimecore");
+        if (Chance.Roll(SlimecoreDropPercent, UnityRandom.Shared)) drops.Add("Slimecore");
         foreach (string s in drops)
         {
             GameObject d = Instantiate(dropcapsule,transform.position,Quaternion.identity);

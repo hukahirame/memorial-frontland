@@ -13,10 +13,11 @@
 
 | 節 | ↑ | ↓ |
 |---|---|---|
-| 🟦 `Domain` | **0** | **10** |
+| 🟦 `Domain` | **0** | **11** |
 | 🟩 `Inventory` | **0** | **2** |
 | 🟩 `Staging` | **0** | **6** |
 | 🟩 `Craft` | **1** | **1** |
+| 🟩 `Enemy` | **1** | **1** |
 | 🟩 `OutField` | **1** | **0** |
 | 🟨 `Day` | **4** | **1** |
 | 🟨 `Roots` | **4** | **5** |
@@ -26,16 +27,17 @@
 | 🟨 `Craft` | **6** | **0** |
 | 🟨 `Player` | **6** | **4** |
 | 🟨 `Scene` | **6** | **7** |
-| 🟨 `Enemy` | **7** | **3** |
+| 🟨 `Enemy` | **8** | **3** |
 
 ## 詳細
 
 ### 🟦Domain 💠 
 
 ↓ 🟩 `Craft` **4** — Ingredient **2**, Recipe **2**  
+↓ 🟩 `Enemy` **1** — IRandom **1**  
 ↓ 🟨 `Craft` **6** — Recipe **3**, Inventory **2**, ItemDefinition **1**  
 ↓ 🟨 `Day` **12** — Reward **3**, DayClock **2**, DayCycle **2**, DayPlan **2**, QuestKind **2**, Root **1**  
-↓ 🟨 `Enemy` **2** — Root **2**  
+↓ 🟨 `Enemy` **19** — EnemyAction **6**, Health **4**, SpawnRule **3**, ActionRule **2**, Chance **2**, Root **2**  
 ↓ 🟨 `Inventory` **17** — ItemSlot **6**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
 ↓ 🟨 `Player` **3** — Health **2**, Quest **1**  
 ↓ 🟨 `Quest` **46** — QuestKind **19**, Quest **14**, Reward **8**, QuestRegistry **2**, Root **2**, QuestId **1**  
@@ -48,6 +50,12 @@
 ↑ 🟦 `Domain` **4** — Ingredient **2**, Recipe **2**  
 
 ↓ 🟨 `Craft` **1** — RecipeDefinition **1**  
+
+### 🟩Enemy 👾 
+
+↑ 🟦 `Domain` **1** — IRandom **1**  
+
+↓ 🟨 `Enemy` **5** — UnityRandom **5**  
 
 ### 🟩Inventory 🎒 
 
@@ -87,7 +95,8 @@
 
 ### 🟨Enemy 👾 
 
-↑ 🟦 `Domain` **2** — Root **2**  
+↑ 🟦 `Domain` **19** — EnemyAction **6**, Health **4**, SpawnRule **3**, ActionRule **2**, Chance **2**, Root **2**  
+↑ 🟩 `Enemy` **5** — UnityRandom **5**  
 ↑ 🟩 `Staging` **1** — MiddleText **1**  
 ↑ 🟨 `Player` **4** — Player2 **4**  
 ↑ 🟨 `Quest` **3** — QuestManager **3**  
