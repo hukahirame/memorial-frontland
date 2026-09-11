@@ -7,8 +7,8 @@
 Legacy から Domain / Game への切り出し。順序は `docs/dependency-list.md` の
 fan-out 昇順で読む。
 
-- Domain 9 ファイル / Game 15 ファイル / Legacy 38 ファイル・9 フォルダ
-- dotnet 105 件 / Unity EditMode 103 件 / PlayMode 3 件
+- Domain 10 ファイル / Game 16 ファイル / Legacy 37 ファイル・9 フォルダ
+- dotnet 117 件 / Unity EditMode 115 件 / PlayMode 3 件
 - ADR 20 件・511 行。目安の 500 行を超えたので `docs/decisions/` への分割が近い
 
 ## ✅ 完了
@@ -20,9 +20,14 @@ fan-out 昇順で読む。
 - 体力 `Health` — UI の Slider が正典で値が黙って丸められていた
 - インベントリの並行 3 リストを `ItemSlot` 1 本に。保存の形が揃い、参照ごとの
   差し替えも消えた
-- 敵の湧きとドロップの規則を `SpawnRule` `ActionRule` へ。`IRandom` で乱数を
+- 敵の湧きと行動の規則を `SpawnRule` `ActionRule` へ。`IRandom` で乱数を
   差し替えられるようにし、境界をテストで固定した
 - 拠点と候補の耐久を `Health` に。`OF_Spawner.spawnerhp` の public static を解消
+- 敵の体力を `Health` に。`Weapon` が相手の `Canvas/Slider` を名前で探して
+  直接減算していたのを `IDamageable` で切った。Slider は表示に戻った
+- 敵のドロップを `DropRule` へ。割合が prefab に移り、敵ごとに変えられる
+- 敵の行動秒数を `ActionRule.Duration` へ。`IRandom` に小数の口を足した。
+  場外の高さは `FallRule`。Slime に残る規則は無くなった
 - アイテム原簿 `ItemCatalog` — `List<string[]>` の添字読みが 5 ファイル 15 箇所。
   見つからないと配列の末尾を越えて例外になるバグごと解消
 
@@ -38,6 +43,7 @@ fan-out 昇順で読む。
 - ソースの解析を正規表現から Roslyn へ（537 行 → 191 行）
 - `docs/dependency-list.md` を生成。フォルダ間の fan-in / fan-out
 - Legacy を関心事ごとのフォルダに分割。直下 35 ファイルが 0 に
+- Slime へ移行済みで参照の無くなった `Enemy` を削除（GUID で全アセットを照合）
 - ファイル移動の禁止を手順に置き換えた（[D-018]）
 - ゲームデータの置き場をテーブルごとに決める（[D-019]）。中間形式の xlsx を削除
 
@@ -47,9 +53,6 @@ fan-out 昇順で読む。
   分かったので、`RootSave` / `QuestSave` を同じ形にすれば塞がる。ただし Domain の
   `Root` / `Quest` は get-only プロパティで `JsonUtility` が読めず、DTO が要る。
   実機でしか検証できないため、ビルドとプレイ確認の後に置く
-- **`Enemy` / `Slime` の HP が Slider のまま。**`Weapon` が相手の Slider を直接
-  減算しているため、`IDamageable` を入れてダメージ経路を変える必要がある。
-  ダメージが通らなくなるとゲームが成立しないので、プレイ確認の後
 - **`GameManager` の責務分解。**`Items` `Coins` シングルトン管理 シーン遷移を
   1 つで抱えており、fan-in 7 の原因になっている
 - `Root.cs:5` のコメントに「二重定義されていた」が残っている（コメント整理の取りこぼし）
@@ -67,7 +70,9 @@ fan-out 昇順で読む。
 
 - **ビルドを一度も通していない。**Unity 6.3 移行以降ずっと。
   `PlayTests` の asmdef がビルドから除外されるかも未確認
-- **実機でしか確かめられないものが 2 件。**どちらもテストでは検証できない
+- **実機でしか確かめられないものが増えている。**どれもテストでは検証できない
   - シーンを跨いだときの体力。`1f4bfdc` で挙動が変わった可能性がある
   - クエストの発行が翌日になる件（`dd810a1`）
+  - 敵に当たること自体。`d55d59a` でダメージの経路を `IDamageable` に替えた
+  - 拠点の耐久がシーンを跨ぐと戻る（`cfc32c6`）
 - 20 分プレイして氾濫を見る / クラフト画面の素材スロット
