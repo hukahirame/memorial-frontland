@@ -7,8 +7,9 @@
 Legacy から Domain / Game への切り出し。順序は `docs/dependency-list.md` の
 fan-out 昇順で読む。
 
-- Domain 10 ファイル / Game 16 ファイル / Legacy 37 ファイル・9 フォルダ
-- dotnet 117 件 / Unity EditMode 115 件 / PlayMode 3 件
+- Domain 12 ファイル / Game 17 ファイル / Legacy 37 ファイル・9 フォルダ
+- dotnet 131 件 / PlayMode 3 件。Unity EditMode は Attack と Field を足してから
+  一度も走らせていない
 - ADR 20 件・511 行。目安の 500 行を超えたので `docs/decisions/` への分割が近い
 
 ## ✅ 完了
@@ -30,6 +31,10 @@ fan-out 昇順で読む。
   場外の高さは `FallRule`。Slime に残る規則は無くなった
 - アイテム原簿 `ItemCatalog` — `List<string[]>` の添字読みが 5 ファイル 15 箇所。
   見つからないと配列の末尾を越えて例外になるバグごと解消
+- 場の範囲を `FieldBounds` へ。シーンが Vector4 に XL, XS, ZL, ZS の順で詰めており、
+  どの成分がどの辺かを `Player2` と `Seeker` が各々知っていた。読むときだけ
+  `Exposition` で名前へ移す。`if (expos == null)` は Vector4 相手で常に偽だった
+- 攻撃の選び分けを `AttackRule` へ。閾値 0.5 が `Player2.Attack` に4か所あった
 
 **Legacy から Game へ移したもの**
 
@@ -49,6 +54,17 @@ fan-out 昇順で読む。
 
 ## ⏭️ 次
 
+- **武器を Domain へ。**プレイヤーの残りで、Health と同じ形をしているのはこれだけ。
+  `Weapon.power` は static で、値は `Info_set.Install()` が表示名の部分一致で
+  決めている（鉄なら 40、伝なら 999）。耐久の正典は `static Slider pw_durability`
+  で、減算は `// pw_durability.value -= 1;` とコメントアウトされたまま一度も
+  減っていない。吹き飛ばしは UI の文字列から逆算している。原簿の列 5〜9 が
+  空で空いており、攻撃力と吹き飛ばしと使い道はそこに置ける。
+  `Info_set.Show_Info2` のボタン文言のバグ（スライムゼリーの「食べる」が
+  直後の `else` で必ず「設置」に上書きされる）も同時に消える
+- **`PlayerHp` の自然回復が Health を迂回している。**5 秒ごとに `slider.value += 1`
+  していて、次の被弾で `RefreshHpView` に消される。Health を正典にしたときの
+  取りこぼし。武器と同じスライスなので一緒に塞ぐ
 - **セーブの修正。**根源とクエストが保存されていない。`ItemSlot` で形は
   分かったので、`RootSave` / `QuestSave` を同じ形にすれば塞がる。ただし Domain の
   `Root` / `Quest` は get-only プロパティで `JsonUtility` が読めず、DTO が要る。
