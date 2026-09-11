@@ -13,12 +13,12 @@
 
 | 節 | ↑ | ↓ |
 |---|---|---|
-| 🟦 `Domain` | **0** | **11** |
+| 🟦 `Domain` | **0** | **12** |
 | 🟩 `Inventory` | **0** | **2** |
 | 🟩 `Staging` | **0** | **6** |
 | 🟩 `Craft` | **1** | **1** |
 | 🟩 `Enemy` | **1** | **2** |
-| 🟩 `OutField` | **1** | **0** |
+| 🟩 `OutField` | **2** | **2** |
 | 🟨 `Day` | **4** | **1** |
 | 🟨 `Roots` | **4** | **5** |
 | 🟨 `Inventory` | **5** | **4** |
@@ -26,8 +26,8 @@
 | 🟨 `Save` | **5** | **2** |
 | 🟨 `Craft` | **6** | **0** |
 | 🟨 `Scene` | **6** | **7** |
-| 🟨 `Player` | **7** | **4** |
-| 🟨 `Enemy` | **8** | **3** |
+| 🟨 `Player` | **8** | **4** |
+| 🟨 `Enemy` | **9** | **3** |
 
 ## 詳細
 
@@ -35,11 +35,12 @@
 
 ↓ 🟩 `Craft` **4** — Ingredient **2**, Recipe **2**  
 ↓ 🟩 `Enemy` **1** — IRandom **1**  
+↓ 🟩 `OutField` **2** — FieldBounds **2**  
 ↓ 🟨 `Craft` **6** — Recipe **3**, Inventory **2**, ItemDefinition **1**  
 ↓ 🟨 `Day` **12** — Reward **3**, DayClock **2**, DayCycle **2**, DayPlan **2**, QuestKind **2**, Root **1**  
-↓ 🟨 `Enemy` **22** — Health **6**, SpawnRule **4**, DropChance **3**, EnemyAction **3**, ActionRule **2**, Root **2**, DropRule **1**, FallRule **1**  
+↓ 🟨 `Enemy` **23** — Health **6**, SpawnRule **4**, DropChance **3**, EnemyAction **3**, ActionRule **2**, Root **2**, DropRule **1**, FallRule **1**, FieldBounds **1**  
 ↓ 🟨 `Inventory` **17** — ItemSlot **6**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
-↓ 🟨 `Player` **3** — Health **2**, Quest **1**  
+↓ 🟨 `Player` **5** — Health **2**, FieldBounds **1**, Nudge **1**, Quest **1**  
 ↓ 🟨 `Quest` **46** — QuestKind **19**, Quest **14**, Reward **8**, QuestRegistry **2**, Root **2**, QuestId **1**  
 ↓ 🟨 `Roots` **13** — AccumulationLevel **8**, Root **3**, RootRegistry **2**  
 ↓ 🟨 `Save` **3** — ItemSlot **3**  
@@ -65,7 +66,11 @@
 
 ### 🟩OutField 🌲 
 
+↑ 🟦 `Domain` **2** — FieldBounds **2**  
 ↑ 🟩 `Inventory` **2** — IItemReceiver **2**  
+
+↓ 🟨 `Enemy` **1** — Exposition **1**  
+↓ 🟨 `Player` **1** — Exposition **1**  
 
 ### 🟩Staging 🎥 
 
@@ -96,8 +101,9 @@
 
 ### 🟨Enemy 👾 
 
-↑ 🟦 `Domain` **22** — Health **6**, SpawnRule **4**, DropChance **3**, EnemyAction **3**, ActionRule **2**, Root **2**, DropRule **1**, FallRule **1**  
+↑ 🟦 `Domain` **23** — Health **6**, SpawnRule **4**, DropChance **3**, EnemyAction **3**, ActionRule **2**, Root **2**, DropRule **1**, FallRule **1**, FieldBounds **1**  
 ↑ 🟩 `Enemy` **6** — UnityRandom **4**, IDamageable **2**  
+↑ 🟩 `OutField` **1** — Exposition **1**  
 ↑ 🟩 `Staging` **1** — MiddleText **1**  
 ↑ 🟨 `Player` **2** — Player2 **2**  
 ↑ 🟨 `Quest` **2** — QuestManager **2**  
@@ -124,8 +130,9 @@
 
 ### 🟨Player 🚶 
 
-↑ 🟦 `Domain` **3** — Health **2**, Quest **1**  
+↑ 🟦 `Domain` **5** — Health **2**, FieldBounds **1**, Nudge **1**, Quest **1**  
 ↑ 🟩 `Enemy` **1** — IDamageable **1**  
+↑ 🟩 `OutField` **1** — Exposition **1**  
 ↑ 🟩 `Staging` **6** — TempAudio **4**, BigText **1**, MiddleText **1**  
 ↑ 🟨 `Enemy` **2** — OF_Spawner **1**, SpawnerCandidate **1**  
 ↑ 🟨 `Inventory` **1** — WeaponBox **1**  

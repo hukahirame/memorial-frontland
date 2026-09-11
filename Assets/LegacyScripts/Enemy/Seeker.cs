@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using MemorialFloor.Domain;
+using MemorialFloor.Game;
 using UnityEngine;
 
 public class Seeker : MonoBehaviour
@@ -26,9 +28,10 @@ public class Seeker : MonoBehaviour
     public void SeekPosition(float range, Vector4 expos)
     {
         Vector3 org = transform.position;
+        FieldBounds bounds = Exposition.ToBounds(expos);
 
-        float pos_x = Random.Range(Mathf.Max(org.x - range, expos.y), Mathf.Min(org.x + range, expos.x));
-        float pos_z = Random.Range(Mathf.Max(org.z - range, expos.w), Mathf.Min(org.z + range, expos.z));
+        float pos_x = Random.Range(bounds.ClampX(org.x - range), bounds.ClampX(org.x + range));
+        float pos_z = Random.Range(bounds.ClampZ(org.z - range), bounds.ClampZ(org.z + range));
 
         transform.position = new Vector3(pos_x, 5, pos_z);
         SetPosition();

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Assets.HeroEditor.Common.Scripts.CharacterScripts;
 using MemorialFloor.Domain;
+using MemorialFloor.Game;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -82,16 +83,16 @@ public class Player2 : MonoBehaviour
 
         //緊急脱出用
         Vector3 pos = transform.position;
-        bool XL = pos.x > expos.x + 0.4, XS = pos.x < expos.y - 0.4, ZL = pos.z > expos.z + 0.4, ZS = pos.z < expos.w - 0.4;
-        if (expos == null) return;
-        if ((pos.x > expos.x) && !XL) playerrb.linearVelocity = Vector3.left * 0.5f;
-        if ((pos.x < expos.y) && !XS) playerrb.linearVelocity = Vector3.right * 0.5f;
-        if ((pos.z > expos.z) && !ZL) playerrb.linearVelocity = Vector3.back * 0.5f;
-        if ((pos.z < expos.w) && !ZS) playerrb.linearVelocity = Vector3.forward * 0.5f;
-        if (XL || XS || ZL || ZS || (Mathf.Abs(pos.y) > 4))
+        FieldBounds bounds = Exposition.ToBounds(expos);
+        if (bounds.HasEscaped(pos.x, pos.y, pos.z))
         {
             transform.position = new Vector3(-2, 0.65f, -2);
             playerrb.linearVelocity = Vector3.right * 2;
+        }
+        else
+        {
+            Nudge nudge = bounds.PushBack(pos.x, pos.z);
+            if (!nudge.None) playerrb.linearVelocity = new Vector3(nudge.X, 0, nudge.Z) * 0.5f;
         }
 
         if (cool == false)//この中は停止可能
