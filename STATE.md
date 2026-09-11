@@ -7,9 +7,8 @@
 Legacy から Domain / Game への切り出し。順序は `docs/dependency-list.md` の
 fan-out 昇順で読む。
 
-- Domain 12 ファイル / Game 17 ファイル / Legacy 37 ファイル・9 フォルダ
-- dotnet 131 件 / PlayMode 3 件。Unity EditMode は Attack と Field を足してから
-  一度も走らせていない
+- Domain 13 ファイル / Game 17 ファイル / Legacy 37 ファイル・9 フォルダ
+- dotnet 142 件 / Unity EditMode 140 件 / PlayMode 3 件。すべて緑
 - ADR 20 件・511 行。目安の 500 行を超えたので `docs/decisions/` への分割が近い
 
 ## ✅ 完了
@@ -35,6 +34,10 @@ fan-out 昇順で読む。
   どの成分がどの辺かを `Player2` と `Seeker` が各々知っていた。読むときだけ
   `Exposition` で名前へ移す。`if (expos == null)` は Vector4 相手で常に偽だった
 - 攻撃の選び分けを `AttackRule` へ。閾値 0.5 が `Player2.Attack` に4か所あった
+- 武器を `Equipment` へ。攻撃力の正典が static で、値は表示名に「鉄」「伝」が
+  含まれるかで決まっていた。耐久の正典は static な Slider だった。
+  原簿に 攻撃力・吹き飛ばし・使い道・回復量 の4列を足し、素性をそこから取る。
+  情報枠のボタンの文言も直った（「食べる」が必ず「設置」に上書きされていた）
 
 **Legacy から Game へ移したもの**
 
@@ -54,17 +57,16 @@ fan-out 昇順で読む。
 
 ## ⏭️ 次
 
-- **武器を Domain へ。**プレイヤーの残りで、Health と同じ形をしているのはこれだけ。
-  `Weapon.power` は static で、値は `Info_set.Install()` が表示名の部分一致で
-  決めている（鉄なら 40、伝なら 999）。耐久の正典は `static Slider pw_durability`
-  で、減算は `// pw_durability.value -= 1;` とコメントアウトされたまま一度も
-  減っていない。吹き飛ばしは UI の文字列から逆算している。原簿の列 5〜9 が
-  空で空いており、攻撃力と吹き飛ばしと使い道はそこに置ける。
-  `Info_set.Show_Info2` のボタン文言のバグ（スライムゼリーの「食べる」が
-  直後の `else` で必ず「設置」に上書きされる）も同時に消える
 - **`PlayerHp` の自然回復が Health を迂回している。**5 秒ごとに `slider.value += 1`
   していて、次の被弾で `RefreshHpView` に消される。Health を正典にしたときの
-  取りこぼし。武器と同じスライスなので一緒に塞ぐ
+  取りこぼし。プレイヤーの残りではこれが一番小さい
+- **吹き飛ばしの値が決まっていない。**原簿に列は空いたが全品目 0 で、
+  これまでと同じく誰も飛ばない。消えていた `Inventbutton` の式は
+  `0.07 * n + 7` だった
+- **武器の耐久も 0 のまま。**`Equipment` は減らせるが、原簿の武器がすべて
+  最大耐久値 0 なので減らない。1 以上を入れると `Weapon` が
+  `FindWithTag("PlayerInventory/WeaponBox")` を呼ぶ。この綴りのタグは
+  無い見込みで、その時に初めて例外になる
 - **セーブの修正。**根源とクエストが保存されていない。`ItemSlot` で形は
   分かったので、`RootSave` / `QuestSave` を同じ形にすれば塞がる。ただし Domain の
   `Root` / `Quest` は get-only プロパティで `JsonUtility` が読めず、DTO が要る。
@@ -91,4 +93,5 @@ fan-out 昇順で読む。
   - クエストの発行が翌日になる件（`dd810a1`）
   - 敵に当たること自体。`d55d59a` でダメージの経路を `IDamageable` に替えた
   - 拠点の耐久がシーンを跨ぐと戻る（`cfc32c6`）
+  - 装備したときの持ち絵とボタンの文言。原簿の列で決まるようになった
 - 20 分プレイして氾濫を見る / クラフト画面の素材スロット
