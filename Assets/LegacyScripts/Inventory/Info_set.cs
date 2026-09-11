@@ -12,8 +12,12 @@ public class Info_set : MonoBehaviour
     [SerializeField] private Button button;
     [SerializeField] private Sprite buttonsprite;
 
+    [Header("手に持つ絵。原簿の ID と対で持つ")]
+    [SerializeField] private string weapon1Id = "Ironsword";
     [SerializeField] private Sprite weapon1;
+    [SerializeField] private string weapon2Id = "Legendsword";
     [SerializeField] private Sprite weapon2;
+
     private ItemDefinition current;
 
     void Start()
@@ -30,15 +34,22 @@ public class Info_set : MonoBehaviour
         txt.text = current.Description;
         mainImage.sprite = Resources.Load<Sprite>(s);
 
-        if (current.Installable)
-            button.gameObject.SetActive(true); // 設置ボタン
-        else button.gameObject.SetActive(false);
-
-        if (nametxt.text== "スライムゼリー") button.GetComponentInChildren<Text>().text = "食べる";
-        if (nametxt.text.IndexOf("剣") != -1) button.GetComponentInChildren<Text>().text = "装備";
-        else button.GetComponentInChildren<Text>().text = "設置";
+        // 非表示のボタンからも文字を取る。既定の GetComponentInChildren は
+        // 活性なものしか返さず、設置できないアイテムを選ぶと null になっていた
+        button.GetComponentInChildren<Text>(true).text = Label(current.Use);
+        button.gameObject.SetActive(current.Installable);
 
         return 1;
+    }
+
+    private static string Label(ItemUse use)
+    {
+        switch (use)
+        {
+            case ItemUse.Eat: return "食べる";
+            case ItemUse.Equip: return "装備";
+            default: return "設置";
+        }
     }
 
     public void Delete_Info()
@@ -49,34 +60,48 @@ public class Info_set : MonoBehaviour
         button.gameObject.SetActive(false);
     }
 
-    private const int SlimejellyHeal = 5;
-
     public void Install()
     {
-        if (nametxt.text == "スライムゼリー")
+        if (current == null) return;
+
+        switch (current.Use)
         {
-            Player2.Hp.Heal(SlimejellyHeal);
-            Player2.RefreshHpView();
-            GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>().UnloadInventory("Slimejelly");
+            case ItemUse.Eat: Eat(); break;
+            case ItemUse.Equip: Equip(); break;
+            default: Place(); break;
         }
-        else if (nametxt.text.IndexOf("鉄") != -1) 
-        {
-            GameObject.Find("WeaponChild").GetComponent<SpriteRenderer>().sprite = weapon1;
-            Weapon.power = 40;
-            TempAudio.TempAudioPlay("Fantasy_Game_Action_Backpack_Open");
-        }
-        else if (nametxt.text.IndexOf("伝") != -1)
-        {
-            GameObject.Find("WeaponChild").GetComponent<SpriteRenderer>().sprite = weapon2;
-            Weapon.power = 999;
-            TempAudio.TempAudioPlay("Fantasy_Game_Action_Backpack_Open");
-        }
-        else //設置
-        {
-            Vector3 installpos = GameObject.FindWithTag("Player").transform.position + Vector3.down * 0.4f;
-            var o = Instantiate((GameObject)Resources.Load(current.ItemId + "_obj"), installpos, Quaternion.identity);
-          //  SceneStarter.saveobjects.Add(new string[] { o.name.Substring(0,o.name.Length-7), GameManager.entered_scene, installpos.x.ToString(), installpos.y.ToString(), installpos.z.ToString() });
-            GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>().UnloadInventory(current.ItemId);
-        }
+    }
+
+    private void Eat()
+    {
+        Player2.Hp.Heal(current.Heal);
+        Player2.RefreshHpView();
+        GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>().UnloadInventory(current.ItemId);
+    }
+
+    private void Equip()
+    {
+        if (!Weapon.Equipped.Equip(current)) return;
+
+        Sprite inhand = InHand(current.ItemId);
+        if (inhand != null) GameObject.Find("WeaponChild").GetComponent<SpriteRenderer>().sprite = inhand;
+
+        TempAudio.TempAudioPlay("Fantasy_Game_Action_Backpack_Open");
+    }
+
+    /// <summary>手に持つ絵。原簿には置けないため Inspector で ID と対にしてある</summary>
+    private Sprite InHand(string itemId)
+    {
+        if (itemId == weapon1Id) return weapon1;
+        if (itemId == weapon2Id) return weapon2;
+
+        return null;
+    }
+
+    private void Place()
+    {
+        Vector3 installpos = GameObject.FindWithTag("Player").transform.position + Vector3.down * 0.4f;
+        Instantiate((GameObject)Resources.Load(current.ItemId + "_obj"), installpos, Quaternion.identity);
+        GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>().UnloadInventory(current.ItemId);
     }
 }

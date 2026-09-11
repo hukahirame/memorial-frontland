@@ -39,8 +39,8 @@
 ↓ 🟨 `Craft` **6** — Recipe **3**, Inventory **2**, ItemDefinition **1**  
 ↓ 🟨 `Day` **12** — Reward **3**, DayClock **2**, DayCycle **2**, DayPlan **2**, QuestKind **2**, Root **1**  
 ↓ 🟨 `Enemy` **23** — Health **6**, SpawnRule **4**, DropChance **3**, EnemyAction **3**, ActionRule **2**, Root **2**, DropRule **1**, FallRule **1**, FieldBounds **1**  
-↓ 🟨 `Inventory` **17** — ItemSlot **6**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
-↓ 🟨 `Player` **10** — AttackKind **3**, AttackRule **2**, Health **2**, FieldBounds **1**, Nudge **1**, Quest **1**  
+↓ 🟨 `Inventory` **22** — ItemSlot **6**, ItemUse **5**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
+↓ 🟨 `Player` **12** — AttackKind **3**, AttackRule **2**, Equipment **2**, Health **2**, FieldBounds **1**, Nudge **1**, Quest **1**  
 ↓ 🟨 `Quest` **46** — QuestKind **19**, Quest **14**, Reward **8**, QuestRegistry **2**, Root **2**, QuestId **1**  
 ↓ 🟨 `Roots` **13** — AccumulationLevel **8**, Root **3**, RootRegistry **2**  
 ↓ 🟨 `Save` **3** — ItemSlot **3**  
@@ -77,7 +77,7 @@
 ↓ 🟨 `Craft` **2** — TempAudio **2**  
 ↓ 🟨 `Day` **1** — MiddleText **1**  
 ↓ 🟨 `Enemy` **1** — MiddleText **1**  
-↓ 🟨 `Inventory` **3** — TempAudio **3**  
+↓ 🟨 `Inventory` **2** — TempAudio **2**  
 ↓ 🟨 `Player` **6** — TempAudio **4**, BigText **1**, MiddleText **1**  
 ↓ 🟨 `Quest` **5** — MiddleText **3**, BigText **2**  
 
@@ -117,10 +117,10 @@
 
 ### 🟨Inventory 🎒 
 
-↑ 🟦 `Domain` **17** — ItemSlot **6**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
+↑ 🟦 `Domain` **22** — ItemSlot **6**, ItemUse **5**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
 ↑ 🟩 `Inventory` **1** — IItemReceiver **1**  
-↑ 🟩 `Staging` **3** — TempAudio **3**  
-↑ 🟨 `Player` **6** — Player2 **4**, Weapon **2**  
+↑ 🟩 `Staging` **2** — TempAudio **2**  
+↑ 🟨 `Player` **5** — Player2 **4**, Weapon **1**  
 ↑ 🟨 `Scene` **3** — GameManager **3**  
 
 ↓ 🟨 `Craft` **1** — PlayerInventory **1**  
@@ -130,7 +130,7 @@
 
 ### 🟨Player 🚶 
 
-↑ 🟦 `Domain` **10** — AttackKind **3**, AttackRule **2**, Health **2**, FieldBounds **1**, Nudge **1**, Quest **1**  
+↑ 🟦 `Domain` **12** — AttackKind **3**, AttackRule **2**, Equipment **2**, Health **2**, FieldBounds **1**, Nudge **1**, Quest **1**  
 ↑ 🟩 `Enemy` **1** — IDamageable **1**  
 ↑ 🟩 `OutField` **1** — Exposition **1**  
 ↑ 🟩 `Staging` **6** — TempAudio **4**, BigText **1**, MiddleText **1**  
@@ -140,7 +140,7 @@
 ↑ 🟨 `Scene` **5** — GameManager **5**  
 
 ↓ 🟨 `Enemy` **2** — Player2 **2**  
-↓ 🟨 `Inventory` **6** — Player2 **4**, Weapon **2**  
+↓ 🟨 `Inventory` **5** — Player2 **4**, Weapon **1**  
 ↓ 🟨 `Save` **3** — Player2 **3**  
 ↓ 🟨 `Scene` **5** — Player2 **5**  
 

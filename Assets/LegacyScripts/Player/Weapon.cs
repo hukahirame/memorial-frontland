@@ -1,16 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using MemorialFloor.Domain;
 using MemorialFloor.Game;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class Weapon : MonoBehaviour // 武器オブジェクトに直接
 {
-    public static int power = 40;
-    public static float knockback;
+    /// <summary>装備している武器。所有者はここ1つ（Player2.Hp と同じ形）</summary>
+    public static readonly Equipment Equipped = new Equipment();
 
     [SerializeField] private GameObject damage_set;
-    public static Slider pw_durability;
     private BoxCollider box;
     void Start()
     {
@@ -29,6 +28,8 @@ public class Weapon : MonoBehaviour // 武器オブジェクトに直接
     }
     private void OnTriggerEnter(Collider other)
     {
+        int power = Equipped.Attack;
+
         if (other.CompareTag("MainSpawner"))
         {
             other.GetComponent<OF_Spawner>().SpawnerBreak(power);
@@ -56,21 +57,14 @@ public class Weapon : MonoBehaviour // 武器オブジェクトに直接
             //TempAudio.TempAudioPlay("EnemyHit");
 
             Rigidbody enemyrb = target.GetComponent<Rigidbody>();
+            float knockback = Equipped.Knockback;
             enemyrb.AddForce(new Vector3(knockback * transform.up.x, knockback / 3, 0) * enemyrb.mass, ForceMode.Impulse);
 
-            // pw_durability.value -= 1;
-            if ((pw_durability != null) && (pw_durability.value <= 0))  //武器耐久値0
+            if (Equipped.Wear(1)) //武器耐久値0
             {
+                Equipped.Unequip();
                 GameObject.FindWithTag("PlayerInventory/WeaponBox").GetComponent<WeaponBox>().Weapon_Des();
-
-                /*player.weaponbutton.GetComponent<Image>().sprite = Resources.Load<Sprite>("ButtonSprite");
-                player.weaponbutton.name = "Box";
-                player.weaponbutton.transform.GetChild(0).GetComponent<Text>().text = null;
-                player.weaponparameta.transform.localScale = new Vector3(0, 1, 1);
-                Destroy(player.w);*/
             }
-
-
         }
     }
 }
