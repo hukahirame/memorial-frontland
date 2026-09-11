@@ -10,9 +10,15 @@ public class Slime : MonoBehaviour, IDamageable
     public float speed;  //種類により変わるが、基本初期値はここで決める
     public float power;
     public int Level;
-    private const int SlimecoreDropPercent = 10;
+    public List<string> drops = new List<string>(); // 必ず落ちる取得物
 
-    public List<string> drops = new List<string>(); // ドロップアイテム群
+    [Tooltip("割合で落ちる取得物")]
+    [SerializeField]
+    private List<DropChance> chanceDrops = new List<DropChance>
+    {
+        new DropChance { ItemId = "Slimecore", Percent = 10 }
+    };
+
     public GameObject dropcapsule;
     public Slider hp;
 
@@ -102,8 +108,7 @@ public class Slime : MonoBehaviour, IDamageable
 
     private void Death() //死亡モーション終了時
     {
-        if (Chance.Roll(SlimecoreDropPercent, UnityRandom.Shared)) drops.Add("Slimecore");
-        foreach (string s in drops)
+        foreach (string s in DropRule.Roll(drops, chanceDrops, UnityRandom.Shared))
         {
             GameObject d = Instantiate(dropcapsule,transform.position,Quaternion.identity);
             d.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(s);
@@ -112,7 +117,7 @@ public class Slime : MonoBehaviour, IDamageable
         }
         GameObject.FindWithTag("QuestManager").GetComponent<QuestManager>().SyncQuest(gameObject.name);
         Root root = RootsManager.Roots.Find(GameManager.entered_scene);
-        if (root != null) root.Calm(3);
+        if (root != null) root.Calm(SpawnRule.CalmPerDefeat);
         Destroy(gameObject);
     }
 }

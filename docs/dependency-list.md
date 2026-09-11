@@ -37,7 +37,7 @@
 ↓ 🟩 `Enemy` **1** — IRandom **1**  
 ↓ 🟨 `Craft` **6** — Recipe **3**, Inventory **2**, ItemDefinition **1**  
 ↓ 🟨 `Day` **12** — Reward **3**, DayClock **2**, DayCycle **2**, DayPlan **2**, QuestKind **2**, Root **1**  
-↓ 🟨 `Enemy` **16** — Health **6**, EnemyAction **3**, SpawnRule **3**, Root **2**, ActionRule **1**, Chance **1**  
+↓ 🟨 `Enemy` **20** — Health **6**, SpawnRule **4**, DropChance **3**, EnemyAction **3**, Root **2**, ActionRule **1**, DropRule **1**  
 ↓ 🟨 `Inventory` **17** — ItemSlot **6**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
 ↓ 🟨 `Player` **3** — Health **2**, Quest **1**  
 ↓ 🟨 `Quest` **46** — QuestKind **19**, Quest **14**, Reward **8**, QuestRegistry **2**, Root **2**, QuestId **1**  
@@ -96,7 +96,7 @@
 
 ### 🟨Enemy 👾 
 
-↑ 🟦 `Domain` **16** — Health **6**, EnemyAction **3**, SpawnRule **3**, Root **2**, ActionRule **1**, Chance **1**  
+↑ 🟦 `Domain` **20** — Health **6**, SpawnRule **4**, DropChance **3**, EnemyAction **3**, Root **2**, ActionRule **1**, DropRule **1**  
 ↑ 🟩 `Enemy` **5** — UnityRandom **3**, IDamageable **2**  
 ↑ 🟩 `Staging` **1** — MiddleText **1**  
 ↑ 🟨 `Player` **2** — Player2 **2**  

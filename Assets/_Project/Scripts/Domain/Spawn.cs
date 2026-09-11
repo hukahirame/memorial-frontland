@@ -67,6 +67,9 @@
         /// <summary>湧いた敵の体力を減らす割合</summary>
         public const float WeakenRatio = 0.2f;
 
+        /// <summary>敵を1体倒したときに根源の蓄積値が下がる量</summary>
+        public const int CalmPerDefeat = 3;
+
         /// <summary>
         /// 湧きを見送るか。根源が無いシーンでは攻略度による抑制は掛からない。
         /// 抑制が決まった時点で以降の判定は引かない
