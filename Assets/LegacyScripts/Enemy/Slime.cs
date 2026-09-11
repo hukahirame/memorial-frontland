@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using MemorialFloor.Domain;
 
-public class Slime : MonoBehaviour
+public class Slime : MonoBehaviour, IDamageable
 {
     public float speed;  //種類により変わるが、基本初期値はここで決める
     public float power;
@@ -16,6 +16,8 @@ public class Slime : MonoBehaviour
     public GameObject dropcapsule;
     public Slider hp;
 
+    private readonly Health health = new Health();
+
     private Animator anim;
     private Rigidbody rb;
     private Vector3 attitude;
@@ -23,6 +25,25 @@ public class Slime : MonoBehaviour
 
     private bool move = false;
     private Player2 p;
+
+    /// <summary>上限と初期値は prefab の Slider が持つ。以後 Slider は表示</summary>
+    void Awake()
+    {
+        health.SetMax(Mathf.RoundToInt(hp.maxValue));
+        health.SetCurrent(Mathf.RoundToInt(hp.value));
+    }
+
+    public int CurrentHp
+    {
+        get { return health.Current; }
+    }
+
+    public void TakeDamage(int amount)
+    {
+        health.Take(amount);
+        hp.value = health.Current;
+    }
+
     void Start()
     {
         if (gameObject.name.IndexOf("(Clone)") != -1) gameObject.name = gameObject.name.Replace("(Clone)", "");
@@ -38,7 +59,7 @@ public class Slime : MonoBehaviour
         if (isDead) return;
         if (move == true) rb.linearVelocity = attitude * speed;
         if (transform.position.y < -10) gameObject.SetActive(false);
-        if (hp.value <= 0)
+        if (health.IsDead)
         {
             //anim
             transform.Find("BodyCollider").gameObject.SetActive(false);

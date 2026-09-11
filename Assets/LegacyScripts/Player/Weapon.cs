@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using MemorialFloor.Game;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -46,7 +47,8 @@ public class Weapon : MonoBehaviour // 武器オブジェクトに直接
             box.enabled = false;
             TempAudio.TempAudioPlay("Fantasy_Game_Attack_Weapon_Impact");
             GameObject target = other.transform.parent.gameObject;
-            target.transform.Find("Canvas/Slider").GetComponent<Slider>().value -= power;
+            var damageable = target.GetComponent<IDamageable>();
+            if (damageable != null) damageable.TakeDamage(power);
 
             var o = Instantiate(damage_set, other.transform.position, Quaternion.identity, other.transform.parent.Find("Canvas"));
             o.GetComponent<DamageSet>().Text(power);

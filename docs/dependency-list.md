@@ -17,7 +17,7 @@
 | 🟩 `Inventory` | **0** | **2** |
 | 🟩 `Staging` | **0** | **6** |
 | 🟩 `Craft` | **1** | **1** |
-| 🟩 `Enemy` | **1** | **1** |
+| 🟩 `Enemy` | **1** | **2** |
 | 🟩 `OutField` | **1** | **0** |
 | 🟨 `Day` | **4** | **1** |
 | 🟨 `Roots` | **4** | **5** |
@@ -25,8 +25,8 @@
 | 🟨 `Quest` | **5** | **5** |
 | 🟨 `Save` | **5** | **2** |
 | 🟨 `Craft` | **6** | **0** |
-| 🟨 `Player` | **6** | **4** |
 | 🟨 `Scene` | **6** | **7** |
+| 🟨 `Player` | **7** | **4** |
 | 🟨 `Enemy` | **8** | **3** |
 
 ## 詳細
@@ -37,7 +37,7 @@
 ↓ 🟩 `Enemy` **1** — IRandom **1**  
 ↓ 🟨 `Craft` **6** — Recipe **3**, Inventory **2**, ItemDefinition **1**  
 ↓ 🟨 `Day` **12** — Reward **3**, DayClock **2**, DayCycle **2**, DayPlan **2**, QuestKind **2**, Root **1**  
-↓ 🟨 `Enemy` **19** — EnemyAction **6**, Health **4**, SpawnRule **3**, ActionRule **2**, Chance **2**, Root **2**  
+↓ 🟨 `Enemy` **16** — Health **6**, EnemyAction **3**, SpawnRule **3**, Root **2**, ActionRule **1**, Chance **1**  
 ↓ 🟨 `Inventory` **17** — ItemSlot **6**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
 ↓ 🟨 `Player` **3** — Health **2**, Quest **1**  
 ↓ 🟨 `Quest` **46** — QuestKind **19**, Quest **14**, Reward **8**, QuestRegistry **2**, Root **2**, QuestId **1**  
@@ -55,7 +55,8 @@
 
 ↑ 🟦 `Domain` **1** — IRandom **1**  
 
-↓ 🟨 `Enemy` **5** — UnityRandom **5**  
+↓ 🟨 `Enemy` **5** — UnityRandom **3**, IDamageable **2**  
+↓ 🟨 `Player` **1** — IDamageable **1**  
 
 ### 🟩Inventory 🎒 
 
@@ -95,11 +96,11 @@
 
 ### 🟨Enemy 👾 
 
-↑ 🟦 `Domain` **19** — EnemyAction **6**, Health **4**, SpawnRule **3**, ActionRule **2**, Chance **2**, Root **2**  
-↑ 🟩 `Enemy` **5** — UnityRandom **5**  
+↑ 🟦 `Domain` **16** — Health **6**, EnemyAction **3**, SpawnRule **3**, Root **2**, ActionRule **1**, Chance **1**  
+↑ 🟩 `Enemy` **5** — UnityRandom **3**, IDamageable **2**  
 ↑ 🟩 `Staging` **1** — MiddleText **1**  
-↑ 🟨 `Player` **4** — Player2 **4**  
-↑ 🟨 `Quest` **3** — QuestManager **3**  
+↑ 🟨 `Player` **2** — Player2 **2**  
+↑ 🟨 `Quest` **2** — QuestManager **2**  
 ↑ 🟨 `Roots` **2** — RootsManager **2**  
 ↑ 🟨 `Save` **2** — SaveData **1**, SaveSystem **1**  
 ↑ 🟨 `Scene` **3** — GameManager **2**, SceneStarter **1**  
@@ -124,13 +125,14 @@
 ### 🟨Player 🚶 
 
 ↑ 🟦 `Domain` **3** — Health **2**, Quest **1**  
+↑ 🟩 `Enemy` **1** — IDamageable **1**  
 ↑ 🟩 `Staging` **6** — TempAudio **4**, BigText **1**, MiddleText **1**  
 ↑ 🟨 `Enemy` **2** — OF_Spawner **1**, SpawnerCandidate **1**  
 ↑ 🟨 `Inventory` **1** — WeaponBox **1**  
 ↑ 🟨 `Quest` **6** — QuestManager **4**, RewardUI **2**  
 ↑ 🟨 `Scene` **5** — GameManager **5**  
 
-↓ 🟨 `Enemy` **4** — Player2 **4**  
+↓ 🟨 `Enemy` **2** — Player2 **2**  
 ↓ 🟨 `Inventory` **6** — Player2 **4**, Weapon **2**  
 ↓ 🟨 `Save` **3** — Player2 **3**  
 ↓ 🟨 `Scene` **5** — Player2 **5**  
@@ -144,7 +146,7 @@
 ↑ 🟨 `Scene` **5** — GameManager **5**  
 
 ↓ 🟨 `Day` **3** — QuestManager **3**  
-↓ 🟨 `Enemy` **3** — QuestManager **3**  
+↓ 🟨 `Enemy` **2** — QuestManager **2**  
 ↓ 🟨 `Player` **6** — QuestManager **4**, RewardUI **2**  
 ↓ 🟨 `Roots` **1** — QuestManager **1**  
 ↓ 🟨 `Scene` **3** — RewardUI **2**, QuestManager **1**  

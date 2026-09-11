@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using MemorialFloor.Domain;
 using MemorialFloor.Game;
 
@@ -93,10 +92,10 @@ public class OF_Spawner : MonoBehaviour
 
         var obj = Instantiate(enemy, pos, Quaternion.identity);
         seeker.gameObject.SetActive(false);
-        if (SpawnRule.ShouldWeaken(root))
+        var damageable = obj.GetComponent<IDamageable>();
+        if (SpawnRule.ShouldWeaken(root) && damageable != null)
         {
-            var s = obj.transform.Find("Canvas").Find("Slider").GetComponent<Slider>();
-            s.value -= s.value * SpawnRule.WeakenRatio;
+            damageable.TakeDamage(Mathf.RoundToInt(damageable.CurrentHp * SpawnRule.WeakenRatio));
         }
         n++;
     }
