@@ -8,6 +8,7 @@ namespace MemorialFloor.Domain.Tests
     internal sealed class FakeRandom : IRandom
     {
         private readonly Queue<int> _values;
+        private readonly Queue<float> _floats = new Queue<float>();
 
         public int Draws { get; private set; }
 
@@ -16,11 +17,26 @@ namespace MemorialFloor.Domain.Tests
             _values = new Queue<int>(values);
         }
 
+        /// <summary>小数を引いたときに返す値を積む</summary>
+        public FakeRandom WithFloats(params float[] values)
+        {
+            foreach (float value in values) _floats.Enqueue(value);
+
+            return this;
+        }
+
         public int Next(int minInclusive, int maxExclusive)
         {
             Draws++;
 
             return _values.Count > 0 ? _values.Dequeue() : minInclusive;
+        }
+
+        public float NextFloat(float min, float max)
+        {
+            Draws++;
+
+            return _floats.Count > 0 ? _floats.Dequeue() : min;
         }
     }
 
@@ -155,6 +171,58 @@ namespace MemorialFloor.Domain.Tests
             Assert.IsFalse(SpawnRule.ShouldWeaken(Progressed(29)));
             Assert.IsTrue(SpawnRule.ShouldWeaken(Progressed(30)));
             Assert.IsFalse(SpawnRule.ShouldWeaken(null));
+        }
+    }
+
+    public class ActionDurationTests
+    {
+        [Test]
+        public void 待機と移動は秒数を引く()
+        {
+            FakeRandom random = new FakeRandom().WithFloats(1.7f, 0.9f);
+
+            Assert.AreEqual(1.7f, ActionRule.Duration(EnemyAction.Wait, random));
+            Assert.AreEqual(0.9f, ActionRule.Duration(EnemyAction.Move, random));
+            Assert.AreEqual(2, random.Draws);
+        }
+
+        [Test]
+        public void 跳躍は乱数を引かず固定の秒数()
+        {
+            FakeRandom random = new FakeRandom();
+
+            Assert.AreEqual(ActionRule.JumpSeconds, ActionRule.Duration(EnemyAction.Jump, random));
+            Assert.AreEqual(0, random.Draws);
+        }
+
+        [Test]
+        public void 行動ごとに決まった範囲で引く()
+        {
+            Assert.AreEqual(ActionRule.WaitSecondsMin, ActionRule.Duration(EnemyAction.Wait, new FakeRandom()));
+            Assert.AreEqual(ActionRule.MoveSecondsMin, ActionRule.Duration(EnemyAction.Move, new FakeRandom()));
+        }
+
+        [Test]
+        public void 待機のほうが移動より長く止まる()
+        {
+            Assert.Greater(ActionRule.WaitSecondsMin, ActionRule.MoveSecondsMin);
+            Assert.Less(ActionRule.WaitSecondsMax, ActionRule.MoveSecondsMax);
+        }
+    }
+
+    public class FallRuleTests
+    {
+        [Test]
+        public void 閾値より下へ落ちたら場外()
+        {
+            Assert.IsTrue(FallRule.IsOutOfField(FallRule.OutOfFieldY - 0.1f));
+        }
+
+        [Test]
+        public void 閾値そのものは場外ではない()
+        {
+            Assert.IsFalse(FallRule.IsOutOfField(FallRule.OutOfFieldY));
+            Assert.IsFalse(FallRule.IsOutOfField(0f));
         }
     }
 }

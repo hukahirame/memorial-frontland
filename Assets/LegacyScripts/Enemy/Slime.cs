@@ -64,7 +64,7 @@ public class Slime : MonoBehaviour, IDamageable
     {
         if (isDead) return;
         if (move == true) rb.linearVelocity = attitude * speed;
-        if (transform.position.y < -10) gameObject.SetActive(false);
+        if (FallRule.IsOutOfField(transform.position.y)) gameObject.SetActive(false);
         if (health.IsDead)
         {
             //anim
@@ -79,22 +79,14 @@ public class Slime : MonoBehaviour, IDamageable
         if (isDead) return;
         EnemyAction act = ActionRule.Choose(UnityRandom.Shared);
 
-        move = false;
+        move = act == EnemyAction.Move;
         attitude = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
-        if (act == EnemyAction.Wait)
-        {
-            Invoke("RandomAction", Random.Range(1.5f, 2f));
-        }
-        else if (act == EnemyAction.Move)
-        {
-            move = true;
-            Invoke("RandomAction", Random.Range(0.5f, 2.5f));
-        }
-        else  //ジャンプ 20%
+        if (act == EnemyAction.Jump)
         {
             rb.AddForce((attitude + Vector3.up) * rb.mass * 2, ForceMode.Impulse);
-            Invoke("RandomAction", 1.2f);
         }
+
+        Invoke("RandomAction", ActionRule.Duration(act, UnityRandom.Shared));
     }
 
     private void OnCollisionEnter(Collision other)

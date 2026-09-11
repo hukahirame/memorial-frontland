@@ -8,6 +8,9 @@
     {
         /// <summary>min 以上 max 未満の整数</summary>
         int Next(int minInclusive, int maxExclusive);
+
+        /// <summary>min 以上 max 以下の小数。整数側と違い上限を含む</summary>
+        float NextFloat(float min, float max);
     }
 
     /// <summary>確率の判定</summary>
@@ -37,6 +40,17 @@
         public const int WaitPercent = 60;
         public const int MovePercent = 20;
 
+        /// <summary>待機を続ける秒数の下限と上限</summary>
+        public const float WaitSecondsMin = 1.5f;
+        public const float WaitSecondsMax = 2f;
+
+        /// <summary>移動を続ける秒数の下限と上限</summary>
+        public const float MoveSecondsMin = 0.5f;
+        public const float MoveSecondsMax = 2.5f;
+
+        /// <summary>跳躍のあと選び直すまでの秒数。着地を待つので幅を持たせない</summary>
+        public const float JumpSeconds = 1.2f;
+
         /// <summary>残りは跳躍</summary>
         public static EnemyAction Choose(IRandom random)
         {
@@ -46,6 +60,27 @@
             if (roll < WaitPercent + MovePercent) return EnemyAction.Move;
 
             return EnemyAction.Jump;
+        }
+
+        /// <summary>選んだ行動を続ける秒数</summary>
+        public static float Duration(EnemyAction action, IRandom random)
+        {
+            if (action == EnemyAction.Wait) return random.NextFloat(WaitSecondsMin, WaitSecondsMax);
+            if (action == EnemyAction.Move) return random.NextFloat(MoveSecondsMin, MoveSecondsMax);
+
+            return JumpSeconds;
+        }
+    }
+
+    /// <summary>場外へ落ちたかどうか</summary>
+    public static class FallRule
+    {
+        /// <summary>この高さより下へ落ちたら戻れない</summary>
+        public const float OutOfFieldY = -10f;
+
+        public static bool IsOutOfField(float y)
+        {
+            return y < OutOfFieldY;
         }
     }
 

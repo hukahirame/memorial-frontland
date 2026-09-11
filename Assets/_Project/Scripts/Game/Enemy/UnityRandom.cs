@@ -12,5 +12,10 @@ namespace MemorialFloor.Game
         {
             return UnityEngine.Random.Range(minInclusive, maxExclusive);
         }
+
+        public float NextFloat(float min, float max)
+        {
+            return UnityEngine.Random.Range(min, max);
+        }
     }
 }
