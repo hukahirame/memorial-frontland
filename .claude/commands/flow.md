@@ -43,7 +43,16 @@ Change-Type: <種別>"
 
 - `Change-Type:` トレーラーは必須。commit-msgフックが検証する。
 - `tools/flow/flow verify` が、宣言した種別とステージされた差分の形を突き合わせる。
-  いま見ているのは refactor で仕様書が変わっていないかの1件だけ。
+
+| 判定 | 落ちる条件 | 解除 |
+|---|---|---|
+| REFACTOR-DIRTY | refactor で `docs/systems/` が変わった | `Spec-Changed: <理由>` |
+| DOCS-CODE | docs で `*.md` と `docs/` 以外が変わった | 無し |
+| TEST-CODE | test で `tests/` と `Assets/_Project/Tests/` 以外が変わった | 無し |
+| TUNE-CODE | tune で `*.cs` が変わった | 無し |
+
+  解除トレーラーが1つしか無いのは、残りは種別を変えるかコミットを割るのが
+  正しい直し方だから。逃げ道を作ると誤ラベルを誘う。
 - **`--no-verify` は使わない。**
 - ゲートが落ちたら、出力の指示に従って修正し、再度コミットする。人間に確認を求めない。
 - **push はしない。** 人間が打つ。

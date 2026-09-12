@@ -4,6 +4,7 @@
 #
 #   flow verify --message <コミットメッセージのファイル>
 #
+# 見ているのは差分の形と宣言が合っているかだけで、中身は見ない。
 # 出力は回復手順として読めるようにする。1行1件、何を直すかまで書く。
 
 command="$1"
@@ -46,17 +47,58 @@ failed=0
 #
 # refactor では仕様書が変わってはいけない。これが守られるから、refactor の
 # レビューは「仕様書の差分が空である」ことの確認で済む。
-specs=""
 if [ "$type" = "refactor" ]; then
   specs=$(printf '%s\n' "$staged" | grep '^docs/systems/.*\.md$')
+
+  if [ -n "$specs" ] && ! grep -q '^Spec-Changed: .' "$message"; then
+    echo "E  REFACTOR-DIRTY  refactor で仕様書が変わっている"
+    printf '%s\n' "$specs" | sed 's/^/     /'
+    echo "     振る舞いが変わったなら feat か fix。変わっていないなら仕様書を戻す"
+    echo "     意図して変えたなら Spec-Changed: <理由> を足す"
+    failed=1
+  fi
 fi
 
-if [ -n "$specs" ] && ! grep -q '^Spec-Changed: .' "$message"; then
-  echo "E  REFACTOR-DIRTY  refactor で仕様書が変わっている"
-  printf '%s\n' "$specs" | sed 's/^/     /'
-  echo "     振る舞いが変わったなら feat か fix。変わっていないなら仕様書を戻す"
-  echo "     意図して変えたなら Spec-Changed: <理由> を足す"
-  failed=1
+# DOCS-CODE
+#
+# docs で触れるのは文書だけ。コードが混ざるなら種別が違う。
+if [ "$type" = "docs" ]; then
+  others=$(printf '%s\n' "$staged" | grep -v -e '\.md$' -e '^docs/')
+
+  if [ -n "$others" ]; then
+    echo "E  DOCS-CODE  docs で文書以外が変わっている"
+    printf '%s\n' "$others" | sed 's/^/     /'
+    echo "     種別を変えるか、コミットを割る。解除トレーラーは無い"
+    failed=1
+  fi
+fi
+
+# TEST-CODE
+#
+# test で触れるのはテストだけ。実装が混ざると、テストが通ったことの意味が消える。
+if [ "$type" = "test" ]; then
+  others=$(printf '%s\n' "$staged" | grep -v -e '^tests/' -e '^Assets/_Project/Tests/')
+
+  if [ -n "$others" ]; then
+    echo "E  TEST-CODE  test でテスト以外が変わっている"
+    printf '%s\n' "$others" | sed 's/^/     /'
+    echo "     種別を変えるか、コミットを割る。解除トレーラーは無い"
+    failed=1
+  fi
+fi
+
+# TUNE-CODE
+#
+# tune は値だけ。コードが変わるなら、値を外に出す作業が先（tune.md）。
+if [ "$type" = "tune" ]; then
+  sources=$(printf '%s\n' "$staged" | grep '\.cs$')
+
+  if [ -n "$sources" ]; then
+    echo "E  TUNE-CODE  tune でコードが変わっている"
+    printf '%s\n' "$sources" | sed 's/^/     /'
+    echo "     値を外に出す作業は feat か refactor。解除トレーラーは無い"
+    failed=1
+  fi
 fi
 
 exit $failed

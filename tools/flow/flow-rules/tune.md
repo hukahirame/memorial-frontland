@@ -4,7 +4,7 @@
 
 変更してよいのは ScriptableObject のアセット(値)だけ。
 
-- Domain のコードが変更されていたら、それは tune ではない
+- コードが変更されていたら、それは tune ではない。commit-msg が TUNE-CODE で落とす
 - 仕様書の本文が変わるなら、それは feat
 
 ## 原則: AIを介在させない
