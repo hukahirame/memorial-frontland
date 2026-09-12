@@ -10,7 +10,8 @@ fan-out 昇順で読む。
 - Domain 13 ファイル / Game 17 ファイル / Legacy 37 ファイル・9 フォルダ
 - dotnet 147 件 / Unity EditMode 143 件 / PlayMode 3 件。すべて緑
 - コミットは種別の宣言が要る（`Change-Type`）。規則は `tools/flow/flow-rules/`。
-  種別ごとの判定は `tools/flow/flow verify` が1件だけ持つ（REFACTOR-DIRTY）
+  種別ごとの判定は `tools/flow/flow verify` が4件持つ（REFACTOR-DIRTY /
+  DOCS-CODE / TEST-CODE / TUNE-CODE）
 - ADR 20 件・511 行。目安の 500 行を超えたので `docs/decisions/` への分割が近い
 
 ## ✅ 完了
@@ -65,7 +66,8 @@ fan-out 昇順で読む。
 - 仕様書とコードの突き合わせ。名指しした「型.メンバ」が実在すること、調整値に
   書いた定数がコードと一致すること。`const` だけが対象で、Inspector と CSV と
   prefab の値は見ない
-- 種別ごとの機械判定を1件。refactor で仕様書が変わると commit-msg が落とす。
+- 種別ごとの機械判定を4件。refactor で仕様書が変わる、docs で文書以外が変わる、
+  test でテスト以外が変わる、tune でコードが変わる。commit-msg が落とす。
   これで refactor のレビューが「仕様書の差分が空」の確認で済む
 - `PlayerHp` の自然回復が `Health` を迂回していた件を直した
 
@@ -78,9 +80,7 @@ fan-out 昇順で読む。
 - **切れた参照 74 件の掃除。**`StartSet/MainCanvas.prefab` に7件、
   `Scenes/MainSite.unity` に5件。シーンを読むたび警告が47件出るので、
   遊んで確かめるときに本物の警告が埋もれる。種別は asset で Unity 上の作業
-- **種別ごとの判定をあと3つ足せる。**docs なのにコードが変わっている、test なのに
-  テスト以外が変わっている、tune なのに Domain が変わっている。どれも道を見るだけ。
-  SPEC-STALE は feat が来るまで効かない
+- **SPEC-STALE は feat が来るまで効かない。**掛けられる種別が無い
 - **アセット検証テストが CI で走らない。**CI は dotnet だけで Unity を動かさない。
   GUID の解決を `AssetDatabase` から `.meta` の走査に移せば今の CI に乗る。
   移植版が同じ 74 件を出せば合っていると言える
