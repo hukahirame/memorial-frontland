@@ -1,4 +1,4 @@
----
+﻿---
 id: player
 slice: プレイヤー 🚶
 touches: [save]
@@ -32,6 +32,7 @@ tunables: []
 
 - 正典は Domain の `Health`。UI の Slider は表示
 - 上限を決めるのはシーンに入ったとき 1 度だけ。2 回目以降は現在値だけ引き継ぐ
+- 時間で自然に回復する。5 秒ごとに 1。回復に上限以外の条件を付けていない
 
 ### 場外
 
@@ -41,6 +42,7 @@ tunables: []
 
 ## 相互作用
 
+- WHILE 死んでいない、5 秒ごとに体力が 1 戻る
 - WHEN 敵に当たった、体力が敵の攻撃力ぶん減る（[enemy](enemy.md)）
 - WHEN 体力が 0 になった、死亡。5 秒後に復活する
 - WHEN 復活した、所持金が 100 減り、体力が上限の 5% に戻り、原点へ立つ
@@ -60,8 +62,6 @@ tunables: []
 
 ## 未決
 
-- **`PlayerHp` が 5 秒ごとに Slider を直接 +1 している。** `Health` を通らないので、
-  次に被弾すると `RefreshHpView` に消される。自然回復を残すのか、消すのか
 - 死亡時 100、復活時 5% の根拠
 - 素手の攻撃力 40 を残すか。いまは事故の値がそのまま規則になっている
 - 吹き飛ばしが全品目 0。値を入れるか。消えていた式は `0.07 * n + 7` だった
@@ -87,5 +87,5 @@ tunables: []
 | 復活までの 5 秒 | `PlayerDeath.ReviveMainProcess` |
 | 場外の猶予 0.4、高さ 4 | `FieldBounds.EscapeMargin` / `EscapeHeight` |
 | 移動速度 1 | `Player2.speed` |
-| 自然回復 5 秒ごとに 1 | `PlayerHp.Update` |
+| 自然回復 5 秒ごとに 1 | `PlayerHp` の Inspector |
 | 武器ごとの攻撃力・吹き飛ばし | `Assets/_Project/Resources/ItemData.csv` |
