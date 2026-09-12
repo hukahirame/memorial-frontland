@@ -1,0 +1,81 @@
+﻿# 切れた参照の控え。AssetIntegrityTests が読み書きする。
+#
+# 導入した時点で既に切れていたもの。増えるとテストが落ちる。
+# 直すと、テストがこのファイルから消して1度だけ落ちる。
+# 手で足さないこと。減らすだけ。
+#
+# <シーンかプレハブの道> <解決できない guid>
+Assets/_Project/Art/EnemyA/DarkSlime.prefab 61629193b2798814fbd3d81c014fc835
+Assets/_Project/Prefabs/First character.prefab 6b745b80aad135d4cb2caf2f972a5400
+Assets/_Project/Prefabs/First character.prefab 8ecc5e576d1a474389299318c5df0424
+Assets/_Project/Prefabs/Player(experiment) 1.prefab 6b745b80aad135d4cb2caf2f972a5400
+Assets/_Project/Prefabs/Player(experiment) 1.prefab 8ecc5e576d1a474389299318c5df0424
+Assets/_Project/Prefabs/Player(experiment).prefab 6b745b80aad135d4cb2caf2f972a5400
+Assets/_Project/Prefabs/Player(experiment).prefab 8ecc5e576d1a474389299318c5df0424
+Assets/_Project/Prefabs/RootButton.prefab 06ab1bd873ba4044d8c93d6b8bc26cb9
+Assets/_Project/Prefabs/Slimecore_button.prefab 3fbdb3260cf67fc4cacbb284ef181f78
+Assets/_Project/Prefabs/Slimejelly_button.prefab 3fbdb3260cf67fc4cacbb284ef181f78
+Assets/_Project/Prefabs/Torchs.prefab 3fbdb3260cf67fc4cacbb284ef181f78
+Assets/_Project/Resources/Adhesivetrap.prefab 41d935cdb93f28e42bd393c7b721d047
+Assets/_Project/Resources/AdhesivetrapObj.prefab 129bfaaabeaec414eb7fd7b559ad0d31
+Assets/_Project/Resources/AdhesivetrapObj.prefab 32536bd61e542c44ab082a4e392ec749
+Assets/_Project/Resources/Adhesivetrapset.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Blueknive.R.prefab e1c1a448846264641ac4612eb60988af
+Assets/_Project/Resources/Blueknive.w.prefab 41d935cdb93f28e42bd393c7b721d047
+Assets/_Project/Resources/Blueknive.w1set.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Blueknive.w2set.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Blueknive.w3set.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Bottle.prefab 41d935cdb93f28e42bd393c7b721d047
+Assets/_Project/Resources/Bottleset.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/DarkSlimejellyset.prefab dbaefcc995751c64482a33b83b226d66
+Assets/_Project/Resources/Darkknive.R.prefab e1c1a448846264641ac4612eb60988af
+Assets/_Project/Resources/Darkknive.w.prefab 41d935cdb93f28e42bd393c7b721d047
+Assets/_Project/Resources/Darkknive.w1set.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Darkknive.w2set.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Darkknive.w3set.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Darkmatterset.prefab dbaefcc995751c64482a33b83b226d66
+Assets/_Project/Resources/FenceObj.prefab 4e52d679fdfa8104c9456af14addef4e
+Assets/_Project/Resources/Fenceset.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Generalknive.w.prefab 41d935cdb93f28e42bd393c7b721d047
+Assets/_Project/Resources/Generalknive.w1set.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Generalknive.w2set.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Generalknive.w3set.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Generalknive.w4set.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Installer.prefab 82258e07ce9897740a36d28c770244cc
+Assets/_Project/Resources/Lightwoodcannon.bullet.prefab 98a6554bcb7ae504eb15d293ef266591
+Assets/_Project/Resources/LightwoodcannonObj.prefab ae8872cdc612d584689eac747439b603
+Assets/_Project/Resources/Lightwoodcannonset.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/QuestFinishButton.prefab 0288edf3bbdcff34cb9a0d74eed510a2
+Assets/_Project/Resources/Slimejellyset.prefab dbaefcc995751c64482a33b83b226d66
+Assets/_Project/Resources/Slimeknive.R.prefab e1c1a448846264641ac4612eb60988af
+Assets/_Project/Resources/Slimeknive.w.prefab 41d935cdb93f28e42bd393c7b721d047
+Assets/_Project/Resources/Slimeknive.w1set.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Slimeknive.w2set.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Slimeknive.w3set.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/SodaSlimejelly.prefab 41d935cdb93f28e42bd393c7b721d047
+Assets/_Project/Resources/SodaSlimejellyset.prefab dbaefcc995751c64482a33b83b226d66
+Assets/_Project/Resources/Torchset.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Resources/Unit_r0.prefab cc317281c48fea84a9091c429f501de6
+Assets/_Project/Resources/Unit_r0.prefab e39343264aedb04418962dec4831643a
+Assets/_Project/Resources/Unit_x0.prefab cb158dbf806d2dc4d8058e88952907c1
+Assets/_Project/Resources/Unit_xa.prefab cb158dbf806d2dc4d8058e88952907c1
+Assets/_Project/Resources/Unit_xn.prefab cb158dbf806d2dc4d8058e88952907c1
+Assets/_Project/Resources/WoodChestset.prefab b4b88cad7803e6d43ae689edc4b728e7
+Assets/_Project/Scenes/MainSite.unity 049d7022f9a74954b97a81e1b726e88f
+Assets/_Project/Scenes/MainSite.unity 198072d091945ea42b7f9a69bfa39ae5
+Assets/_Project/Scenes/MainSite.unity 4df6cead6fe581e47bc1753b0c915ff2
+Assets/_Project/Scenes/MainSite.unity d5f4a4d94bb1882498a3367457e7297f
+Assets/_Project/Scenes/MainSite.unity e36d390f5981abf41906b22efc51d3d7
+Assets/_Project/Scenes/Root1.unity 198072d091945ea42b7f9a69bfa39ae5
+Assets/_Project/Scenes/Root2.unity 198072d091945ea42b7f9a69bfa39ae5
+Assets/_Project/Scenes/Title.unity 198072d091945ea42b7f9a69bfa39ae5
+Assets/_Project/StartSet/Global Light 2D.prefab 4bf8c64144770794282277240bef543a
+Assets/_Project/StartSet/MainCanvas.prefab 064259c6fcad8ec4bbf8617a49c2b62f
+Assets/_Project/StartSet/MainCanvas.prefab 4bf04d49a3581d94e903cb52de580caa
+Assets/_Project/StartSet/MainCanvas.prefab 4df6cead6fe581e47bc1753b0c915ff2
+Assets/_Project/StartSet/MainCanvas.prefab 752797cfafdcc5d49983394ab1454771
+Assets/_Project/StartSet/MainCanvas.prefab bdf8cf9fcdd283e4dbbf70158db8ef68
+Assets/_Project/StartSet/MainCanvas.prefab e36d390f5981abf41906b22efc51d3d7
+Assets/_Project/StartSet/MainCanvas.prefab eb18ff8700e01754e8567cf2822b2bec
+Assets/_Project/StartSet/Silent Land playerA.prefab 2ed596f562d29f441a65ca2033f11a83
+Assets/_Project/StartSet/Silent Land playerA.prefab 5e2ff6ab5d4670c48ab3066f7f0d8b04
