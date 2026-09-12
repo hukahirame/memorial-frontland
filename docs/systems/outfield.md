@@ -1,4 +1,4 @@
----
+﻿---
 id: outfield
 slice: 外フィールド 🌲
 touches: []
@@ -48,10 +48,11 @@ tunables: []
 
 ## 調整値
 
-| 値 | 居場所 |
-|---|---|
-| 最初の落下まで 10〜20 秒 | `BranchFallSystem.Start` |
-| 以降の間隔 20〜36 秒 | `BranchFallSystem.BranchDrop` |
-| 落ちる範囲 | `BranchFallSystem.minusrange` / `plusrange`（Inspector） |
-| 場の範囲 | `SceneStarter.exposition`（Inspector） |
-| 場外の猶予 0.4、高さ 4 | `FieldBounds.EscapeMargin` / `EscapeHeight` |
+| 項目 | 値 | 居場所 |
+|---|---|---|
+| 最初の落下までの秒数 | 10〜20 | `BranchFallSystem.Start` |
+| 以降の間隔（秒） | 20〜36 | `BranchFallSystem.BranchDrop` |
+| 落ちる範囲 | Inspector を見る | `BranchFallSystem.minusrange` |
+| 場の範囲 | Inspector を見る | `SceneStarter.exposition` |
+| 場外の猶予 | 0.4 | `FieldBounds.EscapeMargin` |
+| 場外の高さ | 4 | `FieldBounds.EscapeHeight` |

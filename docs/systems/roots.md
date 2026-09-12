@@ -1,4 +1,4 @@
----
+﻿---
 id: roots
 slice: 根源 🌳
 touches: []
@@ -48,10 +48,10 @@ tunables: []
 
 いずれも ScriptableObject に出ていない。`tune` で触れない。
 
-| 値 | 居場所 |
-|---|---|
-| 日次の蓄積値 +10 | `Root.DailyAccumulationGain` |
-| 日次の攻略度 -3 | `Root.DailyProgressLoss` |
-| 段階の閾値 15 / 40 / 75 / 100 | `Root.Level` |
-| 氾濫時の湧き数 5 | `RootsManager.StampedeJudge` |
-| 根源2つの危険度 1000 / 2000 | `RootsManager.Start` |
+| 項目 | 値 | 居場所 |
+|---|---|---|
+| 日次に増える蓄積値 | 10 | `Root.DailyAccumulationGain` |
+| 日次に減る攻略度 | 3 | `Root.DailyProgressLoss` |
+| 段階の閾値 | 15 / 40 / 75 / 100 | `Root.Level` |
+| 氾濫時の湧き数 | 5 | `RootsManager.StampedeJudge` |
+| 根源2つの危険度 | 1000 / 2000 | `RootsManager.Start` |

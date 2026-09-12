@@ -1,4 +1,4 @@
----
+﻿---
 id: craft
 slice: クラフト 🔨
 touches: []
@@ -40,9 +40,11 @@ tunables: [RecipeDefinition]
 
 ## 調整値
 
-| 値 | 居場所 |
-|---|---|
-| レシピの完成品と材料 | `Assets/_Project/Data/Recipes/*.asset`（ScriptableObject。ここだけ `tune` で触れる） |
-| UI の材料スロット数 4 | `Craft.SlotCount` |
+| 項目 | 値 | 居場所 |
+|---|---|---|
+| UI の材料スロット数 | 4 | `Craft.SlotCount` |
+| 材料1スロットあたりの子オブジェクト数 | 5 | `Craft.WidgetsPerSlot` |
+| レシピの完成品と材料 | 表を見る | `Assets/_Project/Data/Recipes/*.asset` |
 
 レシピだけが ScriptableObject になっている理由は [D-019]。
+ここだけ `tune` で触れる。

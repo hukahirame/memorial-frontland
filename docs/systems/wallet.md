@@ -1,4 +1,4 @@
----
+﻿---
 id: wallet
 slice: 所持金 💰
 touches: [save]
@@ -38,7 +38,9 @@ tunables: []
 
 ## 調整値
 
-| 値 | 居場所 |
-|---|---|
-| 初期値 1000 | `GameManager.startingCoins`（Inspector。ここだけ触れる） |
-| 死亡時 -100 | `PlayerDeath.DeathPenalty` |
+| 項目 | 値 | 居場所 |
+|---|---|---|
+| 初期値 | 1000 | `GameManager.startingCoins` |
+| 死亡時に払う額 | 100 | `PlayerDeath.DeathPenalty` |
+
+初期値は Inspector にある。

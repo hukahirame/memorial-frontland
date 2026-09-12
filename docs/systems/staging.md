@@ -1,4 +1,4 @@
----
+﻿---
 id: staging
 slice: 表示と演出 🎥
 touches: []
@@ -47,8 +47,9 @@ tunables: []
 
 ## 調整値
 
-| 値 | 居場所 |
-|---|---|
-| カメラが追い始める距離 2、追う速さ 0.04 | `MainCamera.FixedUpdate` |
-| 視界確保の透明度 | `ViewSecurer.alpha`（Inspector） |
-| 上下に揺れる UI の周期 | `UpDownUI.UpDown` |
+| 項目 | 値 | 居場所 |
+|---|---|---|
+| カメラが追い始める距離 | 2 | `MainCamera.FixedUpdate` |
+| カメラの追う速さ | 0.04 | `MainCamera.FixedUpdate` |
+| 視界確保の透明度 | Inspector を見る | `ViewSecurer.alpha` |
+| 上下に揺れる UI の周期 | 見て決める | `UpDownUI.UpDown` |

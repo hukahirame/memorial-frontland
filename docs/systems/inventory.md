@@ -1,4 +1,4 @@
----
+﻿---
 id: inventory
 slice: 持ち物 🎒
 touches: [save]
@@ -47,10 +47,11 @@ tunables: []
 
 ## 調整値
 
-| 値 | 居場所 |
-|---|---|
-| スロット数 5 | `PlayerInventory.slotCount`（Inspector。ここだけ触れる） |
-| 最大ストック / 最大耐久値 / 設置可 / 攻撃力 / 吹き飛ばし / 使い道 / 回復量 | `Assets/_Project/Resources/ItemData.csv` |
-| 俊敏の首飾りの加速 0.3 | `PlayerInventory.LoadInventory` |
+| 項目 | 値 | 居場所 |
+|---|---|---|
+| スロット数 | 5 | `PlayerInventory.slotCount` |
+| 俊敏の首飾りの加速 | 0.3 | `PlayerInventory.LoadInventory` |
+| 最大ストック / 最大耐久値 / 設置可 / 攻撃力 / 吹き飛ばし / 使い道 / 回復量 | 原簿を見る | `Assets/_Project/Resources/ItemData.csv` |
 
 原簿は CSV で、表計算から触れる（[D-019]）。
+スロット数は Inspector にある。

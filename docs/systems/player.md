@@ -78,14 +78,15 @@ tunables: []
 
 いずれも ScriptableObject に出ていない。`tune` で触れない。
 
-| 値 | 居場所 |
-|---|---|
-| 素手の攻撃力 40 | `Equipment.UnarmedAttack` |
-| 攻撃の閾値 0.5 | `AttackRule.Threshold` |
-| 死亡時の所持金 -100 | `PlayerDeath.DeathPenalty` |
-| 復活時の体力 5% | `PlayerDeath.RevivePercent` |
-| 復活までの 5 秒 | `PlayerDeath.ReviveMainProcess` |
-| 場外の猶予 0.4、高さ 4 | `FieldBounds.EscapeMargin` / `EscapeHeight` |
-| 移動速度 1 | `Player2.speed` |
-| 自然回復 5 秒ごとに 1 | `PlayerHp` の Inspector |
-| 武器ごとの攻撃力・吹き飛ばし | `Assets/_Project/Resources/ItemData.csv` |
+| 項目 | 値 | 居場所 |
+|---|---|---|
+| 素手の攻撃力 | 40 | `Equipment.UnarmedAttack` |
+| 攻撃の閾値 | 0.5 | `AttackRule.Threshold` |
+| 死亡時に払う所持金 | 100 | `PlayerDeath.DeathPenalty` |
+| 復活時に戻る体力（%） | 5 | `PlayerDeath.RevivePercent` |
+| 復活までの秒数 | 5 | `PlayerDeath.ReviveMainProcess` |
+| 場外の猶予 | 0.4 | `FieldBounds.EscapeMargin` |
+| 場外の高さ | 4 | `FieldBounds.EscapeHeight` |
+| 移動速度 | 1 | `Player2.speed` |
+| 自然回復の間隔と量 | 5 秒ごとに 1 | `PlayerHp` の Inspector |
+| 武器ごとの攻撃力・吹き飛ばし | 原簿を見る | `Assets/_Project/Resources/ItemData.csv` |

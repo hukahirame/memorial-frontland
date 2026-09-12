@@ -1,4 +1,4 @@
----
+﻿---
 id: enemy
 slice: 敵とスポーン 👾
 touches: [save]
@@ -69,14 +69,21 @@ tunables: []
 
 いずれも ScriptableObject に出ていない。`tune` で触れない。
 
-| 値 | 居場所 |
-|---|---|
-| 抑制の攻略度 50、確率 50% | `SpawnRule.SuppressProgress` / `SuppressPercent` |
-| 混み具合 1 体あたり 3% | `SpawnRule.CrowdPercentPerEnemy` |
-| 弱体化の攻略度 30、割合 0.2 | `SpawnRule.WeakenProgress` / `WeakenRatio` |
-| 討伐時の鎮静 3 | `SpawnRule.CalmPerDefeat` |
-| 行動の割合 60 / 20 / 残り | `ActionRule.WaitPercent` / `MovePercent` |
-| 行動の秒数 | `ActionRule` の定数 |
-| 場外の高さ -10 | `FallRule.OutOfFieldY` |
-| 敵ごとの落とすものと割合 | 敵 prefab の `DropChance` |
-| 敵の攻撃力 | 敵 prefab の `Slime.power` |
+| 項目 | 値 | 居場所 |
+|---|---|---|
+| 抑制が掛かる攻略度 | 50 | `SpawnRule.SuppressProgress` |
+| 抑制の確率（%） | 50 | `SpawnRule.SuppressPercent` |
+| 混み具合 1 体あたり（%） | 3 | `SpawnRule.CrowdPercentPerEnemy` |
+| 弱体化が掛かる攻略度 | 30 | `SpawnRule.WeakenProgress` |
+| 弱体化で減らす割合 | 0.2 | `SpawnRule.WeakenRatio` |
+| 討伐時に下がる蓄積値 | 3 | `SpawnRule.CalmPerDefeat` |
+| 待機を選ぶ割合（%） | 60 | `ActionRule.WaitPercent` |
+| 移動を選ぶ割合（%） | 20 | `ActionRule.MovePercent` |
+| 待機を続ける秒数の下限 | 1.5 | `ActionRule.WaitSecondsMin` |
+| 待機を続ける秒数の上限 | 2 | `ActionRule.WaitSecondsMax` |
+| 移動を続ける秒数の下限 | 0.5 | `ActionRule.MoveSecondsMin` |
+| 移動を続ける秒数の上限 | 2.5 | `ActionRule.MoveSecondsMax` |
+| 跳躍のあと選び直すまでの秒数 | 1.2 | `ActionRule.JumpSeconds` |
+| 場外とみなす高さ | -10 | `FallRule.OutOfFieldY` |
+| 敵ごとの落とすものと割合 | prefab を見る | 敵 prefab の `DropChance` |
+| 敵の攻撃力 | prefab を見る | 敵 prefab の `Slime.power` |

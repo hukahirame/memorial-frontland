@@ -1,4 +1,4 @@
----
+﻿---
 id: scene
 slice: シーン遷移 🚪
 touches: [save]
@@ -49,8 +49,7 @@ tunables: []
 
 ## 調整値
 
-| 値 | 居場所 |
-|---|---|
-| MainSite の BGM 2 曲と 50% | `SceneStarter.Start` |
-| 根源の BGM | 同 |
-| シーンごとの立ち位置 | `SceneStarter.playerspowner`（Inspector） |
+| 項目 | 値 | 居場所 |
+|---|---|---|
+| MainSite の BGM を選ぶ確率（%） | 50 | `SceneStarter.Start` |
+| シーンごとの立ち位置 | Inspector を見る | `SceneStarter.playerspowner` |

@@ -1,4 +1,4 @@
----
+﻿---
 id: day
 slice: 日の進行 ☀️
 touches: [save]
@@ -49,8 +49,14 @@ tunables: []
 
 ## 調整値
 
-| 値 | 居場所 |
-|---|---|
-| 1 日の長さ 120 秒 | `Sun2.aroundtime`（Inspector。ここだけ触れる） |
-| 光の強さ 0.3〜1.8 | `Sun2.minIntensity` / `maxIntensity` |
-| 夜明け 4〜5 時、日没 16〜17 時 | `DayClock` の定数 |
+| 項目 | 値 | 居場所 |
+|---|---|---|
+| 1 日の長さ（秒） | 120 | `Sun2.aroundtime` |
+| 光の強さの下限 | 0.3 | `Sun2.minIntensity` |
+| 光の強さの上限 | 1.8 | `Sun2.maxIntensity` |
+| 夜明けの開始（時） | 4 | `DayClock.SunriseHour` |
+| 夜明けの終了（時） | 5 | `DayClock.MorningHour` |
+| 日没の開始（時） | 16 | `DayClock.SunsetHour` |
+| 日没の終了（時） | 17 | `DayClock.NightHour` |
+
+1 日の長さだけが Inspector にある。

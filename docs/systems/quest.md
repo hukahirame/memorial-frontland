@@ -1,4 +1,4 @@
----
+﻿---
 id: quest
 slice: クエスト 📜
 touches: []
@@ -52,8 +52,12 @@ tunables: []
 
 ## 調整値
 
-| 値 | 居場所 |
-|---|---|
-| 調査の報酬 coin 100 / progress 15 | `Sun2.DayStart` と `QuestManager.Start` |
-| サブの報酬 coin 100、目標 スライム 3 体 | `Sun2.DayStart` |
-| 一度に出す本数 4 | `QuestManager.ShownAtOnce` |
+| 項目 | 値 | 居場所 |
+|---|---|---|
+| 一度に出す本数 | 4 | `QuestManager.ShownAtOnce` |
+| 調査の報酬 coin | 100 | `Sun2.DayStart` |
+| 調査の報酬 progress | 15 | `Sun2.DayStart` |
+| サブの報酬 coin | 100 | `Sun2.DayStart` |
+| サブの目標（スライムの数） | 3 | `Sun2.DayStart` |
+
+起動時に作られる 2 本は `QuestManager.Start` にあり、報酬が別の値になっている。
