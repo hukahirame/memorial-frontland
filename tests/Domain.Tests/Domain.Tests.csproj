@@ -36,6 +36,7 @@
     <Compile Include="DependencyList.cs" />
     <Compile Include="DependencyListTests.cs" />
     <Compile Include="SystemSpecTests.cs" />
+    <Compile Include="SpecConformanceTests.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -39,6 +40,16 @@ namespace MemorialFloor.Domain.Tests
             /// <summary>節 -> そこで名前が出た識別子と、その回数</summary>
             public readonly Dictionary<string, Dictionary<string, int>> Mentions =
                 new Dictionary<string, Dictionary<string, int>>(StringComparer.Ordinal);
+
+            /// <summary>宣言されている「型.メンバ」。仕様書が名指しした先が在るかを見る</summary>
+            public readonly HashSet<string> Members = new HashSet<string>(StringComparer.Ordinal);
+
+            /// <summary>
+            /// 「型.メンバ」-> const の値。const だけを入れる。
+            /// SerializeField はシーンの値が優先されるため、ソースの初期値と一致しない
+            /// </summary>
+            public readonly Dictionary<string, string> Constants =
+                new Dictionary<string, string>(StringComparer.Ordinal);
 
             /// <summary>節の一覧</summary>
             public IEnumerable<string> Nodes
@@ -84,6 +95,12 @@ namespace MemorialFloor.Domain.Tests
                     Dictionary<string, int> seen = index.Mentions[node];
                     foreach (string name in Mentioned(File.ReadAllText(file)))
                         seen[name] = seen.ContainsKey(name) ? seen[name] + 1 : 1;
+
+                    foreach ((string member, string value) in DeclaredMembers(File.ReadAllText(file)))
+                    {
+                        index.Members.Add(member);
+                        if (value != null) index.Constants[member] = value;
+                    }
                 }
             }
 
@@ -101,6 +118,64 @@ namespace MemorialFloor.Domain.Tests
                                    .DescendantNodes()
                                    .OfType<SimpleNameSyntax>()
                                    .Select(node => node.Identifier.ValueText);
+        }
+
+        /// <summary>
+        /// そのソースが宣言する「型.メンバ」と、const ならその値。const 以外は値が null。
+        /// メソッド・プロパティ・フィールド・enum の値を拾う。
+        /// 公開の別は見ない。仕様書は private な定数も名指しするため
+        /// </summary>
+        private static IEnumerable<(string Member, string Value)> DeclaredMembers(string source)
+        {
+            SyntaxNode root = CSharpSyntaxTree.ParseText(source).GetRoot();
+
+            foreach (SyntaxNode node in root.DescendantNodes())
+            {
+                BaseTypeDeclarationSyntax owner = node.FirstAncestorOrSelf<BaseTypeDeclarationSyntax>();
+                if (owner == null) continue;
+
+                string type = owner.Identifier.ValueText;
+
+                if (node is MethodDeclarationSyntax method)
+                {
+                    yield return (type + "." + method.Identifier.ValueText, null);
+                }
+                else if (node is PropertyDeclarationSyntax property)
+                {
+                    yield return (type + "." + property.Identifier.ValueText, null);
+                }
+                else if (node is EnumMemberDeclarationSyntax enumMember)
+                {
+                    yield return (type + "." + enumMember.Identifier.ValueText, null);
+                }
+                else if (node is FieldDeclarationSyntax field)
+                {
+                    bool isConst = field.Modifiers.Any(m => m.ValueText == "const");
+
+                    foreach (VariableDeclaratorSyntax declarator in field.Declaration.Variables)
+                    {
+                        string name = type + "." + declarator.Identifier.ValueText;
+                        yield return (name, isConst ? Literal(declarator.Initializer) : null);
+                    }
+                }
+            }
+        }
+
+        /// <summary>初期値が素の数か文字なら、その字面。式なら null</summary>
+        private static string Literal(EqualsValueClauseSyntax initializer)
+        {
+            if (initializer == null) return null;
+
+            if (initializer.Value is LiteralExpressionSyntax literal) return literal.Token.ValueText;
+
+            // -10f のような符号付きは前置演算子になる
+            if (initializer.Value is PrefixUnaryExpressionSyntax unary
+                && unary.Operand is LiteralExpressionSyntax inner)
+            {
+                return unary.OperatorToken.ValueText + inner.Token.ValueText;
+            }
+
+            return null;
         }
 
         /// <summary>そのソースが宣言する型の名前。class / struct / interface / enum / record</summary>
