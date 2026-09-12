@@ -1,0 +1,60 @@
+# コミットが種別を宣言しているかを、リモートの境界で確かめる。
+#
+# commit-msg フックは手元でしか走らない。core.hooksPath は .git/config の設定で
+# バージョン管理されないため、clone した直後はゲートが存在しない。
+# 宣言の有無だけでもここで見ておく。
+#
+# 判定は .githooks/commit-msg をそのまま呼んで行う。許す種別の一覧を2か所に
+# 持つとズレるため。フックが続けて呼ぶ flow verify は、ステージされた中身が
+# 無いので何も見ずに通る。種別と差分の形の突き合わせは手元だけの判定のまま。
+
+name: Commit Type
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # コミットの範囲を読むため履歴が要る。LFS は既定で取得されない
+          fetch-depth: 0
+
+      - name: Check Change-Type
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          TIP: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -u
+          empty=0000000000000000000000000000000000000000
+
+          if [ -n "$BASE" ] && [ "$BASE" != "$empty" ] \
+             && git rev-parse --verify --quiet "$BASE" > /dev/null; then
+            commits=$(git rev-list --no-merges "$BASE..$TIP")
+          else
+            # 初回 push や force push で範囲が取れないときは先端だけ見る
+            commits=$(git rev-list --no-merges -1 "$TIP")
+          fi
+
+          if [ -z "$commits" ]; then
+            echo "見るコミットが無い"
+            exit 0
+          fi
+
+          failed=0
+          for commit in $commits; do
+            git log -1 --format=%B "$commit" > /tmp/message
+            if sh .githooks/commit-msg /tmp/message > /tmp/out 2>&1; then
+              echo "OK   $(git log -1 --format='%h %s' "$commit")"
+            else
+              echo "NG   $(git log -1 --format='%h %s' "$commit")"
+              sed 's/^/     /' /tmp/out
+              failed=1
+            fi
+          done
+
+          exit $failed
