@@ -11,7 +11,8 @@ fan-out 昇順で読む。
 - dotnet 147 件 / Unity EditMode 143 件 / PlayMode 3 件。すべて緑
 - コミットは種別の宣言が要る（`Change-Type`）。規則は `tools/flow/flow-rules/`。
   種別ごとの判定は `tools/flow/flow verify` が4件持つ（REFACTOR-DIRTY /
-  DOCS-CODE / TEST-CODE / TUNE-CODE）
+  DOCS-CODE / TEST-CODE / TUNE-CODE）。これは手元だけ
+- CI は2本。dotnet のテスト147件と、コミットの種別の宣言。Unity は動かさない
 - ADR 20 件・511 行。目安の 500 行を超えたので `docs/decisions/` への分割が近い
 
 ## ✅ 完了
