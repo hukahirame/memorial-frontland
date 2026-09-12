@@ -1,0 +1,62 @@
+#!/bin/sh
+# 宣言した種別と、実際にステージされた差分の形が合っているかを見る。
+# commit-msg フックから呼ばれる。判定だけを行い、ファイルは直さない。
+#
+#   flow verify --message <コミットメッセージのファイル>
+#
+# 出力は回復手順として読めるようにする。1行1件、何を直すかまで書く。
+
+command="$1"
+shift 2>/dev/null
+
+message=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --message)
+      message="$2"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
+if [ "$command" != "verify" ]; then
+  echo "E  使える命令は verify だけ"
+  exit 1
+fi
+
+if [ -z "$message" ] || [ ! -f "$message" ]; then
+  echo "E  --message にコミットメッセージのファイルが要る"
+  exit 1
+fi
+
+type=$(sed -n 's/^Change-Type: \(.*\)$/\1/p' "$message" | tail -1)
+staged=$(git diff --cached --name-only)
+
+# 中身の無いコミットは見ない
+if [ -z "$staged" ]; then
+  exit 0
+fi
+
+failed=0
+
+# REFACTOR-DIRTY
+#
+# refactor では仕様書が変わってはいけない。これが守られるから、refactor の
+# レビューは「仕様書の差分が空である」ことの確認で済む。
+specs=""
+if [ "$type" = "refactor" ]; then
+  specs=$(printf '%s\n' "$staged" | grep '^docs/systems/.*\.md$')
+fi
+
+if [ -n "$specs" ] && ! grep -q '^Spec-Changed: .' "$message"; then
+  echo "E  REFACTOR-DIRTY  refactor で仕様書が変わっている"
+  printf '%s\n' "$specs" | sed 's/^/     /'
+  echo "     振る舞いが変わったなら feat か fix。変わっていないなら仕様書を戻す"
+  echo "     意図して変えたなら Spec-Changed: <理由> を足す"
+  failed=1
+fi
+
+exit $failed
