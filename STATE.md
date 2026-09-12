@@ -8,8 +8,9 @@ Legacy から Domain / Game への切り出し。順序は `docs/dependency-list
 fan-out 昇順で読む。
 
 - Domain 13 ファイル / Game 17 ファイル / Legacy 37 ファイル・9 フォルダ
-- dotnet 145 件 / Unity EditMode 143 件 / PlayMode 3 件。すべて緑
-- コミットは種別の宣言が要る（`Change-Type`）。規則は `tools/flow/flow-rules/`
+- dotnet 147 件 / Unity EditMode 143 件 / PlayMode 3 件。すべて緑
+- コミットは種別の宣言が要る（`Change-Type`）。規則は `tools/flow/flow-rules/`。
+  種別ごとの判定は `tools/flow/flow verify` が1件だけ持つ（REFACTOR-DIRTY）
 - ADR 20 件・511 行。目安の 500 行を超えたので `docs/decisions/` への分割が近い
 
 ## ✅ 完了
@@ -61,6 +62,12 @@ fan-out 昇順で読む。
   機械で埋める。切れた参照 74 件は `docs/asset-baseline.txt` に控え、増える方向で落ちる
 - システムごとの現状仕様を `docs/systems/` に12本。単位は `docs/slices.txt` の行と
   1:1で、対応を `SystemSpecTests` が見張る
+- 仕様書とコードの突き合わせ。名指しした「型.メンバ」が実在すること、調整値に
+  書いた定数がコードと一致すること。`const` だけが対象で、Inspector と CSV と
+  prefab の値は見ない
+- 種別ごとの機械判定を1件。refactor で仕様書が変わると commit-msg が落とす。
+  これで refactor のレビューが「仕様書の差分が空」の確認で済む
+- `PlayerHp` の自然回復が `Health` を迂回していた件を直した
 
 ## ⏭️ 次
 
@@ -71,12 +78,12 @@ fan-out 昇順で読む。
 - **切れた参照 74 件の掃除。**`StartSet/MainCanvas.prefab` に7件、
   `Scenes/MainSite.unity` に5件。シーンを読むたび警告が47件出るので、
   遊んで確かめるときに本物の警告が埋もれる。種別は asset で Unity 上の作業
+- **種別ごとの判定をあと3つ足せる。**docs なのにコードが変わっている、test なのに
+  テスト以外が変わっている、tune なのに Domain が変わっている。どれも道を見るだけ。
+  SPEC-STALE は feat が来るまで効かない
 - **アセット検証テストが CI で走らない。**CI は dotnet だけで Unity を動かさない。
   GUID の解決を `AssetDatabase` から `.meta` の走査に移せば今の CI に乗る。
   移植版が同じ 74 件を出せば合っていると言える
-- **`PlayerHp` の自然回復が Health を迂回している。**5 秒ごとに `slider.value += 1`
-  していて、次の被弾で `RefreshHpView` に消される。Health を正典にしたときの
-  取りこぼし。プレイヤーの残りではこれが一番小さい
 - **吹き飛ばしの値が決まっていない。**原簿に列は空いたが全品目 0 で、
   これまでと同じく誰も飛ばない。消えていた `Inventbutton` の式は
   `0.07 * n + 7` だった
