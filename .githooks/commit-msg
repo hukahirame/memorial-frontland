@@ -1,0 +1,20 @@
+#!/bin/sh
+# 有効化: git config core.hooksPath .githooks
+# Windows: git update-index --chmod=+x .githooks/commit-msg
+
+MSG="$1"
+
+# 種別の宣言を要求する
+if ! grep -qE '^Change-Type: (feat|refactor|fix|tune|asset|test|docs|chore)$' "$MSG"; then
+  echo "E  Change-Type が必要です"
+  echo "   コミットメッセージの末尾に次の行を追加してください:"
+  echo "   Change-Type: <feat|refactor|fix|tune|asset|test|docs|chore>"
+  exit 1
+fi
+
+# flow verify が存在すれば実行する(未導入の間はスキップ)
+if [ -x tools/flow/flow ]; then
+  tools/flow/flow verify --message "$MSG" || exit 1
+fi
+
+exit 0

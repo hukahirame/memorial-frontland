@@ -5,7 +5,13 @@
       "Bash(unity command set_authoring_root *)",
       "PowerShell(unity command set_authoring_root *)",
       "Bash(git reset --hard *)",
-      "PowerShell(git reset --hard *)"
+      "PowerShell(git reset --hard *)",
+      "Bash(git commit --no-verify*)",
+      "PowerShell(git commit --no-verify*)",
+      "Bash(git commit -n *)",
+      "PowerShell(git commit -n *)",
+      "Bash(git -c *)",
+      "PowerShell(git -c *)"
     ],
     "ask": [
       "Bash(unity command delete_asset *)",
