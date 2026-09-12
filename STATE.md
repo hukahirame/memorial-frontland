@@ -8,7 +8,8 @@ Legacy から Domain / Game への切り出し。順序は `docs/dependency-list
 fan-out 昇順で読む。
 
 - Domain 13 ファイル / Game 17 ファイル / Legacy 37 ファイル・9 フォルダ
-- dotnet 142 件 / Unity EditMode 140 件 / PlayMode 3 件。すべて緑
+- dotnet 145 件 / Unity EditMode 143 件 / PlayMode 3 件。すべて緑
+- コミットは種別の宣言が要る（`Change-Type`）。規則は `tools/flow/flow-rules/`
 - ADR 20 件・511 行。目安の 500 行を超えたので `docs/decisions/` への分割が近い
 
 ## ✅ 完了
@@ -54,9 +55,25 @@ fan-out 昇順で読む。
 - Slime へ移行済みで参照の無くなった `Enemy` を削除（GUID で全アセットを照合）
 - ファイル移動の禁止を手順に置き換えた（[D-018]）
 - ゲームデータの置き場をテーブルごとに決める（[D-019]）。中間形式の xlsx を削除
+- 変更の種別を宣言させる flow を入れた。commit-msg フックが `Change-Type` を要求する。
+  判定コマンド `tools/flow/flow` はまだ無く、いま効いているのは宣言の有無だけ
+- シーンとプレハブの参照切れを見る不変条件を3つ置いた。YAML の死角を目視でなく
+  機械で埋める。切れた参照 74 件は `docs/asset-baseline.txt` に控え、増える方向で落ちる
+- システムごとの現状仕様を `docs/systems/` に12本。単位は `docs/slices.txt` の行と
+  1:1で、対応を `SystemSpecTests` が見張る
 
 ## ⏭️ 次
 
+- **`体験の意図` を誰が持つかを決める。**仕様書12本のこの欄が全部空いている。
+  `docs/GDD.md` は「ゲーム設計は Notion に置く。リポジトリには置かない」と決めており、
+  repo に置くならその決定と衝突する。寄せるなら GDD.md を1行直して ADR を1件足す。
+  決まるまで仕様書は挙動しか語らない
+- **切れた参照 74 件の掃除。**`StartSet/MainCanvas.prefab` に7件、
+  `Scenes/MainSite.unity` に5件。シーンを読むたび警告が47件出るので、
+  遊んで確かめるときに本物の警告が埋もれる。種別は asset で Unity 上の作業
+- **アセット検証テストが CI で走らない。**CI は dotnet だけで Unity を動かさない。
+  GUID の解決を `AssetDatabase` から `.meta` の走査に移せば今の CI に乗る。
+  移植版が同じ 74 件を出せば合っていると言える
 - **`PlayerHp` の自然回復が Health を迂回している。**5 秒ごとに `slider.value += 1`
   していて、次の被弾で `RefreshHpView` に消される。Health を正典にしたときの
   取りこぼし。プレイヤーの残りではこれが一番小さい
