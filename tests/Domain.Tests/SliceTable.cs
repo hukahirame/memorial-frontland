@@ -37,6 +37,12 @@ namespace MemorialFloor.Domain.Tests
                         .ToList();
         }
 
+        /// <summary>スライスの名前。仕様書との対応を見るために外へ出す</summary>
+        public static List<string> SliceNames()
+        {
+            return ReadSliceTable().Select(slice => slice.Name).ToList();
+        }
+
         /// <summary>核の指定を型の並びに直す。ファイルならそれが宣言する型に展開する</summary>
         private static List<string> Resolve(Slice slice, SourceIndex.Index index)
         {

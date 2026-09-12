@@ -35,6 +35,7 @@
     <Compile Include="SliceCoverageTests.cs" />
     <Compile Include="DependencyList.cs" />
     <Compile Include="DependencyListTests.cs" />
+    <Compile Include="SystemSpecTests.cs" />
   </ItemGroup>
 
   <ItemGroup>
