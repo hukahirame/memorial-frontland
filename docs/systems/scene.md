@@ -1,6 +1,6 @@
 ﻿---
 id: scene
-slice: シーン遷移 🚪
+name: シーン遷移 🚪
 touches: [save]
 tunables: []
 ---

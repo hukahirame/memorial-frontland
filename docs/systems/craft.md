@@ -1,6 +1,6 @@
 ﻿---
 id: craft
-slice: クラフト 🔨
+name: クラフト 🔨
 touches: []
 tunables: [RecipeDefinition]
 ---

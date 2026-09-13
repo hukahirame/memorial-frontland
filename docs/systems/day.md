@@ -1,6 +1,6 @@
 ﻿---
 id: day
-slice: 日の進行 ☀️
+name: 日の進行 ☀️
 touches: [save]
 tunables: []
 ---

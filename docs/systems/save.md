@@ -1,6 +1,6 @@
 ---
 id: save
-slice: セーブ 💾
+name: セーブ 💾
 touches: [save]
 tunables: []
 ---

@@ -102,13 +102,13 @@ namespace MemorialFloor.Domain.Tests
             return slash < 0 ? node : node.Substring(slash + 1);
         }
 
-        /// <summary>関心事の絵文字。docs/slices.txt の名前に合わせてある</summary>
+        /// <summary>関心事の絵文字。仕様書の name に合わせてある</summary>
         private static string Icon(string node)
         {
             switch (Short(node))
             {
-                case "Domain":    return "💠";
                 case "Roots":     return "🌳";
+                case "Wallet":    return "💰";
                 case "Inventory": return "🎒";
                 case "Craft":     return "🔨";
                 case "Quest":     return "📜";

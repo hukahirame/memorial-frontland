@@ -1,6 +1,6 @@
 ﻿---
 id: player
-slice: プレイヤー 🚶
+name: プレイヤー 🚶
 touches: [save]
 tunables: []
 ---

@@ -7,13 +7,14 @@
 Legacy から Domain / Game への切り出し。順序は `docs/dependency-list.md` の
 fan-out 昇順で読む。
 
-- Domain 13 ファイル / Game 17 ファイル / Legacy 37 ファイル・9 フォルダ
+- Domain 13 ファイル・10 フォルダ / Game 17 ファイル / Legacy 37 ファイル・9 フォルダ。
+  関心事の単位は層の直下のフォルダで、同じ名前のフォルダが層をまたいで1つの関心事（[D-020]）
 - dotnet 148 件 / Unity EditMode 143 件 / PlayMode 3 件。すべて緑
 - コミットは種別の宣言が要る（`Change-Type`）。規則は `tools/flow/flow-rules/`。
   種別ごとの判定は `tools/flow/flow verify` が7件持ち、reference-transaction フックが
   コミット時に掛ける。amend でも `--no-verify` でも走る。現状は `tools/flow/flow-status.md`
 - CI は2本。dotnet のテスト147件と、コミットの種別の宣言。Unity は動かさない
-- ADR 20 件・511 行。目安の 500 行を超えたので `docs/decisions/` への分割が近い
+- ADR 21 件。目安の 500 行を超えたので `docs/decisions/` への分割が近い
 
 ## ✅ 完了
 
@@ -62,7 +63,7 @@ fan-out 昇順で読む。
   判定コマンド `tools/flow/flow` はまだ無く、いま効いているのは宣言の有無だけ
 - シーンとプレハブの参照切れを見る不変条件を3つ置いた。YAML の死角を目視でなく
   機械で埋める。切れた参照 74 件は `docs/asset-baseline.txt` に控え、増える方向で落ちる
-- システムごとの現状仕様を `docs/systems/` に12本。単位は `docs/slices.txt` の行と
+- システムごとの現状仕様を `docs/systems/` に12本。単位は関心事のフォルダと
   1:1で、対応を `SystemSpecTests` が見張る
 - 仕様書とコードの突き合わせ。名指しした「型.メンバ」が実在すること、調整値に
   書いた定数がコードと一致すること。`const` だけが対象で、Inspector と CSV と
@@ -77,6 +78,8 @@ fan-out 昇順で読む。
   公開API一覧はコンパイラの型情報から作り、足すだけなら API-CHANGED に当たらない。
   宣言の無いコミットも落とし、仕様書はコード名の差し替えだけなら refactor で通す。
   `tools/flow/flow-test` が57通りを確かめる
+- スライス表 `docs/slices.txt` を廃止し、関心事をフォルダに一本化した（[D-020]）。
+  Domain も 10 フォルダに分けた。型を足すたびに表を書き換える手間が消えた
 - `PlayerHp` の自然回復が `Health` を迂回していた件を直した
 
 ## ⏭️ 次

@@ -1,6 +1,6 @@
 ﻿---
 id: wallet
-slice: 所持金 💰
+name: 所持金 💰
 touches: [save]
 tunables: []
 ---

@@ -13,7 +13,7 @@
 ```markdown
 ---
 id: hunger
-files: [Hunger*.cs]
+name: 空腹 🍖
 touches: []
 tunables: HungerConfig
 ---
@@ -38,8 +38,8 @@ tunables: HungerConfig
 
 | キー | 内容 |
 |---|---|
-| `id` | ファイル名と一致させる |
-| `files` | Domain直下の対応ファイル。globで書く |
+| `id` | ファイル名と一致させる。関心事のフォルダ名を小文字にしたもの（`Hunger/` なら `hunger`） |
+| `name` | 表示名。一覧と依存表で使う |
 | `touches` | `save` / `net` / `settings` のうち触るもの。実装前は予定 |
 | `tunables` | ScriptableObjectの型名。なければ省略 |
 

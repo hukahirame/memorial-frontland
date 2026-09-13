@@ -1,6 +1,6 @@
 ﻿---
 id: inventory
-slice: 持ち物 🎒
+name: 持ち物 🎒
 touches: [save]
 tunables: []
 ---

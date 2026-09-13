@@ -29,11 +29,10 @@ namespace MemorialFloor.Domain.Tests
             public readonly Dictionary<string, string> Layers =
                 new Dictionary<string, string>(StringComparer.Ordinal);
 
-            /// <summary>リポジトリからの道 -> そのファイルが宣言する型名</summary>
-            public readonly Dictionary<string, List<string>> Files =
-                new Dictionary<string, List<string>>(StringComparer.Ordinal);
-
-            /// <summary>型名 -> 節。節は「層/直下のフォルダ」。直下のファイルは層そのもの</summary>
+            /// <summary>
+            /// 型名 -> 節。節は「層/直下のフォルダ」で、フォルダ名が関心事の名前になる。
+            /// 直下のファイルは層そのもの（SystemSpecTests が落とす）
+            /// </summary>
             public readonly Dictionary<string, string> Owner =
                 new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -73,14 +72,7 @@ namespace MemorialFloor.Domain.Tests
                     List<string> declared = DeclaredTypes(File.ReadAllText(file));
                     if (declared.Count == 0) continue;
 
-                    // 型がどのファイルに宣言されたかを残す。
-                    // スライスの核はファイルでも書けるため（docs/slices.txt）
-                    string path = rel + "/" + file.Substring(dir.Length + 1)
-                                                  .Replace(Path.DirectorySeparatorChar, '/');
-
-                    index.Files[path] = declared;
-
-                    string rest = path.Substring(rel.Length + 1);
+                    string rest = file.Substring(dir.Length + 1).Replace(Path.DirectorySeparatorChar, '/');
                     string node = rest.Contains("/") ? layer + "/" + rest.Split('/')[0] : layer;
 
                     foreach (string name in declared)

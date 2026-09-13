@@ -1,6 +1,6 @@
 ﻿---
 id: enemy
-slice: 敵とスポーン 👾
+name: 敵とスポーン 👾
 touches: [save]
 tunables: []
 ---

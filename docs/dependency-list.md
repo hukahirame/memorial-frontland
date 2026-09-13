@@ -13,48 +13,100 @@
 
 | 節 | ↑ | ↓ |
 |---|---|---|
-| 🟦 `Domain` | **0** | **12** |
+| 🟦 `Day` | **0** | **1** |
+| 🟦 `Inventory` | **0** | **6** |
+| 🟦 `OutField` | **0** | **3** |
+| 🟦 `Quest` | **0** | **3** |
+| 🟦 `Roots` | **0** | **6** |
+| 🟦 `Wallet` | **0** | **1** |
 | 🟩 `Inventory` | **0** | **2** |
 | 🟩 `Staging` | **0** | **6** |
+| 🟦 `Craft` | **1** | **2** |
+| 🟦 `Enemy` | **1** | **2** |
+| 🟦 `Player` | **1** | **2** |
 | 🟩 `Craft` | **1** | **1** |
 | 🟩 `Enemy` | **1** | **2** |
 | 🟩 `OutField` | **2** | **2** |
-| 🟨 `Day` | **4** | **1** |
 | 🟨 `Roots` | **4** | **5** |
 | 🟨 `Inventory` | **5** | **4** |
-| 🟨 `Quest` | **5** | **5** |
 | 🟨 `Save` | **5** | **2** |
-| 🟨 `Craft` | **6** | **0** |
-| 🟨 `Scene` | **6** | **7** |
-| 🟨 `Player` | **8** | **4** |
-| 🟨 `Enemy` | **9** | **3** |
+| 🟨 `Day` | **6** | **1** |
+| 🟨 `Quest` | **6** | **5** |
+| 🟨 `Craft` | **7** | **0** |
+| 🟨 `Scene` | **8** | **7** |
+| 🟨 `Player` | **10** | **4** |
+| 🟨 `Enemy` | **12** | **3** |
 
 ## 詳細
 
-### 🟦Domain 💠 
+### 🟦Craft 🔨 
+
+↑ 🟦 `Inventory` **1** — Inventory **1**  
 
 ↓ 🟩 `Craft` **4** — Ingredient **2**, Recipe **2**  
+↓ 🟨 `Craft` **3** — Recipe **3**  
+
+### 🟦Day ☀️ 
+
+↓ 🟨 `Day` **6** — DayClock **2**, DayCycle **2**, DayPlan **2**  
+
+### 🟦Enemy 👾 
+
+↑ 🟦 `Roots` **2** — Root **2**  
+
 ↓ 🟩 `Enemy` **1** — IRandom **1**  
-↓ 🟩 `OutField` **2** — FieldBounds **2**  
-↓ 🟨 `Craft` **6** — Recipe **3**, Inventory **2**, ItemDefinition **1**  
-↓ 🟨 `Day` **12** — Reward **3**, DayClock **2**, DayCycle **2**, DayPlan **2**, QuestKind **2**, Root **1**  
-↓ 🟨 `Enemy` **23** — Health **6**, SpawnRule **4**, DropChance **3**, EnemyAction **3**, ActionRule **2**, Root **2**, DropRule **1**, FallRule **1**, FieldBounds **1**  
+↓ 🟨 `Enemy` **14** — SpawnRule **4**, DropChance **3**, EnemyAction **3**, ActionRule **2**, DropRule **1**, FallRule **1**  
+
+### 🟦Inventory 🎒 
+
+↓ 🟦 `Craft` **1** — Inventory **1**  
+↓ 🟦 `Player` **2** — ItemDefinition **1**, ItemUse **1**  
+↓ 🟨 `Craft` **3** — Inventory **2**, ItemDefinition **1**  
 ↓ 🟨 `Inventory` **22** — ItemSlot **6**, ItemUse **5**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
-↓ 🟨 `Player` **12** — AttackKind **3**, AttackRule **2**, Equipment **2**, Health **2**, FieldBounds **1**, Nudge **1**, Quest **1**  
-↓ 🟨 `Quest` **46** — QuestKind **19**, Quest **14**, Reward **8**, QuestRegistry **2**, Root **2**, QuestId **1**  
-↓ 🟨 `Roots` **13** — AccumulationLevel **8**, Root **3**, RootRegistry **2**  
 ↓ 🟨 `Save` **3** — ItemSlot **3**  
-↓ 🟨 `Scene` **5** — ItemCatalog **2**, Wallet **2**, Root **1**  
+↓ 🟨 `Scene` **2** — ItemCatalog **2**  
+
+### 🟦OutField 🌲 
+
+↓ 🟩 `OutField` **2** — FieldBounds **2**  
+↓ 🟨 `Enemy` **1** — FieldBounds **1**  
+↓ 🟨 `Player` **2** — FieldBounds **1**, Nudge **1**  
+
+### 🟦Player 🚶 
+
+↑ 🟦 `Inventory` **2** — ItemDefinition **1**, ItemUse **1**  
+
+↓ 🟨 `Enemy` **6** — Health **6**  
+↓ 🟨 `Player` **9** — AttackKind **3**, AttackRule **2**, Equipment **2**, Health **2**  
+
+### 🟦Quest 📜 
+
+↓ 🟨 `Day` **5** — Reward **3**, QuestKind **2**  
+↓ 🟨 `Player` **1** — Quest **1**  
+↓ 🟨 `Quest` **44** — QuestKind **19**, Quest **14**, Reward **8**, QuestRegistry **2**, QuestId **1**  
+
+### 🟦Roots 🌳 
+
+↓ 🟦 `Enemy` **2** — Root **2**  
+↓ 🟨 `Day` **1** — Root **1**  
+↓ 🟨 `Enemy` **2** — Root **2**  
+↓ 🟨 `Quest` **2** — Root **2**  
+↓ 🟨 `Roots` **13** — AccumulationLevel **8**, Root **3**, RootRegistry **2**  
+↓ 🟨 `Scene` **1** — Root **1**  
+
+### 🟦Wallet 💰 
+
+↓ 🟨 `Scene` **2** — Wallet **2**  
 
 ### 🟩Craft 🔨 
 
-↑ 🟦 `Domain` **4** — Ingredient **2**, Recipe **2**  
+↑ 🟦 `Craft` **4** — Ingredient **2**, Recipe **2**  
 
 ↓ 🟨 `Craft` **1** — RecipeDefinition **1**  
 
 ### 🟩Enemy 👾 
 
-↑ 🟦 `Domain` **1** — IRandom **1**  
+↑ 🟦 `Enemy` **1** — IRandom **1**  
 
 ↓ 🟨 `Enemy` **6** — UnityRandom **4**, IDamageable **2**  
 ↓ 🟨 `Player` **1** — IDamageable **1**  
@@ -66,7 +118,7 @@
 
 ### 🟩OutField 🌲 
 
-↑ 🟦 `Domain` **2** — FieldBounds **2**  
+↑ 🟦 `OutField` **2** — FieldBounds **2**  
 ↑ 🟩 `Inventory` **2** — IItemReceiver **2**  
 
 ↓ 🟨 `Enemy` **1** — Exposition **1**  
@@ -83,7 +135,8 @@
 
 ### 🟨Craft 🔨 
 
-↑ 🟦 `Domain` **6** — Recipe **3**, Inventory **2**, ItemDefinition **1**  
+↑ 🟦 `Craft` **3** — Recipe **3**  
+↑ 🟦 `Inventory` **3** — Inventory **2**, ItemDefinition **1**  
 ↑ 🟩 `Craft` **1** — RecipeDefinition **1**  
 ↑ 🟩 `Staging` **2** — TempAudio **2**  
 ↑ 🟨 `Inventory` **1** — PlayerInventory **1**  
@@ -92,7 +145,9 @@
 
 ### 🟨Day ☀️ 
 
-↑ 🟦 `Domain` **12** — Reward **3**, DayClock **2**, DayCycle **2**, DayPlan **2**, QuestKind **2**, Root **1**  
+↑ 🟦 `Day` **6** — DayClock **2**, DayCycle **2**, DayPlan **2**  
+↑ 🟦 `Quest` **5** — Reward **3**, QuestKind **2**  
+↑ 🟦 `Roots` **1** — Root **1**  
 ↑ 🟩 `Staging` **1** — MiddleText **1**  
 ↑ 🟨 `Quest` **3** — QuestManager **3**  
 ↑ 🟨 `Roots` **2** — RootsManager **2**  
@@ -101,7 +156,10 @@
 
 ### 🟨Enemy 👾 
 
-↑ 🟦 `Domain` **23** — Health **6**, SpawnRule **4**, DropChance **3**, EnemyAction **3**, ActionRule **2**, Root **2**, DropRule **1**, FallRule **1**, FieldBounds **1**  
+↑ 🟦 `Enemy` **14** — SpawnRule **4**, DropChance **3**, EnemyAction **3**, ActionRule **2**, DropRule **1**, FallRule **1**  
+↑ 🟦 `OutField` **1** — FieldBounds **1**  
+↑ 🟦 `Player` **6** — Health **6**  
+↑ 🟦 `Roots` **2** — Root **2**  
 ↑ 🟩 `Enemy` **6** — UnityRandom **4**, IDamageable **2**  
 ↑ 🟩 `OutField` **1** — Exposition **1**  
 ↑ 🟩 `Staging` **1** — MiddleText **1**  
@@ -117,7 +175,7 @@
 
 ### 🟨Inventory 🎒 
 
-↑ 🟦 `Domain` **22** — ItemSlot **6**, ItemUse **5**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
+↑ 🟦 `Inventory` **22** — ItemSlot **6**, ItemUse **5**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
 ↑ 🟩 `Inventory` **1** — IItemReceiver **1**  
 ↑ 🟩 `Staging` **2** — TempAudio **2**  
 ↑ 🟨 `Player` **5** — Player2 **4**, Weapon **1**  
@@ -130,7 +188,9 @@
 
 ### 🟨Player 🚶 
 
-↑ 🟦 `Domain` **12** — AttackKind **3**, AttackRule **2**, Equipment **2**, Health **2**, FieldBounds **1**, Nudge **1**, Quest **1**  
+↑ 🟦 `OutField` **2** — FieldBounds **1**, Nudge **1**  
+↑ 🟦 `Player` **9** — AttackKind **3**, AttackRule **2**, Equipment **2**, Health **2**  
+↑ 🟦 `Quest` **1** — Quest **1**  
 ↑ 🟩 `Enemy` **1** — IDamageable **1**  
 ↑ 🟩 `OutField` **1** — Exposition **1**  
 ↑ 🟩 `Staging` **6** — TempAudio **4**, BigText **1**, MiddleText **1**  
@@ -146,7 +206,8 @@
 
 ### 🟨Quest 📜 
 
-↑ 🟦 `Domain` **46** — QuestKind **19**, Quest **14**, Reward **8**, QuestRegistry **2**, Root **2**, QuestId **1**  
+↑ 🟦 `Quest` **44** — QuestKind **19**, Quest **14**, Reward **8**, QuestRegistry **2**, QuestId **1**  
+↑ 🟦 `Roots` **2** — Root **2**  
 ↑ 🟩 `Staging` **5** — MiddleText **3**, BigText **2**  
 ↑ 🟨 `Inventory` **1** — PlayerInventory **1**  
 ↑ 🟨 `Roots` **3** — RootsManager **3**  
@@ -160,7 +221,7 @@
 
 ### 🟨Roots 🌳 
 
-↑ 🟦 `Domain` **13** — AccumulationLevel **8**, Root **3**, RootRegistry **2**  
+↑ 🟦 `Roots` **13** — AccumulationLevel **8**, Root **3**, RootRegistry **2**  
 ↑ 🟨 `Enemy` **2** — MS_Spawner **1**, OF_Spawner **1**  
 ↑ 🟨 `Quest` **1** — QuestManager **1**  
 ↑ 🟨 `Scene` **1** — GameManager **1**  
@@ -173,7 +234,7 @@
 
 ### 🟨Save 💾 
 
-↑ 🟦 `Domain` **3** — ItemSlot **3**  
+↑ 🟦 `Inventory` **3** — ItemSlot **3**  
 ↑ 🟨 `Day` **2** — Sun2 **2**  
 ↑ 🟨 `Inventory` **4** — PlayerInventory **4**  
 ↑ 🟨 `Player` **3** — Player2 **3**  
@@ -184,7 +245,9 @@
 
 ### 🟨Scene 🚪 
 
-↑ 🟦 `Domain` **5** — ItemCatalog **2**, Wallet **2**, Root **1**  
+↑ 🟦 `Inventory` **2** — ItemCatalog **2**  
+↑ 🟦 `Roots` **1** — Root **1**  
+↑ 🟦 `Wallet` **2** — Wallet **2**  
 ↑ 🟨 `Enemy` **1** — OF_Spawner **1**  
 ↑ 🟨 `Player` **5** — Player2 **5**  
 ↑ 🟨 `Quest` **3** — RewardUI **2**, QuestManager **1**  

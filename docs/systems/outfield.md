@@ -1,6 +1,6 @@
 ﻿---
 id: outfield
-slice: 外フィールド 🌲
+name: 外フィールド 🌲
 touches: []
 tunables: []
 ---

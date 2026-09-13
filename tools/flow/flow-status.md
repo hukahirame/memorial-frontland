@@ -51,7 +51,7 @@ reference-transaction は出来上がったコミットを見るので、amend �
 
 | 見ていないもの | なぜ |
 |---|---|
-| SPEC-STALE | feat のコミットが1件も無く、掛けられる対象が無い。file → slice の対応も要る |
+| SPEC-STALE | feat のコミットが1件も無く、掛けられる対象が無い。関心事は道のフォルダ名から引ける |
 | テストを実装より先にコミットした | 判定を置いていない |
 
 ### fix
@@ -135,9 +135,9 @@ REFACTOR-RED が通った木は `.git/flow-green` に控え、同じ木を積み
 | コミットが種別をちょうど1つ宣言している（CHANGE-TYPE） | commit-msg / reference-transaction / `commit-type.yml` | コミット時とCI |
 | Domain が UnityEngine に依存しない | asmdef `noEngineReferences` | コンパイル |
 | Domain の規則（140件） | `dotnet test` | CI |
-| 全型がどれかのスライスに属す | `SliceCoverageTests` | CI |
+| 全型が関心事のフォルダに入っている | `SystemSpecTests` | CI |
 | 依存一覧がソースと一致 | `DependencyListTests` | CI |
-| スライスと仕様書が1対1 | `SystemSpecTests` | CI |
+| 関心事のフォルダと仕様書が1対1 | `SystemSpecTests` | CI |
 | 仕様書の id がファイル名と一致 | `SystemSpecTests` | CI |
 | 仕様書の必須欄が揃っている | `SystemSpecTests` | CI |
 | 仕様書が名指しした型とメンバが実在 | `SpecConformanceTests` | CI |
@@ -150,7 +150,7 @@ REFACTOR-RED が通った木は `.git/flow-green` に控え、同じ木を積み
 
 | 見ていないもの | なぜ |
 |---|---|
-| 変更したスライスを宣言している（SCOPE-UNDECLARED） | ファイルからスライスを引く必要があり、sh から Roslyn を呼べない |
+| 変更した関心事を宣言している（SCOPE-UNDECLARED） | 判定を置いていない。関心事は道のフォルダ名から引ける |
 | 種別と中身の一致 | 差分の形しか見ていない。挙動を変える refactor も Domain のテストが通れば通る |
 | 仕様の文と振る舞いの一致 | 決定的に判定できない。名前と定数だけ見ている |
 | Game と Legacy の公開API | Domain だけ固定している |
@@ -166,7 +166,7 @@ REFACTOR-RED が通った木は `.git/flow-green` に控え、同じ木を積み
    flow の最後の段がプレイでの判定なのに、判定の基準が無い
 3. **調整値の表に範囲の欄を足す。** tune で範囲外を弾ける。
    `SpecConformanceTests` が既に表を読んでいるので、検査はその延長
-4. **file → slice の対応を生成物にする。** SPEC-STALE と SCOPE-UNDECLARED が作れるようになる
+4. **SPEC-STALE と SCOPE-UNDECLARED を置く。** 関心事は道のフォルダ名なので sh だけで引ける
 5. **Game の公開APIも固定する。** Game が動かなくなってから
 
 やらないと決めたもの。アセット検証の CI 移植。third-party の `.meta` が

@@ -1,6 +1,6 @@
 ﻿---
 id: staging
-slice: 表示と演出 🎥
+name: 表示と演出 🎥
 touches: []
 tunables: []
 ---

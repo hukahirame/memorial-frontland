@@ -7,8 +7,9 @@ using NUnit.Framework;
 namespace MemorialFloor.Domain.Tests
 {
     /// <summary>
-    /// 仕様書とスライスの対応を見る。単位を2つ持つとズレるので、1:1に固定する。
-    /// スライスを足したのに仕様書を書き忘れると、ここで落ちる。
+    /// 仕様書と関心事の対応を見る。関心事の単位は層の直下のフォルダで、
+    /// Domain / Game / Legacy の同じ名前のフォルダが1つの関心事になる。仕様書の id はその名前。
+    /// フォルダを足したのに仕様書を書き忘れると、ここで落ちる。
     /// </summary>
     public class SystemSpecTests
     {
@@ -21,23 +22,45 @@ namespace MemorialFloor.Domain.Tests
         };
 
         /// <summary>frontmatter に要る鍵</summary>
-        private static readonly string[] RequiredKeys = { "id", "slice", "touches" };
+        private static readonly string[] RequiredKeys = { "id", "name", "touches" };
 
         [Test]
-        public void スライスと仕様書が1対1で対応する()
+        public void すべての型が関心事のフォルダに入っている()
         {
-            List<string> slices = SliceTable.SliceNames();
-            Dictionary<string, string> specs = Specs();
+            SourceIndex.Index index = SourceIndex.Build();
 
-            List<string> missing = slices.Where(name => !specs.ContainsKey(name)).ToList();
+            List<string> loose = index.Owner
+                .Where(pair => !pair.Value.Contains("/"))
+                .Select(pair => pair.Value + " 直下の " + pair.Key)
+                .OrderBy(text => text, StringComparer.Ordinal)
+                .ToList();
+
+            Assert.IsEmpty(loose, "層の直下に型がある。関心事のフォルダに入れること。" +
+                Environment.NewLine + string.Join(Environment.NewLine, loose));
+        }
+
+        [Test]
+        public void 関心事のフォルダと仕様書が1対1で対応する()
+        {
+            HashSet<string> concerns = new HashSet<string>(
+                SourceIndex.Build().Nodes
+                           .Where(node => node.Contains("/"))
+                           .Select(node => node.Substring(node.IndexOf('/') + 1).ToLowerInvariant()),
+                StringComparer.Ordinal);
+
+            HashSet<string> ids = new HashSet<string>(
+                SpecFiles().Select(Path.GetFileNameWithoutExtension), StringComparer.Ordinal);
+
+            List<string> missing = concerns.Where(name => !ids.Contains(name))
+                                           .OrderBy(name => name, StringComparer.Ordinal).ToList();
             Assert.IsEmpty(missing,
-                "仕様書の無いスライスがある。" + Directory + " に足すこと。" +
+                "仕様書の無い関心事のフォルダがある。" + Directory + " に <フォルダ名を小文字にしたもの>.md を足すこと。" +
                 Environment.NewLine + string.Join(", ", missing));
 
-            List<string> extra = specs.Keys.Where(name => !slices.Contains(name)).ToList();
+            List<string> extra = ids.Where(id => !concerns.Contains(id))
+                                    .OrderBy(id => id, StringComparer.Ordinal).ToList();
             Assert.IsEmpty(extra,
-                "どのスライスにも当たらない仕様書がある。frontmatter の slice を " +
-                SliceTable.TablePath + " の名前に合わせること。" +
+                "どのフォルダにも当たらない仕様書がある。id を関心事のフォルダ名に合わせること。" +
                 Environment.NewLine + string.Join(", ", extra));
         }
 
@@ -81,26 +104,6 @@ namespace MemorialFloor.Domain.Tests
 
             Assert.IsEmpty(lacking, "仕様書に足りない欄がある。" +
                 Environment.NewLine + string.Join(Environment.NewLine, lacking));
-        }
-
-        /// <summary>slice の名前 -> 道</summary>
-        private static Dictionary<string, string> Specs()
-        {
-            Dictionary<string, string> found = new Dictionary<string, string>(StringComparer.Ordinal);
-
-            foreach (string path in SpecFiles())
-            {
-                string slice = Value(File.ReadAllText(path), "slice");
-                if (slice == null) continue;
-
-                if (found.ContainsKey(slice))
-                    throw new InvalidOperationException(
-                        "同じスライスを指す仕様書が2つある: " + slice);
-
-                found[slice] = path;
-            }
-
-            return found;
         }
 
         /// <summary>INDEX.md は一覧なので仕様書に数えない</summary>

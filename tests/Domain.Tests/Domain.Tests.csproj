@@ -31,8 +31,6 @@
     <Compile Include="../../Assets/_Project/Tests/Domain/**/*.cs" />
     <!-- dotnet 専用。Unity 側に置くと UnityEngine 非依存の前提が崩れる -->
     <Compile Include="SourceIndex.cs" />
-    <Compile Include="SliceTable.cs" />
-    <Compile Include="SliceCoverageTests.cs" />
     <Compile Include="DependencyList.cs" />
     <Compile Include="DependencyListTests.cs" />
     <Compile Include="SystemSpecTests.cs" />

@@ -1,6 +1,6 @@
 ﻿---
 id: quest
-slice: クエスト 📜
+name: クエスト 📜
 touches: []
 tunables: []
 ---
