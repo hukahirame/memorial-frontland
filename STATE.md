@@ -8,10 +8,11 @@ Legacy から Domain / Game への切り出し。順序は `docs/dependency-list
 fan-out 昇順で読む。
 
 - Domain 13 ファイル / Game 17 ファイル / Legacy 37 ファイル・9 フォルダ
-- dotnet 147 件 / Unity EditMode 143 件 / PlayMode 3 件。すべて緑
+- dotnet 148 件 / Unity EditMode 143 件 / PlayMode 3 件。すべて緑
 - コミットは種別の宣言が要る（`Change-Type`）。規則は `tools/flow/flow-rules/`。
-  種別ごとの判定は `tools/flow/flow verify` が4件持つ（REFACTOR-DIRTY /
-  DOCS-CODE / TEST-CODE / TUNE-CODE）。これは手元だけ
+  種別ごとの判定は `tools/flow/flow verify` が6件持つ（REFACTOR-DIRTY /
+  DOCS-CODE / TEST-CODE / TUNE-CODE / API-CHANGED / FIX-TEST-WEAKENED）。
+  これは手元だけ
 - CI は2本。dotnet のテスト147件と、コミットの種別の宣言。Unity は動かさない
 - ADR 20 件・511 行。目安の 500 行を超えたので `docs/decisions/` への分割が近い
 
@@ -67,7 +68,9 @@ fan-out 昇順で読む。
 - 仕様書とコードの突き合わせ。名指しした「型.メンバ」が実在すること、調整値に
   書いた定数がコードと一致すること。`const` だけが対象で、Inspector と CSV と
   prefab の値は見ない
-- 種別ごとの機械判定を4件。refactor で仕様書が変わる、docs で文書以外が変わる、
+- Domain の公開API一覧 `docs/public-api.txt` を生成。refactor で人間が承認する
+  対象が機械の作る差分になった
+- 種別ごとの機械判定を6件。refactor で仕様書が変わる、docs で文書以外が変わる、
   test でテスト以外が変わる、tune でコードが変わる。commit-msg が落とす。
   これで refactor のレビューが「仕様書の差分が空」の確認で済む
 - `PlayerHp` の自然回復が `Health` を迂回していた件を直した
