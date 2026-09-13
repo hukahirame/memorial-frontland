@@ -1,6 +1,31 @@
 {
   "permissions": {
     "disableBypassPermissionsMode": "disable",
+    "allow": [
+      "Bash(unity command test_status *)",
+      "PowerShell(unity command test_status *)",
+      "Bash(unity command editor_status *)",
+      "PowerShell(unity command editor_status *)",
+      "Bash(unity command console *)",
+      "PowerShell(unity command console *)",
+      "Bash(unity command recompile_status *)",
+      "PowerShell(unity command recompile_status *)",
+      "Bash(unity command get_serialized_fields *)",
+      "PowerShell(unity command get_serialized_fields *)",
+      "Bash(unity command get_console_logs *)",
+      "PowerShell(unity command get_console_logs *)",
+      "Bash(unity command get_authoring_root *)",
+      "PowerShell(unity command get_authoring_root *)",
+      "Bash(unity command build_status *)",
+      "PowerShell(unity command build_status *)",
+      "Bash(unity command list_open_scenes *)",
+      "PowerShell(unity command list_open_scenes *)",
+      "PowerShell(Select-String *)",
+      "PowerShell(Get-Content *)",
+      "PowerShell(Get-ChildItem *)",
+      "PowerShell(Measure-Object *)",
+      "mcp__terminal__read_terminal"
+    ],
     "deny": [
       "Bash(unity command set_authoring_root *)",
       "PowerShell(unity command set_authoring_root *)",
@@ -11,9 +36,17 @@
       "Bash(git commit -n *)",
       "PowerShell(git commit -n *)",
       "Bash(git -c *)",
-      "PowerShell(git -c *)"
+      "PowerShell(git -c *)",
+      "Bash(unity command eval*)",
+      "PowerShell(unity command eval*)",
+      "Bash(unity command run_script*)",
+      "PowerShell(unity command run_script*)",
+      "Bash(unity command reload_file*)",
+      "PowerShell(unity command reload_file*)"
     ],
     "ask": [
+      "Bash(unity command switch_build_target*)",
+      "PowerShell(unity command switch_build_target*)",
       "Bash(unity command delete_asset *)",
       "PowerShell(unity command delete_asset *)",
       "Bash(unity command move_asset *)",

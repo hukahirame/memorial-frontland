@@ -25,7 +25,7 @@
 
 コミットのとき `dotnet test` がもう一度走り、落ちると REFACTOR-RED で止まる。
 テストは作業ツリーを見るので、`.cs` と `docs/` と `tests/` の変更はすべてコミットに入れる。
-Unity 側（Game / Legacy のコンパイル、EditMode / PlayMode）は走らない。3 で確かめる。
+Unity 側（Game / Legacy のコンパイル、EditMode / PlayMode）は走らない。1 と 3 では `unity-check` も回す。
 
 ## 途中でバグを見つけたら
 
