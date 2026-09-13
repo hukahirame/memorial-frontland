@@ -59,6 +59,39 @@ if [ "$type" = "refactor" ]; then
   fi
 fi
 
+# API-CHANGED
+#
+# refactor で公開している面が変わったら、人間の承認が要る（refactor.md）。
+# 承認の対象は docs/public-api.txt の差分だけで、実装は見ない。
+if [ "$type" = "refactor" ]; then
+  api=$(printf '%s\n' "$staged" | grep '^docs/public-api\.txt$')
+
+  if [ -n "$api" ] && ! grep -q '^Api-Changed: .' "$message"; then
+    echo "E  API-CHANGED  refactor で公開APIが変わっている"
+    echo "     git diff --cached docs/public-api.txt で増減を見る"
+    echo "     人間に提示して承認を取り、Api-Changed: <理由> を足す"
+    failed=1
+  fi
+fi
+
+# FIX-TEST-WEAKENED
+#
+# fix で既存のテストを書き換えていないか。落ちるテストを緩めて直したことにする
+# のが一番静かな壊し方なので、書き換えたこと自体を表に出す。
+# テストを足すのは自由。見るのは既にあるファイルへの変更だけ。
+if [ "$type" = "fix" ]; then
+  touched=$(git diff --cached --name-only --diff-filter=M \
+            -- 'tests/*' 'Assets/_Project/Tests/*')
+
+  if [ -n "$touched" ] && ! grep -q '^Test-Change: .' "$message"; then
+    echo "E  FIX-TEST-WEAKENED  fix で既存のテストが変わっている"
+    printf '%s\n' "$touched" | sed 's/^/     /'
+    echo "     既存テストが落ちるなら、それは仕様が変わったということ（fix.md）"
+    echo "     やむを得ないなら Test-Change: <理由> を足す"
+    failed=1
+  fi
+fi
+
 # DOCS-CODE
 #
 # docs で触れるのは文書だけ。コードが混ざるなら種別が違う。
@@ -77,7 +110,19 @@ fi
 #
 # test で触れるのはテストだけ。実装が混ざると、テストが通ったことの意味が消える。
 if [ "$type" = "test" ]; then
-  others=$(printf '%s\n' "$staged" | grep -v -e '^tests/' -e '^Assets/_Project/Tests/')
+  outside=$(printf '%s\n' "$staged" | grep -v -e '^tests/' -e '^Assets/_Project/Tests/')
+
+  # テストが作る生成物は数えない。実装をそこに隠せないので、見張る意味が無い。
+  # 見分けは先頭の「手で編集しない」。生成物には必ず書いてある
+  others=""
+  for path in $outside; do
+    if [ -f "$path" ] && head -5 "$path" | grep -q "手で編集しない"; then
+      continue
+    fi
+    others="$others$path
+"
+  done
+  others=$(printf '%s' "$others")
 
   if [ -n "$others" ]; then
     echo "E  TEST-CODE  test でテスト以外が変わっている"

@@ -50,6 +50,8 @@ Change-Type: <種別>"
 | DOCS-CODE | docs で `*.md` と `docs/` 以外が変わった | 無し |
 | TEST-CODE | test で `tests/` と `Assets/_Project/Tests/` 以外が変わった | 無し |
 | TUNE-CODE | tune で `*.cs` が変わった | 無し |
+| API-CHANGED | refactor で `docs/public-api.txt` が変わった | `Api-Changed: <理由>` |
+| FIX-TEST-WEAKENED | fix で既存のテストファイルが変わった | `Test-Change: <理由>` |
 
   解除トレーラーが1つしか無いのは、残りは種別を変えるかコミットを割るのが
   正しい直し方だから。逃げ道を作ると誤ラベルを誘う。
