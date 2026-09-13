@@ -1,0 +1,292 @@
+﻿# 公開API。PublicApiTests が作る。手で編集しない。
+#
+# Domain が使う側へ見せている型とメンバ。増減はここに差分として出る。
+# refactor で人間が見るのはこの差分だけ。
+#
+# 入れ子の型は外側と同じ高さに並ぶ。private と internal は入らない。
+
+AccumulationLevel
+AccumulationLevel.High
+AccumulationLevel.Medium
+AccumulationLevel.Minimal
+AccumulationLevel.Small
+AccumulationLevel.Stampede
+
+ActionRule
+ActionRule.Choose(IRandom) : EnemyAction
+ActionRule.Duration(EnemyAction, IRandom) : float
+ActionRule.JumpSeconds : float
+ActionRule.MovePercent : int
+ActionRule.MoveSecondsMax : float
+ActionRule.MoveSecondsMin : float
+ActionRule.WaitPercent : int
+ActionRule.WaitSecondsMax : float
+ActionRule.WaitSecondsMin : float
+
+AddOutcome
+AddOutcome.NoSpace
+AddOutcome.Placed
+AddOutcome.Stacked
+
+AddResult
+AddResult.Outcome : AddOutcome
+AddResult.SlotIndex : int
+AddResult.Stock : int
+AddResult.ctor(AddOutcome, int, int)
+
+AttackKind
+AttackKind.Slash
+AttackKind.Step
+AttackKind.Thrust
+
+AttackRule
+AttackRule.Choose(float, float, float) : AttackKind
+AttackRule.Threshold : float
+AttackRule.ThrustDirection(float) : int
+
+Chance
+Chance.Roll(int, IRandom) : bool
+
+DayClock
+DayClock.Entered(int, int, int, float) : bool
+DayClock.HourAt(int, float) : float
+DayClock.HoursPerDay : int
+DayClock.IsDayOver(int, float) : bool
+DayClock.LightIntensity(float, float, float) : float
+DayClock.MorningHour : int
+DayClock.NightHour : int
+DayClock.SunriseHour : int
+DayClock.SunsetHour : int
+
+DayCycle
+DayCycle.Advance() : void
+DayCycle.ElapsedSeconds : int
+DayCycle.Entered(int, float) : bool
+DayCycle.HourAt(float) : float
+DayCycle.IsDayOver(float) : bool
+DayCycle.PreviousSeconds : int
+DayCycle.Reset() : void
+DayCycle.SetElapsed(int) : void
+
+DayPlan
+DayPlan.Clear() : void
+DayPlan.Count : int
+DayPlan.Pending : IReadOnlyList<string>
+DayPlan.ShouldIssue(string) : bool
+
+DropChance
+DropChance.ItemId : string
+DropChance.Percent : int
+
+DropRule
+DropRule.Roll(IEnumerable<string>, IEnumerable<DropChance>, IRandom) : List<string>
+
+EnemyAction
+EnemyAction.Jump
+EnemyAction.Move
+EnemyAction.Wait
+
+Equipment
+Equipment.Attack : int
+Equipment.Durability : Health
+Equipment.Equip(ItemDefinition) : bool
+Equipment.IsBroken : bool
+Equipment.IsUnarmed : bool
+Equipment.ItemId : string
+Equipment.Knockback : float
+Equipment.UnarmedAttack : int
+Equipment.Unequip() : void
+Equipment.Wear(int) : bool
+Equipment.ctor()
+
+FallRule
+FallRule.IsOutOfField(float) : bool
+FallRule.OutOfFieldY : float
+
+FieldBounds
+FieldBounds.ClampX(float) : float
+FieldBounds.ClampZ(float) : float
+FieldBounds.Contains(float, float) : bool
+FieldBounds.EscapeHeight : float
+FieldBounds.EscapeMargin : float
+FieldBounds.HasEscaped(float, float, float) : bool
+FieldBounds.MaxX : float
+FieldBounds.MaxZ : float
+FieldBounds.MinX : float
+FieldBounds.MinZ : float
+FieldBounds.PushBack(float, float) : Nudge
+FieldBounds.ctor(float, float, float, float)
+
+Health
+Health.Current : int
+Health.Heal(int) : void
+Health.IsDead : bool
+Health.IsReady : bool
+Health.Max : int
+Health.SetCurrent(int) : void
+Health.SetMax(int) : void
+Health.Take(int) : void
+
+IRandom
+IRandom.Next(int, int) : int
+IRandom.NextFloat(float, float) : float
+
+Ingredient
+Ingredient.Amount : int
+Ingredient.DisplayName : string
+Ingredient.ItemId : string
+Ingredient.ctor(string, string, int)
+
+Inventory
+Inventory.Add(string, System.Func<int>) : AddResult
+Inventory.Add(string, int) : AddResult
+Inventory.CountOf(string) : int
+Inventory.EmptySlot : string
+Inventory.Remove(string) : RemoveResult
+Inventory.SlotCount : int
+Inventory.ctor(IList<ItemSlot>)
+
+ItemCatalog
+ItemCatalog.All : IReadOnlyList<ItemDefinition>
+ItemCatalog.Count : int
+ItemCatalog.Find(string) : ItemDefinition
+ItemCatalog.Load(string) : void
+ItemCatalog.Parse(string) : ItemCatalog
+
+ItemDefinition
+ItemDefinition.Attack : int
+ItemDefinition.Description : string
+ItemDefinition.Heal : int
+ItemDefinition.Installable : bool
+ItemDefinition.ItemId : string
+ItemDefinition.Knockback : float
+ItemDefinition.MaxDurability : int
+ItemDefinition.MaxStock : int
+ItemDefinition.Name : string
+ItemDefinition.Use : ItemUse
+ItemDefinition.ctor(string, string, int, int, bool, int, float, ItemUse, int, string)
+
+ItemSlot
+ItemSlot.ItemId : string
+ItemSlot.MaxStock : int
+ItemSlot.Stock : int
+
+ItemUse
+ItemUse.Eat
+ItemUse.Equip
+ItemUse.Place
+
+Nudge
+Nudge.None : bool
+Nudge.X : float
+Nudge.Z : float
+Nudge.ctor(float, float)
+
+Quest
+Quest.Advance() : void
+Quest.Amount : int
+Quest.Id : string
+Quest.IsComplete : bool
+Quest.Kind : QuestKind
+Quest.Progress : int
+Quest.Rewards : IReadOnlyList<Reward>
+Quest.RootId : string
+Quest.SetProgress(int) : void
+Quest.Target : string
+Quest.ctor(string, string, string, int, IReadOnlyList<Reward>)
+
+QuestId
+QuestId.Is(string, QuestKind) : bool
+QuestId.LetterOf(QuestKind) : char
+QuestId.TryReadKind(string, QuestKind) : bool
+
+QuestKind
+QuestKind.Breach
+QuestKind.Common
+QuestKind.Main
+QuestKind.Sub
+
+QuestProgress
+QuestProgress.Advance(int, int) : int
+QuestProgress.Clamp(int, int) : int
+QuestProgress.IsComplete(int, int) : bool
+
+QuestRegistry
+QuestRegistry.All : IReadOnlyList<Quest>
+QuestRegistry.Clear() : void
+QuestRegistry.Count : int
+QuestRegistry.Create(QuestKind, string, string, int, IReadOnlyList<Reward>) : Quest
+QuestRegistry.Find(string) : Quest
+QuestRegistry.HasMainFor(string) : bool
+QuestRegistry.Remove(string) : bool
+
+Recipe
+Recipe.CanCraftWith(Inventory) : bool
+Recipe.Ingredients : IReadOnlyList<Ingredient>
+Recipe.ProductId : string
+Recipe.ctor(string, IReadOnlyList<Ingredient>)
+
+RemoveOutcome
+RemoveOutcome.Decremented
+RemoveOutcome.NotFound
+RemoveOutcome.SlotCleared
+
+RemoveResult
+RemoveResult.Outcome : RemoveOutcome
+RemoveResult.SlotIndex : int
+RemoveResult.Stock : int
+RemoveResult.ctor(RemoveOutcome, int, int)
+
+Reward
+Reward.Amount : int
+Reward.Kind : string
+Reward.ctor(string, int)
+
+Root
+Root.AccumulateDaily() : void
+Root.Accumulation : int
+Root.AdvanceDay() : void
+Root.Calm(int) : void
+Root.DailyAccumulationGain : int
+Root.DailyProgressLoss : int
+Root.Danger : int
+Root.DecayProgressDaily() : void
+Root.Gain(int) : void
+Root.HasSpawnPoint : bool
+Root.Id : string
+Root.Level : AccumulationLevel
+Root.Name : string
+Root.PlaceSpawnPoint(float, float, float) : void
+Root.Progress : int
+Root.Seed : string
+Root.SpawnX : float
+Root.SpawnY : float
+Root.SpawnZ : float
+Root.UiX : float
+Root.UiY : float
+Root.ctor(string, string, string, int, float, float)
+
+RootRegistry
+RootRegistry.AdvanceDay() : void
+RootRegistry.All : IReadOnlyList<Root>
+RootRegistry.Clear() : void
+RootRegistry.Count : int
+RootRegistry.Find(string) : Root
+RootRegistry.TryAdd(Root) : bool
+
+SpawnRule
+SpawnRule.CalmPerDefeat : int
+SpawnRule.CrowdPercentPerEnemy : int
+SpawnRule.ShouldSuppress(Root, int, IRandom) : bool
+SpawnRule.ShouldWeaken(Root) : bool
+SpawnRule.SuppressPercent : int
+SpawnRule.SuppressProgress : int
+SpawnRule.WeakenProgress : int
+SpawnRule.WeakenRatio : float
+
+Wallet
+Wallet.Add(int) : void
+Wallet.Amount : int
+Wallet.CanAfford(int) : bool
+Wallet.SetAmount(int) : void
+Wallet.Spend(int) : bool

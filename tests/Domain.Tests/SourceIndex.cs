@@ -51,6 +51,10 @@ namespace MemorialFloor.Domain.Tests
             public readonly Dictionary<string, string> Constants =
                 new Dictionary<string, string>(StringComparer.Ordinal);
 
+            /// <summary>層 -> 公開されている型とメンバの署名。増減を差分として見るため</summary>
+            public readonly Dictionary<string, SortedSet<string>> PublicApi =
+                new Dictionary<string, SortedSet<string>>(StringComparer.Ordinal);
+
             /// <summary>節の一覧</summary>
             public IEnumerable<string> Nodes
             {
@@ -101,6 +105,12 @@ namespace MemorialFloor.Domain.Tests
                         index.Members.Add(member);
                         if (value != null) index.Constants[member] = value;
                     }
+
+                    if (!index.PublicApi.ContainsKey(layer))
+                        index.PublicApi[layer] = new SortedSet<string>(StringComparer.Ordinal);
+
+                    foreach (string signature in PublicSignatures(File.ReadAllText(file)))
+                        index.PublicApi[layer].Add(signature);
                 }
             }
 
@@ -159,6 +169,84 @@ namespace MemorialFloor.Domain.Tests
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 公開されている型とメンバの署名。使う側から見える面だけを並べる。
+        /// メソッドは引数の型と戻り値まで出す。引数を1つ足したことが差分に出るように
+        /// </summary>
+        private static IEnumerable<string> PublicSignatures(string source)
+        {
+            SyntaxNode root = CSharpSyntaxTree.ParseText(source).GetRoot();
+
+            foreach (BaseTypeDeclarationSyntax declaration in
+                     root.DescendantNodes().OfType<BaseTypeDeclarationSyntax>())
+            {
+                if (!IsPublic(declaration.Modifiers)) continue;
+
+                string type = declaration.Identifier.ValueText;
+                yield return type;
+
+                // インタフェースのメンバは修飾子が無くても公開されている
+                bool openByDefault = declaration is InterfaceDeclarationSyntax;
+
+                if (declaration is EnumDeclarationSyntax enumeration)
+                {
+                    foreach (EnumMemberDeclarationSyntax value in enumeration.Members)
+                        yield return type + "." + value.Identifier.ValueText;
+
+                    continue;
+                }
+
+                if (!(declaration is TypeDeclarationSyntax body)) continue;
+
+                foreach (MemberDeclarationSyntax member in body.Members)
+                {
+                    if (member is BaseTypeDeclarationSyntax) continue; // 入れ子の型は外側で拾う
+
+                    if (member is MethodDeclarationSyntax method)
+                    {
+                        if (!openByDefault && !IsPublic(method.Modifiers)) continue;
+
+                        yield return type + "." + method.Identifier.ValueText
+                                   + Parameters(method.ParameterList) + " : " + method.ReturnType;
+                    }
+                    else if (member is ConstructorDeclarationSyntax constructor)
+                    {
+                        if (!IsPublic(constructor.Modifiers)) continue;
+
+                        yield return type + ".ctor" + Parameters(constructor.ParameterList);
+                    }
+                    else if (member is PropertyDeclarationSyntax property)
+                    {
+                        if (!openByDefault && !IsPublic(property.Modifiers)) continue;
+
+                        yield return type + "." + property.Identifier.ValueText + " : " + property.Type;
+                    }
+                    else if (member is FieldDeclarationSyntax field)
+                    {
+                        if (!IsPublic(field.Modifiers)) continue;
+
+                        foreach (VariableDeclaratorSyntax variable in field.Declaration.Variables)
+                        {
+                            yield return type + "." + variable.Identifier.ValueText
+                                       + " : " + field.Declaration.Type;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static bool IsPublic(SyntaxTokenList modifiers)
+        {
+            return modifiers.Any(m => m.ValueText == "public");
+        }
+
+        private static string Parameters(BaseParameterListSyntax list)
+        {
+            if (list == null) return "()";
+
+            return "(" + string.Join(", ", list.Parameters.Select(p => p.Type.ToString())) + ")";
         }
 
         /// <summary>初期値が素の数か文字なら、その字面。式なら null</summary>
