@@ -10,9 +10,8 @@ fan-out 昇順で読む。
 - Domain 13 ファイル / Game 17 ファイル / Legacy 37 ファイル・9 フォルダ
 - dotnet 148 件 / Unity EditMode 143 件 / PlayMode 3 件。すべて緑
 - コミットは種別の宣言が要る（`Change-Type`）。規則は `tools/flow/flow-rules/`。
-  種別ごとの判定は `tools/flow/flow verify` が6件持つ（REFACTOR-DIRTY /
-  DOCS-CODE / TEST-CODE / TUNE-CODE / API-CHANGED / FIX-TEST-WEAKENED）。
-  これは手元だけ
+  種別ごとの判定は `tools/flow/flow verify` が7件持ち、reference-transaction フックが
+  コミット時に掛ける。amend でも `--no-verify` でも走る。現状は `tools/flow/flow-status.md`
 - CI は2本。dotnet のテスト147件と、コミットの種別の宣言。Unity は動かさない
 - ADR 20 件・511 行。目安の 500 行を超えたので `docs/decisions/` への分割が近い
 
@@ -73,6 +72,11 @@ fan-out 昇順で読む。
 - 種別ごとの機械判定を6件。refactor で仕様書が変わる、docs で文書以外が変わる、
   test でテスト以外が変わる、tune でコードが変わる。commit-msg が落とす。
   これで refactor のレビューが「仕様書の差分が空」の確認で済む
+- flow の判定をコミットそのものに掛けるよう作り直した。amend、`--no-verify`、日本語や
+  空白の道、リネーム、テストの削除ですり抜けていた。refactor はコミット時に `dotnet test` を回す。
+  公開API一覧はコンパイラの型情報から作り、足すだけなら API-CHANGED に当たらない。
+  宣言の無いコミットも落とし、仕様書はコード名の差し替えだけなら refactor で通す。
+  `tools/flow/flow-test` が57通りを確かめる
 - `PlayerHp` の自然回復が `Health` を迂回していた件を直した
 
 ## ⏭️ 次

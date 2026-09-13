@@ -1,21 +1,14 @@
 #!/bin/sh
 # 有効化: git config core.hooksPath .githooks
 # Windows: git update-index --chmod=+x .githooks/commit-msg
+#
+# 種別の宣言だけを先に見る。メッセージを書き終えた時点で落とせるように。
+# 種別と差分の突き合わせは reference-transaction が、出来上がったコミットに対して行う。
+# sh 経由で呼ぶ。Windows では実行ビットが当てにならない
 
-MSG="$1"
-
-# 種別の宣言を要求する
-if ! grep -qE '^Change-Type: (feat|refactor|fix|tune|asset|test|docs|chore)$' "$MSG"; then
-  echo "E  Change-Type が必要です"
-  echo "   コミットメッセージの末尾に次の行を追加してください:"
-  echo "   Change-Type: <feat|refactor|fix|tune|asset|test|docs|chore>"
+if [ ! -f tools/flow/flow ]; then
+  echo "E  tools/flow/flow が無く、種別の宣言を確かめられない"
   exit 1
 fi
 
-# 種別と差分の形が合っているかを見る。
-# sh 経由で呼ぶ。Windows では実行ビットが当てにならない
-if [ -f tools/flow/flow ]; then
-  sh tools/flow/flow verify --message "$MSG" || exit 1
-fi
-
-exit 0
+sh tools/flow/flow declared --message "$1"

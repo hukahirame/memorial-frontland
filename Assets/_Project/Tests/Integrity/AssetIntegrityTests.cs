@@ -187,11 +187,10 @@ namespace MemorialFloor.Tests.Integrity
         private static void WriteBaseline(IEnumerable<string> keys)
         {
             StringBuilder text = new StringBuilder();
-            text.Append("# 切れた参照の控え。AssetIntegrityTests が読み書きする。\n");
+            text.Append("# 切れた参照の控え。AssetIntegrityTests が読み書きする。手で編集しない。\n");
             text.Append("#\n");
             text.Append("# 導入した時点で既に切れていたもの。増えるとテストが落ちる。\n");
             text.Append("# 直すと、テストがこのファイルから消して1度だけ落ちる。\n");
-            text.Append("# 手で足さないこと。減らすだけ。\n");
             text.Append("#\n");
             text.Append("# <シーンかプレハブの道> <解決できない guid>\n");
 

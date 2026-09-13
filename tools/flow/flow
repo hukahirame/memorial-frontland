@@ -1,18 +1,27 @@
 #!/bin/sh
-# 宣言した種別と、実際にステージされた差分の形が合っているかを見る。
-# commit-msg フックから呼ばれる。判定だけを行い、ファイルは直さない。
+# 宣言した種別と、コミットの差分が合っているかを見る。
+# ファイルは直さない。refactor ではテストを回すので、テストが生成物を書き直すことはある。
 #
-#   flow verify --message <コミットメッセージのファイル>
+#   flow declared --message <メッセージのファイル>   commit-msg と CI が呼ぶ。宣言だけを見る
+#   flow verify --commit <コミット>                 reference-transaction が呼ぶ。宣言と差分を見る
 #
 # 見ているのは差分の形と宣言が合っているかだけで、中身は見ない。
 # 出力は回復手順として読めるようにする。1行1件、何を直すかまで書く。
 
+# 許す種別。一覧はここにだけ置く
+types="feat refactor fix tune asset test docs chore"
+
 command="$1"
 shift 2>/dev/null
 
+commit=""
 message=""
 while [ $# -gt 0 ]; do
   case "$1" in
+    --commit)
+      commit="$2"
+      shift 2
+      ;;
     --message)
       message="$2"
       shift 2
@@ -23,21 +32,85 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-if [ "$command" != "verify" ]; then
-  echo "E  使える命令は verify だけ"
+# CHANGE-TYPE
+#
+# 種別の宣言がちょうど1行あり、許す種別であるか。2つあると、どちらで判定したかが読めない。
+# 宣言が無いと種別ごとの判定が1つも掛からないので、verify でも必ず見る
+declared() {
+  lines=$(printf '%s\n' "$1" | grep '^Change-Type:')
+  value=$(printf '%s\n' "$lines" | sed -n 's/^Change-Type: \(.*\)$/\1/p')
+
+  if [ "$(printf '%s\n' "$lines" | grep -c .)" -eq 1 ] \
+     && printf '%s\n' $types | grep -qx -- "$value"; then
+    return 0
+  fi
+
+  echo "E  CHANGE-TYPE  Change-Type がちょうど1行必要"
+  echo "     コミットメッセージの末尾に次の行を1つだけ置く:"
+  echo "     Change-Type: <$(printf '%s' "$types" | tr ' ' '|')>"
+  echo "     git revert が作るメッセージには無い。--no-commit で戻してから種別を書いてコミットする"
+  return 1
+}
+
+case "$command" in
+  declared)
+    if [ -z "$message" ] || [ ! -f "$message" ]; then
+      echo "E  --message にコミットメッセージのファイルが要る"
+      exit 1
+    fi
+    # エディタが CRLF で保存しても同じに読む
+    declared "$(tr -d '\r' < "$message")"
+    exit $?
+    ;;
+  verify)
+    ;;
+  *)
+    echo "E  使える命令は declared と verify だけ"
+    exit 1
+    ;;
+esac
+
+if [ -z "$commit" ] || ! git rev-parse --verify -q "$commit^{commit}" > /dev/null; then
+  echo "E  --commit にコミットが要る"
   exit 1
 fi
 
-if [ -z "$message" ] || [ ! -f "$message" ]; then
-  echo "E  --message にコミットメッセージのファイルが要る"
+# git が失敗すると出力が空になり、どの判定も「該当なし」で通ってしまう。落として止める
+broken() {
+  echo "E  FLOW-BROKEN  $1。判定できないので通さない"
   exit 1
+}
+
+# マージは2つの親のどちらと比べるかが決まらないので見ない
+parents=$(git rev-list --parents -n 1 "$commit") || broken "親を読めない"
+if [ "$(printf '%s\n' "$parents" | wc -w)" -gt 2 ]; then
+  exit 0
 fi
 
-type=$(sed -n 's/^Change-Type: \(.*\)$/\1/p' "$message" | tail -1)
-staged=$(git diff --cached --name-only)
+# エディタが CRLF で保存しても同じに読む
+raw=$(git log -1 --format=%B "$commit") || broken "メッセージを読めない"
+text=$(printf '%s\n' "$raw" | tr -d '\r')
+declared "$text" || exit 1
+type=$(printf '%s\n' "$text" | sed -n 's/^Change-Type: \(.*\)$/\1/p')
+
+trailer() {
+  printf '%s\n' "$text" | grep -q "^$1: ."
+}
+
+empty_tree=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+base=$(git rev-parse --verify -q "$commit^")
+[ -z "$base" ] && base=$empty_tree
+
+# 日本語や空白を含む道もそのまま1行1件で扱う。
+# リネームは消えた道と増えた道の2件に分ける。移した元が見えないと、実装をテストへ移しても通るため
+changed() {
+  git -c core.quotepath=false diff-tree -r --no-commit-id --name-only --no-renames "$@"
+}
+
+files=$(changed "$base" "$commit") || broken "差分を取れない"
 
 # 中身の無いコミットは見ない
-if [ -z "$staged" ]; then
+if [ -z "$files" ]; then
   exit 0
 fi
 
@@ -45,31 +118,112 @@ failed=0
 
 # REFACTOR-DIRTY
 #
-# refactor では仕様書が変わってはいけない。これが守られるから、refactor の
-# レビューは「仕様書の差分が空である」ことの確認で済む。
+# refactor では仕様書が主張する振る舞いが変わってはいけない。これが守られるから、
+# refactor のレビューは「仕様書の差分が空である」ことの確認で済む。
+# バッククォートで囲んだコード名の差し替えだけは通す。コードの居場所は振る舞いではなく、
+# 移した先が実在するかは REFACTOR-RED が回す SpecConformanceTests が見る。
 if [ "$type" = "refactor" ]; then
-  specs=$(printf '%s\n' "$staged" | grep '^docs/systems/.*\.md$')
+  masked() {
+    git show "$1:$2" 2>/dev/null | tr -d '\r' | sed 's/`[A-Za-z_][A-Za-z0-9_.]*`/`#`/g'
+  }
 
-  if [ -n "$specs" ] && ! grep -q '^Spec-Changed: .' "$message"; then
+  specs=$(printf '%s\n' "$files" | grep '^docs/systems/.*\.md$' \
+    | while IFS= read -r spec; do
+        [ "$(masked "$base" "$spec")" = "$(masked "$commit" "$spec")" ] && continue
+        printf '%s\n' "$spec"
+      done)
+
+  if [ -n "$specs" ] && ! trailer Spec-Changed; then
     echo "E  REFACTOR-DIRTY  refactor で仕様書が変わっている"
     printf '%s\n' "$specs" | sed 's/^/     /'
+    echo "     コード名の差し替え以外の文が変わっている"
     echo "     振る舞いが変わったなら feat か fix。変わっていないなら仕様書を戻す"
     echo "     意図して変えたなら Spec-Changed: <理由> を足す"
     failed=1
   fi
 fi
 
+# REFACTOR-RED
+#
+# refactor はテストが通ってからコミットする（refactor.md）。
+# 公開APIの一覧もテストが作るので、ここで回さないと API-CHANGED が古い一覧を見る。
+# テストが見るのは作業ツリーなので、テストが読むもの（.cs と docs/ と tests/）が
+# コミットと違うと判定の意味が無い。
+# 通った木は控えておき、同じ木を積み直すときは回さない。
+if [ "$type" = "refactor" ]; then
+  tree=$(git rev-parse "$commit^{tree}") || broken "木を読めない"
+  green="$(git rev-parse --git-dir)/flow-green"
+
+  if ! grep -qx "$tree" "$green" 2>/dev/null; then
+    dirty=$(git -c core.quotepath=false diff --name-only "$commit" -- '*.cs' docs/ tests/) \
+      || broken "作業ツリーとコミットを比べられない"
+    untracked=$(git -c core.quotepath=false ls-files --others --exclude-standard -- '*.cs' docs/ tests/) \
+      || broken "追跡していないファイルを読めない"
+    loose=$(printf '%s\n%s\n' "$dirty" "$untracked" | grep -v '^$' | sort -u)
+
+    if [ -n "$loose" ]; then
+      echo "E  REFACTOR-RED  作業ツリーがコミットと違い、テストがコミットの中身を見られない"
+      printf '%s\n' "$loose" | sed 's/^/     /'
+      echo "     git add するか、別のコミットに退避してからコミットし直す"
+      failed=1
+    elif ! command -v dotnet > /dev/null 2>&1; then
+      echo "E  REFACTOR-RED  dotnet が無く、テストを回せない"
+      failed=1
+    else
+      log=$(dotnet test tests/Domain.Tests/Domain.Tests.csproj --nologo --verbosity quiet 2>&1)
+      if [ $? -eq 0 ]; then
+        echo "$tree" >> "$green"
+      else
+        echo "E  REFACTOR-RED  refactor で dotnet test が通らない"
+        printf '%s\n' "$log" | grep -E 'error|失敗|Failed|Assert' | head -10 | sed 's/^/     /'
+        rewritten=$(git -c core.quotepath=false diff --name-only "$commit" -- '*.cs' docs/ tests/)
+        if [ -n "$rewritten" ]; then
+          echo "     テストが生成物を書き直した。差分を見て git add し、コミットし直す"
+          printf '%s\n' "$rewritten" | sed 's/^/       /'
+        else
+          echo "     実装を直す。テストを直すのではない（refactor.md）"
+        fi
+        failed=1
+      fi
+    fi
+  fi
+fi
+
 # API-CHANGED
 #
-# refactor で公開している面が変わったら、人間の承認が要る（refactor.md）。
-# 承認の対象は docs/public-api.txt の差分だけで、実装は見ない。
-if [ "$type" = "refactor" ]; then
-  api=$(printf '%s\n' "$staged" | grep '^docs/public-api\.txt$')
+# refactor で既にある公開の面を消したり変えたりしたら、人間の承認が要る（refactor.md）。
+# 足すのは自由。一覧は、使う側が壊れる変化が「既存の行が消える」形で出るように作ってある。
+# 例外は既存の型に abstract の行が増えたときで、実装する側が壊れる。
+if [ "$type" = "refactor" ] && printf '%s\n' "$files" | grep -q '^docs/public-api\.txt$'; then
+  work=$(mktemp -d)
+  surface() {
+    git show "$1:docs/public-api.txt" 2>/dev/null \
+      | sed '1s/^\xEF\xBB\xBF//' | tr -d '\r' | grep -v '^#'
+  }
+  surface "$base" > "$work/before"
+  surface "$commit" > "$work/after"
 
-  if [ -n "$api" ] && ! grep -q '^Api-Changed: .' "$message"; then
-    echo "E  API-CHANGED  refactor で公開APIが変わっている"
-    echo "     git diff --cached docs/public-api.txt で増減を見る"
-    echo "     人間に提示して承認を取り、Api-Changed: <理由> を足す"
+  removed=$(grep -v '^$' "$work/before" | grep -Fxv -f "$work/after")
+
+  # 型の行は塊の先頭。既存の型の塊に、前には無かった abstract の行が増えたかを見る
+  owed=$(awk -v before="$work/before" '
+    BEGIN { while ((getline line < before) > 0) seen[line] = 1 }
+    /^$/ { header = ""; next }
+    header == "" { header = $0; next }
+    !($0 in seen) && (header in seen) && $0 ~ /(^| )abstract / { print }
+  ' "$work/after")
+
+  rm -rf "$work"
+
+  if { [ -n "$removed" ] || [ -n "$owed" ]; } && ! trailer Api-Changed; then
+    echo "E  API-CHANGED  refactor で既存の公開APIが消えた・変わった"
+    [ -n "$removed" ] && printf '%s\n' "$removed" | sed 's/^/     - /'
+    if [ -n "$owed" ]; then
+      printf '%s\n' "$owed" | sed 's/^/     + /'
+      echo "     + の行は既存の型に足した abstract。実装する側がすべて壊れる"
+    fi
+    echo "     git diff $(git rev-parse --short "$base") $(git rev-parse --short "$commit") -- docs/public-api.txt"
+    echo "     を人間に提示して承認を取り、Api-Changed: <理由> を足す"
     failed=1
   fi
 fi
@@ -78,12 +232,12 @@ fi
 #
 # fix で既存のテストを書き換えていないか。落ちるテストを緩めて直したことにする
 # のが一番静かな壊し方なので、書き換えたこと自体を表に出す。
-# テストを足すのは自由。見るのは既にあるファイルへの変更だけ。
+# テストを足すのは自由。見るのは既にあるファイルの変更と削除だけ。
 if [ "$type" = "fix" ]; then
-  touched=$(git diff --cached --name-only --diff-filter=M \
-            -- 'tests/*' 'Assets/_Project/Tests/*')
+  touched=$(changed --diff-filter=MD "$base" "$commit" -- tests/ Assets/_Project/Tests/) \
+    || broken "テストの差分を取れない"
 
-  if [ -n "$touched" ] && ! grep -q '^Test-Change: .' "$message"; then
+  if [ -n "$touched" ] && ! trailer Test-Change; then
     echo "E  FIX-TEST-WEAKENED  fix で既存のテストが変わっている"
     printf '%s\n' "$touched" | sed 's/^/     /'
     echo "     既存テストが落ちるなら、それは仕様が変わったということ（fix.md）"
@@ -96,7 +250,7 @@ fi
 #
 # docs で触れるのは文書だけ。コードが混ざるなら種別が違う。
 if [ "$type" = "docs" ]; then
-  others=$(printf '%s\n' "$staged" | grep -v -e '\.md$' -e '^docs/')
+  others=$(printf '%s\n' "$files" | grep -v -e '\.md$' -e '^docs/')
 
   if [ -n "$others" ]; then
     echo "E  DOCS-CODE  docs で文書以外が変わっている"
@@ -110,19 +264,15 @@ fi
 #
 # test で触れるのはテストだけ。実装が混ざると、テストが通ったことの意味が消える。
 if [ "$type" = "test" ]; then
-  outside=$(printf '%s\n' "$staged" | grep -v -e '^tests/' -e '^Assets/_Project/Tests/')
-
   # テストが作る生成物は数えない。実装をそこに隠せないので、見張る意味が無い。
-  # 見分けは先頭の「手で編集しない」。生成物には必ず書いてある
-  others=""
-  for path in $outside; do
-    if [ -f "$path" ] && head -5 "$path" | grep -q "手で編集しない"; then
-      continue
-    fi
-    others="$others$path
-"
-  done
-  others=$(printf '%s' "$others")
+  # 見分けはコミットの中身の先頭の「手で編集しない」。生成物には必ず書いてある
+  others=$(printf '%s\n' "$files" | grep -v -e '^tests/' -e '^Assets/_Project/Tests/' \
+    | while IFS= read -r path; do
+        if git show "$commit:$path" 2>/dev/null | head -5 | grep -q "手で編集しない"; then
+          continue
+        fi
+        printf '%s\n' "$path"
+      done)
 
   if [ -n "$others" ]; then
     echo "E  TEST-CODE  test でテスト以外が変わっている"
@@ -136,7 +286,7 @@ fi
 #
 # tune は値だけ。コードが変わるなら、値を外に出す作業が先（tune.md）。
 if [ "$type" = "tune" ]; then
-  sources=$(printf '%s\n' "$staged" | grep '\.cs$')
+  sources=$(printf '%s\n' "$files" | grep '\.cs$')
 
   if [ -n "$sources" ]; then
     echo "E  TUNE-CODE  tune でコードが変わっている"

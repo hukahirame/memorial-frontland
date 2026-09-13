@@ -1,8 +1,7 @@
-﻿# 切れた参照の控え。AssetIntegrityTests が読み書きする。
+﻿# 切れた参照の控え。AssetIntegrityTests が読み書きする。手で編集しない。
 #
 # 導入した時点で既に切れていたもの。増えるとテストが落ちる。
 # 直すと、テストがこのファイルから消して1度だけ落ちる。
-# 手で足さないこと。減らすだけ。
 #
 # <シーンかプレハブの道> <解決できない guid>
 Assets/_Project/Art/EnemyA/DarkSlime.prefab 61629193b2798814fbd3d81c014fc835

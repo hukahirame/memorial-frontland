@@ -41,19 +41,23 @@ git commit -m "<メッセージ>
 Change-Type: <種別>"
 ```
 
-- `Change-Type:` トレーラーは必須。commit-msgフックが検証する。
-- `tools/flow/flow verify` が、宣言した種別とステージされた差分の形を突き合わせる。
+- `Change-Type:` トレーラーはちょうど1行必須。commit-msg フックが先に検証する。
+- ブランチに載る直前に、reference-transaction フックが `tools/flow/flow verify` を
+  呼び、宣言と、宣言した種別とコミットの差分を突き合わせる。amend でも `--no-verify` でも走る。
+- `git revert` が作るメッセージには宣言が無く落ちる。`--no-commit` で戻してから種別を書いてコミットする。
 
 | 判定 | 落ちる条件 | 解除 |
 |---|---|---|
-| REFACTOR-DIRTY | refactor で `docs/systems/` が変わった | `Spec-Changed: <理由>` |
+| CHANGE-TYPE | `Change-Type:` がちょうど1行でない、または許す種別でない | 無し |
+| REFACTOR-DIRTY | refactor で `docs/systems/` の文が変わった。バッククォートで囲んだコード名の差し替えだけなら通る | `Spec-Changed: <理由>` |
+| REFACTOR-RED | refactor で `dotnet test` が通らない。テストが読むものが作業ツリーとコミットで違う | 無し |
+| API-CHANGED | refactor で `docs/public-api.txt` の既存の行が消えた。既存の型に abstract の行が増えた | `Api-Changed: <理由>` |
+| FIX-TEST-WEAKENED | fix で既存のテストファイルが変わった・消えた | `Test-Change: <理由>` |
 | DOCS-CODE | docs で `*.md` と `docs/` 以外が変わった | 無し |
-| TEST-CODE | test で `tests/` と `Assets/_Project/Tests/` 以外が変わった | 無し |
+| TEST-CODE | test でテストと生成物以外が変わった | 無し |
 | TUNE-CODE | tune で `*.cs` が変わった | 無し |
-| API-CHANGED | refactor で `docs/public-api.txt` が変わった | `Api-Changed: <理由>` |
-| FIX-TEST-WEAKENED | fix で既存のテストファイルが変わった | `Test-Change: <理由>` |
 
-  解除トレーラーが1つしか無いのは、残りは種別を変えるかコミットを割るのが
+  解除トレーラーのある判定が限られるのは、残りは種別を変えるかコミットを割るのが
   正しい直し方だから。逃げ道を作ると誤ラベルを誘う。
 - **`--no-verify` は使わない。**
 - ゲートが落ちたら、出力の指示に従って修正し、再度コミットする。人間に確認を求めない。

@@ -1,292 +1,307 @@
 ﻿# 公開API。PublicApiTests が作る。手で編集しない。
 #
-# Domain が使う側へ見せている型とメンバ。増減はここに差分として出る。
-# refactor で人間が見るのはこの差分だけ。
+# Domain が使う側へ見せている型とメンバ。1行が1つの面。
+# 使う側が通らなくなる変化は、既存の行が消えるか書き換わる形で出る。
+# 足しただけなら行が増えるだけ。ただし既存の型に abstract の行が増えると、実装する側が壊れる。
 #
-# 入れ子の型は外側と同じ高さに並ぶ。private と internal は入らない。
+# 型ごとに、型の行、基底の行、メンバの行の順に並ぶ。private と internal は入らない。
 
-AccumulationLevel
-AccumulationLevel.High
-AccumulationLevel.Medium
-AccumulationLevel.Minimal
-AccumulationLevel.Small
-AccumulationLevel.Stampede
+enum AccumulationLevel
+AccumulationLevel.High = 3
+AccumulationLevel.Medium = 2
+AccumulationLevel.Minimal = 0
+AccumulationLevel.Small = 1
+AccumulationLevel.Stampede = 4
 
-ActionRule
-ActionRule.Choose(IRandom) : EnemyAction
-ActionRule.Duration(EnemyAction, IRandom) : float
-ActionRule.JumpSeconds : float
-ActionRule.MovePercent : int
-ActionRule.MoveSecondsMax : float
-ActionRule.MoveSecondsMin : float
-ActionRule.WaitPercent : int
-ActionRule.WaitSecondsMax : float
-ActionRule.WaitSecondsMin : float
+static class ActionRule
+static ActionRule.Choose(IRandom) : EnemyAction
+static ActionRule.Duration(EnemyAction, IRandom) : float
+const ActionRule.JumpSeconds : float
+const ActionRule.MovePercent : int
+const ActionRule.MoveSecondsMax : float
+const ActionRule.MoveSecondsMin : float
+const ActionRule.WaitPercent : int
+const ActionRule.WaitSecondsMax : float
+const ActionRule.WaitSecondsMin : float
 
-AddOutcome
-AddOutcome.NoSpace
-AddOutcome.Placed
-AddOutcome.Stacked
+enum AddOutcome
+AddOutcome.NoSpace = 2
+AddOutcome.Placed = 1
+AddOutcome.Stacked = 0
 
-AddResult
-AddResult.Outcome : AddOutcome
-AddResult.SlotIndex : int
-AddResult.Stock : int
+readonly struct AddResult
+AddResult.ctor()
 AddResult.ctor(AddOutcome, int, int)
+AddResult.Outcome.get : AddOutcome
+AddResult.SlotIndex.get : int
+AddResult.Stock.get : int
 
-AttackKind
-AttackKind.Slash
-AttackKind.Step
-AttackKind.Thrust
+enum AttackKind
+AttackKind.Slash = 1
+AttackKind.Step = 2
+AttackKind.Thrust = 0
 
-AttackRule
-AttackRule.Choose(float, float, float) : AttackKind
-AttackRule.Threshold : float
-AttackRule.ThrustDirection(float) : int
+static class AttackRule
+static AttackRule.Choose(float, float, float) : AttackKind
+const AttackRule.Threshold : float
+static AttackRule.ThrustDirection(float) : int
 
-Chance
-Chance.Roll(int, IRandom) : bool
+static class Chance
+static Chance.Roll(int, IRandom) : bool
 
-DayClock
-DayClock.Entered(int, int, int, float) : bool
-DayClock.HourAt(int, float) : float
-DayClock.HoursPerDay : int
-DayClock.IsDayOver(int, float) : bool
-DayClock.LightIntensity(float, float, float) : float
-DayClock.MorningHour : int
-DayClock.NightHour : int
-DayClock.SunriseHour : int
-DayClock.SunsetHour : int
+static class DayClock
+static DayClock.Entered(int, int, int, float) : bool
+static DayClock.HourAt(int, float) : float
+const DayClock.HoursPerDay : int
+static DayClock.IsDayOver(int, float) : bool
+static DayClock.LightIntensity(float, float, float) : float
+const DayClock.MorningHour : int
+const DayClock.NightHour : int
+const DayClock.SunriseHour : int
+const DayClock.SunsetHour : int
 
-DayCycle
+sealed class DayCycle
+DayCycle.ctor()
 DayCycle.Advance() : void
-DayCycle.ElapsedSeconds : int
+DayCycle.ElapsedSeconds.get : int
 DayCycle.Entered(int, float) : bool
 DayCycle.HourAt(float) : float
 DayCycle.IsDayOver(float) : bool
-DayCycle.PreviousSeconds : int
+DayCycle.PreviousSeconds.get : int
 DayCycle.Reset() : void
 DayCycle.SetElapsed(int) : void
 
-DayPlan
+sealed class DayPlan
+DayPlan.ctor()
 DayPlan.Clear() : void
-DayPlan.Count : int
-DayPlan.Pending : IReadOnlyList<string>
+DayPlan.Count.get : int
+DayPlan.Pending.get : IReadOnlyList<string>
 DayPlan.ShouldIssue(string) : bool
 
-DropChance
+sealed class DropChance
+DropChance.ctor()
 DropChance.ItemId : string
 DropChance.Percent : int
 
-DropRule
-DropRule.Roll(IEnumerable<string>, IEnumerable<DropChance>, IRandom) : List<string>
+static class DropRule
+static DropRule.Roll(IEnumerable<string>, IEnumerable<DropChance>, IRandom) : List<string>
 
-EnemyAction
-EnemyAction.Jump
-EnemyAction.Move
-EnemyAction.Wait
+enum EnemyAction
+EnemyAction.Jump = 2
+EnemyAction.Move = 1
+EnemyAction.Wait = 0
 
-Equipment
-Equipment.Attack : int
-Equipment.Durability : Health
+sealed class Equipment
+Equipment.ctor()
+Equipment.Attack.get : int
+Equipment.Durability.get : Health
 Equipment.Equip(ItemDefinition) : bool
-Equipment.IsBroken : bool
-Equipment.IsUnarmed : bool
-Equipment.ItemId : string
-Equipment.Knockback : float
-Equipment.UnarmedAttack : int
+Equipment.IsBroken.get : bool
+Equipment.IsUnarmed.get : bool
+Equipment.ItemId.get : string
+Equipment.Knockback.get : float
+const Equipment.UnarmedAttack : int
 Equipment.Unequip() : void
 Equipment.Wear(int) : bool
-Equipment.ctor()
 
-FallRule
-FallRule.IsOutOfField(float) : bool
-FallRule.OutOfFieldY : float
+static class FallRule
+static FallRule.IsOutOfField(float) : bool
+const FallRule.OutOfFieldY : float
 
-FieldBounds
+sealed class FieldBounds
+FieldBounds.ctor(float, float, float, float)
 FieldBounds.ClampX(float) : float
 FieldBounds.ClampZ(float) : float
 FieldBounds.Contains(float, float) : bool
-FieldBounds.EscapeHeight : float
-FieldBounds.EscapeMargin : float
+const FieldBounds.EscapeHeight : float
+const FieldBounds.EscapeMargin : float
 FieldBounds.HasEscaped(float, float, float) : bool
-FieldBounds.MaxX : float
-FieldBounds.MaxZ : float
-FieldBounds.MinX : float
-FieldBounds.MinZ : float
+FieldBounds.MaxX.get : float
+FieldBounds.MaxZ.get : float
+FieldBounds.MinX.get : float
+FieldBounds.MinZ.get : float
 FieldBounds.PushBack(float, float) : Nudge
-FieldBounds.ctor(float, float, float, float)
 
-Health
-Health.Current : int
+sealed class Health
+Health.ctor()
+Health.Current.get : int
 Health.Heal(int) : void
-Health.IsDead : bool
-Health.IsReady : bool
-Health.Max : int
+Health.IsDead.get : bool
+Health.IsReady.get : bool
+Health.Max.get : int
 Health.SetCurrent(int) : void
 Health.SetMax(int) : void
 Health.Take(int) : void
 
-IRandom
-IRandom.Next(int, int) : int
-IRandom.NextFloat(float, float) : float
+interface IRandom
+abstract IRandom.Next(int, int) : int
+abstract IRandom.NextFloat(float, float) : float
 
-Ingredient
-Ingredient.Amount : int
-Ingredient.DisplayName : string
-Ingredient.ItemId : string
+readonly struct Ingredient
+Ingredient.ctor()
 Ingredient.ctor(string, string, int)
+Ingredient.Amount.get : int
+Ingredient.DisplayName.get : string
+Ingredient.ItemId.get : string
 
-Inventory
-Inventory.Add(string, System.Func<int>) : AddResult
+sealed class Inventory
+Inventory.ctor(IList<ItemSlot>)
+Inventory.Add(string, Func<int>) : AddResult
 Inventory.Add(string, int) : AddResult
 Inventory.CountOf(string) : int
-Inventory.EmptySlot : string
+const Inventory.EmptySlot : string
 Inventory.Remove(string) : RemoveResult
-Inventory.SlotCount : int
-Inventory.ctor(IList<ItemSlot>)
+Inventory.SlotCount.get : int
 
-ItemCatalog
-ItemCatalog.All : IReadOnlyList<ItemDefinition>
-ItemCatalog.Count : int
+sealed class ItemCatalog
+ItemCatalog.ctor()
+ItemCatalog.All.get : IReadOnlyList<ItemDefinition>
+ItemCatalog.Count.get : int
 ItemCatalog.Find(string) : ItemDefinition
 ItemCatalog.Load(string) : void
-ItemCatalog.Parse(string) : ItemCatalog
+static ItemCatalog.Parse(string) : ItemCatalog
 
-ItemDefinition
-ItemDefinition.Attack : int
-ItemDefinition.Description : string
-ItemDefinition.Heal : int
-ItemDefinition.Installable : bool
-ItemDefinition.ItemId : string
-ItemDefinition.Knockback : float
-ItemDefinition.MaxDurability : int
-ItemDefinition.MaxStock : int
-ItemDefinition.Name : string
-ItemDefinition.Use : ItemUse
+sealed class ItemDefinition
 ItemDefinition.ctor(string, string, int, int, bool, int, float, ItemUse, int, string)
+ItemDefinition.Attack.get : int
+ItemDefinition.Description.get : string
+ItemDefinition.Heal.get : int
+ItemDefinition.Installable.get : bool
+ItemDefinition.ItemId.get : string
+ItemDefinition.Knockback.get : float
+ItemDefinition.MaxDurability.get : int
+ItemDefinition.MaxStock.get : int
+ItemDefinition.Name.get : string
+ItemDefinition.Use.get : ItemUse
 
-ItemSlot
+sealed class ItemSlot
+ItemSlot.ctor()
 ItemSlot.ItemId : string
 ItemSlot.MaxStock : int
 ItemSlot.Stock : int
 
-ItemUse
-ItemUse.Eat
-ItemUse.Equip
-ItemUse.Place
+enum ItemUse
+ItemUse.Eat = 1
+ItemUse.Equip = 2
+ItemUse.Place = 0
 
-Nudge
-Nudge.None : bool
-Nudge.X : float
-Nudge.Z : float
+readonly struct Nudge
+Nudge.ctor()
 Nudge.ctor(float, float)
+Nudge.None.get : bool
+Nudge.X.get : float
+Nudge.Z.get : float
 
-Quest
-Quest.Advance() : void
-Quest.Amount : int
-Quest.Id : string
-Quest.IsComplete : bool
-Quest.Kind : QuestKind
-Quest.Progress : int
-Quest.Rewards : IReadOnlyList<Reward>
-Quest.RootId : string
-Quest.SetProgress(int) : void
-Quest.Target : string
+sealed class Quest
 Quest.ctor(string, string, string, int, IReadOnlyList<Reward>)
+Quest.Advance() : void
+Quest.Amount.get : int
+Quest.Id.get : string
+Quest.IsComplete.get : bool
+Quest.Kind.get : QuestKind
+Quest.Progress.get : int
+Quest.Rewards.get : IReadOnlyList<Reward>
+Quest.RootId.get : string
+Quest.SetProgress(int) : void
+Quest.Target.get : string
 
-QuestId
-QuestId.Is(string, QuestKind) : bool
-QuestId.LetterOf(QuestKind) : char
-QuestId.TryReadKind(string, QuestKind) : bool
+static class QuestId
+static QuestId.Is(string, QuestKind) : bool
+static QuestId.LetterOf(QuestKind) : char
+static QuestId.TryReadKind(string, out QuestKind) : bool
 
-QuestKind
-QuestKind.Breach
-QuestKind.Common
-QuestKind.Main
-QuestKind.Sub
+enum QuestKind
+QuestKind.Breach = 1
+QuestKind.Common = 3
+QuestKind.Main = 0
+QuestKind.Sub = 2
 
-QuestProgress
-QuestProgress.Advance(int, int) : int
-QuestProgress.Clamp(int, int) : int
-QuestProgress.IsComplete(int, int) : bool
+static class QuestProgress
+static QuestProgress.Advance(int, int) : int
+static QuestProgress.Clamp(int, int) : int
+static QuestProgress.IsComplete(int, int) : bool
 
-QuestRegistry
-QuestRegistry.All : IReadOnlyList<Quest>
+sealed class QuestRegistry
+QuestRegistry.ctor()
+QuestRegistry.All.get : IReadOnlyList<Quest>
 QuestRegistry.Clear() : void
-QuestRegistry.Count : int
+QuestRegistry.Count.get : int
 QuestRegistry.Create(QuestKind, string, string, int, IReadOnlyList<Reward>) : Quest
 QuestRegistry.Find(string) : Quest
 QuestRegistry.HasMainFor(string) : bool
 QuestRegistry.Remove(string) : bool
 
-Recipe
-Recipe.CanCraftWith(Inventory) : bool
-Recipe.Ingredients : IReadOnlyList<Ingredient>
-Recipe.ProductId : string
+sealed class Recipe
 Recipe.ctor(string, IReadOnlyList<Ingredient>)
+Recipe.CanCraftWith(Inventory) : bool
+Recipe.Ingredients.get : IReadOnlyList<Ingredient>
+Recipe.ProductId.get : string
 
-RemoveOutcome
-RemoveOutcome.Decremented
-RemoveOutcome.NotFound
-RemoveOutcome.SlotCleared
+enum RemoveOutcome
+RemoveOutcome.Decremented = 0
+RemoveOutcome.NotFound = 2
+RemoveOutcome.SlotCleared = 1
 
-RemoveResult
-RemoveResult.Outcome : RemoveOutcome
-RemoveResult.SlotIndex : int
-RemoveResult.Stock : int
+readonly struct RemoveResult
+RemoveResult.ctor()
 RemoveResult.ctor(RemoveOutcome, int, int)
+RemoveResult.Outcome.get : RemoveOutcome
+RemoveResult.SlotIndex.get : int
+RemoveResult.Stock.get : int
 
-Reward
-Reward.Amount : int
-Reward.Kind : string
+readonly struct Reward
+Reward.ctor()
 Reward.ctor(string, int)
+Reward.Amount.get : int
+Reward.Kind.get : string
 
-Root
+sealed class Root
+Root.ctor(string, string, string, int, float, float)
 Root.AccumulateDaily() : void
-Root.Accumulation : int
+Root.Accumulation.get : int
 Root.AdvanceDay() : void
 Root.Calm(int) : void
-Root.DailyAccumulationGain : int
-Root.DailyProgressLoss : int
-Root.Danger : int
+const Root.DailyAccumulationGain : int
+const Root.DailyProgressLoss : int
+Root.Danger.get : int
 Root.DecayProgressDaily() : void
 Root.Gain(int) : void
-Root.HasSpawnPoint : bool
-Root.Id : string
-Root.Level : AccumulationLevel
-Root.Name : string
+Root.HasSpawnPoint.get : bool
+Root.Id.get : string
+Root.Level.get : AccumulationLevel
+Root.Name.get : string
 Root.PlaceSpawnPoint(float, float, float) : void
-Root.Progress : int
-Root.Seed : string
-Root.SpawnX : float
-Root.SpawnY : float
-Root.SpawnZ : float
-Root.UiX : float
-Root.UiY : float
-Root.ctor(string, string, string, int, float, float)
+Root.Progress.get : int
+Root.Seed.get : string
+Root.SpawnX.get : float
+Root.SpawnY.get : float
+Root.SpawnZ.get : float
+Root.UiX.get : float
+Root.UiY.get : float
 
-RootRegistry
+sealed class RootRegistry
+RootRegistry.ctor()
 RootRegistry.AdvanceDay() : void
-RootRegistry.All : IReadOnlyList<Root>
+RootRegistry.All.get : IReadOnlyList<Root>
 RootRegistry.Clear() : void
-RootRegistry.Count : int
+RootRegistry.Count.get : int
 RootRegistry.Find(string) : Root
 RootRegistry.TryAdd(Root) : bool
 
-SpawnRule
-SpawnRule.CalmPerDefeat : int
-SpawnRule.CrowdPercentPerEnemy : int
-SpawnRule.ShouldSuppress(Root, int, IRandom) : bool
-SpawnRule.ShouldWeaken(Root) : bool
-SpawnRule.SuppressPercent : int
-SpawnRule.SuppressProgress : int
-SpawnRule.WeakenProgress : int
-SpawnRule.WeakenRatio : float
+static class SpawnRule
+const SpawnRule.CalmPerDefeat : int
+const SpawnRule.CrowdPercentPerEnemy : int
+static SpawnRule.ShouldSuppress(Root, int, IRandom) : bool
+static SpawnRule.ShouldWeaken(Root) : bool
+const SpawnRule.SuppressPercent : int
+const SpawnRule.SuppressProgress : int
+const SpawnRule.WeakenProgress : int
+const SpawnRule.WeakenRatio : float
 
-Wallet
+sealed class Wallet
+Wallet.ctor()
 Wallet.Add(int) : void
-Wallet.Amount : int
+Wallet.Amount.get : int
 Wallet.CanAfford(int) : bool
 Wallet.SetAmount(int) : void
 Wallet.Spend(int) : bool

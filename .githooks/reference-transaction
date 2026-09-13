@@ -1,0 +1,39 @@
+#!/bin/sh
+# 有効化: git config core.hooksPath .githooks
+# Windows: git update-index --chmod=+x .githooks/reference-transaction
+#
+# ブランチに載る直前のコミットを flow verify に掛ける。落ちたらブランチは動かず、ステージは残る。
+#
+# commit-msg ではなくここで見るのは、出来上がったコミットを見られるから。
+# commit-msg にはステージしか見えず、amend で比べる相手が変わることも渡らない。
+# --no-verify でもここは走る。
+
+stdin=$(cat)
+
+[ "$1" = "prepared" ] || exit 0
+[ -f tools/flow/flow ] || exit 0
+
+zero=0000000000000000000000000000000000000000
+failed=0
+
+for new in $(printf '%s\n' "$stdin" | while read -r old value ref; do
+               case "$ref" in
+                 HEAD|refs/heads/*) printf '%s\n' "$value" ;;
+               esac
+             done | sort -u); do
+  case "$new" in
+    "$zero"|ref:*) continue ;;
+  esac
+
+  [ "$(git cat-file -t "$new" 2>/dev/null)" = "commit" ] || continue
+
+  # どこかから辿れるコミットは、いま作られたものではない。checkout、reset、ブランチの作成など
+  if git merge-base --is-ancestor "$new" HEAD 2>/dev/null \
+     || [ -n "$(git for-each-ref --contains "$new" --count=1)" ]; then
+    continue
+  fi
+
+  sh tools/flow/flow verify --commit "$new" < /dev/null || failed=1
+done
+
+exit $failed
