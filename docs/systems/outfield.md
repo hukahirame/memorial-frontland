@@ -53,6 +53,6 @@ tunables: []
 | 最初の落下までの秒数 | 10〜20 | `BranchFallSystem.Start` |
 | 以降の間隔（秒） | 20〜36 | `BranchFallSystem.BranchDrop` |
 | 落ちる範囲 | Inspector を見る | `BranchFallSystem.minusrange` |
-| 場の範囲 | Inspector を見る | `SceneStarter.exposition` |
+| 場の範囲 | Inspector を見る | `Area.exposition` |
 | 場外の猶予 | 0.4 | `FieldBounds.EscapeMargin` |
 | 場外の高さ | 4 | `FieldBounds.EscapeHeight` |

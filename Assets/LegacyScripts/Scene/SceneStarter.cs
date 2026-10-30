@@ -1,87 +1,89 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using MemorialFloor.Domain;
+using MemorialFloor.Game;
 using UnityEngine;
 using UnityEngine.UI;
-using MemorialFloor.Domain;
 
-public class SceneStarter : MonoBehaviour //シーン起動時の処理全般。ODLに含まず、〇〇STとして設置
+/// <summary>場所に着いたときの処理全般。常駐シーンに置き、移動の入口から呼ばれる</summary>
+public class SceneStarter : MonoBehaviour
 {
-    [SerializeField] private string type; //役割
-    [SerializeField] private Transform playerspowner;
-    [SerializeField] public Vector4 exposition;
+    /// <summary>拠点の BGM に 1 曲目を選ぶ確率（%）</summary>
+    private const int BaseBgmPercent = 50;
 
-   // public static List<string[]> saveobjects = new List<string[]>(); //名称、対応シーン、x,y,z
-    private void Start()
+    [SerializeField] private AreaTravel travel;
+    [SerializeField] private Player2 player;
+    [SerializeField] private Slider hpView;
+    [SerializeField] private Button jumpButton;
+    [SerializeField] private AudioSource bgm;
+    [SerializeField] private QuestManager questManager;
+    [SerializeField] private RewardUI rewardUI;
+    [SerializeField] private Transform rewardPoint;
+
+    private void Awake()
     {
-        Transform pt = GameObject.FindWithTag("Player").transform;
-        Player2 p = pt.GetComponent<Player2>();
-        p.expos = exposition;
+        travel.Entered += Enter;
+    }
 
-        Player2.playerrb = pt.GetComponent<Rigidbody>();
-        Player2.BindHpView(GameObject.FindWithTag("HpSlider").GetComponent<Slider>());
+    private void OnDestroy()
+    {
+        travel.Entered -= Enter;
+    }
 
-        SaveData sd = GameObject.Find("GameManager").GetComponent<SaveSystem>().savedata;
-        for (int i = 0; i < sd.saveObjects.Count; i++)
+    private void Enter(Area area)
+    {
+        player.expos = area.Exposition;
+        Player2.BindHpView(hpView);
+
+        if (area.Kind == AreaKind.Root)
         {
-            if (sd.saveObjectsScene[i] == GameManager.entered_scene)
-            {
-                var obj = Instantiate((GameObject)Resources.Load(sd.saveObjects[i]), sd.saveObjectsPos[i], Quaternion.identity);
-                obj.name = obj.name.Replace("(Clone)", "");
-            }
+            SpawnerDecide(area);
+            JumpReset();
+            PlayBgm("solarisnoame");
+            questManager.StartQuest();
         }
-
-        if (type == "Root")
+        else
         {
-            SpawnerDecide();
-            JumpReset(p);
-            GameObject.Find("GameManager").GetComponent<AudioSource>().clip = (AudioClip)Resources.Load("solarisnoame");
-            GameObject.Find("GameManager").GetComponent<AudioSource>().Play();
-            GameObject.FindWithTag("QuestManager").GetComponent<QuestManager>().StartQuest();
-            pt.transform.position = playerspowner.position;
-        }
-        else if (type == "MainSite")
-        {
-            if(Random.Range(0,100) < 50) GameObject.Find("GameManager").GetComponent<AudioSource>().clip = (AudioClip)Resources.Load("music.dream");
-            else GameObject.Find("GameManager").GetComponent<AudioSource>().clip = (AudioClip)Resources.Load("雨雫 @ フリーBGM DOVA-SYNDROME OFFICIAL YouTube CHANNEL");
-            GameObject.Find("GameManager").GetComponent<AudioSource>().Play();
+            PlayBgm(Random.Range(0, 100) < BaseBgmPercent
+                ? "music.dream"
+                : "雨雫 @ フリーBGM DOVA-SYNDROME OFFICIAL YouTube CHANNEL");
 
             if (RewardUI.rewardUI_show != 0) //RewardUIの唯一のスタートポイント
             {
-                Transform mc = GameObject.FindWithTag("MainCanvas").transform;
-                mc.Find("RewardUI").transform.position = mc.Find("CenterPoint").position;
-                mc.Find("RewardUI").GetComponent<RewardUI>().InputInfo();
-            }
-
-            if (pt.position != new Vector3(-2, 0.65f, -2))
-            {
-                pt.position = playerspowner.position;
-            }
-            else
-            {
-                pt.position = new Vector3(-2, 0.65f, -2);
+                rewardUI.transform.position = rewardPoint.position;
+                rewardUI.InputInfo();
             }
         }
     }
 
-    private void SpawnerDecide()
+    private void PlayBgm(string clip)
     {
-        Root root = RootsManager.Roots.Find(GameManager.entered_scene);
-        if (root == null) return;
+        bgm.clip = (AudioClip)Resources.Load(clip);
+        bgm.Play();
+    }
 
-        if (!root.HasSpawnPoint)
+    private void SpawnerDecide(Area area)
+    {
+        Root root = RootsManager.Roots.Find(travel.Where.RootId);
+        if (root == null || root.HasSpawnPoint) return;
+
+        List<GameObject> candidates = new List<GameObject>();
+        foreach (GameObject candidate in GameObject.FindGameObjectsWithTag("SpawnerCandidate"))
         {
-            var candidates = GameObject.FindGameObjectsWithTag("SpawnerCandidate");
-            var candidate = candidates[Random.Range(0, candidates.Length)];
-            candidate.AddComponent<OF_Spawner>();
-            Vector3 targetpos = candidate.transform.position;
-            root.PlaceSpawnPoint(targetpos.x, targetpos.y, targetpos.z);
+            if (candidate.scene == area.Scene) candidates.Add(candidate);
         }
+
+        if (candidates.Count == 0) return;
+
+        GameObject chosen = candidates[Random.Range(0, candidates.Count)];
+        chosen.AddComponent<OF_Spawner>().Bind(area.Exposition, root.Id);
+
+        Vector3 targetpos = chosen.transform.position;
+        root.PlaceSpawnPoint(targetpos.x, targetpos.y, targetpos.z);
     }
 
-    private void JumpReset(Player2 p)
+    private void JumpReset()
     {
-        Button jumpbutton = GameObject.Find("Jumpbutton").GetComponent<Button>();
-        jumpbutton.onClick.RemoveAllListeners();
-        jumpbutton.onClick.AddListener(p.Jump);
+        jumpButton.onClick.RemoveAllListeners();
+        jumpButton.onClick.AddListener(player.Jump);
     }
 }

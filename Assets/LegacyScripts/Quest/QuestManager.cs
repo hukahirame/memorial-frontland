@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using MemorialFloor.Domain;
+using MemorialFloor.Game;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,12 +17,12 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
     private static readonly QuestKind[] ShowOrder =
         { QuestKind.Breach, QuestKind.Main, QuestKind.Sub };
 
-    // entered_sceneはGameManagerにあります
     public static string ordered_id = ""; // クエ中不変。QBから受注
    // private int pluschild_qm = 6;
 
     [SerializeField] private Text progress;
     [SerializeField] private GameObject questUI;
+    [SerializeField] private AreaTravel travel;
 
     void Start()
     {
@@ -54,6 +55,7 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
                 transform.Find("QuestTopPosition").GetChild(shown.Count - 1).position,
                 Quaternion.identity, transform);
             obj.name = quest.Id;
+            obj.GetComponent<QuestButton>().Bind(travel.Where);
 
             Slider slider = transform.Find(quest.Id).Find("Slider_IconType_03_basic_WhiteFill").GetComponent<Slider>();
             slider.maxValue = quest.Amount;
@@ -89,7 +91,7 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
             else if (ordered_id == quest.Id)
             {
                 if (quest.IsComplete) s.text = "達成済み";
-                else if (GameManager.entered_scene == quest.RootId) s.text = "クエスト中";
+                else if (travel.Where.RootId == quest.RootId) s.text = "クエスト中";
                 else s.text = "受注済み";
             }
         }
@@ -128,7 +130,7 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
         {
             if (quest.Target != target) continue;
 
-            if (quest.Kind == QuestKind.Sub && quest.RootId == GameManager.entered_scene) SyncQuestSub(quest);
+            if (quest.Kind == QuestKind.Sub && quest.RootId == travel.Where.RootId) SyncQuestSub(quest);
             else if (quest.Kind == QuestKind.Common) SyncQuestSub(quest);
             else if (quest.Id == ordered_id) SyncQuestSub(quest);
         }

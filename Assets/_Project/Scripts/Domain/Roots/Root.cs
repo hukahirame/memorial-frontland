@@ -128,8 +128,7 @@ namespace MemorialFloor.Domain
             get { return _roots.Count; }
         }
 
-        /// <summary>同じ Id が既にあれば何もせず false を返す。
-        /// シーン再入場で Start が再実行されても増えないようにするため</summary>
+        /// <summary>同じ Id が既にあれば何もせず false を返す</summary>
         public bool TryAdd(Root root)
         {
             if (root == null) return false;

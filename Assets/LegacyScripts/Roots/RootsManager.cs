@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using MemorialFloor.Domain;
+using MemorialFloor.Game;
 
 public class RootsManager : MonoBehaviour
 {
@@ -18,7 +19,7 @@ public class RootsManager : MonoBehaviour
 
     public void RootCreate(string name, string seed, string id, float uiX, float uiY, int danger) //3日前後で1回実行
     {
-        //既に同じ ID があれば何もしない。MainSite に戻るたび Start が再実行されるため
+        //既に同じ ID があれば何もしない
         Roots.TryAdd(new Root(id, name, seed, danger, uiX, uiY));
     }
 
@@ -73,11 +74,13 @@ public class RootsManager : MonoBehaviour
         {
             case AccumulationLevel.Stampede: //【氾濫】
                 Transform ms = GameObject.FindWithTag("MainSpawner").transform;
+                Area area = Area.In(ms.gameObject.scene);
+                bool inBase = area != null && area.Kind == AreaKind.Base;
 
                 for (int f = 0; f < 5; f++)
                 {
-                    if (GameManager.entered_scene == "MainSite") ms.GetComponent<MS_Spawner>().Spawn();
-                    else                                         ms.GetComponent<OF_Spawner>().Spawn();
+                    if (inBase) ms.GetComponent<MS_Spawner>().Spawn();
+                    else        ms.GetComponent<OF_Spawner>().Spawn();
                 }
                 capacity.text = "-"; capacity.color = Color.black;
                 break;

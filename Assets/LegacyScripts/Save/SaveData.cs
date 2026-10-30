@@ -1,4 +1,5 @@
 ﻿using MemorialFloor.Domain;
+using MemorialFloor.Game;
 using UnityEngine;
 using System;
 using System.Collections.Generic;
@@ -18,19 +19,21 @@ public class SaveData
     public List<ItemSlot> slots = new List<ItemSlot>();
     public List<string> enemies = new List<string>(); //現シーンのみ
     public List<Vector3> respawns = new List<Vector3>(); //現シーンのみ
+
+    //置いた物。同じ添字の3つで1つ。saveObjects はアイテム ID
     public List<string> saveObjects = new List<string>();
     public List<string> saveObjectsScene = new List<string>();
     public List<Vector3> saveObjectsPos = new List<Vector3>();
 
-    public void SyncStatic() //SaveSystem.Save()の中で最初に実行
+    public void SyncStatic(Whereabouts whereabouts, PlacedObjects placed) //SaveSystem.Save()の中で最初に実行
     {
         playerhp = Player2.Hp.Current;
-        entered_scene = GameManager.entered_scene;
+        entered_scene = whereabouts.AreaId;
         daytime = Sun2.Cycle.ElapsedSeconds;
-        SyncDynamic();
+        SyncDynamic(placed);
     }
 
-    public void SyncDynamic()
+    public void SyncDynamic(PlacedObjects placed)
     {
         PlayerInventory pi = GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>();
         slots = new List<ItemSlot>(pi.Slots);
@@ -50,12 +53,16 @@ public class SaveData
         saveObjects.Clear();
         saveObjectsPos.Clear();
         saveObjectsScene.Clear();
-        var saveobj = GameObject.FindGameObjectsWithTag("SaveObject");
-        foreach(var obj in saveobj)
+
+        placed.Flush();
+        foreach (string area in placed.Ledger.Areas)
         {
-            saveObjects.Add(obj.name);
-            saveObjectsPos.Add(obj.transform.position);
-            saveObjectsScene.Add(entered_scene);
+            foreach (Placement placement in placed.Ledger.In(area))
+            {
+                saveObjects.Add(placement.ItemId);
+                saveObjectsPos.Add(new Vector3(placement.X, placement.Y, placement.Z));
+                saveObjectsScene.Add(area);
+            }
         }
     }
 
@@ -63,7 +70,6 @@ public class SaveData
     {
         Player2.Hp.SetCurrent(playerhp);
         Player2.RefreshHpView();
-        GameManager.entered_scene = entered_scene;
         Sun2.Cycle.SetElapsed(daytime);
         LoadDynamic();
     }
@@ -77,11 +83,26 @@ public class SaveData
         GameObject.Find("CoinText").GetComponent<TextMeshProUGUI>().text =
             GameManager.Coins.Amount.ToString();
         GameObject.FindWithTag("Player").transform.position = respawn;
-        
+
         //enemies関連は、MainSpawner生成が遅れるため、そっちで処理
 
-        //saveObject関連は、MonoBehaviourのみで生成可なので、SaveSystem.Loadで処理  
-
         //シーンの静的状態は、いずれシード値から復元できるように
+    }
+
+    /// <summary>置いた物を控えへ戻す。場所に入ったときに置き直される</summary>
+    public void LoadPlacements(PlacementLedger ledger)
+    {
+        Dictionary<string, List<Placement>> byArea = new Dictionary<string, List<Placement>>();
+
+        for (int i = 0; i < saveObjects.Count; i++)
+        {
+            string area = saveObjectsScene[i];
+            if (!byArea.ContainsKey(area)) byArea[area] = new List<Placement>();
+
+            Vector3 position = saveObjectsPos[i];
+            byArea[area].Add(new Placement(saveObjects[i], position.x, position.y, position.z));
+        }
+
+        foreach (KeyValuePair<string, List<Placement>> pair in byArea) ledger.Record(pair.Key, pair.Value);
     }
 }

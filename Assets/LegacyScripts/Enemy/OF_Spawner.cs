@@ -23,6 +23,9 @@ public class OF_Spawner : MonoBehaviour
 
     public Vector4 expos; //XL,XS,ZL,ZS
 
+    /// <summary>置かれた根源の Id</summary>
+    private string rootId;
+
  //   private GameObject tower1;
  //   private GameObject tower1_down;
 
@@ -35,13 +38,19 @@ public class OF_Spawner : MonoBehaviour
         health.SetCurrent(maxHp);
     }
 
+    /// <summary>根源に置かれたとき、場の範囲と根源を受け取る。Start より前に呼ぶ</summary>
+    public void Bind(Vector4 exposition, string rootId)
+    {
+        expos = exposition;
+        this.rootId = rootId;
+    }
+
     void Start()
     {
         //大部分はSceneStarterから実行
 
         gameObject.tag = "MainSpawner";
         spawnrange = Random.Range(6f, 12f);
-        expos = FindObjectOfType<SceneStarter>().exposition;
 
         seeker = GameObject.Find("Seeker");
         seeker.transform.parent = transform;
@@ -87,10 +96,12 @@ public class OF_Spawner : MonoBehaviour
 
         //根源は保持せず使うときに引く。参照を握るとレジストリが唯一の窓口でなくなり、
         //中身を入れ替えたときに古い Root を指したまま生き残る
-        Root root = RootsManager.Roots.Find(GameManager.entered_scene);
+        Root root = RootsManager.Roots.Find(rootId);
         if (SpawnRule.ShouldSuppress(root, n, UnityRandom.Shared)) return;
 
         var obj = Instantiate(enemy, pos, Quaternion.identity);
+        Slime slime = obj.GetComponent<Slime>();
+        if (slime != null) slime.SetHome(rootId);
         seeker.gameObject.SetActive(false);
         var damageable = obj.GetComponent<IDamageable>();
         if (SpawnRule.ShouldWeaken(root) && damageable != null)

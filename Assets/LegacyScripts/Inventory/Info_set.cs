@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using MemorialFloor.Domain;
+using MemorialFloor.Game;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,6 +12,7 @@ public class Info_set : MonoBehaviour
     [SerializeField] private Text txt;
     [SerializeField] private Button button;
     [SerializeField] private Sprite buttonsprite;
+    [SerializeField] private PlacedObjects placed;
 
     [Header("手に持つ絵。原簿の ID と対で持つ")]
     [SerializeField] private string weapon1Id = "Ironsword";
@@ -101,7 +103,7 @@ public class Info_set : MonoBehaviour
     private void Place()
     {
         Vector3 installpos = GameObject.FindWithTag("Player").transform.position + Vector3.down * 0.4f;
-        Instantiate((GameObject)Resources.Load(current.ItemId + "_obj"), installpos, Quaternion.identity);
+        if (!placed.Place(current.ItemId, installpos)) return;
         GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>().UnloadInventory(current.ItemId);
     }
 }

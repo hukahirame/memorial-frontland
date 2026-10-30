@@ -4,7 +4,8 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "MemorialFloor.Domain"
+        "MemorialFloor.Domain",
+        "MemorialFloor.Game"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

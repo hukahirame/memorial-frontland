@@ -1,15 +1,15 @@
 ﻿using Assets.HeroEditor.Common.Scripts.CharacterScripts;
 using System.Collections;
-using System.Collections.Generic;
+using MemorialFloor.Game;
 using UnityEngine;
-using UnityEngine.UI;
 using TMPro;
-using UnityEngine.SceneManagement;
 
 public class PlayerDeath : MonoBehaviour
 {
     private const int DeathPenalty = 100;
     private const int RevivePercent = 5;
+
+    [SerializeField] private AreaTravel travel;
 
     private Player2 p;
 
@@ -39,23 +39,14 @@ public class PlayerDeath : MonoBehaviour
         transform.GetComponentInChildren<MeshCollider>().enabled = true;
         Player2.playerrb.constraints = RigidbodyConstraints.FreezeRotation;
 
-        if(GameManager.entered_scene != "MainSite")
-        {
-            RewardUI.rewardUI_show = 1;
-            SceneManager.LoadScene("MainSite");
-        }
-        else if (GameManager.entered_scene != "Root")
-        {
-            RewardUI.rewardUI_show = 1;
-        }
+        RewardUI.rewardUI_show = 1;
+        travel.Revive();
 
         GameManager.Coins.Spend(DeathPenalty);
         GameObject.Find("CoinText").GetComponent<TextMeshProUGUI>().text =
             GameManager.Coins.Amount.ToString();
         Player2.Hp.SetCurrent(Player2.Hp.Max * RevivePercent / 100);
         Player2.RefreshHpView();
-        transform.position = new Vector3(-2, 0.65f, -2);
-
     }
 
 }

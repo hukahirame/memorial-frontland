@@ -7,6 +7,14 @@ using TMPro;
 
 public class QuestButton : MonoBehaviour
 {
+    /// <summary>今いる場所。生成した QuestManager が渡す</summary>
+    private Whereabouts whereabouts;
+
+    public void Bind(Whereabouts whereabouts)
+    {
+        this.whereabouts = whereabouts;
+    }
+
     void Start()
     {
         if (gameObject.name.IndexOf("(Clone)") != -1) gameObject.name = gameObject.name.Substring(0, gameObject.name.Length - 7); //(Clone)除去
@@ -31,7 +39,7 @@ public class QuestButton : MonoBehaviour
         }
 
 
-        if (GameManager.entered_scene.IndexOf("Root") != -1) //根源内
+        if (whereabouts != null && whereabouts.IsInRoot) //根源内
         {
             if (s.text == "非受注")
             {
@@ -51,9 +59,8 @@ public class QuestButton : MonoBehaviour
             GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("クエストを受注しました");
         }
 
-       // if (GameManager.entered_scene.IndexOf("Root") == -1) return;
        // transform.parent.GetComponent<QuestManager>().StartQuest(); //根源内受注用
-    
+
 
     }
     private void Alert()

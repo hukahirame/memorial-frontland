@@ -1,12 +1,23 @@
-﻿using UnityEngine;
-using UnityEngine.SceneManagement;
+﻿using MemorialFloor.Game;
+using UnityEngine;
 using System.IO;
-using System.Collections;
 
 public class SaveSystem : MonoBehaviour
 {
+    [SerializeField] private AreaTravel travel;
+    [SerializeField] private PlacedObjects placed;
+
     private string filePath;
     public SaveData savedata;
+
+    /// <summary>読み込んだ保存を、最初に場所へ着いたときに戻す</summary>
+    private bool restorePending;
+
+    /// <summary>保存してあった場所。保存が無ければ null</summary>
+    public string SavedAreaId
+    {
+        get { return restorePending ? savedata.entered_scene : null; }
+    }
 
     void Awake()
     {
@@ -16,13 +27,18 @@ public class SaveSystem : MonoBehaviour
         if (File.Exists(filePath)) Load();
     }
 
+    private void OnDestroy()
+    {
+        travel.Entered -= Restore;
+    }
+
     //Domain 分割の間はセーブを止めている。Save() は残してあるので呼べば動く
     //再開するときは Space を使わないこと。Player2 のジャンプと同じキーで、
     //ジャンプのたびに保存されていた（Player2.cs の Jump も GetKeyUp(Space)）
 
     public void Save()
     {
-        savedata.SyncStatic();
+        savedata.SyncStatic(travel.Where, placed);
 
         string json = JsonUtility.ToJson(savedata);
         using (StreamWriter streamWriter = new StreamWriter(filePath))
@@ -31,34 +47,26 @@ public class SaveSystem : MonoBehaviour
         }
     }
 
-    public void Load()
+    /// <summary>起動時に1度だけ。場所の移動は始める側が SavedAreaId を見て行う</summary>
+    private void Load()
     {
-        if (File.Exists(filePath))
+        using (StreamReader streamReader = new StreamReader(filePath))
         {
-            using (StreamReader streamReader = new StreamReader(filePath))
-            {
-                string data = streamReader.ReadToEnd();
-                savedata = JsonUtility.FromJson<SaveData>(data);
-            }
-
-            //既に目的のシーンにいる場合は読み直さない。読み直すと Awake が再入して無限ループになる
-            if (SceneManager.GetActiveScene().name != savedata.entered_scene)
-                SceneManager.LoadScene(savedata.entered_scene);
-            StartCoroutine(Load2());
+            savedata = JsonUtility.FromJson<SaveData>(streamReader.ReadToEnd());
         }
+
+        savedata.LoadPlacements(placed.Ledger);
+
+        restorePending = true;
+        travel.Entered += Restore;
     }
 
-    IEnumerator Load2()
+    private void Restore(Area area)
     {
-        yield return new WaitUntil(() => SceneManager.GetActiveScene().isLoaded); //シーンロードまで待機
+        travel.Entered -= Restore;
+        restorePending = false;
 
         savedata.LoadStatic();
-
-        for (int i = 0; i < savedata.saveObjects.Count; i++) //savedata側で実行できないLoad処理の残り
-        {
-            var obj = Instantiate((GameObject)Resources.Load(savedata.saveObjects[i]), savedata.saveObjectsPos[i], Quaternion.identity);
-            obj.name = obj.name.Replace("(Clone)", "");
-        }
     }
 
 }

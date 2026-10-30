@@ -36,6 +36,14 @@ AddResult.Outcome.get : AddOutcome
 AddResult.SlotIndex.get : int
 AddResult.Stock.get : int
 
+enum AreaKind
+AreaKind.Base = 0
+AreaKind.Root = 1
+
+enum Arrival
+Arrival.Entrance = 0
+Arrival.Home = 1
+
 enum AttackKind
 AttackKind.Slash = 1
 AttackKind.Step = 2
@@ -103,6 +111,10 @@ Equipment.Knockback.get : float
 const Equipment.UnarmedAttack : int
 Equipment.Unequip() : void
 Equipment.Wear(int) : bool
+
+enum ExitKind
+ExitKind.ToBase = 0
+ExitKind.ToOrderedRoot = 1
 
 static class FallRule
 static FallRule.IsOutOfField(float) : bool
@@ -191,6 +203,21 @@ Nudge.ctor(float, float)
 Nudge.None.get : bool
 Nudge.X.get : float
 Nudge.Z.get : float
+
+readonly struct Placement
+Placement.ctor()
+Placement.ctor(string, float, float, float)
+Placement.ItemId.get : string
+Placement.X.get : float
+Placement.Y.get : float
+Placement.Z.get : float
+
+sealed class PlacementLedger
+PlacementLedger.ctor()
+PlacementLedger.Areas.get : IEnumerable<string>
+PlacementLedger.Clear() : void
+PlacementLedger.In(string) : IReadOnlyList<Placement>
+PlacementLedger.Record(string, IEnumerable<Placement>) : void
 
 sealed class Quest
 Quest.ctor(string, string, string, int, IReadOnlyList<Reward>)
@@ -288,6 +315,14 @@ RootRegistry.Count.get : int
 RootRegistry.Find(string) : Root
 RootRegistry.TryAdd(Root) : bool
 
+readonly struct Route
+Route.ctor()
+Route.AreaId.get : string
+Route.Arrival.get : Arrival
+Route.IsRefused.get : bool
+static Route.Refused.get : Route
+static Route.To(string, Arrival) : Route
+
 static class SpawnRule
 const SpawnRule.CalmPerDefeat : int
 const SpawnRule.CrowdPercentPerEnemy : int
@@ -298,6 +333,14 @@ const SpawnRule.SuppressProgress : int
 const SpawnRule.WeakenProgress : int
 const SpawnRule.WeakenRatio : float
 
+static class TravelRule
+static TravelRule.AreaOfRoot(string) : string
+const TravelRule.BaseAreaId : string
+static TravelRule.Begin(string) : Route
+static TravelRule.Revive.get : Route
+static TravelRule.RootOfArea(string, AreaKind) : string
+static TravelRule.Through(ExitKind, Quest) : Route
+
 sealed class Wallet
 Wallet.ctor()
 Wallet.Add(int) : void
@@ -305,3 +348,13 @@ Wallet.Amount.get : int
 Wallet.CanAfford(int) : bool
 Wallet.SetAmount(int) : void
 Wallet.Spend(int) : bool
+
+sealed class Whereabouts
+Whereabouts.ctor()
+Whereabouts.AreaId.get : string
+Whereabouts.Arrive(string, AreaKind) : void
+Whereabouts.HasArrived.get : bool
+Whereabouts.IsInBase.get : bool
+Whereabouts.IsInRoot.get : bool
+Whereabouts.Kind.get : AreaKind
+Whereabouts.RootId.get : string

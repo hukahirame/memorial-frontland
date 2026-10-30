@@ -35,22 +35,13 @@ public class Player2 : MonoBehaviour
     [SerializeField] AudioSource footstep;
     public static AudioSource tempaudio;
     public Allmaity allmaity;
-    //private static bool PL_singleton;
+    [SerializeField] private AreaTravel travel;
     private bool ATK_singleton = false;
 
     void Start()
     {
         playerrb = GetComponent<Rigidbody>();
         BindHpView(GameObject.FindWithTag("HpSlider").GetComponent<Slider>());
-        DontDestroyOnLoad(gameObject);
-
-        /* if (PL_singleton == false)
-         {
-             DontDestroyOnLoad(gameObject);
-             PL_singleton = true;
-         }
-         else Destroy(gameObject);
-        */
     }
 
     void Update()
@@ -95,7 +86,7 @@ public class Player2 : MonoBehaviour
             if (!nudge.None) playerrb.linearVelocity = new Vector3(nudge.X, 0, nudge.Z) * 0.5f;
         }
 
-        if (cool == false)//この中は停止可能
+        if (cool == false && !travel.IsTraveling)//この中は停止可能
         {
             if (!atk_mode)
             {
@@ -153,9 +144,9 @@ public class Player2 : MonoBehaviour
         {
             allmaity.Prepare_Button("CraftInventory");
         }
-        if(other.gameObject.tag == "SceneTransition")
+        if (other.TryGetComponent(out Exit exit))
         {
-            allmaity.Prepare_Button(other.gameObject.name); // 対象objの先頭"ST_"が命名規則
+            EnterExit(exit);
         }
     }
 
@@ -165,10 +156,15 @@ public class Player2 : MonoBehaviour
         {
             allmaity.Trash_Button("CraftInventory");
         }
-        if (other.gameObject.tag == "SceneTransition")
-        {
-            allmaity.Trash_Button(other.gameObject.name); // 対象objの先頭"ST_"が命名規則
-        }
+    }
+
+    /// <summary>出口に入ったら移る。受注が無くて根源へ行けないときは文字だけ出す</summary>
+    private void EnterExit(Exit exit)
+    {
+        Quest ordered = QuestManager.Quests.Find(QuestManager.ordered_id);
+        if (travel.Through(exit.Kind, ordered)) return;
+
+        GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("受注されたクエストがありません");
     }
 
     public void HpChange()

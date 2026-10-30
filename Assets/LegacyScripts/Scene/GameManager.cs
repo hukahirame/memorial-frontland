@@ -1,10 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using MemorialFloor.Domain;
+﻿using MemorialFloor.Domain;
+using MemorialFloor.Game;
 using UnityEngine;
-using System.IO;
 using TMPro;
-using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -14,10 +11,8 @@ public class GameManager : MonoBehaviour
     public TextAsset itemdata;
 
     [SerializeField] Transform maincanvas;
-    [SerializeField] GameObject origin_player;
-    private static bool GM_singleton = false;
-    private static bool P_singleton = false;
-    public static string entered_scene = "MainSite";
+    [SerializeField] private AreaTravel travel;
+    [SerializeField] private SaveSystem saveSystem;
 
     /// <summary>所持金。所有者はここ1つ（QuestManager.Quests と同じ形）</summary>
     public static readonly Wallet Coins = new Wallet();
@@ -27,31 +22,15 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        if (GM_singleton == false)
-        {
-            DontDestroyOnLoad(gameObject);
-            DontDestroyOnLoad(maincanvas);
-            GM_singleton = true;
-
-            Coins.SetAmount(startingCoins);
-            maincanvas.Find("Status_Gold").Find("CoinText")
-                      .GetComponent<TextMeshProUGUI>().text = Coins.Amount.ToString();
-        }
-        else
-        {
-            Destroy(maincanvas.gameObject);
-            Destroy(gameObject);
-        }
-
-        if(P_singleton == false) { origin_player.SetActive(true); P_singleton = true; }
+        Coins.SetAmount(startingCoins);
+        maincanvas.Find("Status_Gold").Find("CoinText")
+                  .GetComponent<TextMeshProUGUI>().text = Coins.Amount.ToString();
 
         Items.Load(itemdata.text);
     }
 
-    public static void SceneTrans(string target)
+    void Start()
     {
-        GameObject.FindWithTag("SceneFinisher").GetComponent<SceneFinisher>().SceneFinish();
-        entered_scene = target;
-        SceneManager.LoadScene(target);
+        travel.Begin(saveSystem.SavedAreaId);
     }
 }

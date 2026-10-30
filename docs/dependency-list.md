@@ -16,8 +16,8 @@
 | 🟦 `Day` | **0** | **1** |
 | 🟦 `Inventory` | **0** | **6** |
 | 🟦 `OutField` | **0** | **3** |
-| 🟦 `Quest` | **0** | **3** |
-| 🟦 `Roots` | **0** | **6** |
+| 🟦 `Quest` | **0** | **5** |
+| 🟦 `Roots` | **0** | **7** |
 | 🟦 `Wallet` | **0** | **1** |
 | 🟩 `Inventory` | **0** | **2** |
 | 🟩 `Staging` | **0** | **6** |
@@ -26,16 +26,18 @@
 | 🟦 `Player` | **1** | **2** |
 | 🟩 `Craft` | **1** | **1** |
 | 🟩 `Enemy` | **1** | **2** |
-| 🟩 `OutField` | **2** | **2** |
-| 🟨 `Roots` | **4** | **5** |
-| 🟨 `Inventory` | **5** | **4** |
-| 🟨 `Save` | **5** | **2** |
+| 🟦 `Scene` | **2** | **5** |
+| 🟩 `OutField` | **2** | **3** |
+| 🟩 `Scene` | **2** | **6** |
+| 🟨 `Roots` | **5** | **5** |
 | 🟨 `Day` | **6** | **1** |
-| 🟨 `Quest` | **6** | **5** |
+| 🟨 `Inventory` | **6** | **4** |
 | 🟨 `Craft` | **7** | **0** |
-| 🟨 `Scene` | **8** | **7** |
-| 🟨 `Player` | **10** | **4** |
-| 🟨 `Enemy` | **12** | **3** |
+| 🟨 `Save` | **7** | **2** |
+| 🟨 `Quest` | **8** | **5** |
+| 🟨 `Enemy` | **11** | **3** |
+| 🟨 `Player` | **11** | **4** |
+| 🟨 `Scene` | **11** | **5** |
 
 ## 詳細
 
@@ -81,6 +83,8 @@
 
 ### 🟦Quest 📜 
 
+↓ 🟦 `Scene` **1** — Quest **1**  
+↓ 🟩 `Scene` **1** — Quest **1**  
 ↓ 🟨 `Day` **5** — Reward **3**, QuestKind **2**  
 ↓ 🟨 `Player` **1** — Quest **1**  
 ↓ 🟨 `Quest` **44** — QuestKind **19**, Quest **14**, Reward **8**, QuestRegistry **2**, QuestId **1**  
@@ -88,11 +92,23 @@
 ### 🟦Roots 🌳 
 
 ↓ 🟦 `Enemy` **2** — Root **2**  
+↓ 🟦 `Scene` **2** — Root **2**  
 ↓ 🟨 `Day` **1** — Root **1**  
 ↓ 🟨 `Enemy` **2** — Root **2**  
 ↓ 🟨 `Quest` **2** — Root **2**  
 ↓ 🟨 `Roots` **13** — AccumulationLevel **8**, Root **3**, RootRegistry **2**  
-↓ 🟨 `Scene` **1** — Root **1**  
+↓ 🟨 `Scene` **2** — Root **2**  
+
+### 🟦Scene 🚪 
+
+↑ 🟦 `Quest` **1** — Quest **1**  
+↑ 🟦 `Roots` **2** — Root **2**  
+
+↓ 🟩 `Scene` **26** — Arrival **6**, Placement **5**, ExitKind **3**, Route **3**, TravelRule **3**, AreaKind **2**, PlacementLedger **2**, Whereabouts **2**  
+↓ 🟨 `Quest` **2** — Whereabouts **2**  
+↓ 🟨 `Roots` **1** — AreaKind **1**  
+↓ 🟨 `Save` **8** — Placement **6**, PlacementLedger **1**, Whereabouts **1**  
+↓ 🟨 `Scene` **1** — AreaKind **1**  
 
 ### 🟦Wallet 💰 
 
@@ -123,6 +139,19 @@
 
 ↓ 🟨 `Enemy` **1** — Exposition **1**  
 ↓ 🟨 `Player` **1** — Exposition **1**  
+↓ 🟨 `Scene` **2** — Exposition **2**  
+
+### 🟩Scene 🚪 
+
+↑ 🟦 `Quest` **1** — Quest **1**  
+↑ 🟦 `Scene` **26** — Arrival **6**, Placement **5**, ExitKind **3**, Route **3**, TravelRule **3**, AreaKind **2**, PlacementLedger **2**, Whereabouts **2**  
+
+↓ 🟨 `Inventory` **1** — PlacedObjects **1**  
+↓ 🟨 `Player` **4** — AreaTravel **2**, Exit **2**  
+↓ 🟨 `Quest` **1** — AreaTravel **1**  
+↓ 🟨 `Roots` **2** — Area **2**  
+↓ 🟨 `Save` **5** — PlacedObjects **3**, Area **1**, AreaTravel **1**  
+↓ 🟨 `Scene` **5** — AreaTravel **3**, Area **2**  
 
 ### 🟩Staging 🎥 
 
@@ -167,7 +196,6 @@
 ↑ 🟨 `Quest` **2** — QuestManager **2**  
 ↑ 🟨 `Roots` **2** — RootsManager **2**  
 ↑ 🟨 `Save` **2** — SaveData **1**, SaveSystem **1**  
-↑ 🟨 `Scene` **3** — GameManager **2**, SceneStarter **1**  
 
 ↓ 🟨 `Player` **2** — OF_Spawner **1**, SpawnerCandidate **1**  
 ↓ 🟨 `Roots` **2** — MS_Spawner **1**, OF_Spawner **1**  
@@ -177,6 +205,7 @@
 
 ↑ 🟦 `Inventory` **22** — ItemSlot **6**, ItemUse **5**, Inventory **4**, ItemDefinition **3**, AddOutcome **2**, RemoveOutcome **2**  
 ↑ 🟩 `Inventory` **1** — IItemReceiver **1**  
+↑ 🟩 `Scene` **1** — PlacedObjects **1**  
 ↑ 🟩 `Staging` **2** — TempAudio **2**  
 ↑ 🟨 `Player` **5** — Player2 **4**, Weapon **1**  
 ↑ 🟨 `Scene` **3** — GameManager **3**  
@@ -193,38 +222,42 @@
 ↑ 🟦 `Quest` **1** — Quest **1**  
 ↑ 🟩 `Enemy` **1** — IDamageable **1**  
 ↑ 🟩 `OutField` **1** — Exposition **1**  
+↑ 🟩 `Scene` **4** — AreaTravel **2**, Exit **2**  
 ↑ 🟩 `Staging` **6** — TempAudio **4**, BigText **1**, MiddleText **1**  
 ↑ 🟨 `Enemy` **2** — OF_Spawner **1**, SpawnerCandidate **1**  
 ↑ 🟨 `Inventory` **1** — WeaponBox **1**  
-↑ 🟨 `Quest` **6** — QuestManager **4**, RewardUI **2**  
-↑ 🟨 `Scene` **5** — GameManager **5**  
+↑ 🟨 `Quest` **3** — QuestManager **2**, RewardUI **1**  
+↑ 🟨 `Scene` **2** — GameManager **2**  
 
 ↓ 🟨 `Enemy` **2** — Player2 **2**  
 ↓ 🟨 `Inventory` **5** — Player2 **4**, Weapon **1**  
 ↓ 🟨 `Save` **3** — Player2 **3**  
-↓ 🟨 `Scene` **5** — Player2 **5**  
+↓ 🟨 `Scene` **2** — Player2 **2**  
 
 ### 🟨Quest 📜 
 
 ↑ 🟦 `Quest` **44** — QuestKind **19**, Quest **14**, Reward **8**, QuestRegistry **2**, QuestId **1**  
 ↑ 🟦 `Roots` **2** — Root **2**  
+↑ 🟦 `Scene` **2** — Whereabouts **2**  
+↑ 🟩 `Scene` **1** — AreaTravel **1**  
 ↑ 🟩 `Staging` **5** — MiddleText **3**, BigText **2**  
 ↑ 🟨 `Inventory` **1** — PlayerInventory **1**  
 ↑ 🟨 `Roots` **3** — RootsManager **3**  
-↑ 🟨 `Scene` **5** — GameManager **5**  
+↑ 🟨 `Scene` **2** — GameManager **2**  
 
 ↓ 🟨 `Day` **3** — QuestManager **3**  
 ↓ 🟨 `Enemy` **2** — QuestManager **2**  
-↓ 🟨 `Player` **6** — QuestManager **4**, RewardUI **2**  
+↓ 🟨 `Player` **3** — QuestManager **2**, RewardUI **1**  
 ↓ 🟨 `Roots` **1** — QuestManager **1**  
 ↓ 🟨 `Scene` **3** — RewardUI **2**, QuestManager **1**  
 
 ### 🟨Roots 🌳 
 
 ↑ 🟦 `Roots` **13** — AccumulationLevel **8**, Root **3**, RootRegistry **2**  
+↑ 🟦 `Scene` **1** — AreaKind **1**  
+↑ 🟩 `Scene` **2** — Area **2**  
 ↑ 🟨 `Enemy` **2** — MS_Spawner **1**, OF_Spawner **1**  
 ↑ 🟨 `Quest` **1** — QuestManager **1**  
-↑ 🟨 `Scene` **1** — GameManager **1**  
 
 ↓ 🟨 `Craft` **1** — RootsManager **1**  
 ↓ 🟨 `Day` **2** — RootsManager **2**  
@@ -235,29 +268,32 @@
 ### 🟨Save 💾 
 
 ↑ 🟦 `Inventory` **3** — ItemSlot **3**  
+↑ 🟦 `Scene` **8** — Placement **6**, PlacementLedger **1**, Whereabouts **1**  
+↑ 🟩 `Scene` **5** — PlacedObjects **3**, Area **1**, AreaTravel **1**  
 ↑ 🟨 `Day` **2** — Sun2 **2**  
 ↑ 🟨 `Inventory` **4** — PlayerInventory **4**  
 ↑ 🟨 `Player` **3** — Player2 **3**  
-↑ 🟨 `Scene` **5** — GameManager **5**  
+↑ 🟨 `Scene` **3** — GameManager **3**  
 
 ↓ 🟨 `Enemy` **2** — SaveData **1**, SaveSystem **1**  
-↓ 🟨 `Scene` **4** — SaveData **2**, SaveSystem **2**  
+↓ 🟨 `Scene` **1** — SaveSystem **1**  
 
 ### 🟨Scene 🚪 
 
 ↑ 🟦 `Inventory` **2** — ItemCatalog **2**  
-↑ 🟦 `Roots` **1** — Root **1**  
+↑ 🟦 `Roots` **2** — Root **2**  
+↑ 🟦 `Scene` **1** — AreaKind **1**  
 ↑ 🟦 `Wallet` **2** — Wallet **2**  
+↑ 🟩 `OutField` **2** — Exposition **2**  
+↑ 🟩 `Scene` **5** — AreaTravel **3**, Area **2**  
 ↑ 🟨 `Enemy` **1** — OF_Spawner **1**  
-↑ 🟨 `Player` **5** — Player2 **5**  
+↑ 🟨 `Player` **2** — Player2 **2**  
 ↑ 🟨 `Quest` **3** — RewardUI **2**, QuestManager **1**  
 ↑ 🟨 `Roots` **2** — RootsManager **2**  
-↑ 🟨 `Save` **4** — SaveData **2**, SaveSystem **2**  
+↑ 🟨 `Save` **1** — SaveSystem **1**  
 
 ↓ 🟨 `Craft` **1** — GameManager **1**  
-↓ 🟨 `Enemy` **3** — GameManager **2**, SceneStarter **1**  
 ↓ 🟨 `Inventory` **3** — GameManager **3**  
-↓ 🟨 `Player` **5** — GameManager **5**  
-↓ 🟨 `Quest` **5** — GameManager **5**  
-↓ 🟨 `Roots` **1** — GameManager **1**  
-↓ 🟨 `Save` **5** — GameManager **5**  
+↓ 🟨 `Player` **2** — GameManager **2**  
+↓ 🟨 `Quest` **2** — GameManager **2**  
+↓ 🟨 `Save` **3** — GameManager **3**  

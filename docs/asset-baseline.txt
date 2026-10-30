@@ -60,11 +60,11 @@ Assets/_Project/Resources/Unit_x0.prefab cb158dbf806d2dc4d8058e88952907c1
 Assets/_Project/Resources/Unit_xa.prefab cb158dbf806d2dc4d8058e88952907c1
 Assets/_Project/Resources/Unit_xn.prefab cb158dbf806d2dc4d8058e88952907c1
 Assets/_Project/Resources/WoodChestset.prefab b4b88cad7803e6d43ae689edc4b728e7
-Assets/_Project/Scenes/MainSite.unity 049d7022f9a74954b97a81e1b726e88f
+Assets/_Project/Scenes/Core.unity 049d7022f9a74954b97a81e1b726e88f
+Assets/_Project/Scenes/Core.unity 4df6cead6fe581e47bc1753b0c915ff2
+Assets/_Project/Scenes/Core.unity d5f4a4d94bb1882498a3367457e7297f
+Assets/_Project/Scenes/Core.unity e36d390f5981abf41906b22efc51d3d7
 Assets/_Project/Scenes/MainSite.unity 198072d091945ea42b7f9a69bfa39ae5
-Assets/_Project/Scenes/MainSite.unity 4df6cead6fe581e47bc1753b0c915ff2
-Assets/_Project/Scenes/MainSite.unity d5f4a4d94bb1882498a3367457e7297f
-Assets/_Project/Scenes/MainSite.unity e36d390f5981abf41906b22efc51d3d7
 Assets/_Project/Scenes/Root1.unity 198072d091945ea42b7f9a69bfa39ae5
 Assets/_Project/Scenes/Root2.unity 198072d091945ea42b7f9a69bfa39ae5
 Assets/_Project/Scenes/Title.unity 198072d091945ea42b7f9a69bfa39ae5

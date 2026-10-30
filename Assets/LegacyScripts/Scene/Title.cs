@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using MemorialFloor.Game;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
@@ -24,6 +25,6 @@ public class Title : MonoBehaviour
 
     public void Load()
     {
-        SceneManager.LoadScene("MainSite");
+        SceneManager.LoadScene(AreaTravel.CoreScene);
     }
 }

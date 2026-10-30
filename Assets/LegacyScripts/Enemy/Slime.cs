@@ -32,6 +32,15 @@ public class Slime : MonoBehaviour, IDamageable
     private bool move = false;
     private Player2 p;
 
+    /// <summary>湧いた根源の Id。根源の外で湧いたものは null</summary>
+    private string homeRootId;
+
+    /// <summary>湧かせた側が、どの根源の敵かを渡す</summary>
+    public void SetHome(string rootId)
+    {
+        homeRootId = rootId;
+    }
+
     /// <summary>上限と初期値は prefab の Slider が持つ。以後 Slider は表示</summary>
     void Awake()
     {
@@ -108,7 +117,7 @@ public class Slime : MonoBehaviour, IDamageable
             d.GetComponent<Rigidbody>().AddForce(v, ForceMode.Impulse);
         }
         GameObject.FindWithTag("QuestManager").GetComponent<QuestManager>().SyncQuest(gameObject.name);
-        Root root = RootsManager.Roots.Find(GameManager.entered_scene);
+        Root root = RootsManager.Roots.Find(homeRootId);
         if (root != null) root.Calm(SpawnRule.CalmPerDefeat);
         Destroy(gameObject);
     }
