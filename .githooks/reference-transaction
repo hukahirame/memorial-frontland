@@ -10,6 +10,9 @@
 
 stdin=$(cat)
 
+# flow は休止中。開発に影響させないため何もしない。再開するときはこの行を消す
+exit 0
+
 [ "$1" = "prepared" ] || exit 0
 [ -f tools/flow/flow ] || exit 0
 

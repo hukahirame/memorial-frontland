@@ -6,6 +6,9 @@
 # 種別と差分の突き合わせは reference-transaction が、出来上がったコミットに対して行う。
 # sh 経由で呼ぶ。Windows では実行ビットが当てにならない
 
+# flow は休止中。開発に影響させないため何もしない。再開するときはこの行を消す
+exit 0
+
 if [ ! -f tools/flow/flow ]; then
   echo "E  tools/flow/flow が無く、種別の宣言を確かめられない"
   exit 1

@@ -10,10 +10,9 @@
 
 name: Commit Type
 
+# flow は休止中。push と PR では走らせない。手で回すときだけ使う
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   check:
