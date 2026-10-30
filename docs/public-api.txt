@@ -20,6 +20,7 @@ const ActionRule.JumpSeconds : float
 const ActionRule.MovePercent : int
 const ActionRule.MoveSecondsMax : float
 const ActionRule.MoveSecondsMin : float
+const ActionRule.StaggerSeconds : float
 const ActionRule.WaitPercent : int
 const ActionRule.WaitSecondsMax : float
 const ActionRule.WaitSecondsMin : float
@@ -53,6 +54,14 @@ static class AttackRule
 static AttackRule.Choose(float, float, float) : AttackKind
 const AttackRule.Threshold : float
 static AttackRule.ThrustDirection(float) : int
+
+static class AttackTiming
+const AttackTiming.ActiveSeconds : float
+const AttackTiming.BufferSeconds : float
+static AttackTiming.IsBuffered(float, float) : bool
+const AttackTiming.StepSeconds : float
+const AttackTiming.SwingSeconds : float
+const AttackTiming.WindupSeconds : float
 
 sealed class BaseRaid
 BaseRaid.ctor()
@@ -118,6 +127,7 @@ Equipment.IsUnarmed.get : bool
 Equipment.ItemId.get : string
 Equipment.Knockback.get : float
 const Equipment.UnarmedAttack : int
+const Equipment.UnarmedKnockback : float
 Equipment.Unequip() : void
 Equipment.Wear(int) : bool
 
@@ -142,6 +152,13 @@ FieldBounds.MaxZ.get : float
 FieldBounds.MinX.get : float
 FieldBounds.MinZ.get : float
 FieldBounds.PushBack(float, float) : Nudge
+
+readonly struct Heading
+Heading.ctor()
+Heading.ctor(float, float)
+Heading.IsStill.get : bool
+Heading.X.get : float
+Heading.Z.get : float
 
 sealed class Health
 Health.ctor()
@@ -173,6 +190,12 @@ Inventory.CountOf(string) : int
 const Inventory.EmptySlot : string
 Inventory.Remove(string) : RemoveResult
 Inventory.SlotCount.get : int
+
+sealed class Invulnerability
+Invulnerability.ctor()
+Invulnerability.Begin(float) : void
+Invulnerability.IsActive(float) : bool
+const Invulnerability.Seconds : float
 
 sealed class ItemCatalog
 ItemCatalog.ctor()
@@ -206,6 +229,14 @@ ItemUse.Eat = 1
 ItemUse.Equip = 2
 ItemUse.Place = 0
 
+static class KnockbackRule
+const KnockbackRule.LiftRatio : float
+static KnockbackRule.Velocity(float, float, float, float, float, float) : Push
+
+static class MoveRule
+const MoveRule.DeadZone : float
+static MoveRule.Direction(float, float) : Heading
+
 readonly struct Nudge
 Nudge.ctor()
 Nudge.ctor(float, float)
@@ -227,6 +258,13 @@ PlacementLedger.Areas.get : IEnumerable<string>
 PlacementLedger.Clear() : void
 PlacementLedger.In(string) : IReadOnlyList<Placement>
 PlacementLedger.Record(string, IEnumerable<Placement>) : void
+
+readonly struct Push
+Push.ctor()
+Push.ctor(float, float, float)
+Push.X.get : float
+Push.Y.get : float
+Push.Z.get : float
 
 sealed class Quest
 Quest.ctor(string, string, string, int, IReadOnlyList<Reward>)

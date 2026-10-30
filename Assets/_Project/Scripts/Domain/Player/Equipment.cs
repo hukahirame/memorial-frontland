@@ -12,13 +12,16 @@
         /// </summary>
         public const int UnarmedAttack = 40;
 
+        /// <summary>何も装備していないときの吹き飛ばし</summary>
+        public const float UnarmedKnockback = 2f;
+
         /// <summary>装備しているものの ID。素手なら空文字</summary>
         public string ItemId { get; private set; }
 
         /// <summary>いま振っているものの攻撃力</summary>
         public int Attack { get; private set; }
 
-        /// <summary>当たった相手を吹き飛ばす強さ。素手では 0</summary>
+        /// <summary>当たった相手を吹き飛ばす強さ</summary>
         public float Knockback { get; private set; }
 
         /// <summary>耐久。耐久の概念を持たない武器と素手では null</summary>
@@ -68,7 +71,7 @@
         {
             ItemId = string.Empty;
             Attack = UnarmedAttack;
-            Knockback = 0f;
+            Knockback = UnarmedKnockback;
             Durability = null;
         }
 

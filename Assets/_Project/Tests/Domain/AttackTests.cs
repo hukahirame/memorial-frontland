@@ -52,4 +52,80 @@ namespace MemorialFloor.Domain.Tests
             Assert.AreEqual(0, AttackRule.ThrustDirection(AttackRule.Threshold));
         }
     }
+
+    public class AttackTimingTests
+    {
+        [Test]
+        public void 当たる時間は振り終わる前に終わる()
+        {
+            Assert.Less(AttackTiming.WindupSeconds + AttackTiming.ActiveSeconds, AttackTiming.SwingSeconds);
+        }
+
+        [Test]
+        public void 振りの終わり際に来た入力は預かる()
+        {
+            float duration = AttackTiming.SwingSeconds;
+
+            Assert.IsTrue(AttackTiming.IsBuffered(duration - 0.1f, duration));
+            Assert.IsTrue(AttackTiming.IsBuffered(duration - AttackTiming.BufferSeconds, duration));
+        }
+
+        [Test]
+        public void 振りの序盤に来た入力は捨てる()
+        {
+            float duration = AttackTiming.SwingSeconds;
+
+            Assert.IsFalse(AttackTiming.IsBuffered(0f, duration));
+            Assert.IsFalse(AttackTiming.IsBuffered(duration - AttackTiming.BufferSeconds - 0.01f, duration));
+        }
+    }
+
+    public class KnockbackRuleTests
+    {
+        private const float Right = 1f;
+        private const float Left = -1f;
+
+        [Test]
+        public void 当てた側から相手へ向かう向きに飛ぶ()
+        {
+            Push push = KnockbackRule.Velocity(0f, 0f, 3f, 4f, 5f, Right);
+
+            Assert.AreEqual(3f, push.X, 1e-4f);
+            Assert.AreEqual(4f, push.Z, 1e-4f);
+        }
+
+        [Test]
+        public void 左にいる相手は左へ飛ぶ()
+        {
+            Push push = KnockbackRule.Velocity(0f, 0f, -2f, 0f, 3f, Right);
+
+            Assert.AreEqual(-3f, push.X, 1e-4f);
+            Assert.AreEqual(0f, push.Z, 1e-4f);
+        }
+
+        [Test]
+        public void 強さの一部ぶん浮く()
+        {
+            Push push = KnockbackRule.Velocity(0f, 0f, 1f, 0f, 3f, Right);
+
+            Assert.AreEqual(3f * KnockbackRule.LiftRatio, push.Y, 1e-4f);
+        }
+
+        [Test]
+        public void 重なっていたら当てた側の向きへ飛ぶ()
+        {
+            Assert.AreEqual(2f, KnockbackRule.Velocity(1f, 1f, 1f, 1f, 2f, Right).X, 1e-4f);
+            Assert.AreEqual(-2f, KnockbackRule.Velocity(1f, 1f, 1f, 1f, 2f, Left).X, 1e-4f);
+        }
+
+        [Test]
+        public void 強さが0なら飛ばない()
+        {
+            Push push = KnockbackRule.Velocity(0f, 0f, 1f, 0f, 0f, Right);
+
+            Assert.AreEqual(0f, push.X);
+            Assert.AreEqual(0f, push.Y);
+            Assert.AreEqual(0f, push.Z);
+        }
+    }
 }

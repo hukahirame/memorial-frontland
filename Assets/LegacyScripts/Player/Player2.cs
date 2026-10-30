@@ -38,6 +38,18 @@ public class Player2 : MonoBehaviour
     [SerializeField] private AreaTravel travel;
     private bool ATK_singleton = false;
 
+    /// <summary>被弾したあとの無敵。点滅もこの間だけ続く</summary>
+    private readonly Invulnerability invulnerability = new Invulnerability();
+
+    /// <summary>出ている攻撃が始まった時刻と全体の長さ。先行入力を受けるかの判定に使う</summary>
+    private float attackStartedAt;
+    private float attackDuration;
+
+    /// <summary>先行入力。出ている攻撃が終わったら、この倒し方で次を出す</summary>
+    private bool hasBufferedAttack;
+    private float bufferedHorizontal;
+    private float bufferedVertical;
+
     void Start()
     {
         playerrb = GetComponent<Rigidbody>();
@@ -111,9 +123,10 @@ public class Player2 : MonoBehaviour
             {
             
             }
-            Vector3 temp = new Vector3(horizontalKey, 0, verticalKey).normalized;
+            Heading heading = MoveRule.Direction(horizontalKey, verticalKey);
+            Vector3 temp = new Vector3(heading.X, 0, heading.Z);
 
-            if (temp.magnitude > 0.2)//足音
+            if (!heading.IsStill)//足音
             {
                 if(on_ground ||(character.GetState() == CharacterState.Idle))  character.SetState(CharacterState.Walk);
                 if (!footstep.loop)  footstep.loop = true;
@@ -201,6 +214,9 @@ public class Player2 : MonoBehaviour
 
     public void Player_Hurt(int damage, Vector3 direction) // 現状、ノックバックはほぼ固定
     {
+        if (Hp.IsDead || invulnerability.IsActive(Time.time)) return;
+
+        invulnerability.Begin(Time.time);
         Hp.Take(damage);
         RefreshHpView();
         playerrb.AddForce(direction.normalized * 100, ForceMode.Impulse);
@@ -221,7 +237,7 @@ public class Player2 : MonoBehaviour
     {
         Wink.play_eyeclose = true;
         var renderers = GetComponentsInChildren<SpriteRenderer>();
-        for(int i = 0; i < 2; i++)
+        while (invulnerability.IsActive(Time.time))
         {
             foreach (var renderer in renderers) renderer.color = new Color(1, 0.2f, 0.2f, renderer.color.a);
             yield return new WaitForSeconds(0.3f);
@@ -243,38 +259,68 @@ public class Player2 : MonoBehaviour
     }
     public IEnumerator Attack()
     {
-        if (ATK_singleton) yield break;
+        //離した瞬間の倒し方。呼んだ側はこの直後にスティックを 0 に戻す
+        float horizontal = joystick_atk.Horizontal;
+        float vertical = joystick_atk.Vertical;
+
+        if (ATK_singleton)
+        {
+            if (AttackTiming.IsBuffered(Time.time - attackStartedAt, attackDuration))
+            {
+                hasBufferedAttack = true;
+                bufferedHorizontal = horizontal;
+                bufferedVertical = vertical;
+            }
+            yield break;
+        }
         ATK_singleton = true;
+
+        while (true)
+        {
+            yield return Swing(horizontal, vertical);
+
+            if (!hasBufferedAttack) break;
+            hasBufferedAttack = false;
+            horizontal = bufferedHorizontal;
+            vertical = bufferedVertical;
+        }
+
+        AttackModeFinish();
+    }
+
+    private IEnumerator Swing(float horizontal, float vertical)
+    {
+        atk_mode = true;
+        attackStartedAt = Time.time;
         SideJab sj = GetComponentInChildren<SideJab>();
 
+        AttackKind kind = AttackRule.Choose(horizontal, vertical, sj.transform.localScale.x);
 
-        AttackKind kind = AttackRule.Choose(
-            joystick_atk.Horizontal, joystick_atk.Vertical, sj.transform.localScale.x);
+        if (kind == AttackKind.Step)
+        {
+            attackDuration = AttackTiming.StepSeconds;
+            playerrb.AddForce(new Vector3(horizontal * 3, 1, vertical * 3) * playerrb.mass, ForceMode.Impulse);
+            yield return new WaitForSeconds(AttackTiming.StepSeconds);
+            yield break;
+        }
 
+        attackDuration = AttackTiming.SwingSeconds;
         if (kind == AttackKind.Thrust)
         {
-            int swing = AttackRule.ThrustDirection(joystick_atk.Vertical);
+            int swing = AttackRule.ThrustDirection(vertical);
             if (swing != 0) StartCoroutine(sj.SideJabPlay(swing));
             character.Jab();
         }
-        else if (kind == AttackKind.Slash)
+        else
         {
             character.Slash();
         }
-        else
-        {
-            playerrb.AddForce(new Vector3(joystick_atk.Horizontal * 3, 1, joystick_atk.Vertical * 3) * playerrb.mass, ForceMode.Impulse);
-            yield return new WaitForSeconds(0.8f);
-            AttackModeFinish();
-            yield break;
-        }
-            TempAudio.TempAudioPlay("Fantasy_Game_Attack_Skill_Knife_Throw_B");
+        TempAudio.TempAudioPlay("Fantasy_Game_Attack_Skill_Knife_Throw_B");
 
-        StartCoroutine(weapon.GetComponent<Weapon>().AttackWeaponProcess(0.7f));
-        //while (animator.GetCurrentAnimatorStateInfo(0).IsName("Slash")) { yield return null;}
-        yield return new WaitForSeconds(0.7f);
-
-        AttackModeFinish();
+        //当たるのは振りの打点のあたりだけ
+        yield return new WaitForSeconds(AttackTiming.WindupSeconds);
+        StartCoroutine(weapon.GetComponent<Weapon>().AttackWeaponProcess(AttackTiming.ActiveSeconds));
+        yield return new WaitForSeconds(AttackTiming.SwingSeconds - AttackTiming.WindupSeconds);
     }
 
 }

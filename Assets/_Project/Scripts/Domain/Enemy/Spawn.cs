@@ -51,6 +51,9 @@
         /// <summary>跳躍のあと選び直すまでの秒数。着地を待つので幅を持たせない</summary>
         public const float JumpSeconds = 1.2f;
 
+        /// <summary>攻撃を受けてから自分で動き出すまでの秒数。この間は吹き飛ばしに任せる</summary>
+        public const float StaggerSeconds = 0.4f;
+
         /// <summary>残りは跳躍</summary>
         public static EnemyAction Choose(IRandom random)
         {

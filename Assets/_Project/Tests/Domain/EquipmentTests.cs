@@ -28,7 +28,7 @@ namespace MemorialFloor.Domain.Tests
 
             Assert.IsTrue(equipment.IsUnarmed);
             Assert.AreEqual(Equipment.UnarmedAttack, equipment.Attack);
-            Assert.AreEqual(0f, equipment.Knockback);
+            Assert.AreEqual(Equipment.UnarmedKnockback, equipment.Knockback);
         }
 
         [Test]
@@ -64,7 +64,7 @@ namespace MemorialFloor.Domain.Tests
 
             Assert.IsTrue(equipment.IsUnarmed);
             Assert.AreEqual(Equipment.UnarmedAttack, equipment.Attack);
-            Assert.AreEqual(0f, equipment.Knockback);
+            Assert.AreEqual(Equipment.UnarmedKnockback, equipment.Knockback);
             Assert.IsNull(equipment.Durability);
         }
 

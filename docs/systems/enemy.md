@@ -35,6 +35,9 @@ tunables: []
 
 - 体力の正典は Domain の `Health`。Slider は表示
 - ダメージを与える側は `IDamageable` 越しにしか触らない。相手の中身を知らない
+- 攻撃を受けると吹き飛ばしの速さで飛ばされ、0.4 秒は自分で動かない。0.1 秒白く光る
+- 倒れると膨らんでから縮み、0.25 秒で消える。倒した一撃のダメージ表示は 1 秒残る。
+  消えるまでの間は攻撃が当たらない
 
 ## 相互作用
 
@@ -89,6 +92,9 @@ tunables: []
 | 移動を続ける秒数の下限 | 0.5 | `ActionRule.MoveSecondsMin` |
 | 移動を続ける秒数の上限 | 2.5 | `ActionRule.MoveSecondsMax` |
 | 跳躍のあと選び直すまでの秒数 | 1.2 | `ActionRule.JumpSeconds` |
+| 攻撃を受けて自分で動かない秒数 | 0.4 | `ActionRule.StaggerSeconds` |
+| 当たって白く光る秒数 | 0.1 | `Slime.FlashSeconds` |
+| 倒れて消えるまでの秒数 | 0.25 | `Slime.BurstSeconds` |
 | 場外とみなす高さ | -10 | `FallRule.OutOfFieldY` |
 | 敵ごとの落とすものと割合 | prefab を見る | 敵 prefab の `DropChance` |
 | 敵の攻撃力 | prefab を見る | 敵 prefab の `Slime.power` |

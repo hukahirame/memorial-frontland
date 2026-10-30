@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MemorialFloor.Game;
 using UnityEngine;
@@ -7,6 +8,18 @@ using MemorialFloor.Domain;
 
 public class Slime : MonoBehaviour, IDamageable
 {
+    /// <summary>当たって白く光る長さ。止めた時間の中でも見えるよう実時間で数える</summary>
+    private const float FlashSeconds = 0.1f;
+
+    /// <summary>倒れてから弾けて消えるまでの秒数</summary>
+    private const float BurstSeconds = 0.25f;
+
+    /// <summary>弾ける前に膨らむ大きさの倍率</summary>
+    private const float BurstSwell = 1.3f;
+
+    /// <summary>倒した一撃のダメージ表示を、本体が消えたあとも残す秒数</summary>
+    private const float NumberLingerSeconds = 1f;
+
     public float speed;  //種類により変わるが、基本初期値はここで決める
     public float power;
     public int Level;
@@ -32,6 +45,13 @@ public class Slime : MonoBehaviour, IDamageable
     private bool move = false;
     private Player2 p;
 
+    /// <summary>この時刻までは吹き飛ばしに任せ、自分では動かない</summary>
+    private float staggerUntil;
+
+    private SpriteRenderer sprite;
+    private Material baseMaterial;
+    private Material flashMaterial;
+
     /// <summary>湧いた根源の Id。根源の外で湧いたものは null</summary>
     private string homeRootId;
 
@@ -46,6 +66,18 @@ public class Slime : MonoBehaviour, IDamageable
     {
         health.SetMax(Mathf.RoundToInt(hp.maxValue));
         health.SetCurrent(Mathf.RoundToInt(hp.value));
+
+        rb = GetComponent<Rigidbody>();
+        sprite = GetComponent<SpriteRenderer>();
+        baseMaterial = sprite.sharedMaterial;
+
+        Shader flash = Resources.Load<Shader>("SpriteFlash");
+        if (flash != null) flashMaterial = new Material(flash);
+    }
+
+    private void OnDestroy()
+    {
+        if (flashMaterial != null) Destroy(flashMaterial);
     }
 
     public int CurrentHp
@@ -59,12 +91,21 @@ public class Slime : MonoBehaviour, IDamageable
         hp.value = health.Current;
     }
 
+    public void TakeHit(int amount, Vector3 push)
+    {
+        TakeDamage(amount);
+
+        rb.linearVelocity = push;
+        staggerUntil = Time.time + ActionRule.StaggerSeconds;
+
+        if (flashMaterial != null) StartCoroutine(Flash());
+    }
+
     void Start()
     {
         if (gameObject.name.IndexOf("(Clone)") != -1) gameObject.name = gameObject.name.Replace("(Clone)", "");
-        
+
         anim = GetComponent<Animator>();
-        rb = GetComponent<Rigidbody>();
         p = GameObject.FindWithTag("Player").GetComponent<Player2>();
         RandomAction();
     }
@@ -72,15 +113,50 @@ public class Slime : MonoBehaviour, IDamageable
     private void FixedUpdate()
     {
         if (isDead) return;
-        if (move == true) rb.linearVelocity = attitude * speed;
+        if (move == true && Time.time >= staggerUntil) rb.linearVelocity = attitude * speed;
         if (FallRule.IsOutOfField(transform.position.y)) gameObject.SetActive(false);
         if (health.IsDead)
         {
-            //anim
-            transform.Find("BodyCollider").gameObject.SetActive(false);
             isDead = true;
-            Invoke("Death", 1f);
+            StartCoroutine(Burst());
         }
+    }
+
+    private IEnumerator Flash()
+    {
+        sprite.sharedMaterial = flashMaterial;
+        yield return new WaitForSecondsRealtime(FlashSeconds);
+        sprite.sharedMaterial = baseMaterial;
+    }
+
+    /// <summary>
+    /// 膨らんでから縮んで消える。表示の Canvas は本体と一緒に縮むため切り離し、
+    /// 倒した一撃のダメージ表示だけを残す
+    /// </summary>
+    private IEnumerator Burst()
+    {
+        hp.gameObject.SetActive(false);
+
+        Transform canvas = transform.Find("Canvas");
+        if (canvas != null)
+        {
+            canvas.SetParent(null, true);
+            Destroy(canvas.gameObject, NumberLingerSeconds);
+        }
+
+        Vector3 size = transform.localScale;
+        for (float t = 0f; t < BurstSeconds; t += Time.deltaTime)
+        {
+            float k = t / BurstSeconds;
+            float scale = k < 0.3f
+                ? Mathf.Lerp(1f, BurstSwell, k / 0.3f)
+                : Mathf.Lerp(BurstSwell, 0f, (k - 0.3f) / 0.7f);
+
+            transform.localScale = size * scale;
+            yield return null;
+        }
+
+        Death();
     }
 
     private void RandomAction()

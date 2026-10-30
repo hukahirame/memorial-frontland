@@ -57,7 +57,7 @@
 ↑ 🟦 `Roots` **2** — Root **2**  
 
 ↓ 🟩 `Enemy` **1** — IRandom **1**  
-↓ 🟨 `Enemy` **14** — SpawnRule **4**, DropChance **3**, EnemyAction **3**, ActionRule **2**, DropRule **1**, FallRule **1**  
+↓ 🟨 `Enemy` **15** — SpawnRule **4**, ActionRule **3**, DropChance **3**, EnemyAction **3**, DropRule **1**, FallRule **1**  
 
 ### 🟦Inventory 🎒 
 
@@ -79,7 +79,7 @@
 ↑ 🟦 `Inventory` **2** — ItemDefinition **1**, ItemUse **1**  
 
 ↓ 🟨 `Enemy` **6** — Health **6**  
-↓ 🟨 `Player` **9** — AttackKind **3**, AttackRule **2**, Equipment **2**, Health **2**  
+↓ 🟨 `Player` **23** — AttackTiming **8**, AttackKind **3**, AttackRule **2**, Equipment **2**, Health **2**, Invulnerability **2**, Heading **1**, KnockbackRule **1**, MoveRule **1**, Push **1**  
 
 ### 🟦Quest 📜 
 
@@ -124,7 +124,7 @@
 ↑ 🟦 `Enemy` **1** — IRandom **1**  
 
 ↓ 🟨 `Enemy` **8** — IDamageable **4**, UnityRandom **4**  
-↓ 🟨 `Player` **1** — IDamageable **1**  
+↓ 🟨 `Player` **2** — IDamageable **2**  
 
 ### 🟩Inventory 🎒 
 
@@ -158,7 +158,7 @@
 ↓ 🟨 `Day` **1** — MiddleText **1**  
 ↓ 🟨 `Enemy` **2** — MiddleText **2**  
 ↓ 🟨 `Inventory` **2** — TempAudio **2**  
-↓ 🟨 `Player` **6** — TempAudio **4**, BigText **1**, MiddleText **1**  
+↓ 🟨 `Player` **16** — HitStop **5**, TempAudio **5**, MainCamera **4**, BigText **1**, MiddleText **1**  
 ↓ 🟨 `Quest` **5** — MiddleText **3**, BigText **2**  
 ↓ 🟨 `Roots` **2** — MiddleText **2**  
 
@@ -185,7 +185,7 @@
 
 ### 🟨Enemy 👾 
 
-↑ 🟦 `Enemy` **14** — SpawnRule **4**, DropChance **3**, EnemyAction **3**, ActionRule **2**, DropRule **1**, FallRule **1**  
+↑ 🟦 `Enemy` **15** — SpawnRule **4**, ActionRule **3**, DropChance **3**, EnemyAction **3**, DropRule **1**, FallRule **1**  
 ↑ 🟦 `OutField` **1** — FieldBounds **1**  
 ↑ 🟦 `Player` **6** — Health **6**  
 ↑ 🟦 `Roots` **2** — Root **2**  
@@ -218,12 +218,12 @@
 ### 🟨Player 🚶 
 
 ↑ 🟦 `OutField` **2** — FieldBounds **1**, Nudge **1**  
-↑ 🟦 `Player` **9** — AttackKind **3**, AttackRule **2**, Equipment **2**, Health **2**  
+↑ 🟦 `Player` **23** — AttackTiming **8**, AttackKind **3**, AttackRule **2**, Equipment **2**, Health **2**, Invulnerability **2**, Heading **1**, KnockbackRule **1**, MoveRule **1**, Push **1**  
 ↑ 🟦 `Quest` **1** — Quest **1**  
-↑ 🟩 `Enemy` **1** — IDamageable **1**  
+↑ 🟩 `Enemy` **2** — IDamageable **2**  
 ↑ 🟩 `OutField` **1** — Exposition **1**  
 ↑ 🟩 `Scene` **4** — AreaTravel **2**, Exit **2**  
-↑ 🟩 `Staging` **6** — TempAudio **4**, BigText **1**, MiddleText **1**  
+↑ 🟩 `Staging` **16** — HitStop **5**, TempAudio **5**, MainCamera **4**, BigText **1**, MiddleText **1**  
 ↑ 🟨 `Enemy` **2** — OF_Spawner **1**, SpawnerCandidate **1**  
 ↑ 🟨 `Inventory` **1** — WeaponBox **1**  
 ↑ 🟨 `Quest` **3** — QuestManager **2**, RewardUI **1**  
