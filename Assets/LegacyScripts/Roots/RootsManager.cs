@@ -1,15 +1,18 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
 using MemorialFloor.Domain;
-using MemorialFloor.Game;
 
 public class RootsManager : MonoBehaviour
 {
     /// <summary>根源の唯一の置き場。追加・検索・日次更新はここを通す</summary>
     public static readonly RootRegistry Roots = new RootRegistry();
 
+    /// <summary>拠点へ向かっている敵。氾濫で積み、拠点の MS_Spawner が出す</summary>
+    public static readonly BaseRaid Raid = new BaseRaid();
+
     [SerializeField] private GameObject rootset;
-    [SerializeField] private Text capacity; //この辺はRMから変更
 
     void Start()
     {
@@ -58,37 +61,43 @@ public class RootsManager : MonoBehaviour
             if (Random.Range(1, 3) >= 2) RootTrick(root.Seed);
         }
 
+        List<string> news = new List<string>();
+
         //氾濫判定は蓄積値の増加直後、攻略度の減少より前に行う（元の順序）
         foreach (var root in Roots.All)
         {
             root.AccumulateDaily();
-            StampedeJudge(root);
+
+            //どこに居ても拠点へ向かわせる。拠点に居れば MS_Spawner が少しずつ、留守なら戻ったときにまとめて出す
+            int raiders = root.Overflow();
+            if (raiders == 0) continue;
+
+            Raid.Add(raiders);
+            news.Add(root.Name + "が氾濫し、拠点へ敵が向かっています");
         }
 
         foreach (var root in Roots.All) root.DecayProgressDaily();
+
+        //予兆は攻略度を減らしたあとで見る。次の零時に増える量は、そのときの攻略度で決まる
+        foreach (var root in Roots.All)
+        {
+            if (root.WillOverflowNextDay) news.Add(root.Name + "が次の零時に氾濫しそうです");
+        }
+
+        if (news.Count > 0) StartCoroutine(Announce(news));
     }
 
-    public void StampedeJudge(Root root) // 蓄積値更新時
+    /// <summary>MiddleText は後の知らせで前の知らせを消すので、1件ずつ出し終えてから次を出す</summary>
+    private IEnumerator Announce(List<string> news)
     {
-        switch (root.Level)
+        GameObject found = GameObject.Find("MiddleText");
+        if (found == null) yield break;
+
+        MiddleText middle = found.GetComponent<MiddleText>();
+        foreach (string item in news)
         {
-            case AccumulationLevel.Stampede: //【氾濫】
-                Transform ms = GameObject.FindWithTag("MainSpawner").transform;
-                Area area = Area.In(ms.gameObject.scene);
-                bool inBase = area != null && area.Kind == AreaKind.Base;
-
-                for (int f = 0; f < 5; f++)
-                {
-                    if (inBase) ms.GetComponent<MS_Spawner>().Spawn();
-                    else        ms.GetComponent<OF_Spawner>().Spawn();
-                }
-                capacity.text = "-"; capacity.color = Color.black;
-                break;
-
-            case AccumulationLevel.High:    capacity.text = "高"; capacity.color = Color.red;    break;
-            case AccumulationLevel.Medium:  capacity.text = "中"; capacity.color = Color.yellow; break;
-            case AccumulationLevel.Small:   capacity.text = "小"; capacity.color = Color.green;  break;
-            default:                        capacity.text = "微"; capacity.color = Color.blue;   break;
+            middle.Midtxt_Anim(item);
+            yield return new WaitForSeconds(middle.waittime + 2f); //入りに 1 秒、出に約 1 秒
         }
     }
 }

@@ -54,6 +54,15 @@ static AttackRule.Choose(float, float, float) : AttackKind
 const AttackRule.Threshold : float
 static AttackRule.ThrustDirection(float) : int
 
+sealed class BaseRaid
+BaseRaid.ctor()
+BaseRaid.Add(int) : void
+BaseRaid.Arrive() : int
+BaseRaid.Clear() : void
+const BaseRaid.IntervalSeconds : float
+BaseRaid.Pending.get : int
+BaseRaid.Tick(float) : int
+
 static class Chance
 static Chance.Roll(int, IRandom) : bool
 
@@ -289,6 +298,7 @@ Root.Accumulation.get : int
 Root.AdvanceDay() : void
 Root.Calm(int) : void
 const Root.DailyAccumulationGain : int
+Root.DailyGain.get : int
 const Root.DailyProgressLoss : int
 Root.Danger.get : int
 Root.DecayProgressDaily() : void
@@ -296,15 +306,21 @@ Root.Gain(int) : void
 Root.HasSpawnPoint.get : bool
 Root.Id.get : string
 Root.Level.get : AccumulationLevel
+const Root.MinDailyAccumulationGain : int
 Root.Name.get : string
+Root.Overflow() : int
 Root.PlaceSpawnPoint(float, float, float) : void
 Root.Progress.get : int
+const Root.ProgressPerGainStep : int
 Root.Seed.get : string
 Root.SpawnX.get : float
 Root.SpawnY.get : float
 Root.SpawnZ.get : float
+const Root.StampedeAccumulation : int
+const Root.StampedeRaiders : int
 Root.UiX.get : float
 Root.UiY.get : float
+Root.WillOverflowNextDay.get : bool
 
 sealed class RootRegistry
 RootRegistry.ctor()

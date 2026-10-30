@@ -30,7 +30,7 @@ public class RootUI : MonoBehaviour
         if (root.Progress >= 50) dp.transform.Find("DP2").GetComponent<Text>().color = new Color(0, 50, 0, 255);
         if (root.Progress >= 30) dp.color = new Color(50, 0, 50, 255);
 
-        Text capa = qm.Find("RootCapacity").GetChild(0).GetComponent<Text>(); // 容量更新（値変化時はまた別で行う）
+        Text capa = qm.Find("RootCapacity").GetChild(0).GetComponent<Text>(); // 開いたときの値。開いているあいだは更新しない
         capa.text = root.Accumulation.ToString();
         switch (root.Level) //閾値は Domain の AccumulationLevel が持つ
         {

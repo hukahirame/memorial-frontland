@@ -64,7 +64,7 @@ public class SceneStarter : MonoBehaviour
     private void SpawnerDecide(Area area)
     {
         Root root = RootsManager.Roots.Find(travel.Where.RootId);
-        if (root == null || root.HasSpawnPoint) return;
+        if (root == null) return;
 
         List<GameObject> candidates = new List<GameObject>();
         foreach (GameObject candidate in GameObject.FindGameObjectsWithTag("SpawnerCandidate"))
@@ -74,11 +74,27 @@ public class SceneStarter : MonoBehaviour
 
         if (candidates.Count == 0) return;
 
-        GameObject chosen = candidates[Random.Range(0, candidates.Count)];
+        //足した部品は場所を離れると消えるので、入るたびに置く。位置は初回に選んで控え、2 回目からはそこに置き直す
+        GameObject chosen = root.HasSpawnPoint
+            ? Nearest(candidates, new Vector3(root.SpawnX, root.SpawnY, root.SpawnZ))
+            : candidates[Random.Range(0, candidates.Count)];
         chosen.AddComponent<OF_Spawner>().Bind(area.Exposition, root.Id);
+
+        if (root.HasSpawnPoint) return;
 
         Vector3 targetpos = chosen.transform.position;
         root.PlaceSpawnPoint(targetpos.x, targetpos.y, targetpos.z);
+    }
+
+    private static GameObject Nearest(List<GameObject> candidates, Vector3 point)
+    {
+        GameObject nearest = candidates[0];
+        foreach (GameObject candidate in candidates)
+        {
+            if ((candidate.transform.position - point).sqrMagnitude < (nearest.transform.position - point).sqrMagnitude) nearest = candidate;
+        }
+
+        return nearest;
     }
 
     private void JumpReset()

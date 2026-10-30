@@ -20,24 +20,24 @@
 | 🟦 `Roots` | **0** | **7** |
 | 🟦 `Wallet` | **0** | **1** |
 | 🟩 `Inventory` | **0** | **2** |
-| 🟩 `Staging` | **0** | **6** |
+| 🟩 `Staging` | **0** | **7** |
 | 🟦 `Craft` | **1** | **2** |
 | 🟦 `Enemy` | **1** | **2** |
 | 🟦 `Player` | **1** | **2** |
 | 🟩 `Craft` | **1** | **1** |
 | 🟩 `Enemy` | **1** | **2** |
-| 🟦 `Scene` | **2** | **5** |
+| 🟦 `Scene` | **2** | **4** |
 | 🟩 `OutField` | **2** | **3** |
 | 🟩 `Scene` | **2** | **6** |
-| 🟨 `Roots` | **5** | **5** |
+| 🟨 `Roots` | **3** | **5** |
 | 🟨 `Day` | **6** | **1** |
 | 🟨 `Inventory` | **6** | **4** |
 | 🟨 `Craft` | **7** | **0** |
 | 🟨 `Save` | **7** | **2** |
 | 🟨 `Quest` | **8** | **5** |
-| 🟨 `Enemy` | **11** | **3** |
 | 🟨 `Player` | **11** | **4** |
 | 🟨 `Scene` | **11** | **5** |
+| 🟨 `Enemy` | **12** | **2** |
 
 ## 詳細
 
@@ -96,7 +96,7 @@
 ↓ 🟨 `Day` **1** — Root **1**  
 ↓ 🟨 `Enemy` **2** — Root **2**  
 ↓ 🟨 `Quest` **2** — Root **2**  
-↓ 🟨 `Roots` **13** — AccumulationLevel **8**, Root **3**, RootRegistry **2**  
+↓ 🟨 `Roots` **10** — AccumulationLevel **4**, BaseRaid **2**, Root **2**, RootRegistry **2**  
 ↓ 🟨 `Scene` **2** — Root **2**  
 
 ### 🟦Scene 🚪 
@@ -106,7 +106,6 @@
 
 ↓ 🟩 `Scene` **26** — Arrival **6**, Placement **5**, ExitKind **3**, Route **3**, TravelRule **3**, AreaKind **2**, PlacementLedger **2**, Whereabouts **2**  
 ↓ 🟨 `Quest` **2** — Whereabouts **2**  
-↓ 🟨 `Roots` **1** — AreaKind **1**  
 ↓ 🟨 `Save` **8** — Placement **6**, PlacementLedger **1**, Whereabouts **1**  
 ↓ 🟨 `Scene` **1** — AreaKind **1**  
 
@@ -124,7 +123,7 @@
 
 ↑ 🟦 `Enemy` **1** — IRandom **1**  
 
-↓ 🟨 `Enemy` **6** — UnityRandom **4**, IDamageable **2**  
+↓ 🟨 `Enemy` **8** — IDamageable **4**, UnityRandom **4**  
 ↓ 🟨 `Player` **1** — IDamageable **1**  
 
 ### 🟩Inventory 🎒 
@@ -146,10 +145,10 @@
 ↑ 🟦 `Quest` **1** — Quest **1**  
 ↑ 🟦 `Scene` **26** — Arrival **6**, Placement **5**, ExitKind **3**, Route **3**, TravelRule **3**, AreaKind **2**, PlacementLedger **2**, Whereabouts **2**  
 
+↓ 🟨 `Enemy` **3** — AreaTravel **2**, Area **1**  
 ↓ 🟨 `Inventory` **1** — PlacedObjects **1**  
 ↓ 🟨 `Player` **4** — AreaTravel **2**, Exit **2**  
 ↓ 🟨 `Quest` **1** — AreaTravel **1**  
-↓ 🟨 `Roots` **2** — Area **2**  
 ↓ 🟨 `Save` **5** — PlacedObjects **3**, Area **1**, AreaTravel **1**  
 ↓ 🟨 `Scene` **5** — AreaTravel **3**, Area **2**  
 
@@ -157,10 +156,11 @@
 
 ↓ 🟨 `Craft` **2** — TempAudio **2**  
 ↓ 🟨 `Day` **1** — MiddleText **1**  
-↓ 🟨 `Enemy` **1** — MiddleText **1**  
+↓ 🟨 `Enemy` **2** — MiddleText **2**  
 ↓ 🟨 `Inventory` **2** — TempAudio **2**  
 ↓ 🟨 `Player` **6** — TempAudio **4**, BigText **1**, MiddleText **1**  
 ↓ 🟨 `Quest` **5** — MiddleText **3**, BigText **2**  
+↓ 🟨 `Roots` **2** — MiddleText **2**  
 
 ### 🟨Craft 🔨 
 
@@ -189,16 +189,16 @@
 ↑ 🟦 `OutField` **1** — FieldBounds **1**  
 ↑ 🟦 `Player` **6** — Health **6**  
 ↑ 🟦 `Roots` **2** — Root **2**  
-↑ 🟩 `Enemy` **6** — UnityRandom **4**, IDamageable **2**  
+↑ 🟩 `Enemy` **8** — IDamageable **4**, UnityRandom **4**  
 ↑ 🟩 `OutField` **1** — Exposition **1**  
-↑ 🟩 `Staging` **1** — MiddleText **1**  
+↑ 🟩 `Scene` **3** — AreaTravel **2**, Area **1**  
+↑ 🟩 `Staging` **2** — MiddleText **2**  
 ↑ 🟨 `Player` **2** — Player2 **2**  
 ↑ 🟨 `Quest` **2** — QuestManager **2**  
-↑ 🟨 `Roots` **2** — RootsManager **2**  
+↑ 🟨 `Roots` **5** — RootsManager **5**  
 ↑ 🟨 `Save` **2** — SaveData **1**, SaveSystem **1**  
 
 ↓ 🟨 `Player` **2** — OF_Spawner **1**, SpawnerCandidate **1**  
-↓ 🟨 `Roots` **2** — MS_Spawner **1**, OF_Spawner **1**  
 ↓ 🟨 `Scene` **1** — OF_Spawner **1**  
 
 ### 🟨Inventory 🎒 
@@ -253,15 +253,13 @@
 
 ### 🟨Roots 🌳 
 
-↑ 🟦 `Roots` **13** — AccumulationLevel **8**, Root **3**, RootRegistry **2**  
-↑ 🟦 `Scene` **1** — AreaKind **1**  
-↑ 🟩 `Scene` **2** — Area **2**  
-↑ 🟨 `Enemy` **2** — MS_Spawner **1**, OF_Spawner **1**  
+↑ 🟦 `Roots` **10** — AccumulationLevel **4**, BaseRaid **2**, Root **2**, RootRegistry **2**  
+↑ 🟩 `Staging` **2** — MiddleText **2**  
 ↑ 🟨 `Quest` **1** — QuestManager **1**  
 
 ↓ 🟨 `Craft` **1** — RootsManager **1**  
 ↓ 🟨 `Day` **2** — RootsManager **2**  
-↓ 🟨 `Enemy` **2** — RootsManager **2**  
+↓ 🟨 `Enemy` **5** — RootsManager **5**  
 ↓ 🟨 `Quest` **3** — RootsManager **3**  
 ↓ 🟨 `Scene` **2** — RootsManager **2**  
 
