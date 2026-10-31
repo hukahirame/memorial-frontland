@@ -22,11 +22,18 @@ public class SceneStarter : MonoBehaviour
     private void Awake()
     {
         travel.Entered += Enter;
+        travel.Leaving += Leave;
     }
 
     private void OnDestroy()
     {
         travel.Entered -= Enter;
+        travel.Leaving -= Leave;
+    }
+
+    private void Leave(Area area)
+    {
+        questManager.Leave(TravelRule.RootOfArea(area.Id, area.Kind));
     }
 
     private void Enter(Area area)
@@ -49,10 +56,11 @@ public class SceneStarter : MonoBehaviour
 
             if (RewardUI.rewardUI_show != 0) //RewardUIの唯一のスタートポイント
             {
-                rewardUI.transform.position = rewardPoint.position;
-                rewardUI.InputInfo();
+                if (rewardUI.InputInfo()) rewardUI.transform.position = rewardPoint.position;
             }
         }
+
+        questManager.Arrived(area.Kind, rewardUI);
     }
 
     private void PlayBgm(string clip)

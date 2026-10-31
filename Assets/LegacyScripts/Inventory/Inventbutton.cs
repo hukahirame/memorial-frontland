@@ -27,6 +27,14 @@ public class Inventbutton : MonoBehaviour //インベントリのボタン本体
         target = s;
     }
 
+    /// <summary>枠が空いた。前の品を覚えたままだと、押したときに持っていない品が出て使えてしまう</summary>
+    public void Clear()
+    {
+        image = null;
+        target = null;
+        transform.Find("Slider").localScale = new Vector3(0, 1, 1); //場の既定。横を 0 にして隠す
+    }
+
     public void Show_Info()
     {
         if(image != null) //アイテム有りBoxの時

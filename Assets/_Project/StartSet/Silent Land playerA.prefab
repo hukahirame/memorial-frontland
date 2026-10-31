@@ -86,7 +86,6 @@ GameObject:
   - component: {fileID: 348623865873181818}
   - component: {fileID: 348623865873181813}
   - component: {fileID: 348623865873181812}
-  - component: {fileID: 348623865873181819}
   - component: {fileID: 348623865873181817}
   - component: {fileID: 348623865873181816}
   - component: {fileID: 348623865873181822}
@@ -187,50 +186,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &348623865873181819
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 348623865873181815}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5e2ff6ab5d4670c48ab3066f7f0d8b04, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  anim: {fileID: 0}
-  speed: 4
-  rb: {fileID: 0}
-  slide: {fileID: 348623867534043840}
-  weaponbutton: {fileID: 0}
-  weaponparameta: {fileID: 0}
-  w: {fileID: 0}
-  w2: {fileID: 0}
-  w3: {fileID: 0}
-  cool: 0
-  ladderdistancex: 0
-  ladderdistancey: 0
-  Tarpos: {x: -3, y: -0.75, z: 0}
-  craftinventory: {fileID: 0}
-  inventcool2: 0
-  sr: {fileID: 0}
-  installobj: {fileID: 0}
-  craftbenchflag: 0
-  n: 
-  installer: {fileID: 3531904983157196212, guid: c31b7dc81c8603447972d773c1ef3bed, type: 3}
-  allmaitybutton: {fileID: 0}
-  horizontalKey: 0
-  verticalKey: 0
-  onladder: 0
-  onhatch: 0
-  h: {fileID: 0}
-  gameoverobj: {fileID: 0}
-  gameoverbutton: {fileID: 0}
-  maincamera: {fileID: 0}
-  onground: 0
-  collecttarget: {fileID: 0}
-  backmainbutton: {fileID: 0}
 --- !u!70 &348623865873181817
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -613,7 +568,6 @@ GameObject:
   m_Component:
   - component: {fileID: 7065194469760660715}
   - component: {fileID: 6555106352931361187}
-  - component: {fileID: 2754422653055069903}
   m_Layer: 0
   m_Name: airsenser
   m_TagString: Untagged
@@ -681,16 +635,3 @@ BoxCollider2D:
   serializedVersion: 2
   m_Size: {x: 0.02, y: 0.02}
   m_EdgeRadius: 0
---- !u!114 &2754422653055069903
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3493064601464794776}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2ed596f562d29f441a65ca2033f11a83, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  p: {fileID: 348623865873181819}

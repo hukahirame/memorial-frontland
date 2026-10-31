@@ -49,6 +49,17 @@ namespace MemorialFloor.Domain
 
         public float MinZ { get; }
 
+        /// <summary>場の真ん中</summary>
+        public float CenterX
+        {
+            get { return (MaxX + MinX) / 2f; }
+        }
+
+        public float CenterZ
+        {
+            get { return (MaxZ + MinZ) / 2f; }
+        }
+
         public bool Contains(float x, float z)
         {
             return x <= MaxX && x >= MinX && z <= MaxZ && z >= MinZ;

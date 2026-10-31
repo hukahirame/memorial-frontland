@@ -6,39 +6,60 @@ namespace MemorialFloor.Domain.Tests
 {
     public class TravelRuleTests
     {
-        private static Quest OrderedFor(string rootId)
-        {
-            return new Quest("X0", rootId, "MainSpawner", 1, null);
-        }
+        private static readonly string[] Roots = { "Root1", "Root2" };
 
         [Test]
-        public void 拠点への出口はクエストを受けていなくても通れる()
+        public void 拠点の奥の出口は最初の根源へ通じる()
         {
-            Route route = TravelRule.Through(ExitKind.ToBase, null);
+            Route route = TravelRule.Through(ExitKind.ToNext, TravelRule.BaseAreaId, Roots);
 
             Assert.IsFalse(route.IsRefused);
-            Assert.AreEqual(TravelRule.BaseAreaId, route.AreaId);
+            Assert.AreEqual("Root1", route.AreaId);
         }
 
         [Test]
-        public void 根源への出口は受注中のクエストの根源へ向かう()
+        public void 根源の出口は並びの隣へ通じる()
         {
-            Route route = TravelRule.Through(ExitKind.ToOrderedRoot, OrderedFor("Root2"));
-
-            Assert.AreEqual("Root2", route.AreaId);
+            Assert.AreEqual("Root2", TravelRule.Through(ExitKind.ToNext, "Root1", Roots).AreaId);
+            Assert.AreEqual(TravelRule.BaseAreaId, TravelRule.Through(ExitKind.ToPrevious, "Root1", Roots).AreaId);
+            Assert.AreEqual("Root1", TravelRule.Through(ExitKind.ToPrevious, "Root2", Roots).AreaId);
         }
 
         [Test]
-        public void クエストを受けていなければ根源へは行けない()
+        public void 来た側の出口の前に立つ()
         {
-            Assert.IsTrue(TravelRule.Through(ExitKind.ToOrderedRoot, null).IsRefused);
+            Assert.AreEqual(Arrival.FromPrevious, TravelRule.Through(ExitKind.ToNext, TravelRule.BaseAreaId, Roots).Arrival);
+            Assert.AreEqual(Arrival.FromPrevious, TravelRule.Through(ExitKind.ToNext, "Root1", Roots).Arrival);
+            Assert.AreEqual(Arrival.FromNext, TravelRule.Through(ExitKind.ToPrevious, "Root2", Roots).Arrival);
+            Assert.AreEqual(Arrival.FromNext, TravelRule.Through(ExitKind.ToPrevious, "Root1", Roots).Arrival);
         }
 
         [Test]
-        public void 出口を通ってきたら入口に立つ()
+        public void 並びの端より先へは行けない()
         {
-            Assert.AreEqual(Arrival.Entrance, TravelRule.Through(ExitKind.ToBase, null).Arrival);
-            Assert.AreEqual(Arrival.Entrance, TravelRule.Through(ExitKind.ToOrderedRoot, OrderedFor("Root1")).Arrival);
+            Assert.IsTrue(TravelRule.Through(ExitKind.ToPrevious, TravelRule.BaseAreaId, Roots).IsRefused);
+            Assert.IsTrue(TravelRule.Through(ExitKind.ToNext, "Root2", Roots).IsRefused);
+        }
+
+        [Test]
+        public void 並びに無い場所からは行けない()
+        {
+            Assert.IsTrue(TravelRule.Through(ExitKind.ToNext, "Root9", Roots).IsRefused);
+            Assert.IsTrue(TravelRule.Through(ExitKind.ToNext, null, Roots).IsRefused);
+        }
+
+        [Test]
+        public void 根源が無ければ拠点の奥へは行けない()
+        {
+            Assert.IsTrue(TravelRule.Through(ExitKind.ToNext, TravelRule.BaseAreaId, null).IsRefused);
+            Assert.IsTrue(TravelRule.Through(ExitKind.ToNext, TravelRule.BaseAreaId, new string[0]).IsRefused);
+        }
+
+        [Test]
+        public void 出口の種類の値はシーンに保存した値のまま()
+        {
+            Assert.AreEqual(0, (int)ExitKind.ToPrevious);
+            Assert.AreEqual(1, (int)ExitKind.ToNext);
         }
 
         [Test]

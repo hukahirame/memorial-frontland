@@ -39,8 +39,10 @@ public class PlayerDeath : MonoBehaviour
         transform.GetComponentInChildren<MeshCollider>().enabled = true;
         Player2.playerrb.constraints = RigidbodyConstraints.FreezeRotation;
 
-        RewardUI.rewardUI_show = 1;
+        //受けているクエストが失敗になるのは、その根源で倒れたときだけ。通り道の根源や拠点では失敗にしない
+        if (QuestManager.IsUnderwayIn(travel.Where.RootId)) RewardUI.rewardUI_show = 1;
         travel.Revive();
+        p.GuardAfterRevive();
 
         GameManager.Coins.Spend(DeathPenalty);
         GameObject.Find("CoinText").GetComponent<TextMeshProUGUI>().text =

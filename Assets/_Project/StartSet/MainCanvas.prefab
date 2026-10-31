@@ -181,7 +181,6 @@ GameObject:
   - component: {fileID: 8947770945470555928}
   - component: {fileID: 8947770945470555931}
   - component: {fileID: 8947770945470555930}
-  - component: {fileID: 8947770945470555933}
   m_Layer: 5
   m_Name: CloseButton2
   m_TagString: Untagged
@@ -287,31 +286,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8947770945470555931}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 8947770945470555933}
-        m_MethodName: CraftClose
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
---- !u!114 &8947770945470555933
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8947770945470555935}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eb18ff8700e01754e8567cf2822b2bec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  wfi: {fileID: 0}
+      m_Calls: []
 --- !u!1 &8947770945484317604
 GameObject:
   m_ObjectHideFlags: 0
@@ -705,7 +680,6 @@ GameObject:
   - component: {fileID: 8947770945549432071}
   - component: {fileID: 8947770945549432070}
   - component: {fileID: 8947770945549432073}
-  - component: {fileID: 8947770945549432069}
   m_Layer: 0
   m_Name: "\u30A4\u30F3\u30D9\u30F3\u30C8\u30EA"
   m_TagString: ItemDateBase1
@@ -827,21 +801,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &8947770945549432069
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8947770945549432075}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4bf04d49a3581d94e903cb52de580caa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  resultly: []
-  room: []
-  result: 
 --- !u!1 &8947770945689739051
 GameObject:
   m_ObjectHideFlags: 0
@@ -854,7 +813,6 @@ GameObject:
   - component: {fileID: 8947770945689739044}
   - component: {fileID: 8947770945689739047}
   - component: {fileID: 8947770945689739046}
-  - component: {fileID: 8947770945689739049}
   m_Layer: 5
   m_Name: CloseButton
   m_TagString: Untagged
@@ -960,31 +918,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8947770945689739047}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 8947770945689739049}
-        m_MethodName: InbentoryClick2
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
---- !u!114 &8947770945689739049
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8947770945689739051}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 752797cfafdcc5d49983394ab1454771, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target: {fileID: 0}
+      m_Calls: []
 --- !u!1 &8947770945709232353
 GameObject:
   m_ObjectHideFlags: 0
@@ -1553,7 +1487,6 @@ GameObject:
   - component: {fileID: 8947770945886738121}
   - component: {fileID: 8947770945886738120}
   - component: {fileID: 8947770945886738123}
-  - component: {fileID: 8947770945886738122}
   m_Layer: 5
   m_Name: WeaponFixOpenButton
   m_TagString: Untagged
@@ -1660,33 +1593,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8947770945886738120}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 8947770945886738122}
-        m_MethodName: FixOn
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
---- !u!114 &8947770945886738122
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8947770945886738124}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 064259c6fcad8ec4bbf8617a49c2b62f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target: {fileID: 8947770945484317604}
-  wfi: {fileID: 8947770945494855461}
-  wci: {fileID: 8947770945868837707}
+      m_Calls: []
 --- !u!1 &8947770945906073665
 GameObject:
   m_ObjectHideFlags: 0
@@ -1729,7 +1636,6 @@ GameObject:
   - component: {fileID: 8947770945911757584}
   - component: {fileID: 8947770945911757587}
   - component: {fileID: 8947770945911757586}
-  - component: {fileID: 8947770945911757585}
   m_Layer: 5
   m_Name: CloseButton3
   m_TagString: Untagged
@@ -1835,31 +1741,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8947770945911757587}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 8947770945911757585}
-        m_MethodName: CraftClose
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
---- !u!114 &8947770945911757585
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8947770945911757588}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eb18ff8700e01754e8567cf2822b2bec, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  wfi: {fileID: 0}
+      m_Calls: []
 --- !u!1 &8947770945948265033
 GameObject:
   m_ObjectHideFlags: 0
@@ -1902,7 +1784,6 @@ GameObject:
   - component: {fileID: 8947770945962632650}
   - component: {fileID: 8947770945962632653}
   - component: {fileID: 8947770945962632652}
-  - component: {fileID: 8947770945962632651}
   m_Layer: 5
   m_Name: OpenButton
   m_TagString: Untagged
@@ -2008,31 +1889,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8947770945962632653}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 8947770945962632651}
-        m_MethodName: InbentoryClick2
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
---- !u!114 &8947770945962632651
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8947770945962632654}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 752797cfafdcc5d49983394ab1454771, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target: {fileID: 8947770946033303071}
+      m_Calls: []
 --- !u!1 &8947770946033303071
 GameObject:
   m_ObjectHideFlags: 0
@@ -2076,7 +1933,6 @@ GameObject:
   - component: {fileID: 8947770946068399052}
   - component: {fileID: 8947770946068399055}
   - component: {fileID: 8947770946068399054}
-  - component: {fileID: 8947770946068399025}
   m_Layer: 0
   m_Name: WeaponFixCloseButton
   m_TagString: Untagged
@@ -2232,33 +2088,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8947770946068399052}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 8947770946068399025}
-        m_MethodName: FixOff
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
---- !u!114 &8947770946068399025
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8947770946068399027}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 064259c6fcad8ec4bbf8617a49c2b62f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target: {fileID: 0}
-  wfi: {fileID: 8947770945494855461}
-  wci: {fileID: 8947770945868837707}
+      m_Calls: []
 --- !u!1 &8947770946070640150
 GameObject:
   m_ObjectHideFlags: 0
@@ -2493,7 +2323,6 @@ GameObject:
   - component: {fileID: 8947770946093845018}
   - component: {fileID: 8947770946093845021}
   - component: {fileID: 8947770946093845020}
-  - component: {fileID: 8947770946093845019}
   m_Layer: 5
   m_Name: Torch
   m_TagString: Untagged
@@ -2599,30 +2428,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8947770946093845021}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 8947770946093845019}
-        m_MethodName: Craftprepare
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
---- !u!114 &8947770946093845019
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8947770946093845022}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4df6cead6fe581e47bc1753b0c915ff2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+      m_Calls: []
 --- !u!1 &8947770946137441016
 GameObject:
   m_ObjectHideFlags: 0
@@ -3112,7 +2918,6 @@ GameObject:
   - component: {fileID: 8947770946295725629}
   - component: {fileID: 8947770946295725628}
   - component: {fileID: 8947770946295725631}
-  - component: {fileID: 8947770946295725630}
   m_Layer: 5
   m_Name: Generalknive.w1
   m_TagString: Untagged
@@ -3218,30 +3023,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8947770946295725628}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 8947770946295725630}
-        m_MethodName: Craftprepare
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
---- !u!114 &8947770946295725630
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8947770946295725600}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4df6cead6fe581e47bc1753b0c915ff2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+      m_Calls: []
 --- !u!1 &8947770946295807147
 GameObject:
   m_ObjectHideFlags: 0
@@ -5335,7 +5117,6 @@ GameObject:
   - component: {fileID: 8947770947016697925}
   - component: {fileID: 8947770947016697924}
   - component: {fileID: 8947770947016697927}
-  - component: {fileID: 8947770947016697926}
   m_Layer: 5
   m_Name: WeaponInventory
   m_TagString: Untagged
@@ -5441,32 +5222,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8947770947016697924}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 8947770947016697926}
-        m_MethodName: WeaponInventoryButton
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
---- !u!114 &8947770947016697926
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8947770947016697928}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e36d390f5981abf41906b22efc51d3d7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  WeaponInventory2: {fileID: 8947770946635055835}
-  b: 0
+      m_Calls: []
 --- !u!1 &8947770947018323258
 GameObject:
   m_ObjectHideFlags: 0
@@ -5557,7 +5313,6 @@ GameObject:
   - component: {fileID: 8947770947048608402}
   - component: {fileID: 8947770947048608405}
   - component: {fileID: 8947770947048608404}
-  - component: {fileID: 8947770947048608403}
   m_Layer: 5
   m_Name: WoodChest
   m_TagString: Untagged
@@ -5663,30 +5418,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 8947770947048608405}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 8947770947048608403}
-        m_MethodName: Craftprepare
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
---- !u!114 &8947770947048608403
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8947770947048608406}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4df6cead6fe581e47bc1753b0c915ff2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
+      m_Calls: []
 --- !u!1 &8947770947056517278
 GameObject:
   m_ObjectHideFlags: 0

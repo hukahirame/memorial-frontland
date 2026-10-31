@@ -18,16 +18,16 @@ public class Seeker : MonoBehaviour
 
         // 除外したいレイヤーを設定 (例: "IgnoreRaycast") int layerMask = 1 << LayerMask.NameToLayer("IgnoreRaycast"); 
         // 除外するためには、レイヤーマスクを反転する layerMask = ~layerMask;
-        Physics.Raycast(transform.position, Vector3.down, out hit, 10f/*, layerMask*/);
-
-        if (hit.point != null)  transform.parent.GetComponent<OF_Spawner>().Spawn2(hit.point + Vector3.up * 0.6f);
+        //地面に当たらなければ湧かせない。外れても hit.point は原点で埋まっている
+        if (Physics.Raycast(transform.position, Vector3.down, out hit, 10f/*, layerMask*/))  transform.parent.GetComponent<OF_Spawner>().Spawn2(hit.point + Vector3.up * 0.6f);
 
         else  Debug.Log("スポーン接地失敗");
     }
 
     public void SeekPosition(float range, Vector4 expos)
     {
-        Vector3 org = transform.position;
+        //起点は親の湧き口。自分の位置は前に湧かせた所に残っている
+        Vector3 org = transform.parent.position;
         FieldBounds bounds = Exposition.ToBounds(expos);
 
         float pos_x = Random.Range(bounds.ClampX(org.x - range), bounds.ClampX(org.x + range));

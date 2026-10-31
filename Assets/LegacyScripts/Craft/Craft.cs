@@ -58,6 +58,9 @@ public class Craft : MonoBehaviour//Craftchildから実行。対応するsetを�
 
     void Start()
     {
+        //持ち物が変わるたびに所持数を書き直す。開いたまま拾っても、閉じて開き直しても今の数が出る
+        pi.Changed += Refresh;
+
         if (recipeDefinitions == null) return;
         foreach (var def in recipeDefinitions)
         {
@@ -67,15 +70,28 @@ public class Craft : MonoBehaviour//Craftchildから実行。対応するsetを�
         }
     }
 
+    void OnDestroy()
+    {
+        if (pi != null) pi.Changed -= Refresh;
+    }
+
     public void Craftprepare2(string showname)
     {
         set.GetComponent<Craft_set>().Put_Info(showname);
         Put_Materials(showname);
     }
 
+    private void Refresh()
+    {
+        if (current != null) Put_Materials(current.ProductId);
+    }
+
     public void CraftStart()
     {
         if (current == null) return;
+
+        //倒れている間と場所を移っている間は作らない。移る途中に作ると、品は前の場所と一緒に消えて材料だけ減る
+        if (!GameObject.FindWithTag("Player").GetComponent<Player2>().CanAct) return;
 
         if (!current.CanCraftWith(CurrentInventory()))
         {
@@ -83,11 +99,15 @@ public class Craft : MonoBehaviour//Craftchildから実行。対応するsetを�
             return;
         }
 
+        //完成品は作業台に落とす。画面は離れても閉じないので、作業台の無い場所では作らない。材料を減らしてから探すと材料だけ消える
+        GameObject bench = GameObject.FindWithTag("CraftBench");
+        if (bench == null) return;
+
         foreach (var ingredient in current.Ingredients)
             for (int i = 0; i < ingredient.Amount; i++) pi.UnloadInventory(ingredient.ItemId);
 
         GameObject drop = Instantiate(dropcapsule,
-            GameObject.FindWithTag("CraftBench").transform.position + new Vector3(0, 0.5f, 0),
+            bench.transform.position + new Vector3(0, 0.5f, 0),
             Quaternion.identity);
         drop.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(current.ProductId);
 

@@ -66,15 +66,16 @@ public class SaveData
         }
     }
 
-    public void LoadStatic()
+    /// <summary>arrivedAreaId は読み込んでから最初に着いた場所</summary>
+    public void LoadStatic(string arrivedAreaId)
     {
         Player2.Hp.SetCurrent(playerhp);
         Player2.RefreshHpView();
         Sun2.Cycle.SetElapsed(daytime);
-        LoadDynamic();
+        LoadDynamic(arrivedAreaId);
     }
 
-    public void LoadDynamic()
+    public void LoadDynamic(string arrivedAreaId)
     {
         PlayerInventory pi = GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>();
         pi.ReplaceSlots(slots);
@@ -82,7 +83,9 @@ public class SaveData
         GameManager.Coins.SetAmount(coin);
         GameObject.Find("CoinText").GetComponent<TextMeshProUGUI>().text =
             GameManager.Coins.Amount.ToString();
-        GameObject.FindWithTag("Player").transform.position = respawn;
+
+        //立ち位置は保存した場所のもの。エディタで場所のシーンから始めると、保存した場所とは違う場所に着く
+        if (arrivedAreaId == entered_scene) GameObject.FindWithTag("Player").transform.position = respawn;
 
         //enemies関連は、MainSpawner生成が遅れるため、そっちで処理
 

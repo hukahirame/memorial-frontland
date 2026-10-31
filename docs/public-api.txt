@@ -14,7 +14,9 @@ AccumulationLevel.Small = 1
 AccumulationLevel.Stampede = 4
 
 static class ActionRule
-static ActionRule.Choose(IRandom) : EnemyAction
+const ActionRule.ChaseMovePercent : int
+const ActionRule.ChaseWaitPercent : int
+static ActionRule.Choose(IRandom, bool) : EnemyAction
 static ActionRule.Duration(EnemyAction, IRandom) : float
 const ActionRule.JumpSeconds : float
 const ActionRule.MovePercent : int
@@ -37,12 +39,20 @@ AddResult.Outcome.get : AddOutcome
 AddResult.SlotIndex.get : int
 AddResult.Stock.get : int
 
+static class AimRule
+static AimRule.Choose(float, bool, float) : EnemyAim
+const AimRule.GoalRadius : float
+static AimRule.Lean(Heading, float, float) : Heading
+const AimRule.SightRange : float
+static AimRule.Toward(float, float) : Heading
+
 enum AreaKind
 AreaKind.Base = 0
 AreaKind.Root = 1
 
 enum Arrival
-Arrival.Entrance = 0
+Arrival.FromNext = 2
+Arrival.FromPrevious = 0
 Arrival.Home = 1
 
 enum AttackKind
@@ -117,6 +127,11 @@ EnemyAction.Jump = 2
 EnemyAction.Move = 1
 EnemyAction.Wait = 0
 
+enum EnemyAim
+EnemyAim.Goal = 2
+EnemyAim.Player = 1
+EnemyAim.Wander = 0
+
 sealed class Equipment
 Equipment.ctor()
 Equipment.Attack.get : int
@@ -132,8 +147,8 @@ Equipment.Unequip() : void
 Equipment.Wear(int) : bool
 
 enum ExitKind
-ExitKind.ToBase = 0
-ExitKind.ToOrderedRoot = 1
+ExitKind.ToNext = 1
+ExitKind.ToPrevious = 0
 
 static class FallRule
 static FallRule.IsOutOfField(float) : bool
@@ -141,6 +156,8 @@ const FallRule.OutOfFieldY : float
 
 sealed class FieldBounds
 FieldBounds.ctor(float, float, float, float)
+FieldBounds.CenterX.get : float
+FieldBounds.CenterZ.get : float
 FieldBounds.ClampX(float) : float
 FieldBounds.ClampZ(float) : float
 FieldBounds.Contains(float, float) : bool
@@ -194,7 +211,10 @@ Inventory.SlotCount.get : int
 sealed class Invulnerability
 Invulnerability.ctor()
 Invulnerability.Begin(float) : void
+Invulnerability.Hold() : void
 Invulnerability.IsActive(float) : bool
+const Invulnerability.ReviveSeconds : float
+Invulnerability.Revived(float) : void
 const Invulnerability.Seconds : float
 
 sealed class ItemCatalog
@@ -303,6 +323,7 @@ QuestRegistry.Count.get : int
 QuestRegistry.Create(QuestKind, string, string, int, IReadOnlyList<Reward>) : Quest
 QuestRegistry.Find(string) : Quest
 QuestRegistry.HasMainFor(string) : bool
+QuestRegistry.HasSubFor(string) : bool
 QuestRegistry.Remove(string) : bool
 
 sealed class Recipe
@@ -393,7 +414,7 @@ const TravelRule.BaseAreaId : string
 static TravelRule.Begin(string) : Route
 static TravelRule.Revive.get : Route
 static TravelRule.RootOfArea(string, AreaKind) : string
-static TravelRule.Through(ExitKind, Quest) : Route
+static TravelRule.Through(ExitKind, string, IReadOnlyList<string>) : Route
 
 sealed class Wallet
 Wallet.ctor()

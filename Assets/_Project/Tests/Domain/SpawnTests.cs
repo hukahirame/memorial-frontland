@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using MemorialFloor.Domain;
 using NUnit.Framework;
 
@@ -75,21 +76,31 @@ namespace MemorialFloor.Domain.Tests
         [Test]
         public void 割合どおりに行動が分かれる()
         {
-            Assert.AreEqual(EnemyAction.Wait, ActionRule.Choose(new FakeRandom(0)));
-            Assert.AreEqual(EnemyAction.Wait, ActionRule.Choose(new FakeRandom(59)));
-            Assert.AreEqual(EnemyAction.Move, ActionRule.Choose(new FakeRandom(60)));
-            Assert.AreEqual(EnemyAction.Move, ActionRule.Choose(new FakeRandom(79)));
-            Assert.AreEqual(EnemyAction.Jump, ActionRule.Choose(new FakeRandom(80)));
-            Assert.AreEqual(EnemyAction.Jump, ActionRule.Choose(new FakeRandom(99)));
+            Assert.AreEqual(EnemyAction.Wait, ActionRule.Choose(new FakeRandom(0), false));
+            Assert.AreEqual(EnemyAction.Wait, ActionRule.Choose(new FakeRandom(59), false));
+            Assert.AreEqual(EnemyAction.Move, ActionRule.Choose(new FakeRandom(60), false));
+            Assert.AreEqual(EnemyAction.Move, ActionRule.Choose(new FakeRandom(79), false));
+            Assert.AreEqual(EnemyAction.Jump, ActionRule.Choose(new FakeRandom(80), false));
+            Assert.AreEqual(EnemyAction.Jump, ActionRule.Choose(new FakeRandom(99), false));
         }
 
         [Test]
-        public void 三つの割合が100になる()
+        public void プレイヤーを見つけているあいだは待機が減る()
+        {
+            Assert.AreEqual(EnemyAction.Wait, ActionRule.Choose(new FakeRandom(29), true));
+            Assert.AreEqual(EnemyAction.Move, ActionRule.Choose(new FakeRandom(30), true));
+            Assert.AreEqual(EnemyAction.Move, ActionRule.Choose(new FakeRandom(69), true));
+            Assert.AreEqual(EnemyAction.Jump, ActionRule.Choose(new FakeRandom(70), true));
+        }
+
+        [TestCase(false, 60, 20, 20)]
+        [TestCase(true, 30, 40, 30)]
+        public void 三つの割合が100になる(bool chasing, int waitExpected, int moveExpected, int jumpExpected)
         {
             int wait = 0, move = 0, jump = 0;
             for (int roll = 0; roll < 100; roll++)
             {
-                switch (ActionRule.Choose(new FakeRandom(roll)))
+                switch (ActionRule.Choose(new FakeRandom(roll), chasing))
                 {
                     case EnemyAction.Wait: wait++; break;
                     case EnemyAction.Move: move++; break;
@@ -97,9 +108,82 @@ namespace MemorialFloor.Domain.Tests
                 }
             }
 
-            Assert.AreEqual(60, wait);
-            Assert.AreEqual(20, move);
-            Assert.AreEqual(20, jump);
+            Assert.AreEqual(waitExpected, wait);
+            Assert.AreEqual(moveExpected, move);
+            Assert.AreEqual(jumpExpected, jump);
+        }
+    }
+
+    public class AimRuleTests
+    {
+        [Test]
+        public void 見える距離に入ったプレイヤーへ寄る()
+        {
+            Assert.AreEqual(EnemyAim.Player, AimRule.Choose(AimRule.SightRange, false, 0f));
+            Assert.AreEqual(EnemyAim.Wander, AimRule.Choose(AimRule.SightRange + 0.01f, false, 0f));
+        }
+
+        [Test]
+        public void 行き先が遠いあいだは寄り近づいたらうろつく()
+        {
+            Assert.AreEqual(EnemyAim.Goal, AimRule.Choose(float.MaxValue, true, AimRule.GoalRadius + 0.01f));
+            Assert.AreEqual(EnemyAim.Wander, AimRule.Choose(float.MaxValue, true, AimRule.GoalRadius));
+        }
+
+        [Test]
+        public void 行き先よりも見つけたプレイヤーへ寄る()
+        {
+            Assert.AreEqual(EnemyAim.Player, AimRule.Choose(1f, true, 10f));
+        }
+
+        [Test]
+        public void 行き先を持たなければ遠くてもうろつく()
+        {
+            Assert.AreEqual(EnemyAim.Wander, AimRule.Choose(float.MaxValue, false, 100f));
+        }
+
+        [Test]
+        public void 差の向きは長さ1で差が無ければ止まる()
+        {
+            Heading heading = AimRule.Toward(3f, 4f);
+
+            Assert.AreEqual(0.6f, heading.X, 1e-5f);
+            Assert.AreEqual(0.8f, heading.Z, 1e-5f);
+            Assert.IsTrue(AimRule.Toward(0f, 0f).IsStill);
+        }
+
+        [Test]
+        public void 傾けた向きは行き先から90度より外れない()
+        {
+            //行き先は +x。うろつく向きを一周させる
+            for (int degree = 0; degree < 360; degree += 15)
+            {
+                double radian = degree * Math.PI / 180.0;
+                Heading wander = new Heading((float)Math.Cos(radian), (float)Math.Sin(radian));
+
+                Heading leaned = AimRule.Lean(wander, 10f, 0f);
+
+                Assert.Greater(leaned.X, 0f, degree + " 度で行き先から外れた");
+                Assert.AreEqual(1f, (float)Math.Sqrt(leaned.X * leaned.X + leaned.Z * leaned.Z), 1e-4f);
+            }
+        }
+
+        [Test]
+        public void 横を向いていれば斜めに寄る()
+        {
+            Heading leaned = AimRule.Lean(new Heading(0f, 1f), 10f, 0f);
+
+            Assert.AreEqual(Math.Sqrt(0.5), leaned.X, 1e-5);
+            Assert.AreEqual(Math.Sqrt(0.5), leaned.Z, 1e-5);
+        }
+
+        [Test]
+        public void 真逆を向いていたら行き先へまっすぐ向かう()
+        {
+            Heading leaned = AimRule.Lean(new Heading(-1f, 0f), 5f, 0f);
+
+            Assert.AreEqual(1f, leaned.X, 1e-5f);
+            Assert.AreEqual(0f, leaned.Z, 1e-5f);
         }
     }
 

@@ -50,6 +50,12 @@ public class Player2 : MonoBehaviour
     private float bufferedHorizontal;
     private float bufferedVertical;
 
+    /// <summary>倒れている間と場所を移っている間は、歩くのも振るのも、持ち物を使うのも止める</summary>
+    public bool CanAct
+    {
+        get { return !cool && !travel.IsTraveling; }
+    }
+
     void Start()
     {
         playerrb = GetComponent<Rigidbody>();
@@ -72,8 +78,9 @@ public class Player2 : MonoBehaviour
 
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D))
         {
-            horizontalKey = Input.GetAxis("Horizontal");
-            verticalKey = Input.GetAxis("Vertical");
+            //なめらかに立ち上がる GetAxis だと、移動の遊びを越えるまで数フレーム動き出さない
+            horizontalKey = Input.GetAxisRaw("Horizontal");
+            verticalKey = Input.GetAxisRaw("Vertical");
         }
         else
         {
@@ -84,21 +91,25 @@ public class Player2 : MonoBehaviour
 
         if (Input.GetKeyUp(KeyCode.Space)) Jump();
 
-        //緊急脱出用
-        Vector3 pos = transform.position;
-        FieldBounds bounds = Exposition.ToBounds(expos);
-        if (bounds.HasEscaped(pos.x, pos.y, pos.z))
+        //緊急脱出用。場の範囲は着いたときに入れ替わるので、移っているあいだは見ない。止めた体には速さも入れられない
+        if (!travel.IsTraveling)
         {
-            transform.position = new Vector3(-2, 0.65f, -2);
-            playerrb.linearVelocity = Vector3.right * 2;
-        }
-        else
-        {
-            Nudge nudge = bounds.PushBack(pos.x, pos.z);
-            if (!nudge.None) playerrb.linearVelocity = new Vector3(nudge.X, 0, nudge.Z) * 0.5f;
+            Vector3 pos = transform.position;
+            FieldBounds bounds = Exposition.ToBounds(expos);
+            if (bounds.HasEscaped(pos.x, pos.y, pos.z))
+            {
+                transform.position = new Vector3(-2, 0.65f, -2);
+                playerrb.linearVelocity = Vector3.right * 2;
+            }
+            else
+            {
+                //押し戻すのは横だけ。縦まで 0 にすると、壁際で跳んでも宙で止まり、吹き飛ばしも消える
+                Nudge nudge = bounds.PushBack(pos.x, pos.z);
+                if (!nudge.None) playerrb.linearVelocity = new Vector3(nudge.X * 0.5f, playerrb.linearVelocity.y, nudge.Z * 0.5f);
+            }
         }
 
-        if (cool == false && !travel.IsTraveling)//この中は停止可能
+        if (CanAct)//この中は停止可能
         {
             if (!atk_mode)
             {
@@ -140,11 +151,22 @@ public class Player2 : MonoBehaviour
             }
             transform.Translate(speed * temp * Time.deltaTime);
         }
+        else
+        {
+            //歩けないあいだは足音も止める。上の止め方は手を離したときにしか通らない。倒れた姿はそのまま残す
+            if (footstep.loop)
+            {
+                footstep.loop = false;
+                footstep.Stop();
+            }
+            if (!cool && character.GetState() == CharacterState.Walk) character.SetState(CharacterState.Idle);
+        }
     }
 
     public void Jump()
     {
-        if (jumpbutton.interactable == false) return;
+        //ボタンの呼び先は Core に残る古い Player で、移動の入口を持たない。動けるかは本物のプレイヤーで見る
+        if (jumpbutton.interactable == false || !playerrb.GetComponent<Player2>().CanAct) return;
         playerrb.AddForce(horizontalKey, playerrb.mass * 4, verticalKey, ForceMode.Impulse);
         jumpbutton.interactable = false;
         Debug.Log("Jump：" + new Vector3(horizontalKey,playerrb.mass * 4, verticalKey));
@@ -171,13 +193,10 @@ public class Player2 : MonoBehaviour
         }
     }
 
-    /// <summary>出口に入ったら移る。受注が無くて根源へ行けないときは文字だけ出す</summary>
+    /// <summary>出口に入ったら、受注にかかわらず隣の場所へ移る</summary>
     private void EnterExit(Exit exit)
     {
-        Quest ordered = QuestManager.Quests.Find(QuestManager.ordered_id);
-        if (travel.Through(exit.Kind, ordered)) return;
-
-        GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("受注されたクエストがありません");
+        travel.Through(exit.Kind, RootsManager.RootIds());
     }
 
     public void HpChange()
@@ -214,7 +233,8 @@ public class Player2 : MonoBehaviour
 
     public void Player_Hurt(int damage, Vector3 direction) // 現状、ノックバックはほぼ固定
     {
-        if (Hp.IsDead || invulnerability.IsActive(Time.time)) return;
+        //場所を移っているあいだは動けないので当てない。倒れて拠点へ戻される途中もここに入る
+        if (Hp.IsDead || travel.IsTraveling || invulnerability.IsActive(Time.time)) return;
 
         invulnerability.Begin(Time.time);
         Hp.Take(damage);
@@ -237,14 +257,38 @@ public class Player2 : MonoBehaviour
     {
         Wink.play_eyeclose = true;
         var renderers = GetComponentsInChildren<SpriteRenderer>();
+
+        //髪や目は色を付けてあるので、白ではなく元の色へ戻す
+        var colors = new Color[renderers.Length];
+        for (int i = 0; i < renderers.Length; i++) colors[i] = renderers[i].color;
+
         while (invulnerability.IsActive(Time.time))
         {
             foreach (var renderer in renderers) renderer.color = new Color(1, 0.2f, 0.2f, renderer.color.a);
             yield return new WaitForSeconds(0.3f);
 
-            foreach (var renderer in renderers) renderer.color = new Color(1, 1, 1,renderer.color.a);
+            for (int i = 0; i < renderers.Length; i++) renderers[i].color = colors[i];
             yield return new WaitForSeconds(0.2f);
         }
+    }
+
+    /// <summary>
+    /// 倒れて戻される。動けるようになってからしばらく当たらず、被弾のあとと同じく点滅する。
+    /// 戻った地点のまわりに攻め込んだ敵が居ても、離れる間を残す。移り始めてから呼ぶ
+    /// </summary>
+    public void GuardAfterRevive()
+    {
+        StartCoroutine(GuardUntilRevived());
+    }
+
+    private IEnumerator GuardUntilRevived()
+    {
+        //移り終わったフレームに当たらないよう、数え始めるまでのあいだも無敵にしておく
+        invulnerability.Hold();
+        while (travel.IsTraveling) yield return null;
+
+        invulnerability.Revived(Time.time);
+        yield return PlayerHurt_Graphic();
     }
     public void AttackDown(){ atk_mode = true; /*speed *= 0.64f;*/ }//いらないかも
 
@@ -290,6 +334,8 @@ public class Player2 : MonoBehaviour
 
     private IEnumerator Swing(float horizontal, float vertical)
     {
+        if (!CanAct) yield break;
+
         atk_mode = true;
         attackStartedAt = Time.time;
         SideJab sj = GetComponentInChildren<SideJab>();
@@ -317,8 +363,9 @@ public class Player2 : MonoBehaviour
         }
         TempAudio.TempAudioPlay("Fantasy_Game_Attack_Skill_Knife_Throw_B");
 
-        //当たるのは振りの打点のあたりだけ
+        //当たるのは振りの打点のあたりだけ。振りかぶっているあいだに倒れたり移り始めたりしたら出さない
         yield return new WaitForSeconds(AttackTiming.WindupSeconds);
+        if (!CanAct) yield break;
         StartCoroutine(weapon.GetComponent<Weapon>().AttackWeaponProcess(AttackTiming.ActiveSeconds));
         yield return new WaitForSeconds(AttackTiming.SwingSeconds - AttackTiming.WindupSeconds);
     }

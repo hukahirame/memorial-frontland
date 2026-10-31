@@ -20,6 +20,15 @@ public class RootsManager : MonoBehaviour
         RootCreate("水の根源", "02020202", "Root2", 200f, -100f, 2000);
     }
 
+    /// <summary>根源の Id を作った順に。場所は拠点のあとにこの順で一列に並ぶ</summary>
+    public static List<string> RootIds()
+    {
+        List<string> ids = new List<string>();
+        foreach (Root root in Roots.All) ids.Add(root.Id);
+
+        return ids;
+    }
+
     public void RootCreate(string name, string seed, string id, float uiX, float uiY, int danger) //3日前後で1回実行
     {
         //既に同じ ID があれば何もしない

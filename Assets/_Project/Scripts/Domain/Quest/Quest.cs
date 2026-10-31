@@ -217,6 +217,17 @@ namespace MemorialFloor.Domain
             return false;
         }
 
+        /// <summary>その根源に、サブが既にあるか。達成して受け取る前のものも数える</summary>
+        public bool HasSubFor(string rootId)
+        {
+            for (int i = 0; i < _quests.Count; i++)
+            {
+                if (_quests[i].RootId == rootId && _quests[i].Kind == QuestKind.Sub) return true;
+            }
+
+            return false;
+        }
+
         /// <summary>全て捨てる。新規開始とテストの後始末で使う</summary>
         public void Clear()
         {

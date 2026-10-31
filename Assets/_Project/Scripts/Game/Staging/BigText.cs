@@ -13,6 +13,8 @@ public class BigText : MonoBehaviour
     [SerializeField] private TextMeshProUGUI txt1; //中央
     [SerializeField] private TextMeshProUGUI txt2; //リボン側
 
+    private Coroutine shown;
+
     //テキスト・画像は最初から透過指定
 
     public void Bigtxt_Anim(string s1,string s2)
@@ -20,7 +22,16 @@ public class BigText : MonoBehaviour
         transform.localScale = new Vector3(1, 1, 1);
         txt1.text = s1;
         txt2.text = s2;
-        StartCoroutine(Bigtxt_Anim2());
+
+        //続けて出すと、前のものの終わりで後のものまで消える。前のものは止めて、透明から出し直す
+        if (shown != null) StopCoroutine(shown);
+        foreach (Graphic part in new Graphic[] { image1, image2, txt1, txt2 })
+        {
+            Color color = part.color;
+            color.a = 0f;
+            part.color = color;
+        }
+        shown = StartCoroutine(Bigtxt_Anim2());
     }
 
     IEnumerator Bigtxt_Anim2()

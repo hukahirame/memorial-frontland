@@ -56,6 +56,7 @@ public class Info_set : MonoBehaviour
 
     public void Delete_Info()
     {
+        current = null;
         mainImage.sprite = buttonsprite;
         nametxt.text = "";
         txt.text = "";
@@ -65,6 +66,9 @@ public class Info_set : MonoBehaviour
     public void Install()
     {
         if (current == null) return;
+
+        //倒れている間と場所を移っている間は使えない。倒れていると食べても体力は戻らず、移る途中に置いた物は前の場所と一緒に消える
+        if (!GameObject.FindWithTag("Player").GetComponent<Player2>().CanAct) return;
 
         switch (current.Use)
         {

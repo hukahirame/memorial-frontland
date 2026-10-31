@@ -18,7 +18,7 @@ tunables: []
 ## 相互作用
 
 - WHEN クエストの報酬 `coin` を受け取った、そのぶん増える（[quest](quest.md)）
-- WHEN 死亡した、100 減る。足りなければ 0 のまま（[player](player.md)）
+- WHEN 死亡した、100 減る。足りなければ減らない（[player](player.md)）
 
 ## やらないこと
 

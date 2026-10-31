@@ -12,8 +12,11 @@ public class MainCamera : MonoBehaviour
     /// <summary>上下を追い付くまでのおおよその秒数。跳ぶたびに画面が上下しないよう遅らせる</summary>
     public const float VerticalFollowSeconds = 0.4f;
 
-    /// <summary>1 フレームでこれより離れたら、場所の移動とみなして追わずに飛ぶ</summary>
-    public const float SnapDistance = 4f;
+    /// <summary>
+    /// プレイヤーが 1 フレームでこれより動いたら、歩いたのではなく移されたとみなし、追わずに飛ぶ。
+    /// 復活の地点のように近くへ移されたときも、明転の途中で画面が流れないように
+    /// </summary>
+    public const float SnapDistance = 1f;
 
     /// <summary>当てたときの揺れの大きさ</summary>
     public const float HitShake = 0.04f;
@@ -28,6 +31,7 @@ public class MainCamera : MonoBehaviour
     private Vector3 _offset;
     private Vector3 _position;
     private Vector3 _velocity;
+    private Vector3 _lastTarget;
 
     private float _shakeStrength;
     private float _shakeEndsAt;
@@ -43,18 +47,20 @@ public class MainCamera : MonoBehaviour
 
         _offset = transform.position - _target.position;
         _position = transform.position;
+        _lastTarget = _target.position;
     }
 
     private void LateUpdate()
     {
-        Vector3 goal = _target.position + _offset;
+        Vector3 target = _target.position;
+        Vector3 goal = target + _offset;
 
-        if ((goal - _position).sqrMagnitude > SnapDistance * SnapDistance)
+        if ((target - _lastTarget).sqrMagnitude > SnapDistance * SnapDistance)
         {
             _position = goal;
             _velocity = Vector3.zero;
         }
-        else
+        else if (Time.deltaTime > 0f) //時間止めの間は追わない。経過 0 の SmoothDamp は、追い付き切った軸の速さを 0 割りで NaN にする
         {
             float dt = Time.deltaTime;
             _position.x = Mathf.SmoothDamp(_position.x, goal.x, ref _velocity.x, FollowSeconds, Mathf.Infinity, dt);
@@ -63,6 +69,7 @@ public class MainCamera : MonoBehaviour
         }
 
         transform.position = _position + ShakeOffset();
+        _lastTarget = target;
     }
 
     /// <summary>画面を揺らす。揺れている最中に弱いものが来ても、強い方を残す</summary>

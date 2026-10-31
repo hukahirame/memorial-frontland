@@ -16,11 +16,13 @@ public class Weapon : MonoBehaviour // 武器オブジェクトに直接
     private BoxCollider box;
     private HitStop hitStop;
     private MainCamera mainCamera;
+    private Player2 player;
 
     void Start()
     {
         box = GetComponent<BoxCollider>();
         box.enabled = false;
+        player = GetComponentInParent<Player2>();
 
         //時間止めはプレイヤーの一番上に1つだけ置く。武器を持ち替えても同じものを使う
         hitStop = transform.root.GetComponent<HitStop>();
@@ -39,13 +41,24 @@ public class Weapon : MonoBehaviour // 武器オブジェクトに直接
     }
     private void OnTriggerEnter(Collider other)
     {
+        //出ている当たりは振りの終わりまで残る。そのあいだに倒れたり移り始めたりしたら当てない
+        if (player != null && !player.CanAct) return;
+
         int power = Equipped.Attack;
 
         if (other.CompareTag("MainSpawner"))
         {
-            other.GetComponent<OF_Spawner>().SpawnerBreak(power);
+            bool broke = other.GetComponent<OF_Spawner>().SpawnerBreak(power);
             box.enabled = false;
             TempAudio.TempAudioPlay("Fantasy_Game_Attack_Weapon_Impact");
+
+            //壊した一撃は、敵を倒したときと同じだけ止めて揺らす
+            if (broke)
+            {
+                hitStop.Stop(HitStop.KillSeconds);
+                if (mainCamera != null) mainCamera.Shake(MainCamera.KillShake);
+                TempAudio.TempAudioPlay("Fantasy_Game_Attack_Weapon_Impact", KillPitch);
+            }
         }
         else if (other.CompareTag("SpawnerCandidate")) 
         {

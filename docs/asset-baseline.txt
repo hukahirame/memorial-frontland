@@ -60,21 +60,8 @@ Assets/_Project/Resources/Unit_x0.prefab cb158dbf806d2dc4d8058e88952907c1
 Assets/_Project/Resources/Unit_xa.prefab cb158dbf806d2dc4d8058e88952907c1
 Assets/_Project/Resources/Unit_xn.prefab cb158dbf806d2dc4d8058e88952907c1
 Assets/_Project/Resources/WoodChestset.prefab b4b88cad7803e6d43ae689edc4b728e7
-Assets/_Project/Scenes/Core.unity 049d7022f9a74954b97a81e1b726e88f
-Assets/_Project/Scenes/Core.unity 4df6cead6fe581e47bc1753b0c915ff2
-Assets/_Project/Scenes/Core.unity d5f4a4d94bb1882498a3367457e7297f
-Assets/_Project/Scenes/Core.unity e36d390f5981abf41906b22efc51d3d7
 Assets/_Project/Scenes/MainSite.unity 198072d091945ea42b7f9a69bfa39ae5
 Assets/_Project/Scenes/Root1.unity 198072d091945ea42b7f9a69bfa39ae5
 Assets/_Project/Scenes/Root2.unity 198072d091945ea42b7f9a69bfa39ae5
 Assets/_Project/Scenes/Title.unity 198072d091945ea42b7f9a69bfa39ae5
-Assets/_Project/StartSet/Global Light 2D.prefab 4bf8c64144770794282277240bef543a
-Assets/_Project/StartSet/MainCanvas.prefab 064259c6fcad8ec4bbf8617a49c2b62f
-Assets/_Project/StartSet/MainCanvas.prefab 4bf04d49a3581d94e903cb52de580caa
-Assets/_Project/StartSet/MainCanvas.prefab 4df6cead6fe581e47bc1753b0c915ff2
-Assets/_Project/StartSet/MainCanvas.prefab 752797cfafdcc5d49983394ab1454771
 Assets/_Project/StartSet/MainCanvas.prefab bdf8cf9fcdd283e4dbbf70158db8ef68
-Assets/_Project/StartSet/MainCanvas.prefab e36d390f5981abf41906b22efc51d3d7
-Assets/_Project/StartSet/MainCanvas.prefab eb18ff8700e01754e8567cf2822b2bec
-Assets/_Project/StartSet/Silent Land playerA.prefab 2ed596f562d29f441a65ca2033f11a83
-Assets/_Project/StartSet/Silent Land playerA.prefab 5e2ff6ab5d4670c48ab3066f7f0d8b04

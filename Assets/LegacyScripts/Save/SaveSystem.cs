@@ -66,7 +66,7 @@ public class SaveSystem : MonoBehaviour
         travel.Entered -= Restore;
         restorePending = false;
 
-        savedata.LoadStatic();
+        savedata.LoadStatic(area.Id);
     }
 
 }

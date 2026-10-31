@@ -43,6 +43,16 @@ namespace MemorialFloor.Domain.Tests
         }
 
         [Test]
+        public void 真ん中は両端のあいだ()
+        {
+            //MainSite の場
+            FieldBounds bounds = new FieldBounds(maxX: 13f, minX: -10.2f, maxZ: -0.2f, minZ: -5.8f);
+
+            Assert.AreEqual(1.4f, bounds.CenterX, 1e-5f);
+            Assert.AreEqual(-3f, bounds.CenterZ, 1e-5f);
+        }
+
+        [Test]
         public void 中に居るなら押し戻さない()
         {
             Assert.IsTrue(Square().PushBack(0f, 0f).None);

@@ -15,6 +15,9 @@ namespace MemorialFloor.Game
         [Tooltip("出口を通ってきたときに立つ地点。空ならこの GameObject の位置")]
         [SerializeField] private Transform entrance;
 
+        [Tooltip("奥の出口を通ってきたときに立つ地点。出口が 1 つの場所は空のままでよく、どちらから来ても入口に立つ")]
+        [SerializeField] private Transform farEntrance;
+
         [Tooltip("始めたときと倒れたあとに立つ地点。空なら入口")]
         [SerializeField] private Transform home;
 
@@ -47,7 +50,9 @@ namespace MemorialFloor.Game
         /// <summary>着いたときに立つ位置</summary>
         public Vector3 PointFor(Arrival arrival)
         {
-            Transform point = arrival == Arrival.Home && home != null ? home : entrance;
+            Transform point = entrance;
+            if (arrival == Arrival.Home && home != null) point = home;
+            if (arrival == Arrival.FromNext && farEntrance != null) point = farEntrance;
 
             return (point != null ? point : transform).position;
         }

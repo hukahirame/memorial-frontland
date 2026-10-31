@@ -57,8 +57,7 @@ public class Sun2 : MonoBehaviour
             QuestManager.Quests.Create(QuestKind.Main, root.Id, "MainSpawner", 1,
                 new[] { new Reward("coin", 100), new Reward("progress", 15) });
 
-            QuestManager.Quests.Create(QuestKind.Sub, root.Id, "Slime", 3,
-                new[] { new Reward("coin", 100) });
+            QuestManager.IssueSub(root.Id);
 
             GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("新クエストが発生しました");
         }

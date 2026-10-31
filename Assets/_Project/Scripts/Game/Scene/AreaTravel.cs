@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using MemorialFloor.Domain;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -92,15 +93,16 @@ namespace MemorialFloor.Game
             Go(TravelRule.Begin(savedAreaId));
         }
 
-        /// <summary>出口を通る。行けないときは何もせず false</summary>
-        public bool Through(ExitKind exit, Quest ordered)
+        /// <summary>出口を通って隣の場所へ移る。並びの端で行き先が無いときは何もせず false</summary>
+        public bool Through(ExitKind exit, IReadOnlyList<string> rootIds)
         {
-            Route route = TravelRule.Through(exit, ordered);
+            Route route = TravelRule.Through(exit, Where.AreaId, rootIds);
             if (route.IsRefused) return false;
 
             Go(route);
             return true;
         }
+
 
         /// <summary>倒れたあと、拠点の決まった地点へ戻る</summary>
         public void Revive()

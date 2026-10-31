@@ -145,6 +145,20 @@ namespace MemorialFloor.Domain.Tests
         }
 
         [Test]
+        public void 根源ごとにサブがあるかを見る()
+        {
+            QuestRegistry registry = new QuestRegistry();
+            registry.Create(QuestKind.Main, "Root1", "MainSpawner", 1, NoReward);
+
+            Assert.IsFalse(registry.HasSubFor("Root1"), "調査をサブと数えた");
+
+            Quest sub = registry.Create(QuestKind.Sub, "Root1", "Slime", 1, NoReward);
+            sub.Advance();
+            Assert.IsTrue(registry.HasSubFor("Root1"), "達成して受け取る前のサブを数えない");
+            Assert.IsFalse(registry.HasSubFor("Root2"));
+        }
+
+        [Test]
         public void 進捗は目標で頭打ちになる()
         {
             QuestRegistry registry = new QuestRegistry();

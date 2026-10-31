@@ -7306,30 +7306,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 348623865873181819, guid: b4ea85ed897d123408b6bd071d887864, type: 3}
-      propertyPath: speed
-      value: 3
-      objectReference: {fileID: 0}
-    - target: {fileID: 348623865873181819, guid: b4ea85ed897d123408b6bd071d887864, type: 3}
-      propertyPath: joystick
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 348623865873181819, guid: b4ea85ed897d123408b6bd071d887864, type: 3}
-      propertyPath: atackbutton
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 348623865873181819, guid: b4ea85ed897d123408b6bd071d887864, type: 3}
-      propertyPath: gameoverobj
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 348623865873181819, guid: b4ea85ed897d123408b6bd071d887864, type: 3}
-      propertyPath: allmaitybutton
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 348623865873181819, guid: b4ea85ed897d123408b6bd071d887864, type: 3}
-      propertyPath: craftinventory
-      value: 
-      objectReference: {fileID: 0}
     - target: {fileID: 348623865873181822, guid: b4ea85ed897d123408b6bd071d887864, type: 3}
       propertyPath: m_Enabled
       value: 0

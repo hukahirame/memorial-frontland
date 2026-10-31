@@ -1,4 +1,6 @@
-﻿namespace MemorialFloor.Domain
+﻿using System;
+
+namespace MemorialFloor.Domain
 {
     /// <summary>
     /// 乱数の口。UnityEngine.Random を直に呼ぶと規則を試験できないため、
@@ -34,11 +36,15 @@
         Jump
     }
 
-    /// <summary>敵の行動選択。待機が多く、移動と跳躍が同じだけ続く</summary>
+    /// <summary>敵の行動選択。待機が多く、移動と跳躍が同じだけ続く。プレイヤーを見つけているあいだは待機が減る</summary>
     public static class ActionRule
     {
         public const int WaitPercent = 60;
         public const int MovePercent = 20;
+
+        /// <summary>プレイヤーを見つけているあいだの割合。待機を減らして寄っていく</summary>
+        public const int ChaseWaitPercent = 30;
+        public const int ChaseMovePercent = 40;
 
         /// <summary>待機を続ける秒数の下限と上限</summary>
         public const float WaitSecondsMin = 1.5f;
@@ -54,13 +60,15 @@
         /// <summary>攻撃を受けてから自分で動き出すまでの秒数。この間は吹き飛ばしに任せる</summary>
         public const float StaggerSeconds = 0.4f;
 
-        /// <summary>残りは跳躍</summary>
-        public static EnemyAction Choose(IRandom random)
+        /// <summary>残りは跳躍。chasing はプレイヤーを見つけているか</summary>
+        public static EnemyAction Choose(IRandom random, bool chasing)
         {
+            int wait = chasing ? ChaseWaitPercent : WaitPercent;
+            int move = chasing ? ChaseMovePercent : MovePercent;
             int roll = random.Next(0, 100);
 
-            if (roll < WaitPercent) return EnemyAction.Wait;
-            if (roll < WaitPercent + MovePercent) return EnemyAction.Move;
+            if (roll < wait) return EnemyAction.Wait;
+            if (roll < wait + move) return EnemyAction.Move;
 
             return EnemyAction.Jump;
         }
@@ -72,6 +80,69 @@
             if (action == EnemyAction.Move) return random.NextFloat(MoveSecondsMin, MoveSecondsMax);
 
             return JumpSeconds;
+        }
+    }
+
+    /// <summary>敵が動くときに目指すもの</summary>
+    public enum EnemyAim
+    {
+        /// <summary>向きを乱数で決める</summary>
+        Wander,
+
+        /// <summary>見つけたプレイヤーへ寄っていく</summary>
+        Player,
+
+        /// <summary>うろつきながら行き先へ寄っていく</summary>
+        Goal
+    }
+
+    /// <summary>
+    /// 敵が動く向き。見えるところにプレイヤーが居れば寄っていく。
+    /// 行き先を持つ敵は、うろつく向きを行き先の側へ傾ける
+    /// </summary>
+    public static class AimRule
+    {
+        /// <summary>この距離までプレイヤーが近づくと見つける。離れれば見失う。壁は見ない</summary>
+        public const float SightRange = 4f;
+
+        /// <summary>行き先からこの距離の内に入ったら、もう寄らずにうろつく。狭いと一か所に固まる</summary>
+        public const float GoalRadius = 6f;
+
+        /// <summary>足し合わせた長さの 2 乗がこれ未満なら、打ち消し合ったとみなす</summary>
+        private const float CancelledSquared = 1e-6f;
+
+        /// <summary>プレイヤーを見つけていれば寄る。でなければ、行き先が遠いときだけ行き先へ寄る</summary>
+        public static EnemyAim Choose(float toPlayer, bool hasGoal, float toGoal)
+        {
+            if (toPlayer <= SightRange) return EnemyAim.Player;
+            if (hasGoal && toGoal > GoalRadius) return EnemyAim.Goal;
+
+            return EnemyAim.Wander;
+        }
+
+        /// <summary>差の向き。差が無ければ止まる</summary>
+        public static Heading Toward(float x, float z)
+        {
+            float length = (float)Math.Sqrt(x * x + z * z);
+            if (length == 0f) return new Heading(0f, 0f);
+
+            return new Heading(x / length, z / length);
+        }
+
+        /// <summary>
+        /// うろつく向きを行き先の側へ傾ける。足し合わせて向きだけを取るので、
+        /// 行き先から 90 度より外れはしないが、まっすぐにも向かわない
+        /// </summary>
+        public static Heading Lean(Heading wander, float towardX, float towardZ)
+        {
+            Heading goal = Toward(towardX, towardZ);
+            float x = wander.X + goal.X;
+            float z = wander.Z + goal.Z;
+
+            //真逆を向いていると打ち消し合い、残った誤差の向きへ逸れる。そのときは行き先へまっすぐ
+            if (x * x + z * z < CancelledSquared) return goal;
+
+            return Toward(x, z);
         }
     }
 

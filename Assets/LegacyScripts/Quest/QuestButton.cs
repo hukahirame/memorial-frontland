@@ -20,52 +20,50 @@ public class QuestButton : MonoBehaviour
         if (gameObject.name.IndexOf("(Clone)") != -1) gameObject.name = gameObject.name.Substring(0, gameObject.name.Length - 7); //(Clone)除去
     }
 
+    /// <summary>
+    /// 受注と解除。どちらも枠の表示ではなく受注の状態で決める。表示は掲示板を開いたまま移ると古いまま残る
+    /// </summary>
     public void QuestOrder() //メインクエのみ
     {
+        Quest quest = QuestManager.Quests.Find(gameObject.name);
+        if (quest == null) return;
+
+        //成功が決まったものは、拠点で受け取るまで受け直しも解除もしない
+        if (quest.IsComplete) return;
+
+        bool ordered = QuestManager.ordered_id == quest.Id;
+
+        //受けるのも解除するのも、対象の根源の外でだけ。中ではもう始まっている
+        if (whereabouts != null && whereabouts.RootId == quest.RootId)
+        {
+            Notice(ordered ? "この根源の中では解除できません" : "この根源の中では受注できません");
+            return;
+        }
+
         var s = transform.Find("StatusText").GetComponent<TextMeshProUGUI>();
 
-        if (s.text == "受注済み")
+        if (ordered)
         {
             s.text = "非受注";
             QuestManager.ordered_id = "";
-            GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("クエストを解除しました");
+            Notice("クエストを解除しました");
             return;
         }
 
-        if (QuestId.Is(QuestManager.ordered_id, QuestKind.Main)) //メイン受注条件
+        if (QuestManager.Quests.Find(QuestManager.ordered_id) != null)
         {
-            GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("これ以上受注できません");
+            Notice("これ以上受注できません");
             return;
         }
 
-
-        if (whereabouts != null && whereabouts.IsInRoot) //根源内
-        {
-            if (s.text == "非受注")
-            {
-                s.text = "受注不可";
-                Invoke("Alert", 1.5f);
-            }
-            else { }
-        }
-        else if(s.text == "達成済み") //消す
-        {
-        
-        }
-        else //管理地通常受注
-        {
-            s.text = "受注済み";
-            QuestManager.ordered_id = gameObject.name;
-            GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("クエストを受注しました");
-        }
-
-       // transform.parent.GetComponent<QuestManager>().StartQuest(); //根源内受注用
-
-
+        s.text = "受注済み";
+        QuestManager.ordered_id = quest.Id;
+        Notice("クエストを受注しました");
     }
-    private void Alert()
+
+    private static void Notice(string text)
     {
-        transform.Find("StatusText").GetComponent<TextMeshProUGUI>().text = "非受注";
+        GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim(text);
     }
 
 }

@@ -30,65 +30,76 @@ public class SceneSmokeTests
     {
         yield return Boot();
 
-        Assert.IsTrue(Travel().Through(ExitKind.ToOrderedRoot, Ordered("Root1")));
+        Assert.IsTrue(Travel().Through(ExitKind.ToNext, RootIds()));
         yield return Arrive();
 
         Assert.AreEqual("Root1", SceneManager.GetActiveScene().name);
     }
 
     [UnityTest]
-    public IEnumerator 拠点からRoot2へ移れる()
+    public IEnumerator Root1を通ってRoot2へ移れる()
     {
         yield return Boot();
+        Travel().Through(ExitKind.ToNext, RootIds());
+        yield return Arrive();
 
-        Assert.IsTrue(Travel().Through(ExitKind.ToOrderedRoot, Ordered("Root2")));
+        Assert.IsTrue(Travel().Through(ExitKind.ToNext, RootIds()));
         yield return Arrive();
 
         Assert.AreEqual("Root2", SceneManager.GetActiveScene().name);
     }
 
     [UnityTest]
-    public IEnumerator 根源から拠点へ戻れる()
+    public IEnumerator 根源から1つずつ戻って拠点に着く()
     {
         yield return Boot();
-        Travel().Through(ExitKind.ToOrderedRoot, Ordered("Root1"));
+        Travel().Go(Route.To("Root2", Arrival.FromPrevious));
         yield return Arrive();
 
-        Assert.IsTrue(Travel().Through(ExitKind.ToBase, null));
+        Assert.IsTrue(Travel().Through(ExitKind.ToPrevious, RootIds()));
         yield return Arrive();
+        Assert.AreEqual("Root1", SceneManager.GetActiveScene().name);
 
+        Assert.IsTrue(Travel().Through(ExitKind.ToPrevious, RootIds()));
+        yield return Arrive();
         Assert.AreEqual(TravelRule.BaseAreaId, SceneManager.GetActiveScene().name);
     }
 
     [UnityTest]
-    public IEnumerator 受注していれば拠点の出口に入るだけで根源へ移る()
+    public IEnumerator 受注していなくても拠点の出口に入るだけで根源へ移る()
     {
         yield return Boot();
-        SetStatic("QuestManager", "ordered_id", MainQuestFor("Root1"));
 
-        StepIntoExit();
+        StepIntoExit(ExitKind.ToNext);
         yield return ArriveAt("Root1");
 
         Assert.AreEqual("Root1", SceneManager.GetActiveScene().name);
     }
 
     [UnityTest]
-    public IEnumerator 受注していなければ出口に入っても移らない()
+    public IEnumerator Root1の奥の出口からRoot2へ行き戻ると奥の出口の前に立つ()
     {
         yield return Boot();
+        StepIntoExit(ExitKind.ToNext);
+        yield return ArriveAt("Root1");
 
-        StepIntoExit();
-        for (int i = 0; i < SettleFrames; i++) yield return null;
+        StepIntoExit(ExitKind.ToNext);
+        yield return ArriveAt("Root2");
 
-        Assert.IsFalse(Travel().IsTraveling);
-        Assert.AreEqual(TravelRule.BaseAreaId, SceneManager.GetActiveScene().name);
+        StepIntoExit(ExitKind.ToPrevious);
+        yield return ArriveAt("Root1");
+
+        Vector3 at = GameObject.FindWithTag("Player").transform.position;
+        Assert.Less(FlatDistance(at, ExitHere(ExitKind.ToNext).transform.position),
+                    FlatDistance(at, ExitHere(ExitKind.ToPrevious).transform.position),
+                    "奥から戻ったのに手前の入口に立つ");
     }
 
     [UnityTest]
     public IEnumerator 根源で倒れると拠点へ戻る()
     {
         yield return Boot();
-        Travel().Through(ExitKind.ToOrderedRoot, Ordered("Root1"));
+        Travel().Go(Route.To("Root1", Arrival.FromPrevious));
         yield return Arrive();
 
         Travel().Revive();
@@ -114,7 +125,7 @@ public class SceneSmokeTests
         Assert.IsNotNull(roots, "RootsManager.Roots が RootRegistry ではない");
         roots.Clear();
 
-        //クエストも同じ。QuestManager.Start が毎回2本足すので、消さないと溜まる
+        //クエストも同じ。QuestManager.Start が毎回足すので、消さないと溜まる
         var quests = StaticField("QuestManager", "Quests").GetValue(null) as QuestRegistry;
         Assert.IsNotNull(quests, "QuestManager.Quests が QuestRegistry ではない");
         quests.Clear();
@@ -126,9 +137,13 @@ public class SceneSmokeTests
         yield return null;
     }
 
-    private static Quest Ordered(string rootId)
+    //場所は拠点のあとに、根源を作った順で一列に並ぶ
+    private static string[] RootIds()
     {
-        return new Quest("X0", rootId, "MainSpawner", 1, null);
+        var roots = StaticField("RootsManager", "Roots").GetValue(null) as RootRegistry;
+        Assert.IsNotNull(roots, "RootsManager.Roots が RootRegistry ではない");
+
+        return roots.All.Select(root => root.Id).ToArray();
     }
 
     private static AreaTravel Travel()
@@ -180,26 +195,27 @@ public class SceneSmokeTests
     }
 
     //プレイヤーを出口の上へ置く。高さはそのままにして、歩いて入ったときと同じ重なり方にする
-    private static void StepIntoExit()
+    private static void StepIntoExit(ExitKind kind)
     {
-        Exit exit = UnityEngine.Object.FindAnyObjectByType<Exit>();
-        Assert.IsNotNull(exit, "拠点に出口が無い");
-
         Transform player = GameObject.FindWithTag("Player").transform;
-        Vector3 at = exit.transform.position;
+        Vector3 at = ExitHere(kind).transform.position;
         player.position = new Vector3(at.x, player.position.y, at.z);
     }
 
-    //QuestManager.Start が根源ごとに足す調査クエスト
-    private static string MainQuestFor(string rootId)
+    //いま居る場所の、その種類の出口
+    private static Exit ExitHere(ExitKind kind)
     {
-        var quests = StaticField("QuestManager", "Quests").GetValue(null) as QuestRegistry;
-        Assert.IsNotNull(quests, "QuestManager.Quests が QuestRegistry ではない");
+        Scene here = SceneManager.GetActiveScene();
+        Exit exit = UnityEngine.Object.FindObjectsByType<Exit>(FindObjectsSortMode.None)
+            .FirstOrDefault(found => found.gameObject.scene == here && found.Kind == kind);
+        Assert.IsNotNull(exit, here.name + " に " + kind + " の出口が無い");
 
-        Quest quest = quests.All.FirstOrDefault(q => q.Kind == QuestKind.Main && q.RootId == rootId);
-        Assert.IsNotNull(quest, rootId + " の調査クエストが無い");
+        return exit;
+    }
 
-        return quest.Id;
+    private static float FlatDistance(Vector3 a, Vector3 b)
+    {
+        return new Vector2(a.x - b.x, a.z - b.z).magnitude;
     }
 
     //Assembly-CSharp は asmdef から参照できない（参照は一方向）ため名前で引く。

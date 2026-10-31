@@ -130,7 +130,6 @@ GameObject:
   - component: {fileID: 1891966}
   - component: {fileID: 1891969}
   - component: {fileID: 1891968}
-  - component: {fileID: 1891967}
   m_Layer: 5
   m_Name: Bottle
   m_TagString: Untagged
@@ -158,18 +157,6 @@ RectTransform:
   m_AnchoredPosition: {x: -540, y: 330.00003}
   m_SizeDelta: {x: 210, y: 210}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1891967
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1891965}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4df6cead6fe581e47bc1753b0c915ff2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1891968
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -213,19 +200,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 2011845839}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1891967}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: Craftprepare
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!222 &1891969
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1097,7 +1072,6 @@ GameObject:
   - component: {fileID: 97201434}
   - component: {fileID: 97201433}
   - component: {fileID: 97201432}
-  - component: {fileID: 97201431}
   m_Layer: 5
   m_Name: WeaponInventory
   m_TagString: Untagged
@@ -1124,18 +1098,6 @@ RectTransform:
   m_AnchoredPosition: {x: 1405.0002, y: 64.999985}
   m_SizeDelta: {x: 50, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &97201431
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 97201429}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e36d390f5981abf41906b22efc51d3d7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &97201432
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1179,19 +1141,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 97201433}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 97201431}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: WeaponInventoryButton
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &97201433
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1701,7 +1651,6 @@ GameObject:
   - component: {fileID: 154125769}
   - component: {fileID: 154125772}
   - component: {fileID: 154125771}
-  - component: {fileID: 154125770}
   m_Layer: 5
   m_Name: Fence
   m_TagString: Untagged
@@ -1729,18 +1678,6 @@ RectTransform:
   m_AnchoredPosition: {x: -180, y: 330}
   m_SizeDelta: {x: 210, y: 210}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &154125770
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 154125768}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4df6cead6fe581e47bc1753b0c915ff2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &154125771
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1784,19 +1721,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1956483307}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 154125770}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: Craftprepare
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!222 &154125772
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -7244,7 +7169,6 @@ GameObject:
   - component: {fileID: 745153707}
   - component: {fileID: 745153706}
   - component: {fileID: 745153705}
-  - component: {fileID: 745153704}
   m_Layer: 5
   m_Name: WoodChest(Notprepare)
   m_TagString: Untagged
@@ -7271,18 +7195,6 @@ RectTransform:
   m_AnchoredPosition: {x: 180, y: 330}
   m_SizeDelta: {x: 210, y: 210}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &745153704
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 745153702}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4df6cead6fe581e47bc1753b0c915ff2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &745153705
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7326,19 +7238,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 745153706}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 745153704}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: Craftprepare
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &745153706
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7542,7 +7442,6 @@ GameObject:
   - component: {fileID: 750644275}
   - component: {fileID: 750644278}
   - component: {fileID: 750644277}
-  - component: {fileID: 750644276}
   m_Layer: 5
   m_Name: Lightwoodcannon
   m_TagString: Untagged
@@ -7570,18 +7469,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 330}
   m_SizeDelta: {x: 210, y: 210}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &750644276
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 750644274}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4df6cead6fe581e47bc1753b0c915ff2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &750644277
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7625,19 +7512,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 50650941}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 750644276}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: Craftprepare
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!222 &750644278
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -9987,8 +9862,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u30AF\u30A8\u30B9\u30C8\u7D50\u679C"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 41ba7130ad12be340b8e5dc2ff2c2cc9, type: 2}
-  m_sharedMaterial: {fileID: 2668172952832345946, guid: 41ba7130ad12be340b8e5dc2ff2c2cc9, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1c3b38839ad820a418a10374c58bbd6f, type: 2}
+  m_sharedMaterial: {fileID: 19861947070383710, guid: 1c3b38839ad820a418a10374c58bbd6f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -10703,7 +10578,6 @@ GameObject:
   - component: {fileID: 1041455279}
   - component: {fileID: 1041455278}
   - component: {fileID: 1041455277}
-  - component: {fileID: 1041455276}
   m_Layer: 0
   m_Name: informationButton
   m_TagString: Untagged
@@ -10730,18 +10604,6 @@ RectTransform:
   m_AnchoredPosition: {x: 250, y: 380}
   m_SizeDelta: {x: 80, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1041455276
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1041455274}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5f4a4d94bb1882498a3367457e7297f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1041455277
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10785,19 +10647,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1041455278}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1041455276}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: Call
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!114 &1041455278
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11965,7 +11815,7 @@ GameObject:
   - component: {fileID: 1118225129}
   m_Layer: 5
   m_Name: RewardUI
-  m_TagString: QuestManager
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -19837,7 +19687,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1700421905}
   - component: {fileID: 1700421907}
-  - component: {fileID: 1700421906}
   m_Layer: 0
   m_Name: FootSensor
   m_TagString: Untagged
@@ -19860,18 +19709,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1688327442}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1700421906
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1700421904}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 049d7022f9a74954b97a81e1b726e88f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!65 &1700421907
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -20882,7 +20719,6 @@ GameObject:
   - component: {fileID: 1869122322}
   - component: {fileID: 1869122325}
   - component: {fileID: 1869122324}
-  - component: {fileID: 1869122323}
   m_Layer: 5
   m_Name: Adhesivetrap
   m_TagString: Untagged
@@ -20910,18 +20746,6 @@ RectTransform:
   m_AnchoredPosition: {x: -360, y: 330}
   m_SizeDelta: {x: 210, y: 210}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1869122323
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1869122321}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4df6cead6fe581e47bc1753b0c915ff2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &1869122324
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20965,19 +20789,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 746008275}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1869122323}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: Craftprepare
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!222 &1869122325
 CanvasRenderer:
   m_ObjectHideFlags: 0

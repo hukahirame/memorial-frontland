@@ -61,6 +61,17 @@ public class Slime : MonoBehaviour, IDamageable
         homeRootId = rootId;
     }
 
+    /// <summary>攻め込んだ先で目指す地点。持たないものはうろつくだけ</summary>
+    private Vector3 goal;
+    private bool hasGoal;
+
+    /// <summary>湧かせた側が、攻め込む先の地点を渡す</summary>
+    public void SetGoal(Vector3 point)
+    {
+        goal = point;
+        hasGoal = true;
+    }
+
     /// <summary>上限と初期値は prefab の Slider が持つ。以後 Slider は表示</summary>
     void Awake()
     {
@@ -113,7 +124,12 @@ public class Slime : MonoBehaviour, IDamageable
     private void FixedUpdate()
     {
         if (isDead) return;
-        if (move == true && Time.time >= staggerUntil) rb.linearVelocity = attitude * speed;
+        if (move == true && Time.time >= staggerUntil)
+        {
+            //見つけているあいだは、動いている最中もプレイヤーへ向け直す
+            if (Aim() == EnemyAim.Player) attitude = Direction(EnemyAim.Player);
+            rb.linearVelocity = attitude * speed;
+        }
         if (FallRule.IsOutOfField(transform.position.y)) gameObject.SetActive(false);
         if (health.IsDead)
         {
@@ -135,6 +151,17 @@ public class Slime : MonoBehaviour, IDamageable
     /// </summary>
     private IEnumerator Burst()
     {
+        //倒れたらすぐ通り抜けられるようにし、その場で弾ける。床も抜けるので重力も切る。
+        //当たり判定の子は prefab ごとに名前が違い、同じ名前の無効な子が先に並ぶものもあるので、名前で探さない
+        foreach (Collider body in GetComponentsInChildren<Collider>()) body.enabled = false;
+        rb.useGravity = false;
+        rb.linearVelocity = Vector3.zero;
+
+        //倒れた体はもう動かさない。跳んだ段に倒されると、溜まった跳ぶ力があとから掛かって浮いていく。
+        //物理から外した体は連続の衝突検出を持てないので、先に戻す。当たり判定はもう切ってある
+        rb.collisionDetectionMode = CollisionDetectionMode.Discrete;
+        rb.isKinematic = true;
+
         hp.gameObject.SetActive(false);
 
         Transform canvas = transform.Find("Canvas");
@@ -162,11 +189,12 @@ public class Slime : MonoBehaviour, IDamageable
     private void RandomAction()
     {
         if (isDead) return;
-        EnemyAction act = ActionRule.Choose(UnityRandom.Shared);
+        EnemyAim aim = Aim();
+        EnemyAction act = ActionRule.Choose(UnityRandom.Shared, aim == EnemyAim.Player);
 
         move = act == EnemyAction.Move;
-        attitude = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
-        if (act == EnemyAction.Jump)
+        attitude = Direction(aim);
+        if (act == EnemyAction.Jump && Time.time >= staggerUntil)
         {
             rb.AddForce((attitude + Vector3.up) * rb.mass * 2, ForceMode.Impulse);
         }
@@ -174,7 +202,55 @@ public class Slime : MonoBehaviour, IDamageable
         Invoke("RandomAction", ActionRule.Duration(act, UnityRandom.Shared));
     }
 
+    /// <summary>いま何を目指すか。倒れているプレイヤーは見ない</summary>
+    private EnemyAim Aim()
+    {
+        float toPlayer = p != null && !Player2.Hp.IsDead ? Flat(p.transform.position).magnitude : float.MaxValue;
+        float toGoal = hasGoal ? Flat(goal).magnitude : 0f;
+
+        return AimRule.Choose(toPlayer, hasGoal, toGoal);
+    }
+
+    /// <summary>目指すものへの向き。うろつく向きは乱数で決める</summary>
+    private Vector3 Direction(EnemyAim aim)
+    {
+        if (aim == EnemyAim.Player)
+        {
+            Vector3 toPlayer = Flat(p.transform.position);
+            return Along(AimRule.Toward(toPlayer.x, toPlayer.z));
+        }
+
+        Vector3 wander = new Vector3(Random.Range(-1f, 1f), 0, Random.Range(-1f, 1f)).normalized;
+        if (aim == EnemyAim.Wander) return wander;
+
+        Vector3 toGoal = Flat(goal);
+        return Along(AimRule.Lean(new Heading(wander.x, wander.z), toGoal.x, toGoal.z));
+    }
+
+    /// <summary>ここから point への水平な差</summary>
+    private Vector3 Flat(Vector3 point)
+    {
+        Vector3 diff = point - transform.position;
+        return new Vector3(diff.x, 0f, diff.z);
+    }
+
+    private static Vector3 Along(Heading heading)
+    {
+        return new Vector3(heading.X, 0f, heading.Z);
+    }
+
     private void OnCollisionEnter(Collision other)
+    {
+        HurtPlayer(other);
+    }
+
+    //無敵の間は吹き飛ばさないので、離れずに触れ続けることがある。無敵が切れたらまた当てる
+    private void OnCollisionStay(Collision other)
+    {
+        HurtPlayer(other);
+    }
+
+    private void HurtPlayer(Collision other)
     {
         if(isDead) return;
         if(other.gameObject.tag == "Player")
