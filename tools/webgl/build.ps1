@@ -9,6 +9,10 @@ WebGL 向けに読み直す量が 1/8 ほどになる。日本語フォントは
 写した先の Library は使い回す。初回は全部を読み込むので長く、2 回目からは変わった物だけを読み直す。
 
 書き出し先は元のプロジェクトの Builds/WebGL。置き場所へ上げる zip は、その隣の Builds/WebGL.zip に作る（zip_build.py）。
+WebGL は隣の Builds/WebGL.new の中に書き出し、画面を出さない Edge でタイトルまで開けると確かめてから差し替える（smoke.py）。
+書いている途中の物や開けない物を、開いている人に渡さないため。開けなければ差し替えずに止まり、前の書き出しが残る。
+書き出しには、手元のサーバーを窓を出さずに裏で立てて開く「遊ぶ.cmd」を置く。ブラウザはファイルを直に開くと中身を読み込ませない（serve.py）。
+サーバーはゲームのページを閉じて数分で自分で止まる（ページが送る便りが来なくなったら止まる）。
 書き出しの設定は Assets/_Project/Scripts/Editor/Build/WebGLBuild.cs。
 Android は手で入れる APK を Builds/Android/MemorialFrontLand.apk に作る。設定は同じ所の AndroidBuild.cs。
 写した先は書き出し先ごとに分ける。同じ所で切り替えると、そのたびに全部を読み直す。
@@ -72,14 +76,20 @@ if ($Target -eq 'WebGL') {
     Set-Content -Path (Join-Path $Workspace 'WebGLWorkspace.txt') -Value '書き出し用に写したプロジェクト。tools/webgl/build.ps1 が作る' -Encoding UTF8
 }
 
-"== 書き出す: $Output"
+# WebGL は隣に書き出し、確かめてから差し替える。Unity は中身のファイルに書き出し先のフォルダ名を付けるので、
+# 隣の .new の中に同じ名前のフォルダを作って書き出す
+$staging = "$Output.new"
+$built = if ($Target -eq 'WebGL') { Join-Path $staging (Split-Path $Output -Leaf) } else { $Output }
+if ($Target -eq 'WebGL' -and (Test-Path $staging)) { Remove-Item -Recurse -Force $staging }
+
+"== 書き出す: $built"
 $log = Join-Path $Workspace 'build.log'
 $arguments = @(
     '-batchmode', '-quit',
     '-projectPath', "`"$Workspace`"",
     '-buildTarget', $Target,
     '-executeMethod', "MemorialFloor.Editor.${Target}Build.Build",
-    $(if ($Target -eq 'WebGL') { '-webglOutput' } else { '-androidOutput' }), "`"$Output`"",
+    $(if ($Target -eq 'WebGL') { '-webglOutput' } else { '-androidOutput' }), "`"$built`"",
     '-logFile', "`"$log`""
 )
 $started = Get-Date
@@ -99,11 +109,51 @@ $summary = Select-String -Path $log -Pattern "${Target}Build: " | Select-Object 
 if ($summary) { $summary.Line.Trim() }
 if ($exitCode -ne 0) { throw "書き出しに失敗した（終了コード $exitCode、$minutes 分）。$log を見ること" }
 
-"== 終わり（$minutes 分）"
+"== 書き終えた（$minutes 分）"
 if ($Target -eq 'Android') {
     "{0,10:N1} MB  {1}" -f ((Get-Item $Output).Length / 1MB), $Output
     return
 }
+
+# 手元で開く起動ファイル。サーバー（serve.py）も書き出しに写し、書き出しのフォルダだけで開けるようにする。
+# サーバーは窓を出さない pythonw で裏に立て、起動ファイルはすぐ閉じる。止めるのはサーバー自身（ページを閉じて数分で止まる）。
+# cmd は日本語を読み違えることがあるので、中身は英数字だけにする。サーバーが書き出し先を握ると差し替えられないので、親へ移ってから立てる
+Copy-Item (Join-Path $PSScriptRoot 'serve.py') (Join-Path $built 'serve.py')
+$launcher = @(
+    '@echo off',
+    'rem Written by tools/webgl/build.ps1. Starts a local server (serve.py) in the background without a window and opens the game in the browser.',
+    'rem The server stops by itself a few minutes after the game page is closed.',
+    'cd /d "%~dp0.."',
+    'start "" pythonw -I "%~dp0serve.py" "%~dp0."'
+)
+[IO.File]::WriteAllText((Join-Path $built '遊ぶ.cmd'), ($launcher -join "`r`n") + "`r`n", (New-Object Text.ASCIIEncoding))
+
+"== 確かめる: ブラウザでタイトルまで開けるか"
+python -I (Join-Path $PSScriptRoot 'smoke.py') $built
+if ($LASTEXITCODE -ne 0) { throw "書き出しがブラウザで開けない。差し替えずに $built に残した（$Output は前のまま）" }
+
+# 差し替える。開いているサーバーは道でファイルを返すので、ページを読み直せば新しい書き出しになる。
+# ファイルを返している最中だとフォルダの名前を変えられないので、少し待って繰り返す
+$previous = "$Output.old"
+if (Test-Path $previous) { Remove-Item -Recurse -Force $previous }
+$swapped = $false
+for ($i = 0; $i -lt 10 -and -not $swapped; $i++) {
+    try {
+        if (Test-Path $Output) { [IO.Directory]::Move($Output, $previous) }
+        [IO.Directory]::Move($built, $Output)
+        $swapped = $true
+    } catch {
+        Start-Sleep -Seconds 1
+    }
+}
+if (-not $swapped) {
+    if (-not (Test-Path $Output) -and (Test-Path $previous)) { [IO.Directory]::Move($previous, $Output) }
+    throw "$Output を差し替えられない（何かが中のファイルを開いている）。新しい書き出しは $built にある"
+}
+# 前の書き出しを消し損ねても、差し替えは済んでいる。残った分は次の書き出しが消す
+if (Test-Path $previous) { Remove-Item -Recurse -Force $previous -ErrorAction SilentlyContinue }
+Remove-Item -Recurse -Force $staging -ErrorAction SilentlyContinue
+"== 差し替えた: $Output（開くときは中の 遊ぶ.cmd）"
 
 Get-ChildItem -Path (Join-Path $Output 'Build') | ForEach-Object { "{0,10:N1} MB  {1}" -f ($_.Length / 1MB), $_.Name }
 

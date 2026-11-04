@@ -36,6 +36,20 @@
     <script>
       var canvas = document.querySelector("#unity-canvas");
 
+      // 書き出しの確かめ（tools/webgl/smoke.py）は ?smoke を付けて開く。そのときだけ読み込みの進みと結果を題名に出し、
+      // 外から読めるようにする。Unity が起動してから smokeSettleMs のあいだにエラーが出なければ、開けたとみなす
+      var smoke = /[?&]smoke(&|$)/.test(location.search);
+      var smokeErrors = [];
+      var smokeSettleMs = 5000;
+      if (smoke) {
+        var consoleError = console.error;
+        console.error = function () {
+          smokeErrors.push(Array.prototype.join.call(arguments, " "));
+          consoleError.apply(console, arguments);
+        };
+        window.addEventListener("error", function (event) { smokeErrors.push(event.message); });
+      }
+
       // Shows a temporary message banner/ribbon for a few seconds, or
       // a permanent error message on top of the canvas if type=='error'.
       // If type=='warning', a yellow highlight color is used.
@@ -153,8 +167,12 @@
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
           document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
+          if (smoke) document.title = "SMOKE-LOADING " + Math.round(100 * progress);
               }).then((unityInstance) => {
                 document.querySelector("#unity-loading-bar").style.display = "none";
+                if (smoke) setTimeout(() => {
+                  document.title = smokeErrors.length ? "SMOKE-ERROR " + smokeErrors[0] : "SMOKE-READY";
+                }, smokeSettleMs);
 #if SHOW_DIAGNOSTICS
                 document.getElementById("diagnostics-icon").onclick = () => {
                   unityDiagnostics.openDiagnosticsDiv(unityInstance.GetMetricsInfo);
@@ -201,11 +219,25 @@
                 };
 #endif
               }).catch((message) => {
-                alert(message);
+                if (smoke) document.title = "SMOKE-ERROR " + message;
+                else alert(message);
               });
             };
 
-      document.body.appendChild(script);
+      // 手元のサーバー（遊ぶ.cmd が裏で立てる serve.py）は、ページから便りが来なくなると数分で止まる。
+      // 開いているあいだは 20 秒ごとに便りを送る。置き場所のサーバーには送らない
+      if (location.hostname == "localhost" || location.hostname == "127.0.0.1") {
+        setInterval(function () { fetch("__alive", { cache: "no-store" }).catch(function () {}); }, 20000);
+      }
+
+      // ファイルを直に開くと、ブラウザは Build の下の読み込みを止め、Unity が起動しない。開き方を出して読み込まない
+      if (location.protocol == "file:") {
+        document.querySelector("#unity-loading-bar").style.display = "none";
+        unityShowBanner("このファイルは直接は開けません（ブラウザが中身の読み込みを止めます）。<br>" +
+          "同じフォルダの「遊ぶ.cmd」をダブルクリックしてください。", "error");
+      } else {
+        document.body.appendChild(script);
+      }
 
     </script>
   </body>

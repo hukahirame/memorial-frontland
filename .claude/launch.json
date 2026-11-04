@@ -4,7 +4,7 @@
     {
       "name": "webgl",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8123", "--directory", "Builds/WebGL"],
+      "runtimeArgs": ["-I", "tools/webgl/serve.py", "--no-browser", "--stay"],
       "port": 8123
     }
   ]

@@ -10,6 +10,9 @@ import os
 import sys
 import zipfile
 
+# 手元で開くためだけに書き出しへ置く物（build.ps1）。置き場所には要らない
+LOCAL_ONLY = {"遊ぶ.cmd", "serve.py"}
+
 
 def main():
     source, destination = sys.argv[1], sys.argv[2]
@@ -20,6 +23,8 @@ def main():
         for folder, folders, files in os.walk(source):
             folders.sort()
             for name in sorted(files):
+                if folder == source and name in LOCAL_ONLY:
+                    continue
                 path = os.path.join(folder, name)
                 archive.write(path, os.path.relpath(path, source).replace(os.sep, "/"))
     os.replace(partial, destination)

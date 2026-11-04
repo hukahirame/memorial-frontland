@@ -53,6 +53,10 @@ namespace MemorialFloor.Editor
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
             PlayerSettings.WebGL.decompressionFallback = true;
 
+            // 中身のファイルの名前を中身から作り、書き出すたびに変える。ブラウザや置き場所が前の書き出しのファイルを
+            // 同じ名前で持っていると、新旧が混ざって開けなくなる
+            PlayerSettings.WebGL.nameFilesAsHashes = true;
+
             // 根源3は static batching で描く回数を減らす前提で組んである。切れていると描く回数が倍ほどになる
             PlayerSettings.SetStaticBatchingForPlatform(BuildTarget.WebGL, true);
 
