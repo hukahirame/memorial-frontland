@@ -124,6 +124,15 @@ namespace MemorialFloor.Domain.Tests
         }
 
         [Test]
+        public void 上下に離れたプレイヤーは近くても見つけない()
+        {
+            Assert.AreEqual(EnemyAim.Player, AimRule.Choose(AimRule.SightDistance(1f, AimRule.SightHeight), false, 0f));
+            Assert.AreEqual(EnemyAim.Player, AimRule.Choose(AimRule.SightDistance(1f, -AimRule.SightHeight), false, 0f));
+            Assert.AreEqual(EnemyAim.Wander, AimRule.Choose(AimRule.SightDistance(1f, AimRule.SightHeight + 0.01f), false, 0f));
+            Assert.AreEqual(EnemyAim.Wander, AimRule.Choose(AimRule.SightDistance(1f, -AimRule.SightHeight - 0.01f), false, 0f));
+        }
+
+        [Test]
         public void 行き先が遠いあいだは寄り近づいたらうろつく()
         {
             Assert.AreEqual(EnemyAim.Goal, AimRule.Choose(float.MaxValue, true, AimRule.GoalRadius + 0.01f));

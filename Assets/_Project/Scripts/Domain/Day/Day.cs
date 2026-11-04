@@ -144,6 +144,20 @@ namespace MemorialFloor.Domain
             return false;
         }
 
+        /// <summary>保存から戻す。発行を待っている根源 Id を入れ直す。空と重複は捨てる</summary>
+        public void Restore(IEnumerable<string> pending)
+        {
+            _pending.Clear();
+            if (pending == null) return;
+
+            foreach (string rootId in pending)
+            {
+                if (string.IsNullOrEmpty(rootId) || _pending.Contains(rootId)) continue;
+
+                _pending.Add(rootId);
+            }
+        }
+
         /// <summary>全て捨てる。新規開始とテストの後始末で使う</summary>
         public void Clear()
         {

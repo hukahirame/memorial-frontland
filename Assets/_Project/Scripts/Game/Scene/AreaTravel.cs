@@ -103,6 +103,25 @@ namespace MemorialFloor.Game
             return true;
         }
 
+        /// <summary>拠点から近道で根源へ移る。行けないときと移っている途中は何もせず false。所持金は呼ぶ側が払う</summary>
+        public bool Shortcut(string rootId, IReadOnlyList<string> rootIds)
+        {
+            Route route = TravelRule.Shortcut(Where.AreaId, rootId, rootIds);
+            if (route.IsRefused || IsTraveling) return false;
+
+            Go(route);
+            return true;
+        }
+
+        /// <summary>根源から近道で拠点へ戻る。根源の外と移っている途中は何もせず false</summary>
+        public bool ShortcutHome(IReadOnlyList<string> rootIds)
+        {
+            Route route = TravelRule.ShortcutHome(Where.AreaId, rootIds);
+            if (route.IsRefused || IsTraveling) return false;
+
+            Go(route);
+            return true;
+        }
 
         /// <summary>倒れたあと、拠点の決まった地点へ戻る</summary>
         public void Revive()

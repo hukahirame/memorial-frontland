@@ -3,7 +3,10 @@
     "rootNamespace": "MemorialFloor.Tests.Integrity",
     "references": [
         "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner"
+        "UnityEditor.TestRunner",
+        "MemorialFloor.Domain",
+        "MemorialFloor.Game",
+        "MemorialFloor.Editor"
     ],
     "includePlatforms": [
         "Editor"

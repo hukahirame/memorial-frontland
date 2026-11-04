@@ -174,6 +174,21 @@ namespace MemorialFloor.Domain.Tests
         }
 
         [Test]
+        public void 保存から戻すと保留が入り直し空と重複は捨てる()
+        {
+            DayPlan plan = new DayPlan();
+            plan.ShouldIssue("Root9");
+
+            plan.Restore(new[] { "Root2", "", null, "Root2", "Root1" });
+
+            CollectionAssert.AreEqual(new[] { "Root2", "Root1" }, plan.Pending, "前の保留が残るか、空と重複が入る");
+            Assert.IsTrue(plan.ShouldIssue("Root1"), "戻した保留が次の夜明けに発行されない");
+
+            plan.Restore(null);
+            Assert.AreEqual(0, plan.Count);
+        }
+
+        [Test]
         public void 捨てると空になる()
         {
             DayPlan plan = new DayPlan();

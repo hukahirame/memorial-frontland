@@ -9,8 +9,27 @@ namespace MemorialFloor.Domain
         Thrust,
         /// <summary>ケサ。どちらへも倒れていないとき</summary>
         Slash,
-        /// <summary>ステップ。体の向きと逆、または上下だけ倒したとき</summary>
-        Step
+        /// <summary>ステップ。体の向きと逆へ倒したとき</summary>
+        Step,
+        /// <summary>回避攻撃。上下だけ倒したとき</summary>
+        Roll
+    }
+
+    /// <summary>攻撃の案内に並べる行動。突きは上下の振りが付くかで分ける</summary>
+    public enum AttackMove
+    {
+        /// <summary>ケサ</summary>
+        Slash,
+        /// <summary>突き。上下の振りが付かない</summary>
+        Thrust,
+        /// <summary>斜め突き。上下にも倒した突きで、上下の振りが付く</summary>
+        DiagonalThrust,
+        /// <summary>ステップ</summary>
+        Step,
+        /// <summary>回避攻撃</summary>
+        Roll,
+        /// <summary>構え歩き。攻撃を構えたまま、体の向きを変えずに歩く。離すまで攻撃は出ない</summary>
+        StanceWalk
     }
 
     /// <summary>攻撃スティックの傾きから何が出るかを決める</summary>
@@ -24,6 +43,7 @@ namespace MemorialFloor.Domain
         {
             if (Math.Abs(horizontal) > Threshold && horizontal * facing > 0f) return AttackKind.Thrust;
             if (Math.Abs(horizontal) < Threshold && Math.Abs(vertical) < Threshold) return AttackKind.Slash;
+            if (Math.Abs(horizontal) < Threshold && Math.Abs(vertical) > Threshold) return AttackKind.Roll;
 
             return AttackKind.Step;
         }
@@ -35,6 +55,22 @@ namespace MemorialFloor.Domain
             if (vertical < -Threshold) return -1;
 
             return 0;
+        }
+
+        /// <summary>倒し方から出る行動。facing は Choose と同じ</summary>
+        public static AttackMove MoveOf(float horizontal, float vertical, float facing)
+        {
+            switch (Choose(horizontal, vertical, facing))
+            {
+                case AttackKind.Thrust:
+                    return ThrustDirection(vertical) != 0 ? AttackMove.DiagonalThrust : AttackMove.Thrust;
+                case AttackKind.Slash:
+                    return AttackMove.Slash;
+                case AttackKind.Roll:
+                    return AttackMove.Roll;
+                default:
+                    return AttackMove.Step;
+            }
         }
     }
 
@@ -50,8 +86,11 @@ namespace MemorialFloor.Domain
         /// <summary>当たる長さ</summary>
         public const float ActiveSeconds = 0.25f;
 
-        /// <summary>突きとケサの全体。これが過ぎるまで次は出ない</summary>
-        public const float SwingSeconds = 0.7f;
+        /// <summary>ケサの全体。これが過ぎるまで次は出ない</summary>
+        public const float SwingSeconds = 0.6f;
+
+        /// <summary>突きの全体。これが過ぎるまで次は出ない</summary>
+        public const float ThrustSeconds = 0.7f;
 
         /// <summary>ステップの全体</summary>
         public const float StepSeconds = 0.8f;
@@ -63,6 +102,35 @@ namespace MemorialFloor.Domain
         public static bool IsBuffered(float elapsed, float duration)
         {
             return elapsed >= duration - BufferSeconds;
+        }
+    }
+
+    /// <summary>
+    /// 回避攻撃。体を縦の軸で 1 回転させながら手前か奥へ抜ける。回り始めから少しのあいだ当たらず（<see cref="Invulnerability.DodgeSeconds"/>）、
+    /// 回っているあいだは、剣を振ったときより短い、体のまわりの範囲に当てる
+    /// </summary>
+    public static class RollRule
+    {
+        /// <summary>全体の秒数。これが過ぎるまで次は出ない</summary>
+        public const float Seconds = 0.6f;
+
+        /// <summary>抜ける距離</summary>
+        public const float Distance = 1.5f;
+
+        /// <summary>回り始めから当たり始めるまで</summary>
+        public const float StrikeFrom = 0.13f;
+
+        /// <summary>当たる長さ</summary>
+        public const float StrikeSeconds = 0.33f;
+
+        /// <summary>当たる範囲の、体からの半径。剣の振りが前へ届く距離（ケサで約 0.7、突きで約 0.85）より短い</summary>
+        public const float Radius = 0.5f;
+
+        /// <summary>進み具合 0〜1 のときに、抜ける距離のどれだけを進んだか。終わり際ほどゆっくりにする</summary>
+        public static float Travelled(float progress)
+        {
+            float rest = 1f - Math.Max(0f, Math.Min(1f, progress));
+            return 1f - rest * rest;
         }
     }
 

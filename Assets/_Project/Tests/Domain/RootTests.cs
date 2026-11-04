@@ -4,10 +4,13 @@ namespace MemorialFloor.Domain.Tests
 {
     public class RootTests
     {
-        /// <summary>MainSite の「はじまりの根源」に相当する初期値</summary>
+        /// <summary>幅の下端を返す。増え方を固定した根源では、何を引いても同じだけ増える</summary>
+        private static readonly IRandom Dice = new FakeRandom();
+
+        /// <summary>MainSite の「はじまりの根源」に相当する初期値。日数で数えられるよう、増え方は 10 に固定する</summary>
         private static Root NewRoot()
         {
-            return new Root("Root1", "はじまりの根源", "01010101", 1000, 0f, -100f);
+            return new Root("Root1", "はじまりの根源", "01010101", 1000, 0f, -100f, 10, 10);
         }
 
         [Test]
@@ -15,7 +18,7 @@ namespace MemorialFloor.Domain.Tests
         {
             var root = NewRoot();
 
-            root.AdvanceDay();
+            root.AdvanceDay(Dice);
 
             Assert.AreEqual(10, root.Accumulation);
         }
@@ -26,7 +29,7 @@ namespace MemorialFloor.Domain.Tests
             var root = NewRoot();
             root.Gain(10);
 
-            root.AdvanceDay();
+            root.AdvanceDay(Dice);
 
             Assert.AreEqual(7, root.Progress);
         }
@@ -36,16 +39,52 @@ namespace MemorialFloor.Domain.Tests
         {
             var root = NewRoot();
 
-            root.AdvanceDay();
+            root.AdvanceDay(Dice);
 
             Assert.AreEqual(0, root.Progress);
+        }
+
+        [Test]
+        public void 攻略度は上限で止まる()
+        {
+            var root = NewRoot();
+
+            root.Gain(Root.MaxProgress - 5);
+            root.Gain(15);
+
+            Assert.AreEqual(Root.MaxProgress, root.Progress);
+        }
+
+        [Test]
+        public void 上げたらいくつになるかを上げる前に知れる()
+        {
+            var root = NewRoot();
+            root.Gain(90);
+
+            Assert.AreEqual(Root.MaxProgress, root.ProgressAfterGain(15));
+            Assert.AreEqual(95, root.ProgressAfterGain(5));
+            Assert.AreEqual(90, root.Progress, "知るだけで上がる");
+        }
+
+        [Test]
+        public void 保存から戻すと攻略度と蓄積値が入る()
+        {
+            var root = NewRoot();
+
+            root.Restore(40, 55);
+            Assert.AreEqual(40, root.Progress);
+            Assert.AreEqual(55, root.Accumulation);
+
+            root.Restore(Root.MaxProgress + 50, -5);
+            Assert.AreEqual(Root.MaxProgress, root.Progress, "上限を超えて戻る");
+            Assert.AreEqual(0, root.Accumulation, "負の蓄積値が戻る");
         }
 
         [Test]
         public void 蓄積値は0を下回らない()
         {
             var root = NewRoot();
-            root.AdvanceDay(); //10
+            root.AdvanceDay(Dice); //10
 
             root.Calm(30);
 
@@ -57,7 +96,7 @@ namespace MemorialFloor.Domain.Tests
         {
             var root = NewRoot();
 
-            for (int i = 0; i < 20; i++) root.AdvanceDay();
+            for (int i = 0; i < 20; i++) root.AdvanceDay(Dice);
             root.Calm(5);
             root.Gain(50);
 
@@ -78,7 +117,7 @@ namespace MemorialFloor.Domain.Tests
         {
             var root = NewRoot();
             int days = (accumulation + 9) / 10; //1日 +10 なので、超えるまで進めてから端数を戻す
-            for (int i = 0; i < days; i++) root.AdvanceDay();
+            for (int i = 0; i < days; i++) root.AdvanceDay(Dice);
             root.Calm(days * 10 - accumulation);
 
             Assert.AreEqual(expected, root.Level);
@@ -89,17 +128,17 @@ namespace MemorialFloor.Domain.Tests
         {
             var root = NewRoot();
 
-            for (int i = 0; i < 10; i++) root.AdvanceDay();
+            for (int i = 0; i < 10; i++) root.AdvanceDay(Dice);
 
             Assert.AreEqual(100, root.Accumulation);
             Assert.AreEqual(AccumulationLevel.Stampede, root.Level);
         }
 
         [Test]
-        public void 氾濫すると蓄積値が0に戻り拠点へ5体向かう()
+        public void 氾濫すると蓄積値が0に戻り拠点に5体攻め込む()
         {
             var root = NewRoot();
-            for (int i = 0; i < 10; i++) root.AdvanceDay();
+            for (int i = 0; i < 10; i++) root.AdvanceDay(Dice);
 
             int raiders = root.Overflow();
 
@@ -111,7 +150,7 @@ namespace MemorialFloor.Domain.Tests
         public void 氾濫していなければ何も起きない()
         {
             var root = NewRoot();
-            for (int i = 0; i < 9; i++) root.AdvanceDay(); //90
+            for (int i = 0; i < 9; i++) root.AdvanceDay(Dice); //90
 
             int raiders = root.Overflow();
 
@@ -123,10 +162,10 @@ namespace MemorialFloor.Domain.Tests
         public void 氾濫は続けて起きない()
         {
             var root = NewRoot();
-            for (int i = 0; i < 10; i++) root.AdvanceDay();
+            for (int i = 0; i < 10; i++) root.AdvanceDay(Dice);
             root.Overflow();
 
-            root.AdvanceDay();
+            root.AdvanceDay(Dice);
 
             Assert.AreEqual(0, root.Overflow());
         }
@@ -137,15 +176,15 @@ namespace MemorialFloor.Domain.Tests
         [TestCase(30, 7)]
         [TestCase(50, 5)]
         [TestCase(70, 3)]
-        [TestCase(200, 3)]
+        [TestCase(200, 1)]
         public void 攻略度が上がるほど日ごとの蓄積が減る(int progress, int expected)
         {
             var root = NewRoot();
             root.Gain(progress);
 
-            Assert.AreEqual(expected, root.DailyGain);
+            Assert.AreEqual(expected, root.MaxDailyGain);
 
-            root.AccumulateDaily();
+            root.AccumulateDaily(Dice);
             Assert.AreEqual(expected, root.Accumulation);
         }
 
@@ -153,31 +192,31 @@ namespace MemorialFloor.Domain.Tests
         public void 次の零時に氾濫するかを前もって知れる()
         {
             var root = NewRoot();
-            for (int i = 0; i < 8; i++) root.AccumulateDaily(); //80
+            for (int i = 0; i < 8; i++) root.AccumulateDaily(Dice); //80
 
-            Assert.IsFalse(root.WillOverflowNextDay);
+            Assert.IsFalse(root.MayOverflowNextDay);
 
-            root.AccumulateDaily(); //90
-            Assert.IsTrue(root.WillOverflowNextDay);
+            root.AccumulateDaily(Dice); //90
+            Assert.IsTrue(root.MayOverflowNextDay);
         }
 
         [Test]
         public void 攻略度が高いと氾濫の前夜も遅れる()
         {
             var root = NewRoot();
-            for (int i = 0; i < 9; i++) root.AccumulateDaily(); //90
+            for (int i = 0; i < 9; i++) root.AccumulateDaily(Dice); //90
             root.Gain(50); //次の増加は 5
 
-            Assert.IsFalse(root.WillOverflowNextDay);
+            Assert.IsFalse(root.MayOverflowNextDay);
         }
 
         [Test]
         public void 氾濫している最中は前夜とみなさない()
         {
             var root = NewRoot();
-            for (int i = 0; i < 10; i++) root.AccumulateDaily(); //100
+            for (int i = 0; i < 10; i++) root.AccumulateDaily(Dice); //100
 
-            Assert.IsFalse(root.WillOverflowNextDay);
+            Assert.IsFalse(root.MayOverflowNextDay);
         }
 
         [Test]
@@ -206,7 +245,7 @@ namespace MemorialFloor.Domain.Tests
     {
         private static Root NewRoot(string id)
         {
-            return new Root(id, id + "の根源", "0101", 1000, 0f, 0f);
+            return new Root(id, id + "の根源", "0101", 1000, 0f, 0f, 10, 10);
         }
 
         [Test]
@@ -274,7 +313,7 @@ namespace MemorialFloor.Domain.Tests
             registry.TryAdd(NewRoot("Root1"));
             registry.TryAdd(NewRoot("Root2"));
 
-            registry.AdvanceDay();
+            registry.AdvanceDay(new FakeRandom());
 
             Assert.AreEqual(10, registry.Find("Root1").Accumulation);
             Assert.AreEqual(10, registry.Find("Root2").Accumulation);
@@ -284,66 +323,49 @@ namespace MemorialFloor.Domain.Tests
     public class BaseRaidTests
     {
         [Test]
-        public void 留守のあいだに積まれた分は着いたときにまとめて出る()
+        public void 氾濫で攻め込んだ敵は位置を持たず満タンで控える()
         {
             var raid = new BaseRaid();
-            raid.Add(5);
-            raid.Add(5);
+            raid.Invade(5);
 
-            Assert.AreEqual(10, raid.Arrive());
-            Assert.AreEqual(0, raid.Pending);
+            Assert.AreEqual(5, raid.Kept.Count);
+            Assert.IsFalse(raid.Kept[0].HasPosition);
+            Assert.AreEqual(Raider.FullHp, raid.Kept[0].Hp);
         }
 
         [Test]
-        public void 着いた直後は間を空けてから出る()
+        public void 離れるときに控えた敵は位置と体力を持つ()
         {
             var raid = new BaseRaid();
-            raid.Arrive();
-            raid.Add(5);
+            raid.Keep(new Raider(1f, 2f, 3f, 40));
 
-            Assert.AreEqual(0, raid.Tick(BaseRaid.IntervalSeconds - 0.1f));
-            Assert.AreEqual(1, raid.Tick(0.1f));
+            Raider kept = raid.Kept[0];
+            Assert.IsTrue(kept.HasPosition);
+            Assert.AreEqual(1f, kept.X);
+            Assert.AreEqual(2f, kept.Y);
+            Assert.AreEqual(3f, kept.Z);
+            Assert.AreEqual(40, kept.Hp);
         }
 
         [Test]
-        public void 居るあいだは1体ずつ間を空けて出る()
+        public void 出すと控えをすべて渡して空になる()
         {
             var raid = new BaseRaid();
-            raid.Add(3);
+            raid.Invade(2);
+            raid.Keep(new Raider(1f, 2f, 3f, 40));
 
-            Assert.AreEqual(1, raid.Tick(0.02f), "間が空いていれば積まれた直後に1体");
-            Assert.AreEqual(0, raid.Tick(BaseRaid.IntervalSeconds - 0.1f));
-            Assert.AreEqual(1, raid.Tick(0.1f));
-            Assert.AreEqual(1, raid.Pending);
+            Assert.AreEqual(3, raid.TakeAll().Count);
+            Assert.AreEqual(0, raid.Kept.Count);
         }
 
         [Test]
-        public void 長く止まっても1回の経過で出るのは1体()
-        {
-            var raid = new BaseRaid();
-            raid.Add(5);
-
-            Assert.AreEqual(1, raid.Tick(BaseRaid.IntervalSeconds * 10));
-            Assert.AreEqual(4, raid.Pending);
-        }
-
-        [Test]
-        public void 積まれていなければ何も出ない()
+        public void 負の数は控えない()
         {
             var raid = new BaseRaid();
 
-            Assert.AreEqual(0, raid.Tick(BaseRaid.IntervalSeconds));
-            Assert.AreEqual(0, raid.Arrive());
-        }
+            raid.Invade(-3);
 
-        [Test]
-        public void 負の数は積まれない()
-        {
-            var raid = new BaseRaid();
-
-            raid.Add(-3);
-
-            Assert.AreEqual(0, raid.Pending);
+            Assert.AreEqual(0, raid.Kept.Count);
         }
     }
 }

@@ -10,6 +10,21 @@ using TMPro;
 
 public class Player2 : MonoBehaviour
 {
+    /// <summary>攻撃のスティックの代わりに押すキー。向きは矢印キーで決める</summary>
+    public const KeyCode AttackKey = KeyCode.F;
+
+    /// <summary>ジャンプボタンの代わりに押すキー。離したときに跳ぶ</summary>
+    public const KeyCode JumpKey = KeyCode.Space;
+
+    /// <summary>回避攻撃の音の高さ。剣の振りと同じ音を高くして、軽く鳴らす</summary>
+    private const float RollPitch = 1.3f;
+
+    /// <summary>柵を壊す Allmaity ボタンの名前</summary>
+    private const string FenceButton = "Fence";
+
+    /// <summary>手の届く範囲にある柵。Allmaity の「柵を壊す」で、いちばん近いものを壊す</summary>
+    private readonly List<Fence> fencesInReach = new List<Fence>();
+
     [SerializeField] private FixedJoystick joystick;
     [SerializeField] private FixedJoystick joystick_atk;
     public static bool cool = false;
@@ -18,6 +33,9 @@ public class Player2 : MonoBehaviour
     public static Rigidbody playerrb;
     public static float speed = 1;
     public Vector4 expos;
+
+    /// <summary>これより高く上がったら場の外とみなす。場所に着くたびに入れ替わる</summary>
+    private float ceiling = FieldBounds.EscapeHeight;
     [SerializeField] public Character character;
     [SerializeField] private Animator animator;
     [SerializeField] private Transform body;
@@ -50,22 +68,97 @@ public class Player2 : MonoBehaviour
     private float bufferedHorizontal;
     private float bufferedVertical;
 
+    /// <summary>体の固い当たり。作業台と出口は、これが重なったときだけ数える。倒れているあいだは切られる</summary>
+    private Collider solidBody;
+
     /// <summary>倒れている間と場所を移っている間は、歩くのも振るのも、持ち物を使うのも止める</summary>
     public bool CanAct
     {
         get { return !cool && !travel.IsTraveling; }
     }
 
+    /// <summary>出ている攻撃。出ていなければ null</summary>
+    private AttackMove? swinging;
+
+    /// <summary>いまの行動。振っているあいだはその攻撃、構えているあいだは構え歩き。どちらでもなければ null</summary>
+    public AttackMove? Doing
+    {
+        get
+        {
+            if (swinging.HasValue) return swinging;
+
+            return IsBracing ? AttackMove.StanceWalk : (AttackMove?)null;
+        }
+    }
+
+    /// <summary>構えているあいだ、いまの向きで離すと出る攻撃。構えていなければ null</summary>
+    public AttackMove? Aimed
+    {
+        get
+        {
+            if (!IsBracing) return null;
+
+            Vector2 aim = AttackAim(joystick_atk);
+            return AttackRule.MoveOf(aim.x, aim.y, body.localScale.x);
+        }
+    }
+
+    /// <summary>攻撃を押したまま、まだ離していない。このあいだは体の向きを変えずに歩く</summary>
+    private bool IsBracing
+    {
+        get { return CanAct && atk_mode && !ATK_singleton; }
+    }
+
+    /// <summary>最後に歩いた向き。止まっても残る。柵はこの向きの先に立てる</summary>
+    /// <summary>絵が向いている横の側。右なら 1、左なら -1。絵は左右にしか向かないので、柵はこの側に立てる</summary>
+    public float Side
+    {
+        get { return body.localScale.x < 0f ? -1f : 1f; }
+    }
+
+    /// <summary>体の固い当たり。倒れているあいだは切られる</summary>
+    public Collider Body
+    {
+        get { return solidBody; }
+    }
+
     void Start()
     {
         playerrb = GetComponent<Rigidbody>();
         BindHpView(GameObject.FindWithTag("HpSlider").GetComponent<Slider>());
+        solidBody = SolidBody();
+        KeyHint.Put((RectTransform)jumpbutton.transform, JumpKey.ToString());
+        if (joystick_atk.TryGetComponent(out JoystickEffect_ATK effect)) effect.Bind(this);
+    }
+
+    private Collider SolidBody()
+    {
+        foreach (MeshCollider found in GetComponentsInChildren<MeshCollider>())
+        {
+            if (!found.isTrigger) return found;
+        }
+
+        return null;
+    }
+
+    /// <summary>着いた場所の、場の範囲と場の外とみなす高さを受け取る</summary>
+    public void Bind(Area area)
+    {
+        expos = area.Exposition;
+        ceiling = area.Ceiling;
+    }
+
+    /// <summary>いま地面に立っているか。on_ground は Update でしか書き直さないので、置き直した直後は古い</summary>
+    public bool Grounded()
+    {
+        return Physics.Raycast(transform.position + Vector3.down * 0.6f, Vector3.down, 0.2f);
     }
 
     void Update()
     {
+        ForgetGoneFences();
 
-        if (Physics.Raycast(transform.position + Vector3.down * 0.6f, Vector3.down, 0.2f)) //接地判定
+        if (Grounded()) //接地判定
         {
             on_ground = true;
             jumpbutton.interactable = true;
@@ -74,13 +167,13 @@ public class Player2 : MonoBehaviour
 
         //if (Input.GetMouseButtonUp(1)) StartCoroutine(Attack());
 
-        if (weapon != null)  weapon.localEulerAngles = new Vector3(0, 0, joystick_atk.Vertical * 90);
+        if (weapon != null)  weapon.localEulerAngles = new Vector3(0, 0, AttackAim(joystick_atk).y * 90);
 
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D))
         {
-            //なめらかに立ち上がる GetAxis だと、移動の遊びを越えるまで数フレーム動き出さない
-            horizontalKey = Input.GetAxisRaw("Horizontal");
-            verticalKey = Input.GetAxisRaw("Vertical");
+            //矢印キーは攻撃の向きに使う。GetAxisRaw は矢印も拾うので、WASD を直に読む
+            horizontalKey = KeyAxis(KeyCode.D, KeyCode.A);
+            verticalKey = KeyAxis(KeyCode.W, KeyCode.S);
         }
         else
         {
@@ -89,13 +182,21 @@ public class Player2 : MonoBehaviour
         }
 
 
-        if (Input.GetKeyUp(KeyCode.Space)) Jump();
+        if (Input.GetKeyUp(JumpKey)) Jump();
+
+        //攻撃のキーは攻撃のスティックと同じで、押して構え、離した瞬間の向きへ振る
+        if (Input.GetKeyDown(AttackKey)) AttackDown();
+        if (Input.GetKeyUp(AttackKey))
+        {
+            AttackUp();
+            StartCoroutine(Attack());
+        }
 
         //緊急脱出用。場の範囲は着いたときに入れ替わるので、移っているあいだは見ない。止めた体には速さも入れられない
         if (!travel.IsTraveling)
         {
             Vector3 pos = transform.position;
-            FieldBounds bounds = Exposition.ToBounds(expos);
+            FieldBounds bounds = Exposition.ToBounds(expos, ceiling);
             if (bounds.HasEscaped(pos.x, pos.y, pos.z))
             {
                 transform.position = new Vector3(-2, 0.65f, -2);
@@ -172,8 +273,12 @@ public class Player2 : MonoBehaviour
         Debug.Log("Jump：" + new Vector3(horizontalKey,playerrb.mass * 4, verticalKey));
     }
 
+    //剣や視界確保の当たりもプレイヤーの子で、その出入りもここへ届く。作業台と出口は体の固い当たりが重なったときだけ数える。
+    //入るときは外接する箱で見る（入った瞬間の浅い重なりも取りこぼさない）。出るときは形で見る（剣だけが抜けても消さない）
     private void OnTriggerEnter(Collider other)
     {
+        if (solidBody == null || !solidBody.enabled || !solidBody.bounds.Intersects(other.bounds)) return;
+
         // 最終的に、Allmaity.csに衝突した名前を全て送り付ける仕様にするはず
         if (other.gameObject.name == "CraftBench")
         {
@@ -183,14 +288,71 @@ public class Player2 : MonoBehaviour
         {
             EnterExit(exit);
         }
+        Fence fence = FenceOf(other);
+        if (fence != null && !fencesInReach.Contains(fence))
+        {
+            fencesInReach.Add(fence);
+            allmaity.Prepare(FenceButton, "柵を壊す", DemolishFence);
+        }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.name == "CraftBench")
+        if (other.gameObject.name == "CraftBench" && !BodyInside(other))
         {
             allmaity.Trash_Button("CraftInventory");
         }
+        Fence fence = FenceOf(other);
+        if (fence != null && !BodyInside(other))
+        {
+            fencesInReach.Remove(fence);
+            if (fencesInReach.Count == 0) allmaity.Trash_Button(FenceButton);
+        }
+    }
+
+    /// <summary>other が柵の手の届く範囲の当たりなら、その柵</summary>
+    private static Fence FenceOf(Collider other)
+    {
+        Fence fence = other.GetComponentInParent<Fence>();
+        return fence != null && fence.Reach == other ? fence : null;
+    }
+
+    /// <summary>手の届く柵のうち、いちばん近いものを壊す。Allmaity の「柵を壊す」から呼ぶ</summary>
+    private void DemolishFence()
+    {
+        ForgetGoneFences();
+
+        Fence nearest = null;
+        foreach (Fence fence in fencesInReach)
+        {
+            if (nearest == null || FlatDistance(fence) < FlatDistance(nearest)) nearest = fence;
+        }
+        if (nearest == null) return;
+
+        nearest.Demolish();
+        fencesInReach.Remove(nearest);
+        if (fencesInReach.Count == 0) allmaity.Trash_Button(FenceButton);
+    }
+
+    private float FlatDistance(Fence fence)
+    {
+        Vector3 offset = fence.transform.position - transform.position;
+        return new Vector2(offset.x, offset.z).magnitude;
+    }
+
+    //場所を移ると、手の届いていた柵は場所ごと消え、出たことは届かない。消えた柵は忘れ、無くなったらボタンも消す
+    private void ForgetGoneFences()
+    {
+        if (fencesInReach.Count == 0 || fencesInReach.RemoveAll(fence => fence == null) == 0) return;
+
+        if (fencesInReach.Count == 0) allmaity.Trash_Button(FenceButton);
+    }
+
+    private bool BodyInside(Collider other)
+    {
+        return solidBody != null && solidBody.enabled && Physics.ComputePenetration(
+            solidBody, solidBody.transform.position, solidBody.transform.rotation,
+            other, other.transform.position, other.transform.rotation, out _, out _);
     }
 
     /// <summary>出口に入ったら、受注にかかわらず隣の場所へ移る</summary>
@@ -262,7 +424,7 @@ public class Player2 : MonoBehaviour
         var colors = new Color[renderers.Length];
         for (int i = 0; i < renderers.Length; i++) colors[i] = renderers[i].color;
 
-        while (invulnerability.IsActive(Time.time))
+        while (invulnerability.IsFlashing(Time.time))
         {
             foreach (var renderer in renderers) renderer.color = new Color(1, 0.2f, 0.2f, renderer.color.a);
             yield return new WaitForSeconds(0.3f);
@@ -290,6 +452,19 @@ public class Player2 : MonoBehaviour
         invulnerability.Revived(Time.time);
         yield return PlayerHurt_Graphic();
     }
+    /// <summary>攻撃の向き。攻撃のスティックを倒していればその向き、倒していなければ矢印キーの向き。長さは 1 まで</summary>
+    public static Vector2 AttackAim(Joystick stick)
+    {
+        if (stick.Direction != Vector2.zero) return stick.Direction;
+
+        return new Vector2(KeyAxis(KeyCode.RightArrow, KeyCode.LeftArrow), KeyAxis(KeyCode.UpArrow, KeyCode.DownArrow)).normalized;
+    }
+
+    private static float KeyAxis(KeyCode positive, KeyCode negative)
+    {
+        return (Input.GetKey(positive) ? 1f : 0f) - (Input.GetKey(negative) ? 1f : 0f);
+    }
+
     public void AttackDown(){ atk_mode = true; /*speed *= 0.64f;*/ }//いらないかも
 
     public void AttackUp() { /*speed *= 1.5625f;*/ }//いらないかも
@@ -299,13 +474,15 @@ public class Player2 : MonoBehaviour
     {
         atk_mode = false;
         ATK_singleton = false;
+        swinging = null;
         animator.transform.localEulerAngles = Vector3.zero;
     }
     public IEnumerator Attack()
     {
-        //離した瞬間の倒し方。呼んだ側はこの直後にスティックを 0 に戻す
-        float horizontal = joystick_atk.Horizontal;
-        float vertical = joystick_atk.Vertical;
+        //離した瞬間の向き。スティックから呼ぶと、呼んだ側はこの直後にスティックを 0 に戻す
+        Vector2 aim = AttackAim(joystick_atk);
+        float horizontal = aim.x;
+        float vertical = aim.y;
 
         if (ATK_singleton)
         {
@@ -341,6 +518,7 @@ public class Player2 : MonoBehaviour
         SideJab sj = GetComponentInChildren<SideJab>();
 
         AttackKind kind = AttackRule.Choose(horizontal, vertical, sj.transform.localScale.x);
+        swinging = AttackRule.MoveOf(horizontal, vertical, sj.transform.localScale.x);
 
         if (kind == AttackKind.Step)
         {
@@ -350,7 +528,14 @@ public class Player2 : MonoBehaviour
             yield break;
         }
 
-        attackDuration = AttackTiming.SwingSeconds;
+        if (kind == AttackKind.Roll)
+        {
+            attackDuration = RollRule.Seconds;
+            yield return Roll(vertical, sj.transform.localScale.x);
+            yield break;
+        }
+
+        attackDuration = kind == AttackKind.Thrust ? AttackTiming.ThrustSeconds : AttackTiming.SwingSeconds;
         if (kind == AttackKind.Thrust)
         {
             int swing = AttackRule.ThrustDirection(vertical);
@@ -367,7 +552,52 @@ public class Player2 : MonoBehaviour
         yield return new WaitForSeconds(AttackTiming.WindupSeconds);
         if (!CanAct) yield break;
         StartCoroutine(weapon.GetComponent<Weapon>().AttackWeaponProcess(AttackTiming.ActiveSeconds));
-        yield return new WaitForSeconds(AttackTiming.SwingSeconds - AttackTiming.WindupSeconds);
+        yield return new WaitForSeconds(attackDuration - AttackTiming.WindupSeconds);
+    }
+
+    //手前か奥へ抜ける。回り始めから少しのあいだ当たらず、回っているあいだは体のまわりに当てる。見た目は RollStaging が受け持つ
+    private IEnumerator Roll(float vertical, float facing)
+    {
+        invulnerability.Dodge(Time.time);
+        character.Slash();
+        TempAudio.TempAudioPlay("Fantasy_Game_Attack_Skill_Knife_Throw_B", RollPitch);
+
+        float depth = vertical > 0f ? 1f : -1f;
+        //抜ける側へ、体の前から回る
+        float turn = -360f * depth * Mathf.Sign(facing);
+        RollStaging staging = new RollStaging(animator.transform, transform, turn, FeetHeight());
+        Weapon blade = weapon.GetComponent<Weapon>();
+        float elapsed = 0f;
+        float travelled = 0f;
+        bool striking = false;
+
+        while (elapsed < RollRule.Seconds && CanAct)
+        {
+            elapsed = Mathf.Min(elapsed + Time.deltaTime, RollRule.Seconds);
+            float progress = elapsed / RollRule.Seconds;
+
+            float reach = RollRule.Travelled(progress) * RollRule.Distance;
+            transform.Translate(0f, 0f, (reach - travelled) * depth);
+            travelled = reach;
+
+            staging.Pose(progress);
+
+            if (!striking && elapsed >= RollRule.StrikeFrom)
+            {
+                striking = true;
+                StartCoroutine(blade.SpinStrikeProcess(RollRule.StrikeSeconds, RollRule.Radius));
+            }
+
+            yield return null;
+        }
+
+        staging.Restore();
+    }
+
+    /// <summary>足もとの高さ。体の固い当たりの下端</summary>
+    private float FeetHeight()
+    {
+        return solidBody != null ? solidBody.bounds.min.y : transform.position.y;
     }
 
 }

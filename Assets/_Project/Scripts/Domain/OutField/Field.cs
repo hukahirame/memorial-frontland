@@ -30,15 +30,17 @@ namespace MemorialFloor.Domain
         /// <summary>押し戻しでは間に合わない距離。これだけ外へ出たら連れ戻す</summary>
         public const float EscapeMargin = 0.4f;
 
-        /// <summary>上下にこれだけ離れたら連れ戻す</summary>
+        /// <summary>上下にこれだけ離れたら連れ戻す。上は場所ごとに高くできる</summary>
         public const float EscapeHeight = 4f;
 
-        public FieldBounds(float maxX, float minX, float maxZ, float minZ)
+        /// <param name="ceiling">これより高く上がったら連れ戻す。2 階建ての場所では、上の階に立てる高さにする</param>
+        public FieldBounds(float maxX, float minX, float maxZ, float minZ, float ceiling = EscapeHeight)
         {
             MaxX = maxX;
             MinX = minX;
             MaxZ = maxZ;
             MinZ = minZ;
+            Ceiling = ceiling;
         }
 
         public float MaxX { get; }
@@ -48,6 +50,9 @@ namespace MemorialFloor.Domain
         public float MaxZ { get; }
 
         public float MinZ { get; }
+
+        /// <summary>これより高く上がったら連れ戻す</summary>
+        public float Ceiling { get; }
 
         /// <summary>場の真ん中</summary>
         public float CenterX
@@ -87,7 +92,7 @@ namespace MemorialFloor.Domain
         /// <summary>押し戻しでは戻らないほど離れたか。高さも見る</summary>
         public bool HasEscaped(float x, float y, float z)
         {
-            if (Math.Abs(y) > EscapeHeight) return true;
+            if (y > Ceiling || y < -EscapeHeight) return true;
 
             return x > MaxX + EscapeMargin || x < MinX - EscapeMargin
                 || z > MaxZ + EscapeMargin || z < MinZ - EscapeMargin;

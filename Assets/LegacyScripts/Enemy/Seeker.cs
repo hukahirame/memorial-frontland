@@ -6,25 +6,32 @@ using UnityEngine;
 
 public class Seeker : MonoBehaviour
 {
+    /// <summary>湧く地面を探し始める高さ。核の候補が決めていなければこれ（1 階建ての場所）</summary>
+    public const float DefaultFrom = 5f;
+
+    /// <summary>湧く地面を探す深さ。核の候補が決めていなければこれ</summary>
+    public const float DefaultDepth = 10f;
+
     private void Start()
     {
         transform.position += Vector3.up;
     }
 
-    private void SetPosition()
+    private void SetPosition(float depth)
     {
         RaycastHit hit;
         transform.position += Vector3.down * 0.05f;
 
-        // 除外したいレイヤーを設定 (例: "IgnoreRaycast") int layerMask = 1 << LayerMask.NameToLayer("IgnoreRaycast"); 
+        // 除外したいレイヤーを設定 (例: "IgnoreRaycast") int layerMask = 1 << LayerMask.NameToLayer("IgnoreRaycast");
         // 除外するためには、レイヤーマスクを反転する layerMask = ~layerMask;
         //地面に当たらなければ湧かせない。外れても hit.point は原点で埋まっている
-        if (Physics.Raycast(transform.position, Vector3.down, out hit, 10f/*, layerMask*/))  transform.parent.GetComponent<OF_Spawner>().Spawn2(hit.point + Vector3.up * 0.6f);
+        if (Physics.Raycast(transform.position, Vector3.down, out hit, depth/*, layerMask*/))  transform.parent.GetComponent<OF_Spawner>().Spawn2(hit.point + Vector3.up * 0.6f);
 
         else  Debug.Log("スポーン接地失敗");
     }
 
-    public void SeekPosition(float range, Vector4 expos)
+    /// <summary>湧き口のまわり range の中で、高さ from から真下へ depth まで地面を探し、見つかれば湧かせる</summary>
+    public void SeekPosition(float range, Vector4 expos, float from = DefaultFrom, float depth = DefaultDepth)
     {
         //起点は親の湧き口。自分の位置は前に湧かせた所に残っている
         Vector3 org = transform.parent.position;
@@ -33,8 +40,8 @@ public class Seeker : MonoBehaviour
         float pos_x = Random.Range(bounds.ClampX(org.x - range), bounds.ClampX(org.x + range));
         float pos_z = Random.Range(bounds.ClampZ(org.z - range), bounds.ClampZ(org.z + range));
 
-        transform.position = new Vector3(pos_x, 5, pos_z);
-        SetPosition();
+        transform.position = new Vector3(pos_x, from, pos_z);
+        SetPosition(depth);
     }
 
     /* private void Start()

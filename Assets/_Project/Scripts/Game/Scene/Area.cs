@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using MemorialFloor.Domain;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -24,6 +24,12 @@ namespace MemorialFloor.Game
         [Tooltip("場の範囲。XL, XS, ZL, ZS の順")]
         [SerializeField] private Vector4 exposition;
 
+        [Tooltip("根源の核から湧く敵。空なら緑のスライム（Resources の Slime）")]
+        [SerializeField] private GameObject enemy;
+
+        [Tooltip("プレイヤーがこれより高く上がったら場の外とみなし、連れ戻す。2 階建ての場所では、上の階に立てる高さにする")]
+        [SerializeField] private float ceiling = FieldBounds.EscapeHeight;
+
         /// <summary>常駐シーンが来るまで止めているルート。止める前から非アクティブだったものは入れない</summary>
         private readonly List<GameObject> _held = new List<GameObject>();
 
@@ -40,6 +46,18 @@ namespace MemorialFloor.Game
         public Vector4 Exposition
         {
             get { return exposition; }
+        }
+
+        /// <summary>プレイヤーを場の外とみなす高さ</summary>
+        public float Ceiling
+        {
+            get { return ceiling; }
+        }
+
+        /// <summary>根源の核から湧く敵の prefab。決めていない場所は null</summary>
+        public GameObject Enemy
+        {
+            get { return enemy; }
         }
 
         public Scene Scene

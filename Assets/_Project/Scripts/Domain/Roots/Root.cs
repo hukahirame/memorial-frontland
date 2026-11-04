@@ -20,22 +20,29 @@ namespace MemorialFloor.Domain
     /// <summary>根源1つ。生成後に変わらない素性と、遊ぶうちに動く3つの値を持つ</summary>
     public sealed class Root
     {
-        /// <summary>攻略度 0 のとき、日ごとに増える蓄積値</summary>
-        public const int DailyAccumulationGain = 10;
+        /// <summary>攻略度 0 のとき、日ごとに増える蓄積値の幅の既定。両端を含み、零時ごとにこの中から引く</summary>
+        public const int DailyGainLow = 3;
+        public const int DailyGainHigh = 9;
 
         /// <summary>攻略度がこれだけ上がるごとに、日ごとに増える蓄積値が 1 減る</summary>
         public const int ProgressPerGainStep = 10;
 
         /// <summary>攻略度がいくら高くても、日ごとにこれだけは増える</summary>
-        public const int MinDailyAccumulationGain = 3;
+        public const int MinDailyAccumulationGain = 1;
 
         public const int DailyProgressLoss = 3;
 
         /// <summary>この蓄積値で氾濫する</summary>
         public const int StampedeAccumulation = 100;
 
-        /// <summary>氾濫1回で拠点へ向かう敵の数</summary>
+        /// <summary>氾濫1回で拠点に攻め込む敵の数</summary>
         public const int StampedeRaiders = 5;
+
+        /// <summary>【解明】の段。この攻略度から、湧いた敵が弱くなり、拠点からの近道が無料になる</summary>
+        public const int RevealProgress = 30;
+
+        /// <summary>攻略度の上限。画面では % で出す</summary>
+        public const int MaxProgress = 100;
 
         public string Id { get; }
         public string Name { get; }
@@ -44,13 +51,17 @@ namespace MemorialFloor.Domain
         /// <summary>危険度。現状どこからも書き換えられない</summary>
         public int Danger { get; }
 
-        /// <summary>攻略度。上限は設けない（元のコードにも無い）</summary>
+        /// <summary>攻略度。0 から MaxProgress まで</summary>
         public int Progress { get; private set; }
 
         /// <summary>蓄積値</summary>
         public int Accumulation { get; private set; }
 
-        /// <summary>マップ上での UI 位置</summary>
+        /// <summary>攻略度 0 のとき、日ごとに増える蓄積値の幅。両端を含む</summary>
+        public int GainLow { get; }
+        public int GainHigh { get; }
+
+        /// <summary>地図の札の位置。地図の中心からの距離で、画面の画素ではない</summary>
         public float UiX { get; }
         public float UiY { get; }
 
@@ -60,7 +71,8 @@ namespace MemorialFloor.Domain
         public float SpawnY { get; private set; }
         public float SpawnZ { get; private set; }
 
-        public Root(string id, string name, string seed, int danger, float uiX, float uiY)
+        public Root(string id, string name, string seed, int danger, float uiX, float uiY,
+            int gainLow = DailyGainLow, int gainHigh = DailyGainHigh)
         {
             Id = id;
             Name = name;
@@ -68,6 +80,8 @@ namespace MemorialFloor.Domain
             Danger = danger;
             UiX = uiX;
             UiY = uiY;
+            GainLow = gainLow;
+            GainHigh = gainHigh;
         }
 
         public AccumulationLevel Level
@@ -82,33 +96,36 @@ namespace MemorialFloor.Domain
             }
         }
 
-        /// <summary>次の零時に増える蓄積値。攻略度が高いほど少ない</summary>
-        public int DailyGain
+        /// <summary>次の零時に増えうる蓄積値のうち、いちばん多い量。攻略度が高いほど少ない</summary>
+        public int MaxDailyGain
         {
-            get
-            {
-                int gain = DailyAccumulationGain - Progress / ProgressPerGainStep;
-                return gain < MinDailyAccumulationGain ? MinDailyAccumulationGain : gain;
-            }
+            get { return GainFrom(GainHigh); }
         }
 
-        /// <summary>次の零時に氾濫する。いま氾濫しているものは含めない</summary>
-        public bool WillOverflowNextDay
+        /// <summary>次の零時に氾濫しうる。いちばん多く増えた場合で見るので、外れて翌晩に持ち越すことがある。いま氾濫しているものは含めない</summary>
+        public bool MayOverflowNextDay
         {
-            get { return Accumulation < StampedeAccumulation && Accumulation + DailyGain >= StampedeAccumulation; }
+            get { return Accumulation < StampedeAccumulation && Accumulation + MaxDailyGain >= StampedeAccumulation; }
         }
 
         /// <summary>日付が変わったときの変化。蓄積値が増え、攻略度が減る</summary>
-        public void AdvanceDay()
+        public void AdvanceDay(IRandom random)
         {
-            AccumulateDaily();
+            AccumulateDaily(random);
             DecayProgressDaily();
         }
 
-        /// <summary>日次の蓄積値の増加。氾濫判定はこの直後に行われる</summary>
-        public void AccumulateDaily()
+        /// <summary>日次の蓄積値の増加。増える量は幅の中から引く。氾濫判定はこの直後に行われる</summary>
+        public void AccumulateDaily(IRandom random)
         {
-            Accumulation += DailyGain;
+            Accumulation += GainFrom(random.Next(GainLow, GainHigh + 1));
+        }
+
+        /// <summary>攻略度 0 なら baseGain 増える日に、いまの攻略度で実際に増える量</summary>
+        private int GainFrom(int baseGain)
+        {
+            int gain = baseGain - Progress / ProgressPerGainStep;
+            return gain < MinDailyAccumulationGain ? MinDailyAccumulationGain : gain;
         }
 
         /// <summary>日次の攻略度の減少</summary>
@@ -123,7 +140,7 @@ namespace MemorialFloor.Domain
             Accumulation = Clamp0(Accumulation - amount);
         }
 
-        /// <summary>氾濫していれば蓄積値を空にし、拠点へ向かう敵の数を返す。していなければ 0</summary>
+        /// <summary>氾濫していれば蓄積値を空にし、拠点に攻め込む敵の数を返す。していなければ 0</summary>
         public int Overflow()
         {
             if (Level != AccumulationLevel.Stampede) return 0;
@@ -132,10 +149,23 @@ namespace MemorialFloor.Domain
             return StampedeRaiders;
         }
 
-        /// <summary>攻略度を上げる。クエスト報酬など</summary>
+        /// <summary>攻略度を上げる。クエスト報酬など。MaxProgress で止まる</summary>
         public void Gain(int amount)
         {
-            Progress += amount;
+            Progress = ProgressAfterGain(amount);
+        }
+
+        /// <summary>上げたらいくつになるか。上げる前に結果の画面で見せる</summary>
+        public int ProgressAfterGain(int amount)
+        {
+            return CapProgress(Progress + amount);
+        }
+
+        /// <summary>保存から戻す。攻略度は上限で止め、どちらも 0 を下回らない</summary>
+        public void Restore(int progress, int accumulation)
+        {
+            Progress = CapProgress(progress);
+            Accumulation = Clamp0(accumulation);
         }
 
         public void PlaceSpawnPoint(float x, float y, float z)
@@ -149,6 +179,11 @@ namespace MemorialFloor.Domain
         private static int Clamp0(int value)
         {
             return value < 0 ? 0 : value;
+        }
+
+        private static int CapProgress(int value)
+        {
+            return value > MaxProgress ? MaxProgress : Clamp0(value);
         }
     }
 
@@ -188,9 +223,9 @@ namespace MemorialFloor.Domain
             return null;
         }
 
-        public void AdvanceDay()
+        public void AdvanceDay(IRandom random)
         {
-            for (int i = 0; i < _roots.Count; i++) _roots[i].AdvanceDay();
+            for (int i = 0; i < _roots.Count; i++) _roots[i].AdvanceDay(random);
         }
 
         /// <summary>全て捨てる。新規開始とテストの後始末で使う</summary>
@@ -200,49 +235,77 @@ namespace MemorialFloor.Domain
         }
     }
 
+    /// <summary>拠点に攻め込んだ敵 1 体の控え。位置を持たないものは氾濫で来たばかりで、拠点の湧き口のまわりに満タンで出る</summary>
+    public readonly struct Raider
+    {
+        /// <summary>体力を控えていない。出すときは満タン</summary>
+        public const int FullHp = 0;
+
+        /// <summary>氾濫で来たばかりの 1 体</summary>
+        public static Raider Fresh
+        {
+            get { return default(Raider); }
+        }
+
+        public Raider(float x, float y, float z, int hp)
+        {
+            HasPosition = true;
+            X = x;
+            Y = y;
+            Z = z;
+            Hp = hp;
+        }
+
+        /// <summary>位置を持つ。拠点を離れるときに生き残っていた敵</summary>
+        public bool HasPosition { get; }
+
+        public float X { get; }
+
+        public float Y { get; }
+
+        public float Z { get; }
+
+        /// <summary>残りの体力。FullHp なら満タン</summary>
+        public int Hp { get; }
+    }
+
     /// <summary>
-    /// 拠点へ向かっている敵。根源の氾濫で積まれ、拠点で出る。拠点を離れるときに生き残っていた敵も積み戻される。
-    /// 留守のあいだに積まれた分は着いたときにまとめて、居るあいだに積まれた分は間を空けて1体ずつ出す
+    /// 拠点に攻め込んだ敵の控え。拠点のシーンが無いあいだ（留守のあいだと、保存から戻して拠点に着くまで）の敵を持つ。
+    /// 拠点に居るあいだはシーンの敵が正で、氾濫で来た敵も拠点の MS_Spawner がすぐ出して控えを空にする
     /// </summary>
     public sealed class BaseRaid
     {
-        /// <summary>拠点に居るあいだ、1体出してから次を出すまでの秒数</summary>
-        public const float IntervalSeconds = 6f;
+        private readonly List<Raider> _kept = new List<Raider>();
 
-        private float _wait;
-
-        /// <summary>まだ出ていない数</summary>
-        public int Pending { get; private set; }
-
-        public void Add(int count)
+        public IReadOnlyList<Raider> Kept
         {
-            if (count > 0) Pending += count;
+            get { return _kept; }
         }
 
-        /// <summary>拠点に着いた。積まれていた分を全て渡し、次の1体までの間を空ける</summary>
-        public int Arrive()
+        /// <summary>氾濫で count 体攻め込んだ。位置を持たない敵として控える</summary>
+        public void Invade(int count)
         {
-            int all = Pending;
-            Pending = 0;
-            _wait = IntervalSeconds;
+            for (int i = 0; i < count; i++) _kept.Add(Raider.Fresh);
+        }
+
+        /// <summary>1 体控える。拠点を離れるときと、保存から戻すときに使う</summary>
+        public void Keep(Raider raider)
+        {
+            _kept.Add(raider);
+        }
+
+        /// <summary>拠点に出す。控えていた敵をすべて渡し、控えを空にする</summary>
+        public List<Raider> TakeAll()
+        {
+            List<Raider> all = new List<Raider>(_kept);
+            _kept.Clear();
+
             return all;
-        }
-
-        /// <summary>拠点に居るあいだの経過。いま出す数を返す。間が空いていれば積まれた直後に1体出る</summary>
-        public int Tick(float seconds)
-        {
-            _wait = _wait > seconds ? _wait - seconds : 0f;
-            if (_wait > 0f || Pending == 0) return 0;
-
-            Pending--;
-            _wait = IntervalSeconds;
-            return 1;
         }
 
         public void Clear()
         {
-            Pending = 0;
-            _wait = 0f;
+            _kept.Clear();
         }
     }
 }

@@ -99,5 +99,22 @@ namespace MemorialFloor.Domain.Tests
             Assert.IsTrue(bounds.HasEscaped(0f, FieldBounds.EscapeHeight + 0.01f, 0f));
             Assert.IsTrue(bounds.HasEscaped(0f, -FieldBounds.EscapeHeight - 0.01f, 0f));
         }
+
+        [Test]
+        public void 天井を高くした場所ではその高さまで上がっても連れ戻さない()
+        {
+            FieldBounds bounds = new FieldBounds(maxX: 10f, minX: -10f, maxZ: 5f, minZ: -5f, ceiling: 8f);
+
+            Assert.IsFalse(bounds.HasEscaped(0f, 8f, 0f));
+            Assert.IsTrue(bounds.HasEscaped(0f, 8.01f, 0f));
+        }
+
+        [Test]
+        public void 天井を高くしても下へ離れすぎれば連れ戻す()
+        {
+            FieldBounds bounds = new FieldBounds(maxX: 10f, minX: -10f, maxZ: 5f, minZ: -5f, ceiling: 8f);
+
+            Assert.IsTrue(bounds.HasEscaped(0f, -FieldBounds.EscapeHeight - 0.01f, 0f));
+        }
     }
 }

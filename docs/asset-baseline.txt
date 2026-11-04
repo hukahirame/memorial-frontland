@@ -61,7 +61,5 @@ Assets/_Project/Resources/Unit_xa.prefab cb158dbf806d2dc4d8058e88952907c1
 Assets/_Project/Resources/Unit_xn.prefab cb158dbf806d2dc4d8058e88952907c1
 Assets/_Project/Resources/WoodChestset.prefab b4b88cad7803e6d43ae689edc4b728e7
 Assets/_Project/Scenes/MainSite.unity 198072d091945ea42b7f9a69bfa39ae5
-Assets/_Project/Scenes/Root1.unity 198072d091945ea42b7f9a69bfa39ae5
-Assets/_Project/Scenes/Root2.unity 198072d091945ea42b7f9a69bfa39ae5
 Assets/_Project/Scenes/Title.unity 198072d091945ea42b7f9a69bfa39ae5
 Assets/_Project/StartSet/MainCanvas.prefab bdf8cf9fcdd283e4dbbf70158db8ef68

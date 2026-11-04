@@ -6,8 +6,8 @@ namespace MemorialFloor.Domain.Tests
     public class ItemCatalogTests
     {
         private const string Csv =
-            "システム内名称,名称,最大ストック,最大耐久値,設置可,攻撃力,吹き飛ばし,使い道,回復量,,紹介文\n" +
-            "Slimejelly,スライムゼリー,100,0,1,0,0,1,5,,噛み応えバツグン。\n" +
+            "システム内名称,名称,最大ストック,最大耐久値,設置可,攻撃力,吹き飛ばし,使い道,回復量,値段,紹介文\n" +
+            "Slimejelly,スライムゼリー,100,0,1,0,0,1,5,5,噛み応えバツグン。\n" +
             "Branch,木の枝,100,0,0,0,0,0,0,,色々なことに使える。\n" +
             "Ironsword,鉄の剣,1,0,1,40,7.5,2,0,,お気に入りの鉄の剣。\n";
 
@@ -42,6 +42,15 @@ namespace MemorialFloor.Domain.Tests
             Assert.AreEqual(7.5f, item.Knockback);
             Assert.AreEqual(ItemUse.Equip, item.Use);
             Assert.AreEqual(0, item.Heal);
+        }
+
+        [Test]
+        public void 値段を読み空欄は売っていないとみなす()
+        {
+            ItemCatalog catalog = ItemCatalog.Parse(Csv);
+
+            Assert.AreEqual(5, catalog.Find("Slimejelly").Price);
+            Assert.AreEqual(0, catalog.Find("Branch").Price);
         }
 
         [Test]

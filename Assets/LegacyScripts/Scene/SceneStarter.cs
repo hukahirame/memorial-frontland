@@ -38,7 +38,7 @@ public class SceneStarter : MonoBehaviour
 
     private void Enter(Area area)
     {
-        player.expos = area.Exposition;
+        player.Bind(area);
         Player2.BindHpView(hpView);
 
         if (area.Kind == AreaKind.Root)

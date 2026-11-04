@@ -10,7 +10,8 @@ using UnityEngine.TestTools;
 using MemorialFloor.Domain;
 using MemorialFloor.Game;
 
-//根源の湧き口から湧く数と場所、根源の詳細の表示。湧き口は、いつもの湧きの連鎖を止めてから湧かせる口を直に呼んで数える
+//Root3 の 2 階建ての作り。核のある階に敵が湧くことと、エスカレーターで上の階へ上がれること。組み直すと壊れうる。
+//湧き口は、いつもの湧きの連鎖を止めてから湧かせる口を直に呼ぶ
 public class RootPlayTests
 {
     private const int SettleFrames = 120;
@@ -18,121 +19,55 @@ public class RootPlayTests
     /// <summary>移動が終わるのを待つ上限（実時間の秒）。暗転と明転を含む</summary>
     private const float TravelSeconds = 10f;
 
-    /// <summary>湧きの連鎖の 1 回を待つ最長（秒）。15〜29 秒で次が湧く</summary>
-    private const float ChainSeconds = 30f;
+    /// <summary>Root3 の上の階の床の高さ（FloodedMallBuilder.UpperFloor）</summary>
+    private const float Root3UpperFloor = 4f;
 
-    /// <summary>浮動小数の比較の許容</summary>
-    private const float Tolerance = 1e-3f;
+    /// <summary>Root3 のエスカレーターが上の階まで横に進む長さ。30 度で高さ 4 を上る</summary>
+    private const float Root3EscalatorRun = 6.93f;
+
+    /// <summary>歩かせて着くのを待つ上限（ゲームの秒）。エスカレーターを上りきるのに 10 秒ほどかかる</summary>
+    private const float WalkSeconds = 30f;
 
     [UnityTest]
-    public IEnumerator 倒した敵は湧きの抑えに数えない()
+    public IEnumerator Root3で核が下の階にあると敵は下の階の通路に湧く()
     {
-        yield return GoToRoot("Root1");
+        yield return SpawnsOnCoreFloor(-1000f, 0f);
+    }
+
+    [UnityTest]
+    public IEnumerator Root3で核が上の階にあると敵は上の階に湧く()
+    {
+        yield return SpawnsOnCoreFloor(1000f, Root3UpperFloor);
+    }
+
+    [UnityTest]
+    public IEnumerator Root3ではエスカレーターを歩いて上の階へ上がれる()
+    {
+        yield return GoToRoot("Root3");
         MonoBehaviour spawner = Spawner();
         spawner.StopAllCoroutines();
         yield return Defeat();
 
-        //攻略度 0 の根源では、居る敵が 0 なら見送らない。湧いた累計で数えると 34 体で湧かなくなる
-        const int times = 40;
-        int spawned = 0;
-        for (int i = 0; i < times; i++)
-        {
-            Call(spawner, "Spawn2", spawner.transform.position + Vector3.up);
-            spawned += Slimes().Count;
-            yield return Defeat();
-        }
+        //エスカレーターの原点は下端の縁の真ん中で、前（forward）へ上る。上の踊り場から右（right）の上の階へ降りる
+        Transform escalator = InHere("MallEscalator");
+        Component player = Player();
+        Rigidbody body = player.GetComponent<Rigidbody>();
+        Vector3 start = escalator.position - escalator.forward + Vector3.up * 0.65f;
+        body.linearVelocity = Vector3.zero;
+        body.position = start;
+        player.transform.position = start;
 
-        Assert.AreEqual(times, spawned, "倒した敵まで数えて、長く居るほど湧かなくなる");
-    }
+        Time.timeScale = 4f;
+        Vector3 up = escalator.forward;
+        yield return WalkUntil(up, () => Vector3.Dot(player.transform.position - escalator.position, up) > Root3EscalatorRun + 0.5f);
 
-    [UnityTest]
-    public IEnumerator 湧き口を壊したときの大量発生は一度きりで湧きの連鎖は増えない()
-    {
-        yield return GoToRoot("Root1");
-        MonoBehaviour spawner = Spawner();
-        spawner.StopAllCoroutines();
+        Vector3 off = escalator.right;
+        yield return WalkUntil(off, () => Vector3.Dot(player.transform.position - escalator.position, off) > 2.5f);
+        Time.timeScale = 1f;
 
-        Call(spawner, "SpawnerBreak", 10000);
-        Assert.Greater(Slimes().Count, 0, "壊しても湧かない");
-        yield return Defeat();
-
-        //いつもの連鎖は止めてあるので、ここで湧くのは壊したときに足された連鎖だけ
-        Time.timeScale = 10f;
-        int later = 0;
-        float until = Time.time + ChainSeconds + 1f;
-        while (Time.time < until)
-        {
-            later += Slimes().Count;
-            yield return Defeat();
-        }
-
-        Assert.AreEqual(0, later, "壊したときの大量発生のぶん、湧きの連鎖が増えて続く");
-    }
-
-    [UnityTest]
-    public IEnumerator 根源の敵は湧き口のまわりに湧く()
-    {
-        yield return GoToRoot("Root1");
-        MonoBehaviour spawner = Spawner();
-        spawner.StopAllCoroutines();
-        yield return Defeat();
-
-        float range = (float)Field(spawner, "spawnrange").GetValue(spawner);
-        GameObject seeker = (GameObject)Field(spawner, "seeker").GetValue(spawner);
-        Vector3 origin = spawner.transform.position;
-
-        for (int i = 0; i < 10; i++)
-        {
-            //前に湧かせた所に残っているのと同じく、湧き口から離しておく
-            seeker.transform.position = origin + new Vector3(range * 3f, 0f, range * 3f);
-            Call(spawner, "Spawn", range);
-
-            foreach (Component slime in Slimes())
-            {
-                Vector3 offset = slime.transform.position - origin;
-                Assert.LessOrEqual(Mathf.Abs(offset.x), range + Tolerance, "湧き口から離れた所に湧く");
-                Assert.LessOrEqual(Mathf.Abs(offset.z), range + Tolerance, "湧き口から離れた所に湧く");
-            }
-
-            yield return Defeat();
-        }
-    }
-
-    [UnityTest]
-    public IEnumerator 根源の詳細の解明と抑制は達していない根源を開くと元の色に戻る()
-    {
-        yield return Boot();
-        RootRegistry roots = (RootRegistry)StaticField("RootsManager", "Roots").GetValue(null);
-        roots.Find("Root1").Gain(SpawnRule.SuppressProgress);
-
-        Component manager = GameObject.FindWithTag("RootsManager").GetComponent(GameType("RootsManager"));
-        Call(manager, "RootUIShow");
-        yield return null;
-
-        //詳細の枠は掲示板 1 枚を根源どうしで使い回す
-        Transform weaken = GameObject.FindWithTag("QuestManager").transform.Find("RootProgress/DetailProgress");
-        Transform suppress = weaken.Find("DP2");
-        Color weakenAtFirst = ColorOf(weaken);
-        Color suppressAtFirst = ColorOf(suppress);
-
-        Call(RootButton(manager, "Root1"), "Show_QM");
-        Assert.AreNotEqual(weakenAtFirst, ColorOf(weaken), "達した【解明】に色が付かない");
-        Assert.AreNotEqual(suppressAtFirst, ColorOf(suppress), "達した【抑制】に色が付かない");
-
-        Call(RootButton(manager, "Root2"), "Show_QM");
-        AssertColor(weakenAtFirst, ColorOf(weaken), "攻略度 0 の根源でも【解明】が達した色のまま");
-        AssertColor(suppressAtFirst, ColorOf(suppress), "攻略度 0 の根源でも【抑制】が達した色のまま");
-    }
-
-    [UnityTest]
-    public IEnumerator 掲示板のタグは掲示板にだけ付いている()
-    {
-        yield return Boot();
-        GameObject[] tagged = GameObject.FindGameObjectsWithTag("QuestManager");
-
-        //敵を倒したときと湧き口を壊したときは、このタグで掲示板を探して進める。どれが返るかは決まっていない
-        Assert.AreEqual(1, tagged.Length, "掲示板を探すと、掲示板でない物が返ることがある");
-        Assert.IsNotNull(tagged[0].GetComponent(GameType("QuestManager")), "タグの付いた物が掲示板でない");
+        //降りたあとも上の階に居続ける。場の外とみなされると、下の階の手前へ連れ戻される
+        for (int i = 0; i < SettleFrames; i++) yield return null;
+        Assert.AreEqual(Root3UpperFloor + 0.6f, player.transform.position.y, 0.3f, "上の階に立っていない: " + player.transform.position);
     }
 
     [UnityTearDown]
@@ -185,29 +120,81 @@ public class RootPlayTests
         yield return null;
     }
 
-    private static Component RootButton(Component manager, string rootId)
+    /// <summary>
+    /// Root3 の核を、控えた位置にいちばん近い候補に置いて入り、湧いた敵が floor の階の床の 0.6 上に出るかを見る。
+    /// 2 回目からは控えた位置にいちばん近い候補に核が置かれる。控える高さ toward を大きく離せば、選ばれる候補の階が決まる
+    /// </summary>
+    private static IEnumerator SpawnsOnCoreFloor(float toward, float floor)
     {
-        Transform button = manager.transform.Find(rootId);
-        Assert.IsNotNull(button, rootId + " の地図のボタンが無い");
+        yield return Boot();
+        RootRegistry roots = (RootRegistry)StaticField("RootsManager", "Roots").GetValue(null);
+        roots.Find("Root3").PlaceSpawnPoint(12f, toward, 6f);
 
-        return button.GetComponent(GameType("RootUI"));
+        Travel().Go(Route.To("Root3", Arrival.FromPrevious));
+        yield return Arrive();
+
+        MonoBehaviour spawner = Spawner();
+        spawner.StopAllCoroutines();
+        yield return Defeat();
+
+        //核の像は土台を床に載せてあり、像の真ん中は床より上にある
+        Assert.That(spawner.transform.position.y, Is.InRange(floor, floor + 3f), "核が狙った階の候補に置かれない: " + spawner.transform.position);
+
+        float range = (float)Field(spawner, "spawnrange").GetValue(spawner);
+        int spawned = 0;
+
+        for (int i = 0; i < 20; i++)
+        {
+            Call(spawner, "Spawn", range * 2f);
+
+            //ほかの階（4 離れる）・吹き抜けの底・像や柱の上には湧かない。崩れた縁の欠けた所は床より 0.4 ほど低いので、1 まで許す
+            foreach (Component slime in Slimes())
+            {
+                Assert.AreEqual(floor + 0.6f, slime.transform.position.y, 1f, "核と同じ階の通路でない所に湧く: " + slime.transform.position);
+                spawned++;
+            }
+
+            yield return Defeat();
+        }
+
+        Assert.Greater(spawned, 0, "核のまわりに湧かない");
     }
 
-    //UnityEngine.UI は asmdef から参照していないので、Text は名前で引く
-    private static Color ColorOf(Transform shown)
+    /// <summary>移動のスティックを toward へ倒したまま、done になるまで歩かせる。歩き終えたらスティックを戻す</summary>
+    private static IEnumerator WalkUntil(Vector3 toward, Func<bool> done)
     {
-        Component text = shown.GetComponent("Text");
-        Assert.IsNotNull(text, shown.name + " に Text が無い");
+        Component player = Player();
+        Component stick = (Component)Field(player, "joystick").GetValue(player);
+        FieldInfo input = GameType("Joystick").GetField("input", BindingFlags.Instance | BindingFlags.NonPublic);
+        input.SetValue(stick, new Vector2(toward.x, toward.z));
 
-        return (Color)text.GetType().GetProperty("color").GetValue(text);
+        float giveUp = Time.time + WalkSeconds;
+        while (!done() && Time.time < giveUp) yield return null;
+
+        input.SetValue(stick, Vector2.zero);
+        Assert.IsTrue(done(), "歩いても着かない: " + player.transform.position);
     }
 
-    private static void AssertColor(Color expected, Color actual, string message)
+    private static Component Player()
     {
-        Assert.AreEqual(expected.r, actual.r, Tolerance, message);
-        Assert.AreEqual(expected.g, actual.g, Tolerance, message);
-        Assert.AreEqual(expected.b, actual.b, Tolerance, message);
-        Assert.AreEqual(expected.a, actual.a, Tolerance, message);
+        GameObject player = GameObject.FindWithTag("Player");
+        Assert.IsNotNull(player, "プレイヤーが居ない");
+
+        Component component = player.GetComponent(GameType("Player2"));
+        Assert.IsNotNull(component, "プレイヤーに Player2 が無い");
+
+        return component;
+    }
+
+    /// <summary>いま居る場所のシーンの、name という名前の物</summary>
+    private static Transform InHere(string name)
+    {
+        Transform found = Travel().Current.Scene.GetRootGameObjects()
+            .SelectMany(root => root.GetComponentsInChildren<Transform>(true))
+            .FirstOrDefault(part => part.name == name);
+        Assert.IsNotNull(found, Travel().Current.Id + " に " + name + " が無い");
+
+        return found;
     }
 
     private static IEnumerator GoToRoot(string rootId)

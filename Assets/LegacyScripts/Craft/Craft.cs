@@ -8,6 +8,7 @@ public class Craft : MonoBehaviour//Craftchildから実行。対応するsetを�
 {
     private const int SlotCount = 4;        // UI が持つ材料スロット数
     private const int WidgetsPerSlot = 5;   // 材料1スロットあたりの子オブジェクト数
+    private const float ButtonGap = 150f;   // 作ると買うが並ぶとき、真ん中からそれぞれをずらす幅
 
     public PlayerInventory pi;
 
@@ -38,9 +39,22 @@ public class Craft : MonoBehaviour//Craftchildから実行。対応するsetを�
 
     public Transform matset;
 
+    [Tooltip("作るボタン。レシピのある品を開いたときだけ出す")]
+    [SerializeField] private RectTransform makeButton;
+
+    [Tooltip("買うボタン。原簿に値段のある品を開いたときだけ出す")]
+    [SerializeField] private RectTransform buyButton;
+
+    [SerializeField] private Text buyLabel;
+
     [SerializeField] private GameObject dropcapsule;
 
     private readonly Dictionary<string, Recipe> recipes = new Dictionary<string, Recipe>();
+
+    /// <summary>開いている品。何も開いていなければ null</summary>
+    private ItemDefinition shown;
+
+    /// <summary>開いている品のレシピ。作れない品なら null</summary>
     private Recipe current;
 
     private Text[] materialTexts;
@@ -58,6 +72,9 @@ public class Craft : MonoBehaviour//Craftchildから実行。対応するsetを�
 
     void Start()
     {
+        //品を選ぶまで、説明と材料の枠と作る・買うのボタンを出さない。選ぶ前は空の枠だけが並ぶ
+        set.SetActive(false);
+
         //持ち物が変わるたびに所持数を書き直す。開いたまま拾っても、閉じて開き直しても今の数が出る
         pi.Changed += Refresh;
 
@@ -77,13 +94,18 @@ public class Craft : MonoBehaviour//Craftchildから実行。対応するsetを�
 
     public void Craftprepare2(string showname)
     {
+        set.SetActive(true);
         set.GetComponent<Craft_set>().Put_Info(showname);
-        Put_Materials(showname);
+        shown = GameManager.Items.Find(showname);
+        recipes.TryGetValue(showname, out current);
+
+        Put_Materials();
+        Put_Buttons();
     }
 
     private void Refresh()
     {
-        if (current != null) Put_Materials(current.ProductId);
+        if (shown != null) Put_Materials();
     }
 
     public void CraftStart()
@@ -106,28 +128,50 @@ public class Craft : MonoBehaviour//Craftchildから実行。対応するsetを�
         foreach (var ingredient in current.Ingredients)
             for (int i = 0; i < ingredient.Amount; i++) pi.UnloadInventory(ingredient.ItemId);
 
+        Drop(current.ProductId, bench);
+        Put_Materials();
+    }
+
+    /// <summary>開いている品を所持金で買う。品は作ったときと同じく作業台に落ちる</summary>
+    public void BuyStart()
+    {
+        if (shown == null || shown.Price <= 0) return;
+
+        //作るときと同じく、倒れている間と移っている間、作業台の無い場所では買わない。払ってから探すと所持金だけ減る
+        if (!GameObject.FindWithTag("Player").GetComponent<Player2>().CanAct) return;
+
+        GameObject bench = GameObject.FindWithTag("CraftBench");
+        if (bench == null) return;
+
+        if (!GameManager.Coins.Spend(shown.Price))
+        {
+            GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("所持金が足りません");
+            return;
+        }
+
+        Drop(shown.ItemId, bench);
+    }
+
+    private void Drop(string itemId, GameObject bench)
+    {
         GameObject drop = Instantiate(dropcapsule,
             bench.transform.position + new Vector3(0, 0.5f, 0),
             Quaternion.identity);
-        drop.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(current.ProductId);
-
-        Put_Materials(current.ProductId);
+        drop.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(itemId);
     }
 
-    private void Put_Materials(string productId) // 完成品の材料に関する情報をアップロード
+    private void Put_Materials() // 完成品の材料に関する情報をアップロード
     {
-        if (!recipes.TryGetValue(productId, out var recipe)) return;
-        current = recipe;
-
+        int count = current == null ? 0 : current.Ingredients.Count;
         var inventory = CurrentInventory();
 
         for (int slot = 0; slot < SlotCount; slot++)
         {
-            bool used = slot < recipe.Ingredients.Count;
+            bool used = slot < count;
             SetSlotActive(slot, used);
             if (!used) continue;
 
-            var ingredient = recipe.Ingredients[slot];
+            var ingredient = current.Ingredients[slot];
             materialTexts[slot].text = ingredient.DisplayName;
             demandTexts[slot].text = ingredient.Amount.ToString();
             icons[slot].sprite = Resources.Load<Sprite>(ingredient.ItemId);
@@ -135,10 +179,23 @@ public class Craft : MonoBehaviour//Craftchildから実行。対応するsetを�
         }
     }
 
+    /// <summary>作れる品には作るボタン、売っている品には買うボタンを出す。片方だけなら真ん中に寄せる</summary>
+    private void Put_Buttons()
+    {
+        bool make = current != null;
+        bool buy = shown != null && shown.Price > 0;
+
+        makeButton.gameObject.SetActive(make);
+        buyButton.gameObject.SetActive(buy);
+        if (buy) buyLabel.text = shown.Price + " コインで買う";
+
+        float apart = make && buy ? ButtonGap : 0f;
+        makeButton.anchoredPosition = new Vector2(-apart, makeButton.anchoredPosition.y);
+        buyButton.anchoredPosition = new Vector2(apart, buyButton.anchoredPosition.y);
+    }
+
     private void SetSlotActive(int slot, bool active)
     {
-        if (slot == 0) return; // 先頭スロットは常時表示
-
         for (int d = slot * WidgetsPerSlot; d < (slot + 1) * WidgetsPerSlot; d++)
         {
             if (d >= matset.childCount) return;

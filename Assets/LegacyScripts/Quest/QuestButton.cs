@@ -40,12 +40,10 @@ public class QuestButton : MonoBehaviour
             return;
         }
 
-        var s = transform.Find("StatusText").GetComponent<TextMeshProUGUI>();
-
         if (ordered)
         {
-            s.text = "非受注";
             QuestManager.ordered_id = "";
+            Redraw(quest.RootId);
             Notice("クエストを解除しました");
             return;
         }
@@ -56,9 +54,16 @@ public class QuestButton : MonoBehaviour
             return;
         }
 
-        s.text = "受注済み";
         QuestManager.ordered_id = quest.Id;
+        Redraw(quest.RootId);
         Notice("クエストを受注しました");
+    }
+
+    /// <summary>掲示板の枠を描き直す。受注中の枠の強調と、ほかの枠の「ほかを受注中」を付け直す</summary>
+    private void Redraw(string rootId)
+    {
+        QuestManager board = GetComponentInParent<QuestManager>();
+        if (board != null) board.ShowQuestUI(rootId);
     }
 
     private static void Notice(string text)

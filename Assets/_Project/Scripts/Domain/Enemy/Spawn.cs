@@ -105,6 +105,9 @@ namespace MemorialFloor.Domain
         /// <summary>この距離までプレイヤーが近づくと見つける。離れれば見失う。壁は見ない</summary>
         public const float SightRange = 4f;
 
+        /// <summary>上下にこれより離れたプレイヤーは見つけない。2 階建ての場所で、ほかの階のプレイヤーを追わない</summary>
+        public const float SightHeight = 2f;
+
         /// <summary>行き先からこの距離の内に入ったら、もう寄らずにうろつく。狭いと一か所に固まる</summary>
         public const float GoalRadius = 6f;
 
@@ -118,6 +121,15 @@ namespace MemorialFloor.Domain
             if (hasGoal && toGoal > GoalRadius) return EnemyAim.Goal;
 
             return EnemyAim.Wander;
+        }
+
+        /// <summary>
+        /// 見つけるかを決めるときの、プレイヤーまでの距離。flat は水平な距離、rise は上下の差。
+        /// 上下に離れすぎていればほかの階に居るので、どれだけ近くても見つけない遠さにする
+        /// </summary>
+        public static float SightDistance(float flat, float rise)
+        {
+            return Math.Abs(rise) > SightHeight ? float.PositiveInfinity : flat;
         }
 
         /// <summary>差の向き。差が無ければ止まる</summary>
@@ -170,8 +182,8 @@ namespace MemorialFloor.Domain
         /// <summary>既に居る1体あたり、見送る確率に足す量</summary>
         public const int CrowdPercentPerEnemy = 3;
 
-        /// <summary>この攻略度から、湧いた敵が弱くなる</summary>
-        public const int WeakenProgress = 30;
+        /// <summary>この攻略度から、湧いた敵が弱くなる。【解明】の段</summary>
+        public const int WeakenProgress = Root.RevealProgress;
 
         /// <summary>湧いた敵の体力を減らす割合</summary>
         public const float WeakenRatio = 0.2f;

@@ -88,6 +88,32 @@ namespace MemorialFloor.Domain.Tests
         }
     }
 
+    public class QuestRewardsTests
+    {
+        private static int Amount(Reward[] rewards, string kind)
+        {
+            return rewards.Single(reward => reward.Kind == kind).Amount;
+        }
+
+        [Test]
+        public void 調査のコインは危険度の10分の1で攻略度は15()
+        {
+            Assert.AreEqual(100, Amount(QuestRewards.For(QuestKind.Main, 1000), "coin"));
+            Assert.AreEqual(200, Amount(QuestRewards.For(QuestKind.Main, 2000), "coin"));
+            Assert.AreEqual(15, Amount(QuestRewards.For(QuestKind.Main, 2000), "progress"));
+        }
+
+        [Test]
+        public void 決壊はコインも攻略度も調査の倍()
+        {
+            Reward[] main = QuestRewards.For(QuestKind.Main, 2000);
+            Reward[] breach = QuestRewards.For(QuestKind.Breach, 2000);
+
+            Assert.AreEqual(Amount(main, "coin") * 2, Amount(breach, "coin"));
+            Assert.AreEqual(Amount(main, "progress") * 2, Amount(breach, "progress"));
+        }
+    }
+
     public class QuestRegistryTests
     {
         private static readonly Reward[] NoReward = new Reward[0];
@@ -142,6 +168,35 @@ namespace MemorialFloor.Domain.Tests
             registry.Create(QuestKind.Breach, "Root1", "MainSpawner", 1, NoReward);
             Assert.IsTrue(registry.HasMainFor("Root1"));
             Assert.IsFalse(registry.HasMainFor("Root2"));
+        }
+
+        [Test]
+        public void 根源ごとに決壊があるかを見る()
+        {
+            QuestRegistry registry = new QuestRegistry();
+            registry.Create(QuestKind.Main, "Root1", "MainSpawner", 1, NoReward);
+
+            Assert.IsFalse(registry.HasBreachFor("Root1"), "調査を決壊と数えた");
+
+            registry.Create(QuestKind.Breach, "Root1", "MainSpawner", 1, NoReward);
+            Assert.IsTrue(registry.HasBreachFor("Root1"));
+            Assert.IsFalse(registry.HasBreachFor("Root2"));
+        }
+
+        [Test]
+        public void 保存から戻したクエストは_Id_のまま足せて二重には持たない()
+        {
+            QuestRegistry registry = new QuestRegistry();
+            Quest saved = new Quest("X3", "Root2", "MainSpawner", 1, NoReward);
+
+            Assert.IsTrue(registry.TryAdd(saved));
+            Assert.AreSame(saved, registry.Find("X3"));
+
+            Assert.IsFalse(registry.TryAdd(new Quest("X3", "Root1", "MainSpawner", 1, NoReward)), "同じ Id を二重に持つ");
+            Assert.IsFalse(registry.TryAdd(null));
+            Assert.AreEqual(1, registry.Count);
+
+            Assert.AreEqual("X0", registry.Create(QuestKind.Main, "Root1", "MainSpawner", 1, NoReward).Id, "戻した Id の空きを詰めない");
         }
 
         [Test]

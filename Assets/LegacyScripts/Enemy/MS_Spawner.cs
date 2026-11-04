@@ -5,15 +5,15 @@ using MemorialFloor.Game;
 using UnityEngine;
 
 /// <summary>
-/// 拠点の湧き口。根源の氾濫で拠点へ向かってきた敵を出す。拠点のシーンにだけ置く。
-/// 出した敵は拠点の中心を目指す。拠点を離れるときに生き残っている敵は積み戻し、戻ったときにまた出す
+/// 拠点の湧き口。根源の氾濫で拠点に攻め込んだ敵を出す。拠点のシーンにだけ置く。
+/// 出した敵は拠点の中心を目指す。拠点を離れるときに生き残っている敵は位置と体力を控え、戻ったときに同じところへ出す
 /// </summary>
 public class MS_Spawner : MonoBehaviour
 {
     /// <summary>円が場からはみ出すとき、場に入る点を引き直す回数。尽きたら円の中心を場へ丸める</summary>
     private const int PickTries = 16;
 
-    [Tooltip("湧き口からのばらつき。この半径の中に出す")]
+    [Tooltip("湧き口からのばらつき。氾濫で来た敵は、この半径の中に出す")]
     [SerializeField] private float scatter = 1.5f;
 
     private GameObject enemy;
@@ -40,10 +40,8 @@ public class MS_Spawner : MonoBehaviour
         travel = FindAnyObjectByType<AreaTravel>();
         if (travel != null) travel.Leaving += Retreat;
 
-        //留守のあいだに来たものは、もう中心のあたりまで攻め込んでいる
-        int arrived = RootsManager.Raid.Arrive();
-        for (int left = arrived; left > 0; left--) Spawn(center, AimRule.GoalRadius);
-
+        //留守のあいだに攻め込んだ敵と、離れる前に生き残っていた敵
+        int arrived = Release();
         if (arrived > 0) StartCoroutine(Announce(arrived));
     }
 
@@ -63,25 +61,45 @@ public class MS_Spawner : MonoBehaviour
 
     void Update()
     {
-        //移動のあいだは出さない。積み戻したあとに出すと、拠点のシーンと一緒に消える
+        //移動のあいだは出さない。離れる途中に出すと、拠点のシーンと一緒に消える
         if (travel != null && travel.IsTraveling) return;
 
-        for (int left = RootsManager.Raid.Tick(Time.deltaTime); left > 0; left--) Spawn(transform.position, scatter);
+        //居るあいだに氾濫で攻め込んだ敵は、すぐ出す
+        if (RootsManager.Raid.Kept.Count > 0) Release();
     }
 
-    /// <summary>拠点を離れる。生き残っている敵は拠点のシーンと一緒に消えるので、数えて積み戻す</summary>
+    /// <summary>控えている敵をすべて出す。出した数を返す</summary>
+    private int Release()
+    {
+        List<Raider> kept = RootsManager.Raid.TakeAll();
+        foreach (Raider raider in kept) Spawn(raider);
+
+        return kept.Count;
+    }
+
+    /// <summary>拠点を離れる。生き残っている敵は拠点のシーンと一緒に消えるので、位置と体力を控える</summary>
     private void Retreat(Area area)
     {
         if (area.Scene != gameObject.scene) return;
 
-        int alive = 0;
+        foreach (Raider raider in Survivors()) RootsManager.Raid.Keep(raider);
+        raiders.Clear();
+    }
+
+    /// <summary>生き残っている敵の位置と体力。拠点に居るあいだに保存するときも写す</summary>
+    public List<Raider> Survivors()
+    {
+        List<Raider> alive = new List<Raider>();
         foreach (GameObject raider in raiders)
         {
-            if (IsAlive(raider)) alive++;
+            if (!IsAlive(raider)) continue;
+
+            Vector3 at = raider.transform.position;
+            IDamageable damageable = raider.GetComponent<IDamageable>();
+            alive.Add(new Raider(at.x, at.y, at.z, damageable != null ? damageable.CurrentHp : Raider.FullHp));
         }
 
-        raiders.Clear();
-        RootsManager.Raid.Add(alive);
+        return alive;
     }
 
     /// <summary>倒されて消えたもの、倒れて消える途中のもの、場外へ落ちたものは数えない</summary>
@@ -93,17 +111,32 @@ public class MS_Spawner : MonoBehaviour
         return damageable == null || damageable.CurrentHp > 0;
     }
 
-    /// <summary>around から radius の中に出す。場の外へははみ出さない</summary>
-    private void Spawn(Vector3 around, float radius)
+    /// <summary>控えていた 1 体を出す。位置を持つものはその位置に、持たないものは湧き口のまわりに出す。体力は控えた値まで減らす</summary>
+    private void Spawn(Raider kept)
     {
-        Vector3 pos = PickInField(around, radius);
+        Vector3 pos;
+        if (kept.HasPosition)
+        {
+            pos = new Vector3(kept.X, kept.Y, kept.Z);
+        }
+        else
+        {
+            pos = PickInField(transform.position, scatter);
 
-        //地面が見つからなければ高さを変えずに出す。拠点へ向かってきた敵を取りこぼさない
-        if (Physics.Raycast(pos + Vector3.up * 5f, Vector3.down, out RaycastHit hit, 10f)) pos = hit.point + Vector3.up * 0.6f;
+            //地面が見つからなければ高さを変えずに出す。攻め込んだ敵を取りこぼさない
+            if (Physics.Raycast(pos + Vector3.up * 5f, Vector3.down, out RaycastHit hit, 10f)) pos = hit.point + Vector3.up * 0.6f;
+        }
 
         //MainSite に対応する根源は無いため、攻略度による弱体化は行わない
         GameObject raider = Instantiate(enemy, pos, Quaternion.identity);
         raider.GetComponent<Slime>().SetGoal(center);
+
+        IDamageable damageable = raider.GetComponent<IDamageable>();
+        if (damageable != null && kept.Hp > Raider.FullHp && kept.Hp < damageable.CurrentHp)
+        {
+            damageable.TakeDamage(damageable.CurrentHp - kept.Hp);
+        }
+
         raiders.Add(raider);
     }
 

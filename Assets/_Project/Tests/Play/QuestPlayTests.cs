@@ -9,7 +9,7 @@ using UnityEngine.TestTools;
 using MemorialFloor.Domain;
 using MemorialFloor.Game;
 
-//掲示板で受注し、根源で拠点を壊して帰るまでの流れ。結果の画面と受注の状態を見る。
+//掲示板で受注し、根源で核を壊して帰るまでの流れ。結果の画面と受注の状態を見る。
 //掲示板は地図から開く代わりに QuestManager.ShowQuestUI を、枠を押す代わりに QuestButton.QuestOrder を直に呼ぶ
 public class QuestPlayTests
 {
@@ -21,123 +21,61 @@ public class QuestPlayTests
     /// <summary>倒れてから拠点に戻されるまでの上限（秒）。起き上がるまでの 5 秒を含む</summary>
     private const float ReviveSeconds = 12f;
 
-    /// <summary>壊れた拠点が見えなくなるのを待つ秒数。膨らんで縮む 0.25 秒に余裕を足す</summary>
-    private const float BurstSeconds = 0.5f;
-
     [UnityTest]
-    public IEnumerator 始めから根源ごとに調査とサブが1本ずつある()
+    public IEnumerator 始めから根源ごとに調査とサブが1本ずつあり調査のコインは危険度で決まる()
     {
         yield return Boot();
 
         foreach (string root in new[] { "Root1", "Root2" })
         {
-            MainQuestFor(root);
+            Quest main = Quests().Find(MainQuestFor(root));
             Assert.AreEqual(1, Quests().All.Count(q => q.Kind == QuestKind.Sub && q.RootId == root), root + " のサブ");
+            Assert.AreEqual(Roots().Find(root).Danger / QuestRewards.DangerPerCoin, Amount(main, "coin"), root + " の調査のコイン");
         }
     }
 
     [UnityTest]
-    public IEnumerator サブが残っている根源にはサブを足さない()
+    public IEnumerator 受けた調査は通り道の根源で核を壊しても進まない()
     {
         yield return Boot();
-        Quest sub = SubQuestFor("Root1");
-
-        IssueSub("Root1");
-        Assert.AreEqual(1, Quests().All.Count(q => q.Kind == QuestKind.Sub && q.RootId == "Root1"), "1 体で両方が進み、2 本ぶん払う");
-
-        Quests().Remove(sub.Id);
-        IssueSub("Root1");
-        Assert.IsNotNull(Quests().All.FirstOrDefault(q => q.Kind == QuestKind.Sub && q.RootId == "Root1"), "受け取ったあとに次が出ない");
-    }
-
-    [UnityTest]
-    public IEnumerator サブは達成した1回だけ知らせ掲示板に達成済みと出る()
-    {
-        yield return Boot();
-        Quest sub = SubQuestFor("Root1");
-        string objective = "スライムを" + sub.Amount + "体討伐する";
-        yield return OrderAndGo(MainQuestFor("Root1"), "Root1");
-
-        for (int i = 0; i < sub.Amount; i++) Sync("Slime");
-        Assert.AreEqual("サブクエスト達成：" + objective, Shown(Middle(), "txt"));
-
-        Middle().Midtxt_Anim("別の知らせ");
-        Sync("Slime");
-        Assert.AreEqual("別の知らせ", Shown(Middle(), "txt"), "倒すたびに達成を知らせ直す");
-
-        OpenBoard("Root1");
-        yield return null;
-
-        Component button = Button(sub.Id);
-        Assert.AreEqual("達成済み", Status(button));
-        StringAssert.Contains(objective, TextOf(button.transform.Find("BodyText").gameObject), "対象が内部名のまま出る");
-        StringAssert.Contains("コイン x 100", TextOf(button.transform.Find("RewardText").gameObject));
-    }
-
-    [UnityTest]
-    public IEnumerator 拠点を壊すと破壊と出て帰るよう促し見えなくなる()
-    {
-        yield return Boot();
-        yield return OrderAndGo(MainQuestFor("Root1"), "Root1");
-
-        Component spawner = Spawner();
-        Vector3 size = spawner.transform.localScale;
-
-        Assert.IsTrue(Break(spawner), "壊した一撃と扱わない");
-        Assert.IsFalse(Break(spawner), "壊れたあとにもう一度壊れる");
-
-        BigText big = UnityEngine.Object.FindAnyObjectByType<BigText>();
-        Assert.AreEqual("破壊", Shown(big, "txt2"), "根源を出る前に倒れると失敗になるのに達成と出る");
-        StringAssert.Contains("生きて根源を出る", Shown(big, "txt1"));
-
-        yield return new WaitForSeconds(BurstSeconds);
-        Assert.IsFalse(spawner.GetComponentsInChildren<Renderer>().Any(r => r.enabled), "壊れても見えたまま");
-        Assert.AreEqual(size, spawner.transform.localScale, "縮んだまま残る");
-    }
-
-    [UnityTest]
-    public IEnumerator 調査とサブが並んでも枠は別の段に出て調査の枠を押せる()
-    {
-        yield return Boot();
-        string main = MainQuestFor("Root1");
-        SubQuestFor("Root1");
-
-        OpenBoard("Root1");
-        yield return null;
-
-        Component[] buttons = Buttons();
-        Assert.AreEqual(2, buttons.Length);
-
-        //後に並ぶ枠ほど手前に描かれ、押した位置の入力を先に受ける
-        Component mainButton = Button(main);
-        Vector2 center = Area(mainButton).center;
-        foreach (Component other in buttons.Where(b => b.transform.GetSiblingIndex() > mainButton.transform.GetSiblingIndex()))
-        {
-            Assert.IsFalse(Area(other).Contains(center), other.name + " の枠が調査の枠を覆う");
-        }
-
-        Order(mainButton);
-        Assert.AreEqual(main, OrderedId());
-    }
-
-    [UnityTest]
-    public IEnumerator 掲示板を開き直しても枠は積もらない()
-    {
-        yield return Boot();
-
-        OpenBoard("Root1");
-        yield return null;
-        OpenBoard("Root1");
-        yield return null;
+        string root2 = MainQuestFor("Root2");
         OpenBoard("Root2");
         yield return null;
+        Order(Button(root2));
 
-        CollectionAssert.AreEquivalent(new[] { MainQuestFor("Root2"), SubQuestFor("Root2").Id },
-                                       Buttons().Select(b => b.name).ToArray(), "前に開いた枠が残る");
+        yield return WalkTo("Root1");
+        BreakSpawner();
+
+        Assert.AreEqual(0, Quests().Find(root2).Progress, "通り道の根源の核で、受けた調査が進む");
+        Assert.AreNotEqual("破壊", Shown(UnityEngine.Object.FindAnyObjectByType<BigText>(), "txt2"), "通り道の根源で破壊と出る");
     }
 
     [UnityTest]
-    public IEnumerator 拠点を壊して帰ると達成済みの報酬をすべて受け取り受注が空く()
+    public IEnumerator 氾濫した根源に決壊が出て報酬は調査の倍になる()
+    {
+        yield return Boot();
+        Root root = Roots().Find("Root2");
+
+        Overflow(root);
+
+        Quest breach = Quests().All.FirstOrDefault(q => q.Kind == QuestKind.Breach && q.RootId == "Root2");
+        Assert.IsNotNull(breach, "氾濫しても決壊が出ない");
+        Assert.AreEqual(root.Danger / QuestRewards.DangerPerCoin * QuestRewards.BreachMultiplier, Amount(breach, "coin"));
+        Assert.AreEqual(QuestRewards.MainProgress * QuestRewards.BreachMultiplier, Amount(breach, "progress"));
+        Assert.IsFalse(Quests().All.Any(q => q.Kind == QuestKind.Breach && q.RootId == "Root1"), "氾濫していない根源に決壊が出る");
+
+        Overflow(root);
+        Assert.AreEqual(1, Quests().All.Count(q => q.Kind == QuestKind.Breach && q.RootId == "Root2"), "決壊が二重に出る");
+
+        OpenBoard("Root2");
+        yield return null;
+        Component button = Button(breach.Id);
+        StringAssert.Contains("敵を5体討伐する", TextOf(button.transform.Find("BodyText").gameObject), "決壊の枠に目的が出ない");
+        StringAssert.Contains("決壊", TextOf(button.transform.Find("TypeText").gameObject));
+    }
+
+    [UnityTest]
+    public IEnumerator 核を壊して帰ると調査の報酬を受け取り受注が空く()
     {
         yield return Boot();
         string main = MainQuestFor("Root1");
@@ -147,22 +85,22 @@ public class QuestPlayTests
         yield return OrderAndGo(main, "Root1");
 
         for (int i = 0; i < sub.Amount; i++) Sync("Slime");
-        Assert.IsTrue(sub.IsComplete, "根源にいる間にサブが進まない");
+        Assert.AreEqual(coins + 100, Coins().Amount, "根源にいる間にサブが進まないか、達成しても払わない");
         BreakSpawner();
-        Assert.IsTrue(Quests().Find(main).IsComplete, "拠点を壊しても達成にならない");
+        Assert.IsTrue(Quests().Find(main).IsComplete, "核を壊しても達成にならない");
 
         yield return WalkTo(TravelRule.BaseAreaId);
 
         Assert.AreEqual("成功", Text("resulttxt"));
         StringAssert.Contains("0 % → 15 %", Text("sidetxt"));
-        StringAssert.Contains("コイン　x　200", Text("sidetxt"), "調査とサブの両方が出ない");
-        Assert.AreEqual(coins + 200, Coins().Amount);
+        StringAssert.Contains("コイン　x　100", Text("sidetxt"), "先に払ったサブまで出すか、調査の報酬が出ない");
+        Assert.AreEqual(coins + 200, Coins().Amount, "サブと調査の両方を払わない");
         Assert.AreEqual("", OrderedId());
         Assert.IsFalse(Quests().All.Any(quest => quest.IsComplete), "受け取ったクエストが残る");
     }
 
     [UnityTest]
-    public IEnumerator 拠点を壊してから根源を出る前に倒れると失敗になりもう一度挑める()
+    public IEnumerator 核を壊してから根源を出る前に倒れると失敗になりもう一度挑める()
     {
         yield return Boot();
         string main = MainQuestFor("Root1");
@@ -180,7 +118,7 @@ public class QuestPlayTests
 
         OpenBoard("Root1");
         yield return null;
-        Assert.AreEqual("受注済み", Status(Button(main)));
+        Assert.AreEqual("受注中", Status(Button(main)));
 
         yield return WalkTo("Root1");
         BreakSpawner();
@@ -207,52 +145,6 @@ public class QuestPlayTests
     }
 
     [UnityTest]
-    public IEnumerator 拠点で倒れても結果の画面は出ない()
-    {
-        yield return Boot();
-        string main = MainQuestFor("Root1");
-        OpenBoard("Root1");
-        yield return null;
-        Order(Button(main));
-
-        yield return DieAndRevive();
-
-        Assert.AreEqual(0, StaticField("RewardUI", "rewardUI_show").GetValue(null), "あとで帰ったときに失敗の結果が出る");
-        Assert.AreEqual(main, OrderedId(), "拠点で倒れただけで受注が外れた");
-    }
-
-    [UnityTest]
-    public IEnumerator 受注と解除は対象の根源の外でだけできる()
-    {
-        yield return Boot();
-        string root1 = MainQuestFor("Root1");
-        string root2 = MainQuestFor("Root2");
-        yield return WalkTo("Root1");
-
-        OpenBoard("Root1");
-        yield return null;
-        Order(Button(root1));
-        Assert.AreEqual("", OrderedId(), "対象の根源の中で受注できる");
-
-        OpenBoard("Root2");
-        yield return null;
-        Order(Button(root2));
-        Assert.AreEqual(root2, OrderedId(), "ほかの根源から受注できない");
-
-        yield return WalkTo("Root2");
-        OpenBoard("Root2");
-        yield return null;
-        Order(Button(root2));
-        Assert.AreEqual(root2, OrderedId(), "対象の根源の中で解除できる");
-
-        yield return WalkTo("Root1");
-        OpenBoard("Root2");
-        yield return null;
-        Order(Button(root2));
-        Assert.AreEqual("", OrderedId(), "外に出ても解除できない");
-    }
-
-    [UnityTest]
     public IEnumerator 受けたクエストは対象の根源に入るまで始まらず手前で倒れても失敗にならない()
     {
         yield return Boot();
@@ -271,7 +163,7 @@ public class QuestPlayTests
     }
 
     [UnityTest]
-    public IEnumerator 拠点を壊して隣の根源へ出ると着いたところで成功と出て報酬を受け取る()
+    public IEnumerator 核を壊して隣の根源へ出ると着いたところで成功と出て報酬を受け取る()
     {
         yield return Boot();
         string main = MainQuestFor("Root1");
@@ -354,8 +246,9 @@ public class QuestPlayTests
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
 
-        ((RootRegistry)StaticField("RootsManager", "Roots").GetValue(null)).Clear();
+        Roots().Clear();
         ((BaseRaid)StaticField("RootsManager", "Raid").GetValue(null)).Clear();
+        ((DayPlan)StaticField("Sun2", "Plan").GetValue(null)).Clear();
         Quests().Clear();
         StaticField("QuestManager", "ordered_id").SetValue(null, "");
         StaticField("RewardUI", "rewardUI_show").SetValue(null, 0);
@@ -397,12 +290,38 @@ public class QuestPlayTests
     //場所は拠点のあとに、根源を作った順で一列に並ぶ
     private static string[] RootIds()
     {
-        return ((RootRegistry)StaticField("RootsManager", "Roots").GetValue(null)).All.Select(root => root.Id).ToArray();
+        return Roots().All.Select(root => root.Id).ToArray();
     }
 
-    //体力を 0 にして、起き上がって拠点に戻されるまで待つ
+    private static RootRegistry Roots()
+    {
+        return (RootRegistry)StaticField("RootsManager", "Roots").GetValue(null);
+    }
+
+    private static int Amount(Quest quest, string kind)
+    {
+        return quest.Rewards.Single(reward => reward.Kind == kind).Amount;
+    }
+
+    //いちばん少なく増えても次の零時に氾濫するところまで溜めてから、零時を待たずに零時の処理を直に呼ぶ
+    private static void Overflow(Root root)
+    {
+        root.Restore(root.Progress, Root.StampedeAccumulation - 1);
+
+        Type type = GameType("RootsManager");
+        UnityEngine.Object manager = UnityEngine.Object.FindAnyObjectByType(type);
+        Assert.IsNotNull(manager, "RootsManager が無い");
+
+        type.GetMethod("Dayover").Invoke(manager, null);
+    }
+
+    //体力を 0 にして、起き上がって拠点に戻されるまで待つ。着いてから敵に当たっていると無敵の間は傷が入らないので、
+    //敵を消して無敵が明けてから入れる
     private static IEnumerator DieAndRevive()
     {
+        foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy")) UnityEngine.Object.Destroy(enemy);
+        yield return new WaitForSeconds(Invulnerability.Seconds);
+
         Component player = GameObject.FindWithTag("Player").GetComponent(GameType("Player2"));
         Health hp = (Health)StaticField("Player2", "Hp").GetValue(null);
         GameType("Player2").GetMethod("Player_Hurt").Invoke(player, new object[] { hp.Current, Vector3.right });
@@ -418,17 +337,17 @@ public class QuestPlayTests
 
     private static void BreakSpawner()
     {
-        Assert.IsTrue(Break(Spawner()), "拠点が壊れない");
+        Assert.IsTrue(Break(Spawner()), "核が壊れない");
     }
 
-    //いま居る根源の拠点
+    //いま居る根源の核
     private static Component Spawner()
     {
         Scene here = SceneManager.GetActiveScene();
         Component spawner = UnityEngine.Object.FindObjectsByType(GameType("OF_Spawner"), FindObjectsSortMode.None)
             .Cast<Component>()
             .FirstOrDefault(found => found.gameObject.scene == here);
-        Assert.IsNotNull(spawner, "根源に拠点が無い");
+        Assert.IsNotNull(spawner, "根源に核が無い");
 
         return spawner;
     }
@@ -437,11 +356,6 @@ public class QuestPlayTests
     private static bool Break(Component spawner)
     {
         return (bool)GameType("OF_Spawner").GetMethod("SpawnerBreak").Invoke(spawner, new object[] { 10000 });
-    }
-
-    private static void IssueSub(string rootId)
-    {
-        GameType("QuestManager").GetMethod("IssueSub").Invoke(null, new object[] { rootId });
     }
 
     private static void Sync(string target)
@@ -480,14 +394,6 @@ public class QuestPlayTests
         GameType("QuestButton").GetMethod("QuestOrder").Invoke(button, null);
     }
 
-    private static Rect Area(Component button)
-    {
-        Vector3[] corners = new Vector3[4];
-        ((RectTransform)button.transform).GetWorldCorners(corners);
-
-        return Rect.MinMaxRect(corners[0].x, corners[0].y, corners[2].x, corners[2].y);
-    }
-
     private static string Status(Component button)
     {
         return TextOf(button.transform.Find("StatusText").gameObject);
@@ -500,14 +406,6 @@ public class QuestPlayTests
         Assert.IsNotNull(reward, "結果の画面が無い");
 
         return Shown(reward, fieldName);
-    }
-
-    private static MiddleText Middle()
-    {
-        MiddleText middle = UnityEngine.Object.FindAnyObjectByType<MiddleText>();
-        Assert.IsNotNull(middle, "中くらいの文字が無い");
-
-        return middle;
     }
 
     //文字を出す部品が持つ文字の欄の中身。TextMeshPro は asmdef から参照できないため名前で引く

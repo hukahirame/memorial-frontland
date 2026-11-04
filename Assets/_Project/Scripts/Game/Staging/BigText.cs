@@ -19,6 +19,8 @@ public class BigText : MonoBehaviour
 
     public void Bigtxt_Anim(string s1,string s2)
     {
+        //開いている持ち物や地図より手前に出す。Canvas の子は後に並ぶものほど手前に描かれる
+        transform.SetAsLastSibling();
         transform.localScale = new Vector3(1, 1, 1);
         txt1.text = s1;
         txt2.text = s2;

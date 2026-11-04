@@ -3,15 +3,23 @@ using System.Collections.Generic;
 
 namespace MemorialFloor.Domain
 {
-    /// <summary>場所に置いた物1つ。アイテム ID と位置</summary>
+    /// <summary>場所に置いた物1つ。アイテム ID と位置と向き。耐久のある物（木の柵）は、残りの耐久と控えた時刻と倒れているかも持つ</summary>
     public readonly struct Placement
     {
-        public Placement(string itemId, float x, float y, float z)
+        /// <summary>耐久を控えていない。置き直すと満タンで立つ</summary>
+        public const int NoDurability = -1;
+
+        public Placement(string itemId, float x, float y, float z, float yaw = 0f,
+                         int durability = NoDurability, float recordedAt = 0f, bool fallen = false)
         {
             ItemId = itemId;
             X = x;
             Y = y;
             Z = z;
+            Yaw = yaw;
+            Durability = durability;
+            RecordedAt = recordedAt;
+            Fallen = fallen;
         }
 
         public string ItemId { get; }
@@ -21,6 +29,18 @@ namespace MemorialFloor.Domain
         public float Y { get; }
 
         public float Z { get; }
+
+        /// <summary>y 軸まわりの向き（度）。向きを持たない物は 0</summary>
+        public float Yaw { get; }
+
+        /// <summary>残りの耐久。耐久を持たない物と、控えていない物は NoDurability</summary>
+        public int Durability { get; }
+
+        /// <summary>控えた時刻（遊んでいるあいだの秒）。置き直すときに、離れていたあいだのぶん耐久を戻すのに使う</summary>
+        public float RecordedAt { get; }
+
+        /// <summary>倒れている。倒れる耐久と起き上がる耐久が違うので、耐久だけでは決まらない</summary>
+        public bool Fallen { get; }
     }
 
     /// <summary>

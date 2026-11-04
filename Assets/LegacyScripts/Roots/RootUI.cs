@@ -33,7 +33,7 @@ public class RootUI : MonoBehaviour
         Text dp = qm.Find("RootProgress").Find("DetailProgress").GetComponent<Text>();
         dp.transform.Find("DP2").GetComponent<Text>().color =
             root.Progress >= SpawnRule.SuppressProgress ? new Color(0, 50, 0, 255) : Unreached;
-        dp.color = root.Progress >= SpawnRule.WeakenProgress ? new Color(50, 0, 50, 255) : Unreached;
+        dp.color = root.Progress >= Root.RevealProgress ? new Color(50, 0, 50, 255) : Unreached;
 
         Text capa = qm.Find("RootCapacity").GetChild(0).GetComponent<Text>(); // 開いたときの値。開いているあいだは更新しない
         capa.text = root.Accumulation.ToString();
@@ -45,6 +45,8 @@ public class RootUI : MonoBehaviour
             case AccumulationLevel.Small:    capa.text = "小"; capa.color = Color.green;  break;
             default:                         capa.text = "微"; capa.color = Color.blue;   break;
         }
+
+        qm.GetComponentInChildren<RootShortcut>(true).Show(root.Id);
 
         // QMのUI生成プログラムを呼んで、クエスト欄（左側）の情報を入れてもらう
         qm.GetComponent<QuestManager>().ShowQuestUI(root.Id);

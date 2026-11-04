@@ -13,15 +13,28 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
     /// <summary>一度に表示するクエストの数</summary>
     private const int ShownAtOnce = 4;
 
-    /// <summary>調査と決壊の目的。始めたときの見出しと、調査の枠に出す</summary>
-    private const string MainObjective = "根源を探し出し、破壊する";
+    /// <summary>調査の目的。始めたときの見出しと、調査の枠と、画面の左上の受注中の札に出す</summary>
+    public const string MainObjective = "スポナーを探し出し、破壊する";
 
-    /// <summary>根源の拠点を壊したあとの目的。根源を出る前にその中で倒れると失敗になるので、壊した時点では達成と出さない</summary>
-    private const string ReturnObjective = "生きて根源を出る";
+    /// <summary>決壊で核を壊したあとの目的</summary>
+    public static readonly string DefeatObjective = "敵を" + Quest.BreachDefeats + "体討伐する";
+
+    /// <summary>決壊の目的。核を壊しても終わらず、続けて敵を倒す。出す所は調査の目的と同じ</summary>
+    public static readonly string BreachObjective = "スポナーを破壊し、" + DefeatObjective;
+
+    /// <summary>達成したあとの目的。根源を出る前にその中で倒れると失敗になるので、達成した時点では達成と出さない</summary>
+    public const string ReturnObjective = "生きて根源を出る";
 
     /// <summary>表示順。決壊、調査、サブの順に並べる</summary>
     private static readonly QuestKind[] ShowOrder =
         { QuestKind.Breach, QuestKind.Main, QuestKind.Sub };
+
+    /// <summary>受注中の枠の地と縁の色。ほかの枠と見分けがつくように</summary>
+    private static readonly Color OrderedPaper = new Color(1f, 0.93f, 0.74f);
+    private static readonly Color OrderedFrame = new Color(1f, 0.8f, 0.36f);
+
+    /// <summary>ほかの根源のクエストを受注しているときの、状態の字の色</summary>
+    private static readonly Color OtherOrderedColor = new Color(0.45f, 0.42f, 0.4f);
 
     public static string ordered_id = ""; // クエ中不変。QBから受注
    // private int pluschild_qm = 6;
@@ -33,26 +46,47 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
     /// <summary>成功が決まり、まだ受け取っていないクエスト。着いた先ですぐ受け取る</summary>
     private string unannounced = "";
 
-    void Start()
+    /// <summary>
+    /// 保存が無いまま始めたとき、根源ごとに調査とサブを 1 本ずつ出す。
+    /// 夜明けの発行は保留を挟むので、ここで出さないと 2 回目の夜明けまで受けるものが無い
+    /// </summary>
+    public static void IssueFirst()
     {
-        //夜明けの発行は保留を挟む。ここで出さないと、2 回目の夜明けまで受けるものが無い
-        Quests.Create(QuestKind.Main, "Root1", "MainSpawner", 1,
-                      new[] { new Reward("coin", 100), new Reward("progress", 15) });
-        IssueSub("Root1");
-        Quests.Create(QuestKind.Main, "Root2", "MainSpawner", 1,
-                      new[] { new Reward("coin", 200), new Reward("progress", 15) });
-        IssueSub("Root2");
+        foreach (Root root in RootsManager.Roots.All) IssueFirst(root);
+    }
+
+    /// <summary>根源 1 つに、始めの調査とサブを出す。保存のあとで足した根源にも使う</summary>
+    public static void IssueFirst(Root root)
+    {
+        if (!Quests.HasMainFor(root.Id)) IssueMain(root, QuestKind.Main);
+        IssueSub(root.Id);
+    }
+
+    /// <summary>調査か決壊を 1 本出す。報酬は根源の危険度で決まる</summary>
+    public static Quest IssueMain(Root root, QuestKind kind)
+    {
+        return Quests.Create(kind, root.Id, "MainSpawner", Quest.CoreAmount(kind), QuestRewards.For(kind, root.Danger));
+    }
+
+    /// <summary>氾濫した根源に決壊を 1 本出す。既にあれば足さずに false</summary>
+    public static bool IssueBreach(Root root)
+    {
+        if (Quests.HasBreachFor(root.Id)) return false;
+
+        IssueMain(root, QuestKind.Breach);
+        return true;
     }
 
     /// <summary>
-    /// 根源にサブを 1 本足す。夜明けの発行と始めたときとで同じものを出す。
+    /// 根源にサブを 1 本足す。夜明けの発行と始めたときとで同じものを出す。足したら true。
     /// 残っていれば足さない。足すと 1 体倒すたびに両方が進み、2 本ぶん払う
     /// </summary>
-    public static void IssueSub(string rootId)
+    public static bool IssueSub(string rootId)
     {
-        if (Quests.HasSubFor(rootId)) return;
+        if (Quests.HasSubFor(rootId)) return false;
 
         Quests.Create(QuestKind.Sub, rootId, "Slime", 3, new[] { new Reward("coin", 100) });
+        return true;
     }
 
     public void ShowQuestUI(string root) //QuestUI(ボタン)の生成 + 情報入力
@@ -95,12 +129,11 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
             TextMeshProUGUI r = obj.transform.Find("RewardText").GetComponent<TextMeshProUGUI>();
             TextMeshProUGUI s = obj.transform.Find("StatusText").GetComponent<TextMeshProUGUI>();
 
-            if (quest.Kind == QuestKind.Main)
+            if (quest.Kind == QuestKind.Main || quest.Kind == QuestKind.Breach)
             {
-                t.text = "【調査クエスト】";
-                b.text += MainObjective; //クエ目的記入
+                t.text = quest.Kind == QuestKind.Main ? "【調査クエスト】" : "【決壊クエスト】";
+                b.text += quest.Kind == QuestKind.Main ? MainObjective : BreachObjective; //クエ目的記入
             }
-            else if (quest.Kind == QuestKind.Breach) t.text = "【決壊クエスト】";
             else if (quest.Kind == QuestKind.Sub)
             {
                 t.text = "【サブクエスト】";
@@ -117,9 +150,32 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
                 obj.GetComponent<Button>().interactable = false;
                 s.text = quest.IsComplete ? "達成済み" : "";
             }
+            else if (ordered_id == quest.Id)
+            {
+                s.text = quest.IsComplete ? "達成済み" : travel.Where.RootId == quest.RootId ? "クエスト中" : "受注中";
+                Emphasize(obj, s);
+            }
             else if (quest.IsComplete) s.text = "達成済み";
-            else if (ordered_id == quest.Id) s.text = travel.Where.RootId == quest.RootId ? "クエスト中" : "受注済み";
+            else if (Quests.Find(ordered_id) != null)
+            {
+                //受注できるのは全体で 1 本だけ。ほかの根源のものを受けているあいだは受けられない
+                s.text = "ほかを受注中";
+                s.color = OtherOrderedColor;
+            }
         }
+    }
+
+    /// <summary>受注中の枠を目立たせる。縁を金に、地を暖かい色にし、状態を赤いリボンに白い字で載せる</summary>
+    private static void Emphasize(GameObject card, TextMeshProUGUI status)
+    {
+        card.GetComponent<Image>().color = OrderedPaper;
+        card.transform.Find("Frame").GetComponent<Image>().color = OrderedFrame;
+
+        Transform badge = card.transform.Find("OrderedBadge");
+        if (badge != null) badge.gameObject.SetActive(true);
+
+        status.color = Color.white;
+        status.fontStyle = FontStyles.Bold;
     }
 
     public static string RewardName(string kind)
@@ -127,7 +183,9 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
         if (kind == "progress") return "攻略度";
         if (kind == "coin") return "コイン";
 
-        return kind;
+        //品物の報酬は原簿の表示名で出す
+        ItemDefinition item = GameManager.Items.Find(kind);
+        return item != null ? item.Name : kind;
     }
 
     /// <summary>サブと共通の目的</summary>
@@ -150,7 +208,7 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
 
         RewardUI.rewardUI_id = quest.Id;
         transform.parent.Find("BigText").gameObject.GetComponent<BigText>()
-                 .Bigtxt_Anim(Headline(quest, MainObjective), "開始");
+                 .Bigtxt_Anim(Headline(quest, CurrentObjective(quest)), "開始");
 
         //クエスト物生成
     }
@@ -195,22 +253,38 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
                  .Bigtxt_Anim(Headline(quest, paid), "成功");
     }
 
-    /// <summary>開始時と、根源の拠点を壊したとき、成功が決まったときに出す見出し。決壊クエストは種別の名前を差し替える</summary>
+    /// <summary>開始時と、根源の核を壊したとき、成功が決まったときに出す見出し。決壊クエストは種別の名前を差し替える</summary>
     private static string Headline(Quest quest, string objective)
     {
-        string kind = quest.Kind == QuestKind.Breach ? "決壊" : "調査";
-        return "「" + RootsManager.Roots.Find(quest.RootId).Name + "」" + kind + "クエスト\n\n" + objective;
+        return "「" + RootsManager.Roots.Find(quest.RootId).Name + "」" + KindName(quest) + "クエスト\n\n" + objective;
+    }
+
+    /// <summary>調査か決壊か。見出しと受注中の札に出す</summary>
+    public static string KindName(Quest quest)
+    {
+        return quest.Kind == QuestKind.Breach ? "決壊" : "調査";
+    }
+
+    /// <summary>調査か決壊の、いまの目的。見出しと受注中の札に出す</summary>
+    public static string CurrentObjective(Quest quest)
+    {
+        if (quest.IsComplete) return ReturnObjective;
+        if (quest.Kind != QuestKind.Breach) return MainObjective;
+
+        return quest.CoreBroken ? DefeatObjective : BreachObjective;
     }
 
     public void SyncQuest(string target) // クエ進捗追加、外部から呼ぶ
     {
-        foreach (Quest quest in Quests.All)
+        //サブは達成したその場で一覧から消えるので、写しを回す
+        foreach (Quest quest in new List<Quest>(Quests.All))
         {
-            if (quest.Target != target) continue;
+            if (!quest.AdvancesOn(target)) continue;
 
             if (quest.Kind == QuestKind.Sub && quest.RootId == travel.Where.RootId) SyncQuestSub(quest);
             else if (quest.Kind == QuestKind.Common) SyncQuestSub(quest);
-            else if (quest.Id == ordered_id) SyncQuestSub(quest);
+            //受けた調査と決壊は、対象の根源の中でだけ進む。通り道の根源で核を壊しても進めない
+            else if (quest.Id == ordered_id && quest.RootId == travel.Where.RootId) SyncQuestSub(quest);
         }
     }
 
@@ -220,19 +294,29 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
         if (quest.IsComplete) return;
 
         quest.Advance();
-        if (!quest.IsComplete) return;
 
         if (quest.Kind == QuestKind.Main || quest.Kind == QuestKind.Breach)
         {
+            //大きい文字は、核を壊したときと、決壊で敵を倒しきったときだけ。倒した数は受注中の札に出る。
             //成功が決まるのは、生きてこの根源を出たとき（Leave）
-            transform.parent.Find("BigText").gameObject.GetComponent<BigText>()
-                     .Bigtxt_Anim(Headline(quest, ReturnObjective), "破壊");
+            string word = quest.DefeatedAfterCore == 0 ? "破壊" : quest.IsComplete ? "討伐" : null;
+            if (word != null)
+                transform.parent.Find("BigText").gameObject.GetComponent<BigText>()
+                         .Bigtxt_Anim(Headline(quest, CurrentObjective(quest)), word);
         }
-        else
+        else if (!quest.IsComplete) return;
+        else if (quest.Kind == QuestKind.Sub)
         {
-            string kind = quest.Kind == QuestKind.Sub ? "サブクエスト" : "共通クエスト";
-            GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim(kind + "達成：" + Objective(quest));
+            //サブは達成したその場で払って一覧から消す。次の夜明けにまた出る
+            string paid = FindAnyObjectByType<RewardUI>(FindObjectsInactive.Include).Pay(quest);
+            Notice("サブクエスト達成：" + Objective(quest) + "（" + paid + "）");
         }
+        else Notice("共通クエスト達成：" + Objective(quest));
+    }
+
+    private static void Notice(string text)
+    {
+        GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim(text);
     }
 
     //FinQuest()はRewardUIへ移行しました

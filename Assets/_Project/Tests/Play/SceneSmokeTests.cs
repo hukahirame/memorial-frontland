@@ -96,6 +96,38 @@ public class SceneSmokeTests
     }
 
     [UnityTest]
+    public IEnumerator Root2を通ってRoot3へ移れる()
+    {
+        yield return Boot();
+        Travel().Go(Route.To("Root2", Arrival.FromPrevious));
+        yield return Arrive();
+
+        Assert.IsTrue(Travel().Through(ExitKind.ToNext, RootIds()));
+        yield return Arrive();
+
+        Assert.AreEqual("Root3", SceneManager.GetActiveScene().name);
+    }
+
+    [UnityTest]
+    public IEnumerator Root2の奥の出口からRoot3へ行き戻ると奥の出口の前に立つ()
+    {
+        yield return Boot();
+        Travel().Go(Route.To("Root2", Arrival.FromPrevious));
+        yield return Arrive();
+
+        StepIntoExit(ExitKind.ToNext);
+        yield return ArriveAt("Root3");
+
+        StepIntoExit(ExitKind.ToPrevious);
+        yield return ArriveAt("Root2");
+
+        Vector3 at = GameObject.FindWithTag("Player").transform.position;
+        Assert.Less(FlatDistance(at, ExitHere(ExitKind.ToNext).transform.position),
+                    FlatDistance(at, ExitHere(ExitKind.ToPrevious).transform.position),
+                    "奥から戻ったのに手前の入口に立つ");
+    }
+
+    [UnityTest]
     public IEnumerator 根源で倒れると拠点へ戻る()
     {
         yield return Boot();

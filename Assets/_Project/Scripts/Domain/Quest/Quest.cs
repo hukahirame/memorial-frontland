@@ -102,10 +102,40 @@ namespace MemorialFloor.Domain
     }
 
     /// <summary>
+    /// 調査と決壊の報酬。コインは対象の根源の危険度で決まり、決壊は調査の倍になる
+    /// </summary>
+    public static class QuestRewards
+    {
+        /// <summary>危険度をこの数で割ったものが、調査で払うコイン</summary>
+        public const int DangerPerCoin = 10;
+
+        /// <summary>調査で上がる攻略度</summary>
+        public const int MainProgress = 15;
+
+        /// <summary>決壊の報酬は、コインも攻略度も調査のこの倍</summary>
+        public const int BreachMultiplier = 2;
+
+        /// <summary>調査か決壊の報酬。danger は対象の根源の危険度</summary>
+        public static Reward[] For(QuestKind kind, int danger)
+        {
+            int times = kind == QuestKind.Breach ? BreachMultiplier : 1;
+
+            return new[]
+            {
+                new Reward("coin", danger / DangerPerCoin * times),
+                new Reward("progress", MainProgress * times),
+            };
+        }
+    }
+
+    /// <summary>
     /// クエスト1つ。
     /// </summary>
     public sealed class Quest
     {
+        /// <summary>決壊で、核を壊したあとに倒す敵の数</summary>
+        public const int BreachDefeats = 5;
+
         public string Id { get; }
         public QuestKind Kind { get; }
 
@@ -136,6 +166,32 @@ namespace MemorialFloor.Domain
         public bool IsComplete
         {
             get { return QuestProgress.IsComplete(Progress, Amount); }
+        }
+
+        /// <summary>調査か決壊で、核を壊したか。どちらも核を壊すと 1 進む</summary>
+        public bool CoreBroken
+        {
+            get { return Progress > 0; }
+        }
+
+        /// <summary>決壊で、核を壊したあとに倒した敵の数</summary>
+        public int DefeatedAfterCore
+        {
+            get { return CoreBroken ? Progress - 1 : 0; }
+        }
+
+        /// <summary>調査か決壊の目標量。核の 1 に、決壊なら壊したあとに倒す敵の数を足す</summary>
+        public static int CoreAmount(QuestKind kind)
+        {
+            return kind == QuestKind.Breach ? 1 + BreachDefeats : 1;
+        }
+
+        /// <summary>倒した物 target で進むか。決壊は、核（Target）を壊すまでは核だけで、壊したあとは核のほかの物（敵）で進む</summary>
+        public bool AdvancesOn(string target)
+        {
+            if (Kind == QuestKind.Breach && CoreBroken) return target != Target;
+
+            return target == Target;
         }
 
         /// <summary>1つ進める。目標を超えない</summary>
@@ -185,6 +241,15 @@ namespace MemorialFloor.Domain
             return quest;
         }
 
+        /// <summary>保存から戻すとき。採番せず Id のまま足す。同じ Id が既にあれば足さずに false</summary>
+        public bool TryAdd(Quest quest)
+        {
+            if (quest == null || Find(quest.Id) != null) return false;
+
+            _quests.Add(quest);
+            return true;
+        }
+
         /// <summary>見つからなければ null</summary>
         public Quest Find(string id)
         {
@@ -212,6 +277,17 @@ namespace MemorialFloor.Domain
             {
                 if (_quests[i].RootId != rootId) continue;
                 if (_quests[i].Kind == QuestKind.Main || _quests[i].Kind == QuestKind.Breach) return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>その根源に、決壊が既にあるか</summary>
+        public bool HasBreachFor(string rootId)
+        {
+            for (int i = 0; i < _quests.Count; i++)
+            {
+                if (_quests[i].RootId == rootId && _quests[i].Kind == QuestKind.Breach) return true;
             }
 
             return false;

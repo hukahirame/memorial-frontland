@@ -73,6 +73,26 @@ namespace MemorialFloor.Domain.Tests
         }
 
         [Test]
+        public void 額が変わったときだけ知らせる()
+        {
+            Wallet wallet = new Wallet();
+            wallet.SetAmount(100);
+            int told = 0;
+            wallet.Changed += () => told++;
+
+            wallet.Add(50);
+            wallet.Spend(30);
+            wallet.SetAmount(500);
+            Assert.AreEqual(3, told);
+
+            wallet.Add(0);
+            wallet.Spend(0);
+            wallet.Spend(1000);
+            wallet.SetAmount(500);
+            Assert.AreEqual(3, told, "額が変わらないのに表示を書き直させる");
+        }
+
+        [Test]
         public void 読み込みで負の値は0になる()
         {
             Wallet wallet = new Wallet();

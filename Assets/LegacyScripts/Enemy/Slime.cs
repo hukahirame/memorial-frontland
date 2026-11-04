@@ -29,11 +29,15 @@ public class Slime : MonoBehaviour, IDamageable
     [SerializeField]
     private List<DropChance> chanceDrops = new List<DropChance>
     {
-        new DropChance { ItemId = "Slimecore", Percent = 10 }
+        new DropChance { ItemId = "Slimecore", Percent = 5 }
     };
 
     public GameObject dropcapsule;
     public Slider hp;
+
+    [Tooltip("倒したときに進める討伐クエストの対象。空なら自分の名前。色違いは元の種類の名前にし、同じ討伐に数える")]
+    [SerializeField]
+    private string questTarget;
 
     private readonly Health health = new Health();
 
@@ -47,6 +51,15 @@ public class Slime : MonoBehaviour, IDamageable
 
     /// <summary>この時刻までは吹き飛ばしに任せ、自分では動かない</summary>
     private float staggerUntil;
+
+    /// <summary>この時刻までは、柵にぶつかり続けていても削らない</summary>
+    private float strikeFenceAt;
+
+    /// <summary>いまプレイヤーを見つけているか。見つけた瞬間を知るために持つ</summary>
+    private bool noticing;
+
+    /// <summary>この時刻までは、見つけても「！」を出し直さない</summary>
+    private float alertAgainAt;
 
     private SpriteRenderer sprite;
     private Material baseMaterial;
@@ -202,13 +215,30 @@ public class Slime : MonoBehaviour, IDamageable
         Invoke("RandomAction", ActionRule.Duration(act, UnityRandom.Shared));
     }
 
-    /// <summary>いま何を目指すか。倒れているプレイヤーは見ない</summary>
+    /// <summary>いま何を目指すか。倒れているプレイヤーと、ほかの階のプレイヤーは見ない</summary>
     private EnemyAim Aim()
     {
-        float toPlayer = p != null && !Player2.Hp.IsDead ? Flat(p.transform.position).magnitude : float.MaxValue;
+        float toPlayer = p != null && !Player2.Hp.IsDead
+            ? AimRule.SightDistance(Flat(p.transform.position).magnitude, p.transform.position.y - transform.position.y)
+            : float.MaxValue;
         float toGoal = hasGoal ? Flat(goal).magnitude : 0f;
 
-        return AimRule.Choose(toPlayer, hasGoal, toGoal);
+        EnemyAim aim = AimRule.Choose(toPlayer, hasGoal, toGoal);
+        Notice(aim == EnemyAim.Player);
+
+        return aim;
+    }
+
+    /// <summary>見つけた瞬間に、頭上へ「！」を出す。見つけたり見失ったりを繰り返す境目で出し続けないよう、出してからしばらくは出さない</summary>
+    private void Notice(bool sees)
+    {
+        if (sees && !noticing && Time.time >= alertAgainAt)
+        {
+            AlertMark.Show(transform.Find("Canvas"));
+            alertAgainAt = Time.time + AlertMark.CooldownSeconds;
+        }
+
+        noticing = sees;
     }
 
     /// <summary>目指すものへの向き。うろつく向きは乱数で決める</summary>
@@ -242,12 +272,24 @@ public class Slime : MonoBehaviour, IDamageable
     private void OnCollisionEnter(Collision other)
     {
         HurtPlayer(other);
+        StrikeFence(other);
     }
 
     //無敵の間は吹き飛ばさないので、離れずに触れ続けることがある。無敵が切れたらまた当てる
     private void OnCollisionStay(Collision other)
     {
         HurtPlayer(other);
+        StrikeFence(other);
+    }
+
+    /// <summary>柵にぶつかっているあいだ、決まった間隔ごとに攻撃力のぶん削る</summary>
+    private void StrikeFence(Collision other)
+    {
+        if (isDead || Time.time < strikeFenceAt) return;
+        if (!other.collider.TryGetComponent(out Fence fence)) return;
+
+        fence.Ram((int)power, transform.position);
+        strikeFenceAt = Time.time + Fence.StrikeSeconds;
     }
 
     private void HurtPlayer(Collision other)
@@ -268,10 +310,10 @@ public class Slime : MonoBehaviour, IDamageable
             Vector3 v = new Vector3(Random.Range(0, 1f), Random.Range(0.5f, 1), Random.Range(0, 1f)) * 2;
             d.GetComponent<Rigidbody>().AddForce(v, ForceMode.Impulse);
         }
-        GameObject.FindWithTag("QuestManager").GetComponent<QuestManager>().SyncQuest(gameObject.name);
+        string target = string.IsNullOrEmpty(questTarget) ? gameObject.name : questTarget;
+        GameObject.FindWithTag("QuestManager").GetComponent<QuestManager>().SyncQuest(target);
         Root root = RootsManager.Roots.Find(homeRootId);
         if (root != null) root.Calm(SpawnRule.CalmPerDefeat);
         Destroy(gameObject);
     }
 }
-

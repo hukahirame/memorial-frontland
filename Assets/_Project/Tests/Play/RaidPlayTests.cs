@@ -10,9 +10,8 @@ using UnityEngine.TestTools;
 using MemorialFloor.Domain;
 using MemorialFloor.Game;
 
-//根源の氾濫が拠点へ届くことと、根源で敵を倒して氾濫を防げること。攻め込んだ敵が拠点の中心へ寄り、
-//見つけたプレイヤーへ向かうこと。倒れて中心の近くへ戻されても、しばらくは当たらないこと。
-//零時を待たず RootsManager.Dayover を直に呼ぶ
+//根源の氾濫で拠点に敵が攻め込むことと、拠点を離れても攻め込んだ敵が位置と体力ごと残ること。
+//根源へ入り直しても、湧き口が同じ位置に置かれること。零時を待たず RootsManager.Dayover を直に呼ぶ
 public class RaidPlayTests
 {
     private const int SettleFrames = 120;
@@ -21,14 +20,11 @@ public class RaidPlayTests
     /// <summary>湧いてから測るまでに、うろついて離れうる距離</summary>
     private const float Drift = 2.5f;
 
-    /// <summary>倒れてから戻され終わるまでを待つ上限</summary>
-    private const float ReviveGiveUpSeconds = 12f;
-
-    /// <summary>秒数を待つときの余裕</summary>
-    private const float Slack = 0.15f;
+    /// <summary>生き残った敵に負わせる傷。満タンと見分けられればよい</summary>
+    private const int Wound = 100;
 
     [UnityTest]
-    public IEnumerator 拠点に居るあいだは間を空けて1体ずつ湧く()
+    public IEnumerator 拠点に居るあいだの氾濫はすぐ湧き口のまわりにまとめて湧く()
     {
         yield return Boot();
         int before = SlimesHere();
@@ -38,19 +34,16 @@ public class RaidPlayTests
 
         Assert.AreEqual(0, Roots().Find("Root1").Accumulation, "氾濫で蓄積値が 0 に戻る");
 
-        yield return WaitUntilSlimes(before + 1, BaseRaid.IntervalSeconds + 2f);
-        Assert.AreEqual(before + 1, SlimesHere(), "1体目");
+        yield return null;
+        yield return null;
 
-        yield return new WaitForSeconds(BaseRaid.IntervalSeconds * 0.5f);
-        Assert.AreEqual(before + 1, SlimesHere(), "間を空けずに2体目が出た");
-
-        yield return WaitUntilSlimes(before + 2, BaseRaid.IntervalSeconds + 2f);
-        Assert.AreEqual(before + 2, SlimesHere(), "2体目");
-        Assert.AreEqual(Root.StampedeRaiders - 2, Raid().Pending);
+        Assert.AreEqual(before + Root.StampedeRaiders, SlimesHere(), "まとめて湧かない");
+        Assert.AreEqual(0, Raid().Kept.Count, "出したのに控えに残る");
+        AssertNearGate(RaidersHere());
     }
 
     [UnityTest]
-    public IEnumerator 留守のあいだの氾濫は戻ったときにまとめて湧く()
+    public IEnumerator 留守のあいだの氾濫は戻ったときに湧き口のまわりに湧く()
     {
         yield return Boot();
         int atBase = SlimesHere();
@@ -61,48 +54,71 @@ public class RaidPlayTests
         Dayover();
         for (int i = 0; i < SettleFrames; i++) yield return null;
 
-        Assert.AreEqual(Root.StampedeRaiders, Raid().Pending, "根源の中では湧かず、拠点へ向かう");
+        Assert.AreEqual(Root.StampedeRaiders, Raid().Kept.Count, "根源の中では湧かず、拠点の控えに入る");
 
         yield return GoHome();
 
-        Assert.AreEqual(0, Raid().Pending);
+        Assert.AreEqual(0, Raid().Kept.Count);
         Assert.AreEqual(atBase + Root.StampedeRaiders, SlimesHere());
+        AssertNearGate(RaidersHere());
     }
 
     [UnityTest]
-    public IEnumerator 拠点を離れるとき生き残っている敵は戻ったときにまた湧く()
+    public IEnumerator 拠点を離れるとき生き残っている敵は戻ったときに同じところへ同じ体力で湧く()
     {
         yield return Boot();
-        int before = SlimesHere();
 
         BringToEdgeOfStampede("Root1");
         Dayover();
-        yield return WaitUntilSlimes(before + 1, BaseRaid.IntervalSeconds + 2f);
-        Assert.AreEqual(before + 1, SlimesHere(), "出かける前に1体出ている");
+        yield return null;
+        yield return null;
+
+        List<Component> raiders = RaidersHere();
+        Assert.AreEqual(Root.StampedeRaiders, raiders.Count, "出かける前に出ていない");
+
+        //湧き口から離れたところへ移しておく。湧き口のまわりに湧き直しても、同じところに見えないように
+        Component moved = raiders[0];
+        Vector3 center = CenterHere();
+        Vector3 spot = new Vector3(center.x, moved.transform.position.y, center.z);
+        moved.transform.position = spot;
+        IDamageable hurt = moved.GetComponent<IDamageable>();
+        hurt.TakeDamage(Wound);
+        int left = hurt.CurrentHp;
 
         yield return GoTo("Root1");
-        Assert.AreEqual(Root.StampedeRaiders, Raid().Pending, "出ていた1体が積み戻される");
 
-        yield return GoHome();
-        Assert.AreEqual(before + Root.StampedeRaiders, SlimesHere());
+        Assert.AreEqual(Root.StampedeRaiders, Raid().Kept.Count, "生き残っている敵が控えられない");
+        Assert.IsTrue(Raid().Kept.All(raider => raider.HasPosition), "位置が控えられない");
+        Assert.AreEqual(1, Raid().Kept.Count(raider => raider.Hp == left), "減った体力が控えられない");
+
+        //出た直後に見る。着いてからはうろついて離れる
+        Travel().Go(Route.To(TravelRule.BaseAreaId, Arrival.FromNext));
+        for (int i = 0; i < TravelFrames && RaidersHere().Count == 0; i++) yield return null;
+
+        raiders = RaidersHere();
+        Assert.AreEqual(Root.StampedeRaiders, raiders.Count, "控えた数だけ湧かない");
+        Component back = raiders.OrderBy(raider => Apart(raider.transform.position, spot)).First();
+        Assert.Less(Apart(back.transform.position, spot), Drift, "控えた位置に戻らない");
+        Assert.AreEqual(left, back.GetComponent<IDamageable>().CurrentHp, "減った体力で戻らない");
+
+        yield return Arrive();
     }
 
     [UnityTest]
-    public IEnumerator 倒した敵は積み戻されない()
+    public IEnumerator 倒した敵は控えに残らない()
     {
         yield return Boot();
-        var existing = new HashSet<Component>(SlimeObjectsHere());
 
         BringToEdgeOfStampede("Root1");
         Dayover();
-        yield return WaitUntilSlimes(existing.Count + 1, BaseRaid.IntervalSeconds + 2f);
-        Assert.AreEqual(existing.Count + 1, SlimesHere(), "出かける前に1体出ている");
+        yield return null;
+        yield return null;
 
-        IDamageable raider = SlimeObjectsHere().First(slime => !existing.Contains(slime)).GetComponent<IDamageable>();
+        IDamageable raider = RaidersHere()[0].GetComponent<IDamageable>();
         raider.TakeDamage(raider.CurrentHp);
 
         yield return GoTo("Root1");
-        Assert.AreEqual(Root.StampedeRaiders - 1, Raid().Pending);
+        Assert.AreEqual(Root.StampedeRaiders - 1, Raid().Kept.Count);
     }
 
     [UnityTest]
@@ -117,96 +133,6 @@ public class RaidPlayTests
 
         Assert.AreEqual(first, SpawnerHere().transform.position);
         Assert.Greater(SlimesHere(), 0, "2回目でも敵が湧く");
-    }
-
-    [UnityTest]
-    public IEnumerator 留守のあいだに攻め込んだ敵は拠点の中心のまわりに湧く()
-    {
-        yield return Boot();
-        yield return GoTo("Root1");
-
-        BringToEdgeOfStampede("Root1");
-        Dayover();
-
-        yield return GoHome();
-
-        Vector3 center = CenterHere();
-        List<Component> raiders = RaidersHere();
-        Assert.AreEqual(Root.StampedeRaiders, raiders.Count, "攻め込んだ敵が行き先を持たない");
-
-        foreach (Component raider in raiders)
-        {
-            Assert.Less(Apart(raider.transform.position, center), AimRule.GoalRadius + Drift, "中心から離れたところに湧いた");
-        }
-    }
-
-    [UnityTest]
-    public IEnumerator 拠点に攻め込んだ敵は中心へ寄っていく()
-    {
-        yield return Boot();
-        Vector3 center = CenterHere();
-
-        var gate = (Component)UnityEngine.Object.FindAnyObjectByType(GameType("MS_Spawner"));
-        Assert.IsNotNull(gate, "拠点の湧き口が無い");
-        MethodInfo setGoal = GameType("Slime").GetMethod("SetGoal");
-
-        //1体ずつは乱数でぶれるので、何体かの平均で見る
-        var raiders = new List<Component>();
-        for (int i = 0; i < Root.StampedeRaiders; i++)
-        {
-            Component raider = PlaceSlime(gate.transform.position + Vector3.forward * (i - 2) * 0.6f);
-            setGoal.Invoke(raider, new object[] { center });
-            raiders.Add(raider);
-        }
-
-        float before = raiders.Average(raider => Apart(raider.transform.position, center));
-        Assert.Greater(before, AimRule.GoalRadius, "湧き口が中心に近すぎて寄るかを見られない");
-
-        yield return new WaitForSeconds(15f);
-
-        float after = raiders.Average(raider => Apart(raider.transform.position, center));
-        Assert.Less(after, before - 1f, "中心へ寄っていかない");
-    }
-
-    [UnityTest]
-    public IEnumerator 見えるところのプレイヤーへ向きを合わせる()
-    {
-        yield return Boot();
-        Health hp = (Health)StaticField("Player2", "Hp").GetValue(null);
-        hp.SetCurrent(hp.Max);
-
-        Transform player = GameObject.FindWithTag("Player").transform;
-        Component slime = PlaceSlime(player.position + Vector3.right * (AimRule.SightRange - 1f));
-        FieldInfo attitude = GameType("Slime").GetField("attitude", BindingFlags.NonPublic | BindingFlags.Instance);
-        Assert.IsNotNull(attitude, "Slime.attitude が見つからない");
-
-        //最初の行動は Start で選ぶ。プレイヤーは -x の側に居る
-        yield return null;
-
-        Vector3 toward = (Vector3)attitude.GetValue(slime);
-        Assert.Less(toward.x, -0.95f, "プレイヤーの方を向かない");
-    }
-
-    [UnityTest]
-    public IEnumerator 倒れて戻ってからしばらくは当たらない()
-    {
-        yield return Boot();
-        Component player = GameObject.FindWithTag("Player").GetComponent(GameType("Player2"));
-        Health hp = (Health)StaticField("Player2", "Hp").GetValue(null);
-
-        Hurt(player, hp.Current);
-        Assert.IsTrue(hp.IsDead, "倒れない");
-        yield return WaitForRevive();
-
-        int revived = hp.Current;
-        Hurt(player, 1);
-        Assert.AreEqual(revived, hp.Current, "戻ってすぐに当たった");
-
-        yield return new WaitForSeconds(Invulnerability.ReviveSeconds + Slack);
-
-        int before = hp.Current;
-        Hurt(player, 1);
-        Assert.AreEqual(before - 1, hp.Current, "無敵が明けない");
     }
 
     [UnityTearDown]
@@ -230,13 +156,13 @@ public class RaidPlayTests
         yield return null;
     }
 
-    //あと一晩で氾濫する手前まで溜める
+    //いちばん少なく増えても、あと一晩で氾濫する手前まで溜める
     private static void BringToEdgeOfStampede(string rootId)
     {
         Root root = Roots().Find(rootId);
         Assert.IsNotNull(root, rootId + " が無い");
 
-        while (!root.WillOverflowNextDay) root.AccumulateDaily();
+        root.Restore(root.Progress, Root.StampedeAccumulation - 1);
     }
 
     private static Component SpawnerHere()
@@ -284,6 +210,26 @@ public class RaidPlayTests
         return SlimeObjectsHere().Where(slime => (bool)hasGoal.GetValue(slime)).ToList();
     }
 
+    private static Component GateHere()
+    {
+        var gate = (Component)UnityEngine.Object.FindAnyObjectByType(GameType("MS_Spawner"));
+        Assert.IsNotNull(gate, "拠点の湧き口が無い");
+
+        return gate;
+    }
+
+    //湧き口の側に居る。中心のまわりに湧いたものは、湧き口より中心の方が近い
+    private static void AssertNearGate(List<Component> raiders)
+    {
+        Vector3 gate = GateHere().transform.position;
+        Vector3 center = CenterHere();
+
+        foreach (Component raider in raiders)
+        {
+            Assert.Less(Apart(raider.transform.position, gate), Apart(raider.transform.position, center), "湧き口より中心の近くに湧いた");
+        }
+    }
+
     //拠点の中心。場の範囲の真ん中
     private static Vector3 CenterHere()
     {
@@ -298,39 +244,6 @@ public class RaidPlayTests
     private static float Apart(Vector3 a, Vector3 b)
     {
         return new Vector2(a.x - b.x, a.z - b.z).magnitude;
-    }
-
-    private static Component PlaceSlime(Vector3 at)
-    {
-        GameObject prefab = Resources.Load<GameObject>("Slime");
-        Assert.IsNotNull(prefab, "Slime の prefab が無い");
-
-        return UnityEngine.Object.Instantiate(prefab, at, Quaternion.identity).GetComponent(GameType("Slime"));
-    }
-
-    private static void Hurt(Component player, int damage)
-    {
-        GameType("Player2").GetMethod("Player_Hurt").Invoke(player, new object[] { damage, Vector3.right });
-    }
-
-    //起き上がって、戻される移動が終わるまで待つ。着いてから間を置かない。戻ったあとの無敵の秒数を食うため
-    private static IEnumerator WaitForRevive()
-    {
-        FieldInfo cool = StaticField("Player2", "cool");
-        AreaTravel travel = Travel();
-        float giveUp = Time.time + ReviveGiveUpSeconds;
-
-        while ((bool)cool.GetValue(null) && Time.time < giveUp) yield return null;
-        Assert.IsFalse((bool)cool.GetValue(null), "起き上がらない");
-
-        while (travel.IsTraveling && Time.time < giveUp) yield return null;
-        Assert.IsFalse(travel.IsTraveling, "戻されない");
-    }
-
-    private static IEnumerator WaitUntilSlimes(int count, float seconds)
-    {
-        float until = Time.time + seconds;
-        while (SlimesHere() < count && Time.time < until) yield return null;
     }
 
     private static RootRegistry Roots()

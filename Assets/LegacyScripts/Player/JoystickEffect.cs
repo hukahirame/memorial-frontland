@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using MemorialFloor.Game;
 using UnityEngine;
 
 public class JoystickEffect : MonoBehaviour
@@ -8,6 +9,11 @@ public class JoystickEffect : MonoBehaviour
     [SerializeField] private GameObject down;
     [SerializeField] private GameObject left;
     [SerializeField] private GameObject right;
+
+    void Start()
+    {
+        KeyHint.Put((RectTransform)transform, "WASD");
+    }
 
     void Update()
     {

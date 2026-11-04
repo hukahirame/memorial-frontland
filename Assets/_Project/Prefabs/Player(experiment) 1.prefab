@@ -5389,6 +5389,7 @@ MonoBehaviour:
   jumpbutton: {fileID: 0}
   footstep: {fileID: 1539511784068188435}
   allmaity: {fileID: 0}
+  travel: {fileID: 0}
 --- !u!54 &3980460192160412030
 Rigidbody:
   m_ObjectHideFlags: 0

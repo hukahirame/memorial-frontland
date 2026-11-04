@@ -2,6 +2,7 @@
 using UnityEngine;
 using TMPro;
 using MemorialFloor.Domain;
+using MemorialFloor.Game;
 
 public class RewardUI : MonoBehaviour
 {
@@ -53,10 +54,9 @@ public class RewardUI : MonoBehaviour
             resulttxt.text = "成功";
             resulttxt.color = new Color(170, 0, 0, 255);
 
-            //受け取るのは達成済みのすべて（他の根源のサブも）。表示もそれに合わせる
+            //受け取るのは達成済みのすべて。表示もそれに合わせる。攻略度は上限で止まる
             List<Quest> cleared = Cleared();
-            int now_progress = root.Progress;
-            sidetxt.text += string.Format("◎攻略度　{0} % → {1} %\n\n", now_progress, now_progress + ProgressGain(cleared, root.Id));
+            sidetxt.text += string.Format("◎攻略度　{0} % → {1} %\n\n", root.Progress, root.ProgressAfterGain(ProgressGain(cleared, root.Id)));
             sidetxt.text += "【報酬】\n";
 
             foreach (Reward reward in Total(cleared))
@@ -76,11 +76,33 @@ public class RewardUI : MonoBehaviour
     {
         rewardUI_show = 0;
 
+        string paid = Describe(Total(Cleared()));
+        FinQuest();
+        return paid;
+    }
+
+    /// <summary>1 本ぶん払って一覧から消す。サブは達成したその場でこれを通る。払ったものを 1 行で返す</summary>
+    public string Pay(Quest quest)
+    {
+        foreach (Reward reward in quest.Rewards) Grant(quest, reward);
+
+        //空けるのは受け取ったものの受注だけ。一緒に失敗したクエストは受けたまま残す
+        if (QuestManager.ordered_id == quest.Id) QuestManager.ordered_id = "";
+
+        GameObject shown = GameObject.Find(quest.Id);
+        if (shown != null) Destroy(shown);
+
+        QuestManager.Quests.Remove(quest.Id);
+        return Describe(quest.Rewards);
+    }
+
+    /// <summary>払ったものを 1 行に。「コイン x 100、攻略度 x 15」</summary>
+    private static string Describe(IEnumerable<Reward> rewards)
+    {
         List<string> paid = new List<string>();
-        foreach (Reward reward in Total(Cleared()))
+        foreach (Reward reward in rewards)
             paid.Add(QuestManager.RewardName(reward.Kind) + " x " + reward.Amount);
 
-        FinQuest();
         return string.Join("、", paid);
     }
 
@@ -141,19 +163,7 @@ public class RewardUI : MonoBehaviour
         }
 
         //消すのは添字ではなく Id で行う。添字は1つ消すたびに後ろがずれる
-        foreach (Quest quest in cleared)
-        {
-            foreach (Reward reward in quest.Rewards) Grant(quest, reward);
-
-            //空けるのは受け取ったものの受注だけ。一緒に失敗したクエストは受けたまま残す
-            if (QuestManager.ordered_id == quest.Id) QuestManager.ordered_id = "";
-
-            Debug.Log("クリア＆リスト破壊対象：" + quest.Id);
-            GameObject clearedUI = GameObject.Find(quest.Id);
-            if (clearedUI != null) Destroy(clearedUI);
-
-            QuestManager.Quests.Remove(quest.Id);
-        }
+        foreach (Quest quest in cleared) Pay(quest);
     }
 
     private void Grant(Quest quest, Reward reward)
@@ -166,14 +176,15 @@ public class RewardUI : MonoBehaviour
         else if (reward.Kind == "coin")
         {
             GameManager.Coins.Add(reward.Amount);
-            GameObject.Find("CoinText").GetComponent<TextMeshProUGUI>().text =
-                GameManager.Coins.Amount.ToString();
         }
         else
         {
-            //coin でも progress でもないものはアイテム報酬
-            transform.Find("Inventory").GetComponent<PlayerInventory>()
-                     .LoadInventory(reward.Kind, reward.Amount);
+            //coin でも progress でもないものはアイテム報酬。持ち物へ 1 個ずつ入れ、入りきらない分は受け取れない
+            IItemReceiver inventory = GameObject.FindWithTag("PlayerInventory").GetComponent<IItemReceiver>();
+            for (int i = 0; i < reward.Amount; i++)
+            {
+                if (inventory.LoadInventory(reward.Kind, 0) != 1) break;
+            }
         }
     }
 }

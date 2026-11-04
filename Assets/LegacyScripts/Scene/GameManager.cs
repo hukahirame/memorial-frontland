@@ -20,17 +20,33 @@ public class GameManager : MonoBehaviour
     // シーンの CoinText が 1000 で始まっていたので、その値を引き継ぐ
     [SerializeField] private int startingCoins = 1000;
 
+    private TextMeshProUGUI coinText;
+
     void Awake()
     {
+        coinText = maincanvas.Find("Status_Gold").Find("CoinText").GetComponent<TextMeshProUGUI>();
+        Coins.Changed += ShowCoins;
         Coins.SetAmount(startingCoins);
-        maincanvas.Find("Status_Gold").Find("CoinText")
-                  .GetComponent<TextMeshProUGUI>().text = Coins.Amount.ToString();
+        ShowCoins();
 
         Items.Load(itemdata.text);
     }
 
     void Start()
     {
+        //保存があれば根源とクエストを戻し、無ければ始めの調査とサブを出す。着いたときにクエストが始まるので、着く前に済ませる
+        if (!saveSystem.RestoreWorld()) QuestManager.IssueFirst();
+
         travel.Begin(saveSystem.SavedAreaId);
+    }
+
+    void OnDestroy()
+    {
+        Coins.Changed -= ShowCoins;
+    }
+
+    private void ShowCoins()
+    {
+        coinText.text = Coins.Amount.ToString();
     }
 }

@@ -1,0 +1,20 @@
+{
+    "name": "MemorialFloor.Editor",
+    "rootNamespace": "MemorialFloor.Editor",
+    "references": [
+        "MemorialFloor.Domain",
+        "MemorialFloor.Game",
+        "Unity.Postprocessing.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

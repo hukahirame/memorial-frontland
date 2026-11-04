@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a05cb0ae8a4237342a0fe85a824f0e8d, type: 3}
+  m_Name: FieldPalette
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.FieldPalette
+  entries:
+  - letter: d
+    description: "\u571F"
+    material: {fileID: 2100000, guid: 223b7c4a612942f4191531e2c996ddbd, type: 2}
+    colliderCenter: {x: 0, y: 0, z: 0}
+    colliderSize: {x: 1, y: 1, z: 1}
+  - letter: D
+    description: "\u571F\u3002\u5F53\u305F\u308A\u3060\u3051\u304C\u5965\u3078 1
+      \u30DE\u30B9\u4F38\u3073\u308B\uFF08\u5DE6\u53F3\u306E\u7AEF\u306E\u898B\u3048\u306A\u3044\u58C1\uFF09"
+    material: {fileID: 2100000, guid: 223b7c4a612942f4191531e2c996ddbd, type: 2}
+    colliderCenter: {x: 0, y: 0, z: 0.5}
+    colliderSize: {x: 1, y: 1, z: 2}
+  - letter: b
+    description: "\u6A39\u76AE"
+    material: {fileID: 2100000, guid: 7e56b6e37c078ed47b6d0e9d9249ea9f, type: 2}
+    colliderCenter: {x: 0, y: 0, z: 0}
+    colliderSize: {x: 1, y: 1, z: 1}
+  - letter: r
+    description: "\u5CA9"
+    material: {fileID: 2100000, guid: 7bc3d3afce706e94b8b142c251025e83, type: 2}
+    colliderCenter: {x: 0, y: 0, z: 0}
+    colliderSize: {x: 1, y: 1, z: 1}

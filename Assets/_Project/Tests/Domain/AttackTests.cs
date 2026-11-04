@@ -30,9 +30,16 @@ namespace MemorialFloor.Domain.Tests
         }
 
         [Test]
-        public void 上下だけ倒したらステップ()
+        public void 上下だけ倒したら回避攻撃()
         {
-            Assert.AreEqual(AttackKind.Step, AttackRule.Choose(0f, 0.9f, Right));
+            Assert.AreEqual(AttackKind.Roll, AttackRule.Choose(0f, 0.9f, Right));
+            Assert.AreEqual(AttackKind.Roll, AttackRule.Choose(0f, -0.9f, Left));
+        }
+
+        [Test]
+        public void 向いていない側の斜めはステップ()
+        {
+            Assert.AreEqual(AttackKind.Step, AttackRule.Choose(-0.7f, 0.7f, Right));
         }
 
         [Test]
@@ -59,6 +66,7 @@ namespace MemorialFloor.Domain.Tests
         public void 当たる時間は振り終わる前に終わる()
         {
             Assert.Less(AttackTiming.WindupSeconds + AttackTiming.ActiveSeconds, AttackTiming.SwingSeconds);
+            Assert.Less(AttackTiming.WindupSeconds + AttackTiming.ActiveSeconds, AttackTiming.ThrustSeconds);
         }
 
         [Test]

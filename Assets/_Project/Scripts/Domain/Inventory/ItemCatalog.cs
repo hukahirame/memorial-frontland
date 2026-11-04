@@ -32,7 +32,7 @@ namespace MemorialFloor.Domain
         /// <summary>設置できるか。情報枠にボタンを出すかを決める</summary>
         public bool Installable { get; }
 
-        /// <summary>装備したときの攻撃力。武器でなければ 0</summary>
+        /// <summary>装備したときの攻撃力。装備しない品では、持っているだけで足される攻撃力。どちらでもなければ 0</summary>
         public int Attack { get; }
 
         /// <summary>当たった相手を吹き飛ばす強さ。0 なら飛ばさない</summary>
@@ -44,11 +44,15 @@ namespace MemorialFloor.Domain
         /// <summary>食べたときに回復する体力。食べ物でなければ 0</summary>
         public int Heal { get; }
 
+        /// <summary>拠点で買うときの値段。0 以下なら売っていない</summary>
+        public int Price { get; }
+
         public string Description { get; }
 
         public ItemDefinition(string itemId, string name, int maxStock,
                               int maxDurability, bool installable, int attack,
-                              float knockback, ItemUse use, int heal, string description)
+                              float knockback, ItemUse use, int heal, string description,
+                              int price = 0)
         {
             ItemId = itemId;
             Name = name;
@@ -60,13 +64,14 @@ namespace MemorialFloor.Domain
             Use = use;
             Heal = heal;
             Description = description;
+            Price = price;
         }
     }
 
     /// <summary>
     /// アイテムの原簿。CSV 1行が1種で、先頭行は見出しとして読み飛ばす。
     /// 列は 0:ID 1:名称 2:最大ストック 3:最大耐久値 4:設置可
-    /// 5:攻撃力 6:吹き飛ばし 7:使い道 8:回復量 10:紹介文。
+    /// 5:攻撃力 6:吹き飛ばし 7:使い道 8:回復量 9:値段 10:紹介文。
     /// </summary>
     public sealed class ItemCatalog
     {
@@ -80,6 +85,7 @@ namespace MemorialFloor.Domain
         private const int KnockbackColumn = 6;
         private const int UseColumn = 7;
         private const int HealColumn = 8;
+        private const int PriceColumn = 9;
         private const int DescriptionColumn = 10;
 
         private readonly List<ItemDefinition> _items = new List<ItemDefinition>();
@@ -139,7 +145,8 @@ namespace MemorialFloor.Domain
                     knockback: Real(cell[KnockbackColumn]),
                     use: Use(cell[UseColumn]),
                     heal: Number(cell[HealColumn]),
-                    description: cell[DescriptionColumn].Trim()));
+                    description: cell[DescriptionColumn].Trim(),
+                    price: Number(cell[PriceColumn])));
             }
         }
 

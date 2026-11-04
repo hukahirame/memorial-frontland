@@ -10,8 +10,8 @@ public class PlayerHp : MonoBehaviour
     [SerializeField] private Slider slider;
 
     [Header("自然回復")]
-    [SerializeField] private float regenSeconds = 5;
-    [SerializeField] private int regenAmount = 1;
+    [SerializeField] private float regenSeconds = 1;
+    [SerializeField] private int regenAmount = 2;
 
     private float time = 0;
 

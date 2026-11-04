@@ -34,21 +34,32 @@ namespace MemorialFloor.Game
             travel.Entered -= Restore;
         }
 
-        /// <summary>いま居る場所に置く。場所に居ないときと prefab が無いときは置かずに false</summary>
-        public bool Place(string itemId, Vector3 position)
+        /// <summary>置いた物の prefab。置けない品なら null</summary>
+        public static GameObject Prefab(string itemId)
+        {
+            return Resources.Load<GameObject>(itemId + PrefabSuffix);
+        }
+
+        /// <summary>いま居る場所に、y 軸まわりに yaw 度回して置く。場所に居ないときと prefab が無いときは置かずに false</summary>
+        public bool Place(string itemId, Vector3 position, float yaw = 0f)
+        {
+            return Spawn(itemId, position, yaw) != null;
+        }
+
+        private GameObject Spawn(string itemId, Vector3 position, float yaw)
         {
             Area area = travel.Current;
-            if (area == null) return false;
+            if (area == null) return null;
 
-            GameObject prefab = Resources.Load<GameObject>(itemId + PrefabSuffix);
-            if (prefab == null) return false;
+            GameObject prefab = Prefab(itemId);
+            if (prefab == null) return null;
 
-            GameObject placed = Instantiate(prefab, position, Quaternion.identity);
+            GameObject placed = Instantiate(prefab, position, Quaternion.Euler(0f, yaw, 0f));
             placed.name = prefab.name;
             SceneManager.MoveGameObjectToScene(placed, area.Scene);
             _placed.Add(new KeyValuePair<string, GameObject>(itemId, placed));
 
-            return true;
+            return placed;
         }
 
         /// <summary>いま居る場所に置いてある物を控えへ書く。保存の前に呼ぶ</summary>
@@ -65,15 +76,20 @@ namespace MemorialFloor.Game
             _placed.Clear();
         }
 
+        //柵は控えた耐久に、離れていたあいだに戻るぶんを足して戻す。倒れていたかも戻す。控えていなければ満タンで立つ
         private void Restore(Area area)
         {
             foreach (Placement placement in Ledger.In(area.Id))
             {
-                Place(placement.ItemId, new Vector3(placement.X, placement.Y, placement.Z));
+                GameObject placed = Spawn(placement.ItemId, new Vector3(placement.X, placement.Y, placement.Z), placement.Yaw);
+                if (placed == null || placement.Durability == Placement.NoDurability) continue;
+
+                if (placed.TryGetComponent(out Fence fence))
+                    fence.Restore(placement.Durability, placement.Fallen, Time.time - placement.RecordedAt);
             }
         }
 
-        /// <summary>置いた物のうち、まだ在るもの。壊されて消えたものは入れない</summary>
+        /// <summary>置いた物のうち、まだ在るもの。壊されて消えたものは入れない。柵は残りの耐久と控えた時刻と倒れているかも控える</summary>
         private List<Placement> Remaining()
         {
             List<Placement> remaining = new List<Placement>();
@@ -82,8 +98,11 @@ namespace MemorialFloor.Game
             {
                 if (pair.Value == null) continue;
 
-                Vector3 position = pair.Value.transform.position;
-                remaining.Add(new Placement(pair.Key, position.x, position.y, position.z));
+                Transform placed = pair.Value.transform;
+                Vector3 position = placed.position;
+                bool isFence = pair.Value.TryGetComponent(out Fence fence);
+                remaining.Add(new Placement(pair.Key, position.x, position.y, position.z, placed.eulerAngles.y,
+                                            isFence ? fence.Durability : Placement.NoDurability, Time.time, isFence && fence.IsFallen));
             }
 
             return remaining;

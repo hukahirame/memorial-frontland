@@ -19,7 +19,7 @@ public class OF_Spawner : MonoBehaviour
 
     public static bool spawnable = false;
 
-    [Tooltip("拠点の耐久。スポナーごとに個別に持つ")]
+    [Tooltip("根源の核の耐久。スポナーごとに個別に持つ")]
     [SerializeField] private int maxHp = 100;
 
     private readonly Health health = new Health();
@@ -29,6 +29,10 @@ public class OF_Spawner : MonoBehaviour
     /// <summary>置かれた根源の Id</summary>
     private string rootId;
 
+    /// <summary>湧く地面を探し始める高さと深さ。置かれた核の候補が持ち、2 階建ての場所では候補の立つ階に湧かせる</summary>
+    private float seekFrom = Seeker.DefaultFrom;
+    private float seekDepth = Seeker.DefaultDepth;
+
  //   private GameObject tower1;
  //   private GameObject tower1_down;
 
@@ -37,6 +41,9 @@ public class OF_Spawner : MonoBehaviour
 
     /// <summary>壊れてから見えなくなるまでの秒数。倒した敵と同じ見せ方にする</summary>
     private const float BurstSeconds = 0.25f;
+
+    /// <summary>出口の脇の点が場からはみ出すとき、場に入る点を引き直す回数。尽きたら出口の位置を場へ丸める</summary>
+    private const int BesideExitTries = 16;
 
     /// <summary>壊れる前に膨らむ大きさの倍率</summary>
     private const float BurstSwell = 1.3f;
@@ -64,19 +71,36 @@ public class OF_Spawner : MonoBehaviour
         seeker = GameObject.Find("Seeker");
         seeker.transform.parent = transform;
         seeker_cs = seeker.GetComponent<Seeker>();
-        enemy = (GameObject)Resources.Load("Slime");
+
+        SpawnerCandidate candidate = GetComponent<SpawnerCandidate>();
+        if (candidate != null)
+        {
+            seekFrom = candidate.SeekFrom;
+            seekDepth = candidate.SeekDepth;
+        }
+
+        //湧く敵は場所が決める。決めていない場所は緑のスライム
+        Area here = Area.In(gameObject.scene);
+        enemy = here != null && here.Enemy != null ? here.Enemy : (GameObject)Resources.Load("Slime");
 
         //移動の入口は常駐シーンにあり、シーンを跨ぐ参照は持てないので引く
         travel = FindAnyObjectByType<AreaTravel>();
 
-        //保存した敵は、保存した根源に入ったときにだけ戻す。拠点で保存した敵は戻さない（攻め込んだ敵と同じく保存しない）
+        //保存した敵は、保存した根源に入ったときにだけ戻す。拠点に攻め込んだ敵は、拠点の控え（RootsManager.Raid）が持つ。
+        //体力を持たない前の保存の敵は、新しく湧いた敵として出す
         SaveData sd = GameObject.Find("GameManager").GetComponent<SaveSystem>().savedata;
-        Area here = Area.In(gameObject.scene);
         if (here != null && here.Id == sd.entered_scene && sd.respawns.Count > 0)
         {
-            foreach (Vector3 pos in sd.respawns) Put(pos);
+            for (int i = 0; i < sd.respawns.Count; i++)
+            {
+                int hp = i < sd.enemyHps.Count ? sd.enemyHps[i] : 0;
+                if (hp > 0) Revive(sd.respawns[i], hp);
+                else Put(sd.respawns[i]);
+            }
+
             sd.enemies.Clear();
             sd.respawns.Clear();
+            sd.enemyHps.Clear();
         }
         else
         {
@@ -108,7 +132,7 @@ public class OF_Spawner : MonoBehaviour
     private void Spawn(float range)
     {
         seeker.SetActive(true);
-        seeker_cs.SeekPosition(range, expos);
+        seeker_cs.SeekPosition(range, expos, seekFrom, seekDepth);
     }
 
     /// <summary>Seeker が見つけた地面に 1 体出す</summary>
@@ -138,6 +162,18 @@ public class OF_Spawner : MonoBehaviour
         spawned.Add(obj);
     }
 
+    /// <summary>保存した敵を pos に戻す。間引かず、体力は控えた値まで減らす。弱めた分も控えた体力に入っている</summary>
+    private void Revive(Vector3 pos, int hp)
+    {
+        GameObject obj = Instantiate(enemy, pos, Quaternion.identity);
+        Slime slime = obj.GetComponent<Slime>();
+        if (slime != null) slime.SetHome(rootId);
+
+        IDamageable damageable = obj.GetComponent<IDamageable>();
+        if (damageable != null && hp < damageable.CurrentHp) damageable.TakeDamage(damageable.CurrentHp - hp);
+        spawned.Add(obj);
+    }
+
     /// <summary>ここから出した敵のうち、いま居る数。倒されて消えたものと場外へ落ちたものは数えない</summary>
     private int Alive()
     {
@@ -150,10 +186,24 @@ public class OF_Spawner : MonoBehaviour
     {
         for (int i = 0; i < amount; i++) Spawn(spawnrange * 2);
         Vector3 stoppos = GameObject.Find("ST_MainSite").transform.position;
-        Put(stoppos + new Vector3(Random.Range(1f,6f),0,Random.Range(-5f,1f)));
-        Put(stoppos + new Vector3(Random.Range(1f, 6f), 0, Random.Range(-5f, 1f)));
+        Put(BesideExit(stoppos));
+        Put(BesideExit(stoppos));
      //   tower1.SetActive(false);
      //   tower1_down.SetActive(true);
+    }
+
+    /// <summary>拠点への出口の脇の点。場の外の点は、丸めると場の縁に一列に並ぶので引き直す。出口が場の角にある根源では外が多い</summary>
+    private Vector3 BesideExit(Vector3 exit)
+    {
+        FieldBounds bounds = Exposition.ToBounds(expos);
+
+        for (int tries = 0; tries < BesideExitTries; tries++)
+        {
+            Vector3 pos = exit + new Vector3(Random.Range(1f, 6f), 0, Random.Range(-5f, 1f));
+            if (bounds.Contains(pos.x, pos.z)) return pos;
+        }
+
+        return new Vector3(bounds.ClampX(exit.x), exit.y, bounds.ClampZ(exit.z));
     }
 
 

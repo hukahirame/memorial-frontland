@@ -34,8 +34,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 350, y: -30}
-  m_SizeDelta: {x: 150, y: 45}
+  m_AnchoredPosition: {x: 385, y: -30}
+  m_SizeDelta: {x: 236, y: 45}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7292582811821398030
 CanvasRenderer:
@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u975E\u53D7\u6CE8"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2362defebcdec424f95c3b67618eb200, type: 2}
-  m_sharedMaterial: {fileID: -7688380936224422103, guid: 2362defebcdec424f95c3b67618eb200, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1c3b38839ad820a418a10374c58bbd6f, type: 2}
+  m_sharedMaterial: {fileID: 19861947070383710, guid: 1c3b38839ad820a418a10374c58bbd6f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -108,7 +108,7 @@ MonoBehaviour:
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 1
+  m_enableWordWrapping: 0
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}
@@ -167,6 +167,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1011078160329858077}
+  - {fileID: 2088901230768851158}
   - {fileID: 7166988574765107128}
   - {fileID: 1105660547884027072}
   - {fileID: 2619935644510089134}
@@ -504,8 +505,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u3010\u8ABF\u67FB\u30AF\u30A8\u30B9\u30C8\u3011"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2362defebcdec424f95c3b67618eb200, type: 2}
-  m_sharedMaterial: {fileID: -7688380936224422103, guid: 2362defebcdec424f95c3b67618eb200, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1c3b38839ad820a418a10374c58bbd6f, type: 2}
+  m_sharedMaterial: {fileID: 19861947070383710, guid: 1c3b38839ad820a418a10374c58bbd6f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -638,8 +639,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2362defebcdec424f95c3b67618eb200, type: 2}
-  m_sharedMaterial: {fileID: -7688380936224422103, guid: 2362defebcdec424f95c3b67618eb200, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1c3b38839ad820a418a10374c58bbd6f, type: 2}
+  m_sharedMaterial: {fileID: 19861947070383710, guid: 1c3b38839ad820a418a10374c58bbd6f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -666,9 +667,9 @@ MonoBehaviour:
   m_fontSize: 32
   m_fontSizeBase: 32
   m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
+  m_enableAutoSizing: 1
+  m_fontSizeMin: 24
+  m_fontSizeMax: 32
   m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -679,7 +680,7 @@ MonoBehaviour:
   m_lineSpacingMax: 0
   m_paragraphSpacing: 0
   m_charWidthMaxAdj: 0
-  m_enableWordWrapping: 1
+  m_TextWrappingMode: 0
   m_wordWrappingRatios: 0.4
   m_overflowMode: 0
   m_linkedTextComponent: {fileID: 0}
@@ -772,8 +773,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u5831\u916C\n"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 2362defebcdec424f95c3b67618eb200, type: 2}
-  m_sharedMaterial: {fileID: -7688380936224422103, guid: 2362defebcdec424f95c3b67618eb200, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 1c3b38839ad820a418a10374c58bbd6f, type: 2}
+  m_sharedMaterial: {fileID: 19861947070383710, guid: 1c3b38839ad820a418a10374c58bbd6f, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1087,3 +1088,78 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 7330434042869167437, guid: 51eb75a79fcfd4aafa88386b1412396e, type: 3}
   m_PrefabInstance: {fileID: 4548425095393881651}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &7679921477863162975
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2088901230768851158}
+  - component: {fileID: 456727453497839009}
+  - component: {fileID: 3821347378739795646}
+  m_Layer: 5
+  m_Name: OrderedBadge
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &2088901230768851158
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7679921477863162975}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 205380822511165}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 385, y: -30}
+  m_SizeDelta: {x: 236, y: 48}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &456727453497839009
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7679921477863162975}
+  m_CullTransparentMesh: 1
+--- !u!114 &3821347378739795646
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7679921477863162975}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: da5db72ec48e840799f4a20440277192, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 1
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1

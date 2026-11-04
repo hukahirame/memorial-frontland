@@ -70,6 +70,17 @@ namespace MemorialFloor.Domain.Tests
         }
 
         [Test]
+        public void 控えは置いた物の向きも持つ()
+        {
+            PlacementLedger ledger = new PlacementLedger();
+
+            ledger.Record("MainSite", new[] { new Placement("Fence", 4f, 0f, -2f, 90f), Torch(1f) });
+
+            Assert.AreEqual(90f, ledger.In("MainSite")[0].Yaw);
+            Assert.AreEqual(0f, ledger.In("MainSite")[1].Yaw, "向きを渡さずに置いた物が向きを持つ");
+        }
+
+        [Test]
         public void 全て捨てると空になる()
         {
             PlacementLedger ledger = new PlacementLedger();

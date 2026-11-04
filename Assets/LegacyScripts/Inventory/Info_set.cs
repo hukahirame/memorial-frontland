@@ -87,12 +87,21 @@ public class Info_set : MonoBehaviour
 
     private void Equip()
     {
-        if (!Weapon.Equipped.Equip(current)) return;
-
-        Sprite inhand = InHand(current.ItemId);
-        if (inhand != null) GameObject.Find("WeaponChild").GetComponent<SpriteRenderer>().sprite = inhand;
+        if (!Wield(current.ItemId)) return;
 
         TempAudio.TempAudioPlay("Fantasy_Game_Action_Backpack_Open");
+    }
+
+    /// <summary>武器を持つ。手の絵を替え、持ち物の「装備中」の印も付け直す。保存から戻すときも使う。装備できない品なら何もせず false</summary>
+    public bool Wield(string itemId)
+    {
+        if (!Weapon.Equipped.Equip(GameManager.Items.Find(itemId))) return false;
+
+        Sprite inhand = InHand(itemId);
+        if (inhand != null) GameObject.Find("WeaponChild").GetComponent<SpriteRenderer>().sprite = inhand;
+
+        GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>().MarkEquipped();
+        return true;
     }
 
     /// <summary>手に持つ絵。原簿には置けないため Inspector で ID と対にしてある</summary>
@@ -106,8 +115,20 @@ public class Info_set : MonoBehaviour
 
     private void Place()
     {
-        Vector3 installpos = GameObject.FindWithTag("Player").transform.position + Vector3.down * 0.4f;
-        if (!placed.Place(current.ItemId, installpos)) return;
+        Player2 player = GameObject.FindWithTag("Player").GetComponent<Player2>();
+        Vector3 installpos = player.transform.position + Vector3.down * 0.4f;
+        float yaw = 0f;
+
+        //柵は足元ではなく、向いている側の格子の線に立てる。地面が無い所や、動かない物に重なる所には立てない
+        GameObject prefab = PlacedObjects.Prefab(current.ItemId);
+        if (prefab != null && prefab.TryGetComponent(out Fence fence)
+            && !FenceSite.TryFind(fence, player.Body, player.Side, out installpos, out yaw))
+        {
+            GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("ここには置けません");
+            return;
+        }
+
+        if (!placed.Place(current.ItemId, installpos, yaw)) return;
         GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>().UnloadInventory(current.ItemId);
     }
 }

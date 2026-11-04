@@ -80,6 +80,9 @@ namespace MemorialFloor.Domain
         /// <summary>拠点の場所</summary>
         public const string BaseAreaId = "MainSite";
 
+        /// <summary>近道を通るたびに払う所持金</summary>
+        public const int ShortcutFee = 20;
+
         /// <summary>
         /// 出口を通ったときの行き先。場所は拠点、根源の並べた順に一列に並び、出口は隣の場所へ通じる。
         /// クエストを受けていなくても通れる。並びの端より先と、並びに無い場所からは行けない
@@ -95,6 +98,28 @@ namespace MemorialFloor.Domain
 
             string areaId = to == 0 ? BaseAreaId : AreaOfRoot(rootIds[to - 1]);
             return Route.To(areaId, exit == ExitKind.ToNext ? Arrival.FromPrevious : Arrival.FromNext);
+        }
+
+        /// <summary>近道の行き先。拠点からだけ、並びのどの根源へも直に行き、手前の出口の前に立つ</summary>
+        public static Route Shortcut(string fromAreaId, string rootId, IReadOnlyList<string> rootIds)
+        {
+            if (fromAreaId != BaseAreaId || IndexInLine(AreaOfRoot(rootId), rootIds) < 1) return Route.Refused;
+
+            return Route.To(AreaOfRoot(rootId), Arrival.FromPrevious);
+        }
+
+        /// <summary>拠点への近道の行き先。並びの根源からだけ、無料で拠点の決まった地点へ戻る</summary>
+        public static Route ShortcutHome(string fromAreaId, IReadOnlyList<string> rootIds)
+        {
+            if (IndexInLine(fromAreaId, rootIds) < 1) return Route.Refused;
+
+            return Route.To(BaseAreaId, Arrival.Home);
+        }
+
+        /// <summary>その根源へ近道で行くときに払う額。今の攻略度が【解明】の段に届いていれば無料</summary>
+        public static int ShortcutFeeTo(Root root)
+        {
+            return root != null && root.Progress >= Root.RevealProgress ? 0 : ShortcutFee;
         }
 
         /// <summary>一列の並びでの位置。拠点が 0、根源は並べた順に 1 から。並びに無ければ -1</summary>

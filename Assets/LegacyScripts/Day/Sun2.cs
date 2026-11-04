@@ -46,20 +46,20 @@ public class Sun2 : MonoBehaviour
 
     private void DayStart() //夜明け後
     {
+        bool issued = false;
+
         foreach (Root root in RootsManager.Roots.All)
         {
-            //その根源に調査か決壊が既にあるなら何もしない
-            if (QuestManager.Quests.HasMainFor(root.Id)) continue;
+            //サブは調査と別に、無ければ足す。保留も挟まない
+            if (QuestManager.IssueSub(root.Id)) issued = true;
 
-            //1度保留してから発行する。初回の夜明けでは積むだけ
-            if (!Plan.ShouldIssue(root.Id)) continue;
+            //その根源に調査か決壊が既にあるなら出さない。無ければ 1 度保留してから出す。初回の夜明けでは積むだけ
+            if (QuestManager.Quests.HasMainFor(root.Id) || !Plan.ShouldIssue(root.Id)) continue;
 
-            QuestManager.Quests.Create(QuestKind.Main, root.Id, "MainSpawner", 1,
-                new[] { new Reward("coin", 100), new Reward("progress", 15) });
-
-            QuestManager.IssueSub(root.Id);
-
-            GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("新クエストが発生しました");
+            QuestManager.IssueMain(root, QuestKind.Main);
+            issued = true;
         }
+
+        if (issued) GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("新クエストが発生しました");
     }
 }

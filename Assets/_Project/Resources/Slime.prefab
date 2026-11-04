@@ -1424,7 +1424,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: beddfa6435155aa46ba18b5fb6b663dd, type: 3}
     m_FontSize: 55
     m_FontStyle: 0
     m_BestFit: 0
@@ -2916,6 +2916,9 @@ MonoBehaviour:
   Level: 1
   drops:
   - Slimejelly
+  chanceDrops:
+  - ItemId: Slimecore
+    Percent: 5
   dropcapsule: {fileID: 8337573646266240455, guid: a47d32c2e7dbff148a4be736b2377957, type: 3}
   hp: {fileID: 2521978725070392990}
 --- !u!54 &5426411718724493770
