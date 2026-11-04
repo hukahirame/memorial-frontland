@@ -202,6 +202,45 @@ public class SavePlayTests
         CollectionAssert.AreEqual(ids, Quests().All.Select(q => q.Id).ToArray(), "空の保存でクエストを消す");
     }
 
+    //遊びの状態は static にあり、常駐シーンを読み直しても残る。タイトルが開くたびに起動した直後へ戻さないと、
+    //設定からタイトルに戻って別の枠や「はじめる」で始めたときに、前の遊びが混ざる
+    [UnityTest]
+    public IEnumerator 設定からタイトルに戻って始め直すと前の遊びが残らない()
+    {
+        yield return Boot();
+        DayCycle cycle = (DayCycle)StaticField("Sun2", "Cycle").GetValue(null);
+        Health hp = (Health)StaticField("Player2", "Hp").GetValue(null);
+        int quests = Quests().All.Count;
+
+        //前の遊び
+        Roots().All[0].Restore(80, 0);
+        StaticField("QuestManager", "ordered_id").SetValue(null, Quests().All[0].Id);
+        Plan().Restore(new[] { "Root1" });
+        cycle.SetElapsed(60);
+        hp.SetCurrent(1);
+        StaticField("Player2", "speed").SetValue(null, 3f);
+
+        SettingsMenu settings = UnityEngine.Object.FindAnyObjectByType<SettingsMenu>();
+        Assert.IsNotNull(settings, "常駐シーンに設定が無い");
+        settings.Open();
+        Assert.AreEqual(0f, Time.timeScale, "設定を開いても止まらない");
+
+        settings.RequestTitle();
+        float giveUp = Time.realtimeSinceStartup + TravelSeconds;
+        while (SceneManager.GetActiveScene().name != AreaTravel.TitleScene && Time.realtimeSinceStartup < giveUp) yield return null;
+        Assert.AreEqual(AreaTravel.TitleScene, SceneManager.GetActiveScene().name, "タイトルに戻らない");
+        Assert.AreEqual(1f, Time.timeScale, "タイトルに戻っても止まったまま");
+
+        yield return Boot();
+        Assert.AreEqual(0, Roots().All[0].Progress, "根源の攻略度が前の遊びのまま");
+        Assert.AreEqual("", StaticField("QuestManager", "ordered_id").GetValue(null), "受注が前の遊びのまま");
+        Assert.AreEqual(quests, Quests().All.Count, "前の遊びのクエストが残る");
+        Assert.AreEqual(0, Plan().Count, "保留中の調査が前の遊びのまま");
+        Assert.Less(cycle.ElapsedSeconds, 60, "時刻が前の遊びのまま");
+        Assert.AreEqual(hp.Max, hp.Current, "体力が前の遊びのまま");
+        Assert.AreEqual(1f, (float)StaticField("Player2", "speed").GetValue(null), "速さが前の遊びのまま");
+    }
+
     [UnityTearDown]
     public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
     {

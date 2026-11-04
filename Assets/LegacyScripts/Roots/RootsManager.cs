@@ -100,7 +100,7 @@ public class RootsManager : MonoBehaviour
             if (QuestManager.IssueBreach(root)) news.Add(root.Name + "に決壊クエストが出ました");
         }
 
-        foreach (var root in Roots.All) root.DecayProgressDaily();
+        foreach (var root in Roots.All) root.DecayProgressDaily(UnityRandom.Shared);
 
         //予兆は攻略度を減らしたあとで見る。次の零時に増える量は、そのときの攻略度で決まる
         foreach (var root in Roots.All)

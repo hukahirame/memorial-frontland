@@ -32,7 +32,7 @@ public class RootUI : MonoBehaviour
         //詳細の枠は根源どうしで使い回す。達していない段も塗り直さないと、前に開いた根源の色が残る
         Text dp = qm.Find("RootProgress").Find("DetailProgress").GetComponent<Text>();
         dp.transform.Find("DP2").GetComponent<Text>().color =
-            root.Progress >= SpawnRule.SuppressProgress ? new Color(0, 50, 0, 255) : Unreached;
+            root.Progress >= Root.SuppressProgress ? new Color(0, 50, 0, 255) : Unreached;
         dp.color = root.Progress >= Root.RevealProgress ? new Color(50, 0, 50, 255) : Unreached;
 
         Text capa = qm.Find("RootCapacity").GetChild(0).GetComponent<Text>(); // 開いたときの値。開いているあいだは更新しない

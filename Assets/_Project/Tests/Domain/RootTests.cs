@@ -24,14 +24,18 @@ namespace MemorialFloor.Domain.Tests
         }
 
         [Test]
-        public void 一日経つと攻略度が3減る()
+        public void 一日経つと攻略度が幅の中から引いた量だけ減る()
         {
-            var root = NewRoot();
-            root.Gain(10);
+            var low = NewRoot();
+            low.Gain(10);
+            var high = NewRoot();
+            high.Gain(10);
 
-            root.AdvanceDay(Dice);
+            low.AdvanceDay(Dice);
+            high.AdvanceDay(new FakeRandom(10, Root.DailyProgressLossHigh)); //増える量は 10 に固定してある
 
-            Assert.AreEqual(7, root.Progress);
+            Assert.AreEqual(10 - Root.DailyProgressLossLow, low.Progress);
+            Assert.AreEqual(10 - Root.DailyProgressLossHigh, high.Progress);
         }
 
         [Test]
@@ -174,9 +178,9 @@ namespace MemorialFloor.Domain.Tests
         [TestCase(9, 10)]
         [TestCase(10, 9)]
         [TestCase(30, 7)]
-        [TestCase(50, 5)]
-        [TestCase(70, 3)]
-        [TestCase(200, 1)]
+        [TestCase(50, 2)]
+        [TestCase(70, 1)]
+        [TestCase(200, 0)]
         public void 攻略度が上がるほど日ごとの蓄積が減る(int progress, int expected)
         {
             var root = NewRoot();
@@ -205,7 +209,7 @@ namespace MemorialFloor.Domain.Tests
         {
             var root = NewRoot();
             for (int i = 0; i < 9; i++) root.AccumulateDaily(Dice); //90
-            root.Gain(50); //次の増加は 5
+            root.Gain(50); //次の増加は 2
 
             Assert.IsFalse(root.MayOverflowNextDay);
         }

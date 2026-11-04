@@ -17,10 +17,11 @@ public class JoystickEffect_ATK : MonoBehaviour
 
     void Start()
     {
-        //攻撃のキーは右下、向きのキーは左下に分けて置く。← と → を隣に並べると、1 本の長い矢印に見える
-        KeyHint.Put((RectTransform)transform, Player2.AttackKey.ToString());
-        KeyHint.Put((RectTransform)transform, "←↑↓→", Vector2.zero);
-        guide = AttackGuide.Put((RectTransform)transform, Player2.AttackKey.ToString());
+        //攻撃のキーは右下、向きのキーは左上に分けて置く。← と → を隣に並べると、1 本の長い矢印に見える。
+        //下の辺に 2 つ並べると、スティックの幅に収まらず重なる
+        KeyHint.Put((RectTransform)transform, Player2.AttackKeyName);
+        KeyHint.Put((RectTransform)transform, "←↑↓→", Vector2.up);
+        guide = AttackGuide.Put((RectTransform)transform, Player2.AttackKeyName);
     }
 
     /// <summary>攻撃の案内に、出ている行動と構えている行動を出すプレイヤーを受け取る</summary>

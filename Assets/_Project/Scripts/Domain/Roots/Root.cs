@@ -27,10 +27,12 @@ namespace MemorialFloor.Domain
         /// <summary>攻略度がこれだけ上がるごとに、日ごとに増える蓄積値が 1 減る</summary>
         public const int ProgressPerGainStep = 10;
 
-        /// <summary>攻略度がいくら高くても、日ごとにこれだけは増える</summary>
+        /// <summary>【抑制】で割る前の下限。【抑制】に達するまでは、攻略度がいくら高くても日ごとにこれだけは増える</summary>
         public const int MinDailyAccumulationGain = 1;
 
-        public const int DailyProgressLoss = 3;
+        /// <summary>日ごとに減る攻略度の幅。両端を含み、零時ごとに根源ごとにこの中から引く</summary>
+        public const int DailyProgressLossLow = 2;
+        public const int DailyProgressLossHigh = 3;
 
         /// <summary>この蓄積値で氾濫する</summary>
         public const int StampedeAccumulation = 100;
@@ -40,6 +42,12 @@ namespace MemorialFloor.Domain
 
         /// <summary>【解明】の段。この攻略度から、湧いた敵が弱くなり、拠点からの近道が無料になる</summary>
         public const int RevealProgress = 30;
+
+        /// <summary>【抑制】の段。この攻略度から、敵の湧きが抑えられ、日ごとに増える蓄積値が減る</summary>
+        public const int SuppressProgress = 50;
+
+        /// <summary>【抑制】に達しているとき、日ごとに増える蓄積値をこれで割る。端数は切り捨てるので、増えない夜もある</summary>
+        public const int SuppressGainDivisor = 2;
 
         /// <summary>攻略度の上限。画面では % で出す</summary>
         public const int MaxProgress = 100;
@@ -112,7 +120,7 @@ namespace MemorialFloor.Domain
         public void AdvanceDay(IRandom random)
         {
             AccumulateDaily(random);
-            DecayProgressDaily();
+            DecayProgressDaily(random);
         }
 
         /// <summary>日次の蓄積値の増加。増える量は幅の中から引く。氾濫判定はこの直後に行われる</summary>
@@ -125,13 +133,15 @@ namespace MemorialFloor.Domain
         private int GainFrom(int baseGain)
         {
             int gain = baseGain - Progress / ProgressPerGainStep;
-            return gain < MinDailyAccumulationGain ? MinDailyAccumulationGain : gain;
+            if (gain < MinDailyAccumulationGain) gain = MinDailyAccumulationGain;
+
+            return Progress >= SuppressProgress ? gain / SuppressGainDivisor : gain;
         }
 
-        /// <summary>日次の攻略度の減少</summary>
-        public void DecayProgressDaily()
+        /// <summary>日次の攻略度の減少。減る量は幅の中から引く</summary>
+        public void DecayProgressDaily(IRandom random)
         {
-            Progress = Clamp0(Progress - DailyProgressLoss);
+            Progress = Clamp0(Progress - random.Next(DailyProgressLossLow, DailyProgressLossHigh + 1));
         }
 
         /// <summary>蓄積値を下げる。スライム撃破など</summary>

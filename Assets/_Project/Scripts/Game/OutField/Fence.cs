@@ -44,6 +44,9 @@ namespace MemorialFloor.Game
         /// <summary>倒れて戻りかけのときのゲージの色</summary>
         private static readonly Color FallenFill = new Color(1f, 0.6f, 0.25f);
 
+        /// <summary>ゲージの幅と高さ（画素）。柵は奥行きに沿って立ち、正面からは細く見えるので、ふつうより小さくする</summary>
+        private static readonly Vector2 GaugeSize = new Vector2(56f, 8f);
+
         private const string HitSound = "Fantasy_Game_Attack_Weapon_Impact";
 
         /// <summary>壊れたときと倒れたときの音の高さ。叩いたときと同じ音を低くして重さを出す</summary>
@@ -119,7 +122,7 @@ namespace MemorialFloor.Game
             block = new MaterialPropertyBlock();
 
             reach = MakeReach();
-            gauge = WorldGauge.Put(transform, StandingFill);
+            gauge = WorldGauge.Put(transform, StandingFill, GaugeSize);
         }
 
         private void Update()

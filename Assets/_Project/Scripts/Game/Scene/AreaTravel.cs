@@ -16,6 +16,9 @@ namespace MemorialFloor.Game
         /// <summary>プレイヤーと UI など、ずっと残す物を置くシーン</summary>
         public const string CoreScene = "Core";
 
+        /// <summary>タイトルの画面のシーン。設定の「タイトルに戻る」で、常駐シーンごと入れ替える</summary>
+        public const string TitleScene = "Title";
+
         [Tooltip("移動させるもの。プレイヤー")]
         [SerializeField] private Transform traveler;
 

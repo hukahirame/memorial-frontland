@@ -11,7 +11,10 @@ using TMPro;
 public class Player2 : MonoBehaviour
 {
     /// <summary>攻撃のスティックの代わりに押すキー。向きは矢印キーで決める</summary>
-    public const KeyCode AttackKey = KeyCode.F;
+    public const KeyCode AttackKey = KeyCode.RightShift;
+
+    /// <summary>画面の案内に出す、攻撃のキーの名前。AttackKey を変えたら合わせる</summary>
+    public const string AttackKeyName = "右Shift";
 
     /// <summary>ジャンプボタンの代わりに押すキー。離したときに跳ぶ</summary>
     public const KeyCode JumpKey = KeyCode.Space;

@@ -5,14 +5,17 @@ using MemorialFloor.Domain;
 using MemorialFloor.Game;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// タイトル画面。保存があれば「つづきから」（いちばん新しく書いた枠）と「データをえらぶ」を、無ければ「はじめる」だけを出す。
-/// 「データをえらぶ」では保存の枠を名前と並べ、押した枠の続きから始める。空いた枠は名前を決めてからはじめから始める。
-/// 「はじめる」も 1 つめの枠の名前を決めてから始める。保存のある枠は「編集」で名前を変えたり消したりできる
+/// タイトル画面。最初は題字と「PRESS ANY BUTTON」だけを出し、キーかボタンか画面のどこかを押すとデータの一覧を開く。
+/// 一覧は右に暗い帯を敷き、保存の枠を名前・場所・書いた日時と上から並べる。保存のある枠は押すと続きから始まり、
+/// 空いた枠は名前を決めてからはじめから始まる。保存のある枠は「編集」で名前を変えたり消したりできる。
+/// キーでも選べ（上下と決定、Esc で一つ前へ）、一覧を開いたときはいちばん新しく書いた枠を選んでおく。
+/// 開くたびに遊びの状態を起動した直後と同じに戻す（GameSession）。設定の「タイトルに戻る」で来たときのため
 /// </summary>
 public class Title : MonoBehaviour
 {
@@ -25,16 +28,73 @@ public class Title : MonoBehaviour
     /// <summary>題字が 1 往復する秒数</summary>
     private const float FloatSeconds = 4f;
 
-    /// <summary>データをえらぶ画面で、並べたボタンのあいだ。参照解像度の画素</summary>
-    private const float Gap = 16f;
+    /// <summary>最初の画面の誘いの字</summary>
+    private const string Prompt = "PRESS ANY BUTTON";
+
+    /// <summary>誘いの字の大きさ。参照解像度の画素</summary>
+    private const float PromptFontSize = 46f;
+
+    /// <summary>誘いの字の字のあいだ</summary>
+    private const float PromptSpacing = 12f;
+
+    /// <summary>誘いの字の、画面の下端からの高さ</summary>
+    private const float PromptHeight = 150f;
+
+    /// <summary>誘いの字が薄くなって戻る 1 往復の秒数</summary>
+    private const float PromptPulseSeconds = 2.4f;
+
+    /// <summary>誘いの字の、いちばん薄いときの濃さ</summary>
+    private const float PromptMinAlpha = 0.3f;
+
+    /// <summary>一覧と名前の画面で右に敷く帯の幅。左上の題字にかからない幅</summary>
+    private const float BandWidth = 820f;
+
+    /// <summary>帯の濃さ。明るい背景の上でも字が読める濃さ</summary>
+    private static readonly Color BandColor = new Color(0f, 0f, 0f, 0.55f);
+
+    /// <summary>帯の中の左右と下の余白</summary>
+    private const float BandPadding = 64f;
+
+    /// <summary>帯の上端から見出しまで</summary>
+    private const float HeadingTop = 80f;
+
+    /// <summary>見出しの字の大きさ</summary>
+    private const float HeadingFontSize = 56f;
+
+    /// <summary>見出しの段の高さ</summary>
+    private const float HeadingHeight = 80f;
+
+    /// <summary>見出しの下の金の線から、最初の段まで</summary>
+    private const float HeadingGap = 36f;
+
+    /// <summary>段の高さ</summary>
+    private const float RowHeight = 118f;
+
+    /// <summary>段のあいだ</summary>
+    private const float RowGap = 12f;
+
+    /// <summary>枠の名前と決めるボタンの字の大きさ。場所と日時はこれに対する割合で小さくする</summary>
+    private const float SlotFontSize = 54f;
+
+    /// <summary>編集・消す・もどるの字の大きさ</summary>
+    private const float SubFontSize = 38f;
+
+    /// <summary>編集のボタンの幅。枠の段はこの分だけ右を空ける</summary>
+    private const float EditWidth = 150f;
+
+    /// <summary>もどるのボタンの大きさ</summary>
+    private static readonly Vector2 BackSize = new Vector2(300f, 80f);
+
+    /// <summary>指が乗った段と選んでいる段の字の色、見出しの線の色。題字の「ほのぼの」と同じ金</summary>
+    private static readonly Color Gold = new Color32(0xFF, 0xD2, 0x7A, 0xFF);
 
     /// <summary>消すボタンを 1 回押したときの文字。2 回目で消す</summary>
     private const string ConfirmText = "もう一度で消す";
 
-    /// <summary>枠の名前の長さの上限（字数）。枠のボタンに収まる長さ</summary>
+    /// <summary>枠の名前の長さの上限（字数）。枠の段に収まる長さ</summary>
     private const int NameLimit = 12;
 
-    /// <summary>名前の欄の下敷き。ボタンの板は透けているが、欄は打つ所が分かるよう暗く敷く</summary>
+    /// <summary>名前の欄の下敷き。帯より暗く敷き、打つ所が分かるようにする</summary>
     private static readonly Color FieldBack = new Color(0f, 0f, 0f, 0.45f);
 
     [Tooltip("画面全体。開いたときに透明から浮かび上がらせる")]
@@ -43,16 +103,13 @@ public class Title : MonoBehaviour
     [Tooltip("題字。ゆっくり上下に揺らす")]
     [SerializeField] private RectTransform logo;
 
-    [Tooltip("始めるボタンの文字。保存があれば「つづきから」、無ければ「はじめる」。データをえらぶ画面の枠のボタンは、このボタンを写して作る")]
+    [Tooltip("字のボタンの型の文字。一覧の枠の段と名前の画面の決めるボタンは、このボタンを写して作る。型そのものは隠す")]
     [SerializeField] private TextMeshProUGUI startLabel;
 
-    [Tooltip("2 つめのボタン。保存があるときだけ見せ、データをえらぶ画面を開く。編集・消す・もどるのボタンは、このボタンを写して作る")]
+    [Tooltip("小さい字のボタンの型。編集・消す・もどるは、このボタンを写して作る。型そのものは隠す")]
     [SerializeField] private GameObject freshButton;
 
-    [Tooltip("2 つめのボタンの文字")]
-    [SerializeField] private TextMeshProUGUI freshLabel;
-
-    /// <summary>データをえらぶ画面と名前の画面に並べた物。画面を替えるときに消す</summary>
+    /// <summary>一覧と名前の画面に並べた物。画面を替えるときに消す</summary>
     private readonly List<GameObject> made = new List<GameObject>();
 
     /// <summary>消すボタンを 1 回押して確かめを出したか。保存を消すと取り返せないので、2 回目で消す</summary>
@@ -60,13 +117,36 @@ public class Title : MonoBehaviour
 
     private Vector2 logoHome;
 
+    /// <summary>最初の画面の誘いの字</summary>
+    private TextMeshProUGUI prompt;
+
+    /// <summary>Esc で戻る先。最初の画面では無い</summary>
+    private UnityAction back;
+
+    /// <summary>画面を替えたフレーム。替えるきっかけになった押下で、同じフレームのうちに次の画面まで進ませない</summary>
+    private int shownFrame;
+
     private GameObject StartButton
     {
         get { return startLabel.GetComponentInParent<Button>(true).gameObject; }
     }
 
+    private bool OnFront
+    {
+        get { return prompt != null && prompt.gameObject.activeSelf; }
+    }
+
+    //前に遊んだ状態を捨て、起動した直後と同じにする。設定からタイトルに戻ったあとに始め直すため
+    private void Awake()
+    {
+        GameSession.Reset();
+    }
+
     private void Start()
     {
+        StartButton.SetActive(false);
+        freshButton.SetActive(false);
+        prompt = PromptText();
         ShowFront();
         PressFeedback.AttachAll(screen.transform);
 
@@ -78,6 +158,24 @@ public class Title : MonoBehaviour
     {
         float phase = Time.unscaledTime / FloatSeconds * 2f * Mathf.PI;
         logo.anchoredPosition = logoHome + Vector2.up * (Mathf.Sin(phase) * FloatHeight);
+
+        if (OnFront)
+        {
+            float pulse = (Mathf.Cos(Time.unscaledTime / PromptPulseSeconds * 2f * Mathf.PI) + 1f) / 2f;
+            prompt.alpha = Mathf.Lerp(PromptMinAlpha, 1f, pulse);
+        }
+
+        if (Time.frameCount <= shownFrame) return;
+
+        //浮かび上がりきるまでは受けない。開いた瞬間の押し間違いで進まないように
+        if (OnFront)
+        {
+            if (screen.alpha >= 1f && Input.anyKeyDown) ShowPicker();
+        }
+        else if (back != null && Input.GetKeyDown(KeyCode.Escape))
+        {
+            back();
+        }
     }
 
     private IEnumerator Appear()
@@ -91,20 +189,6 @@ public class Title : MonoBehaviour
         screen.alpha = 1f;
     }
 
-    /// <summary>始めるボタンから呼ぶ。保存があればいちばん新しく書いた枠の続きから、無ければ 1 つめの枠の名前を決めてからはじめる</summary>
-    public void Load()
-    {
-        int latest = LatestSlot();
-        if (latest > 0) Play(latest, "");
-        else ShowNamer(1, ShowFront);
-    }
-
-    /// <summary>2 つめのボタンから呼ぶ。データをえらぶ画面を開く。名前はシーンのボタンが呼ぶので変えない</summary>
-    public void LoadFresh()
-    {
-        ShowPicker();
-    }
-
     /// <summary>name ははじめから始めるときに枠へ付ける名前。続きからなら保存の名前のままで、使われない</summary>
     private static void Play(int slot, string name)
     {
@@ -113,58 +197,74 @@ public class Title : MonoBehaviour
         SceneManager.LoadScene(AreaTravel.CoreScene);
     }
 
-    /// <summary>最初の画面。保存が無ければ、始めるボタンで 1 つめの枠の名前を決めてからはじめる</summary>
+    /// <summary>最初の画面。題字と誘いの字だけを出す</summary>
     private void ShowFront()
     {
         Clear();
-
-        bool saved = LatestSlot() > 0;
-        startLabel.text = saved ? "つづきから" : "はじめる";
-        freshLabel.text = "データをえらぶ";
-        StartButton.SetActive(true);
-        freshButton.SetActive(saved);
+        prompt.gameObject.SetActive(true);
+        back = null;
     }
 
     /// <summary>
-    /// データをえらぶ画面。枠のボタンを始めるボタンの位置から上へ積み（1 つめが上）、保存のある枠には字の左に編集のボタンを付ける。
-    /// もどるボタンは 2 つめのボタンの位置に置く。位置は型のボタンから測るので、タイトルの並べ方が変わってもついていく
+    /// データの一覧。右の帯に見出しと保存の枠を上から並べる。保存のある枠は押すと続きから始まり、右に「編集」を付ける。
+    /// 空いた枠は押すと名前の画面へ。いちばん新しく書いた枠を選んでおき、そのまま決めれば続きから始まる
     /// </summary>
     private void ShowPicker()
     {
         Clear();
+        RectTransform band = Band("データをえらぶ");
+
+        int latest = LatestSlot();
+        GameObject focus = null;
 
         for (int slot = 1; slot <= SaveSystem.SlotCount; slot++)
         {
             int chosen = slot;
-            bool saved = SaveSystem.HasSaveIn(slot);
+            float top = RowTop(slot - 1);
 
-            //保存のある枠は押すと続きから、空いた枠は名前を決めてから始める
-            GameObject row = Copy(StartButton, Row(SaveSystem.SlotCount - slot), SlotText(slot),
-                                  () => { if (saved) Play(chosen, ""); else ShowNamer(chosen, ShowPicker); });
+            Button row = Copy(StartButton, band, SlotText(slot), SlotFontSize, TextAlignmentOptions.MidlineLeft, () => PressSlot(chosen));
+            Place(row, top, RowHeight, 0f, EditWidth);
+            if (focus == null || slot == latest) focus = row.gameObject;
 
-            if (!saved) continue;
+            if (!SaveSystem.HasSaveIn(slot)) continue;
 
-            GameObject edit = Copy(freshButton, Row(SaveSystem.SlotCount - slot), "編集", () => ShowNamer(chosen, ShowPicker));
-            BesideText(edit, row, "編集");
+            Button edit = Copy(freshButton, band, "編集", SubFontSize, TextAlignmentOptions.MidlineRight, () => ShowNamer(chosen));
+            var rect = (RectTransform)edit.transform;
+            rect.anchorMin = Vector2.one;
+            rect.anchorMax = Vector2.one;
+            rect.pivot = Vector2.one;
+            rect.sizeDelta = new Vector2(EditWidth, RowHeight);
+            rect.anchoredPosition = new Vector2(-BandPadding, -top);
         }
 
-        Copy(freshButton, ((RectTransform)freshButton.transform).anchoredPosition, "もどる", ShowFront);
-        HideFront();
+        BackButton(band, ShowFront);
+        back = ShowFront;
+        StartCoroutine(SelectSoon(focus));
+    }
+
+    /// <summary>枠の段を押した。保存があれば続きから、無ければ名前を決めてからはじめる</summary>
+    private void PressSlot(int slot)
+    {
+        if (SaveSystem.HasSaveIn(slot)) Play(slot, "");
+        else ShowNamer(slot);
     }
 
     /// <summary>
-    /// 名前の画面。いちばん上に名前の欄、その下に決めるボタン、保存のある枠なら消すボタンを並べ、もどるは 2 つめのボタンの位置で back へ戻る。
-    /// 空いた枠は「はじめる」で名前を付けて始め、保存のある枠は「決める」で名前を書き換えてデータをえらぶ画面へ戻る
+    /// 名前の画面。空いた枠は名前を決めて「はじめる」で始め、保存のある枠は名前を書き換えて「決める」か、2 回押して「消す」。
+    /// もどると一覧へ。名前の欄で決定のキーを押しても、はじめる・決めると同じ
     /// </summary>
-    private void ShowNamer(int slot, UnityAction back)
+    private void ShowNamer(int slot)
     {
         Clear();
 
         bool saved = SaveSystem.HasSaveIn(slot);
         SaveData data = SaveSystem.Peek(slot);
-        TMP_InputField field = NameField(Row(2), data != null ? data.saveName : "", DefaultName(slot));
+        RectTransform band = Band(saved ? "データを編集" : "名前をつける");
 
-        Copy(StartButton, Row(1), saved ? "決める" : "はじめる", () =>
+        TMP_InputField field = NameField(band, data != null ? data.saveName : "", DefaultName(slot));
+        Place(field, RowTop(0), RowHeight);
+
+        UnityAction confirm = () =>
         {
             string name = field.text.Trim();
             if (!saved)
@@ -175,23 +275,26 @@ public class Title : MonoBehaviour
 
             SaveSystem.Rename(slot, name);
             ShowPicker();
-        });
+        };
+        field.onSubmit.AddListener(_ => confirm());
+
+        Button ok = Copy(StartButton, band, saved ? "決める" : "はじめる", SlotFontSize, TextAlignmentOptions.MidlineRight, confirm);
+        Place(ok, RowTop(1), RowHeight);
 
         if (saved)
         {
             TextMeshProUGUI eraseLabel = null;
-            GameObject erase = Copy(freshButton, Row(0), "消す", () => Erase(slot, eraseLabel));
+            Button erase = Copy(freshButton, band, "消す", SubFontSize, TextAlignmentOptions.MidlineRight, () => Erase(slot, eraseLabel));
+            Place(erase, RowTop(2), RowHeight);
             eraseLabel = erase.GetComponentInChildren<TextMeshProUGUI>(true);
         }
 
-        Copy(freshButton, ((RectTransform)freshButton.transform).anchoredPosition, "もどる", back);
-        HideFront();
-
-        field.Select();
-        field.ActivateInputField();
+        BackButton(band, ShowPicker);
+        back = ShowPicker;
+        StartCoroutine(ActivateSoon(field));
     }
 
-    /// <summary>1 回目は確かめを出し、2 回目でその枠の保存を消してデータをえらぶ画面へ戻る</summary>
+    /// <summary>1 回目は確かめを出し、2 回目でその枠の保存を消して一覧へ戻る</summary>
     private void Erase(int slot, TextMeshProUGUI label)
     {
         if (!confirming)
@@ -205,89 +308,178 @@ public class Title : MonoBehaviour
         ShowPicker();
     }
 
-    /// <summary>並べる段の位置。0 が始めるボタンの位置で、上へ 1 段ずつ積む</summary>
-    private Vector2 Row(int up)
-    {
-        var start = (RectTransform)StartButton.transform;
-        return start.anchoredPosition + Vector2.up * (start.rect.height + Gap) * up;
-    }
-
-    private void HideFront()
-    {
-        StartButton.SetActive(false);
-        freshButton.SetActive(false);
-    }
-
-    /// <summary>画面を替える前に、前の画面に並べた物を消す</summary>
+    /// <summary>画面を替える前に、前の画面に並べた物を消す。替えたフレームの押下は次の画面で数えない</summary>
     private void Clear()
     {
         foreach (GameObject thing in made) Destroy(thing);
         made.Clear();
         confirming = false;
+
+        prompt.gameObject.SetActive(false);
+        if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+        shownFrame = Time.frameCount;
+    }
+
+    //選ぶのは次のフレーム。選んだフレームのうちに、いま押した決定のキーで押されないように
+    private static IEnumerator SelectSoon(GameObject target)
+    {
+        yield return null;
+        if (target != null && EventSystem.current != null) EventSystem.current.SetSelectedGameObject(target);
+    }
+
+    private static IEnumerator ActivateSoon(TMP_InputField field)
+    {
+        yield return null;
+        if (field == null) yield break;
+
+        field.Select();
+        field.ActivateInputField();
+    }
+
+    /// <summary>最初の画面の誘いの字。画面の下の真ん中に置く</summary>
+    private TextMeshProUGUI PromptText()
+    {
+        TextMeshProUGUI text = Text(StartButton.transform.parent, Prompt, PromptFontSize, TextAlignmentOptions.Center);
+        text.characterSpacing = PromptSpacing;
+
+        RectTransform rect = text.rectTransform;
+        rect.anchorMin = new Vector2(0.5f, 0f);
+        rect.anchorMax = new Vector2(0.5f, 0f);
+        rect.sizeDelta = new Vector2(1200f, 80f);
+        rect.anchoredPosition = new Vector2(0f, PromptHeight);
+        return text;
+    }
+
+    /// <summary>右に画面の上から下まで敷く暗い帯と、その上の見出しと金の線</summary>
+    private RectTransform Band(string heading)
+    {
+        var band = new GameObject("Band", typeof(RectTransform), typeof(Image));
+        band.layer = StartButton.layer;
+        made.Add(band);
+
+        var rect = (RectTransform)band.transform;
+        rect.SetParent(StartButton.transform.parent, false);
+        rect.anchorMin = new Vector2(1f, 0f);
+        rect.anchorMax = Vector2.one;
+        rect.pivot = new Vector2(1f, 0.5f);
+        rect.sizeDelta = new Vector2(BandWidth, 0f);
+        rect.anchoredPosition = Vector2.zero;
+        band.GetComponent<Image>().color = BandColor;
+
+        TextMeshProUGUI title = Text(rect, heading, HeadingFontSize, TextAlignmentOptions.BottomLeft);
+        Place(title, HeadingTop, HeadingHeight);
+
+        var line = new GameObject("Line", typeof(RectTransform), typeof(Image));
+        line.layer = band.layer;
+        line.transform.SetParent(rect, false);
+        Image image = line.GetComponent<Image>();
+        image.color = Gold;
+        image.raycastTarget = false;
+        Place(image, HeadingTop + HeadingHeight + 8f, 3f);
+
+        return rect;
+    }
+
+    /// <summary>帯の右下に「もどる」を置く</summary>
+    private void BackButton(RectTransform band, UnityAction onClick)
+    {
+        Button button = Copy(freshButton, band, "もどる", SubFontSize, TextAlignmentOptions.MidlineRight, onClick);
+        var rect = (RectTransform)button.transform;
+        rect.anchorMin = new Vector2(1f, 0f);
+        rect.anchorMax = new Vector2(1f, 0f);
+        rect.pivot = new Vector2(1f, 0f);
+        rect.sizeDelta = BackSize;
+        rect.anchoredPosition = new Vector2(-BandPadding, BandPadding);
+    }
+
+    /// <summary>段の上端の、帯の上端からの深さ。0 が最初の段</summary>
+    private static float RowTop(int index)
+    {
+        return HeadingTop + HeadingHeight + HeadingGap + index * (RowHeight + RowGap);
+    }
+
+    /// <summary>帯の上端から top の深さに、高さ height で置く。左右は帯の余白から left・right だけ内へ寄せる</summary>
+    private static void Place(Component part, float top, float height, float left = 0f, float right = 0f)
+    {
+        var rect = (RectTransform)part.transform;
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = Vector2.one;
+        rect.pivot = new Vector2(0.5f, 1f);
+        rect.offsetMin = new Vector2(BandPadding + left, -top - height);
+        rect.offsetMax = new Vector2(-(BandPadding + right), -top);
     }
 
     /// <summary>
-    /// ボタンを、枠のボタンの字の左に並べる。ボタンの板は透けていて字は右に寄るので、板の左端ではなく字の左端に合わせる。
-    /// 幅は widest が入る分にする。字は右に寄るので、短い字でも枠の字のすぐ左に出る
+    /// 型のボタンを parent に写し、文字と押したときの動きを替える。型がシーンでつないだ呼び先は外す。
+    /// 板は透けていて色を変えても見えないので、指が乗ったときと選んでいるときは字を金にする
     /// </summary>
-    private static void BesideText(GameObject button, GameObject row, string widest)
+    private Button Copy(GameObject model, Transform parent, string text, float fontSize, TextAlignmentOptions alignment, UnityAction onClick)
     {
-        TextMeshProUGUI rowLabel = row.GetComponentInChildren<TextMeshProUGUI>(true);
-        rowLabel.ForceMeshUpdate();
-        Bounds text = rowLabel.textBounds;
-        Vector3 textLeft = rowLabel.rectTransform.TransformPoint(new Vector3(text.min.x, text.center.y, 0f));
-
-        var rect = (RectTransform)button.transform;
-        TextMeshProUGUI label = button.GetComponentInChildren<TextMeshProUGUI>(true);
-        rect.pivot = new Vector2(1f, 0.5f);
-        rect.sizeDelta = new Vector2(label.GetPreferredValues(widest).x + Gap * 2f, rect.sizeDelta.y);
-        rect.position = textLeft;
-        rect.anchoredPosition += Vector2.left * Gap;
-    }
-
-    /// <summary>型のボタンを同じ親に写し、文字と押したときの動きを替える。型がシーンでつないだ呼び先は外す</summary>
-    private GameObject Copy(GameObject model, Vector2 at, string text, UnityAction onClick)
-    {
-        GameObject copy = Instantiate(model, model.transform.parent);
+        GameObject copy = Instantiate(model, parent);
+        copy.name = model.name;
         copy.SetActive(true);
-        ((RectTransform)copy.transform).anchoredPosition = at;
+        made.Add(copy);
 
-        //金の下線は、最初の画面でいちばん先に押すボタンの印。並べたボタンには付けない
+        //金の下線は題字の飾り。並べたボタンには付けない
         Transform underline = copy.transform.Find("Underline");
         if (underline != null) underline.gameObject.SetActive(false);
 
-        //枠の文字は 2 行になる。型の大きさを上限に、収まるまで縮める
+        //名前が長いと段に収まらない。決めた大きさを上限に、収まるまで縮める
         TextMeshProUGUI label = copy.GetComponentInChildren<TextMeshProUGUI>(true);
         label.text = text;
-        label.fontSizeMax = label.fontSize;
-        label.fontSizeMin = label.fontSize * 0.5f;
+        label.alignment = alignment;
+        label.fontSize = fontSize;
+        label.fontSizeMax = fontSize;
+        label.fontSizeMin = fontSize * 0.5f;
         label.enableAutoSizing = true;
 
         Button button = copy.GetComponent<Button>();
         button.onClick = new Button.ButtonClickedEvent();
         button.onClick.AddListener(onClick);
+        button.transition = Selectable.Transition.ColorTint;
+        button.targetGraphic = label;
 
-        made.Add(copy);
-        return copy;
+        ColorBlock colors = ColorBlock.defaultColorBlock;
+        colors.normalColor = Color.white;
+        colors.highlightedColor = Gold;
+        colors.selectedColor = Gold;
+        colors.pressedColor = new Color(Gold.r * 0.8f, Gold.g * 0.8f, Gold.b * 0.8f, 1f);
+        colors.disabledColor = new Color(1f, 1f, 1f, 0.4f);
+        colors.fadeDuration = 0.08f;
+        button.colors = colors;
+
+        return button;
     }
 
-    /// <summary>名前の欄。始めるボタンと同じ大きさと並びにし、字も同じ書体で右に寄せる。空のときは枠の決まりの名前を薄く出す</summary>
-    private TMP_InputField NameField(Vector2 at, string text, string placeholder)
+    /// <summary>型のボタンの字と同じ書体の字。指は取らない</summary>
+    private TextMeshProUGUI Text(Transform parent, string words, float size, TextAlignmentOptions alignment)
     {
-        var model = (RectTransform)StartButton.transform;
+        var holder = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        holder.layer = StartButton.layer;
+        holder.transform.SetParent(parent, false);
+
+        TextMeshProUGUI text = holder.GetComponent<TextMeshProUGUI>();
+        text.font = startLabel.font;
+        text.fontSharedMaterial = startLabel.fontSharedMaterial;
+        text.fontSize = size;
+        text.color = Color.white;
+        text.alignment = alignment;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
+        text.raycastTarget = false;
+        text.text = words;
+        return text;
+    }
+
+    /// <summary>名前の欄。段と同じ書体と大きさで左に寄せる。空のときは枠の決まりの名前を薄く出す</summary>
+    private TMP_InputField NameField(RectTransform band, string text, string placeholder)
+    {
         GameObject root = TMP_DefaultControls.CreateInputField(new TMP_DefaultControls.Resources());
         root.name = "NameField";
+        root.transform.SetParent(band, false);
+        made.Add(root);
 
-        var rect = (RectTransform)root.transform;
-        rect.SetParent(model.parent, false);
-        rect.anchorMin = model.anchorMin;
-        rect.anchorMax = model.anchorMax;
-        rect.pivot = model.pivot;
-        rect.sizeDelta = model.sizeDelta;
-        rect.anchoredPosition = at;
-
-        //UI だけを写すカメラで描くので、子もボタンと同じ層に置く
-        foreach (Transform part in root.GetComponentsInChildren<Transform>(true)) part.gameObject.layer = model.gameObject.layer;
+        //UI だけを写すカメラで描くこともあるので、子も帯と同じ層に置く
+        foreach (Transform part in root.GetComponentsInChildren<Transform>(true)) part.gameObject.layer = band.gameObject.layer;
 
         root.GetComponent<Image>().color = FieldBack;
 
@@ -298,8 +490,8 @@ public class Title : MonoBehaviour
         foreach (TextMeshProUGUI shown in root.GetComponentsInChildren<TextMeshProUGUI>(true))
         {
             shown.font = startLabel.font;
-            shown.fontSize = startLabel.fontSize;
-            shown.alignment = TextAlignmentOptions.Right;
+            shown.fontSize = SlotFontSize;
+            shown.alignment = TextAlignmentOptions.MidlineLeft;
             shown.color = Color.white;
         }
 
@@ -308,19 +500,21 @@ public class Title : MonoBehaviour
         hint.color = new Color(1f, 1f, 1f, 0.45f);
 
         field.text = text;
-        made.Add(root);
         return field;
     }
 
-    /// <summary>枠のボタンの文字。名前（無ければ決まりの名前）と、保存があれば書いた日時と場所、無ければ空き</summary>
+    /// <summary>枠の段の字。1 行めに名前と場所、2 行めに書いた日時。空いた枠は名前と「空き」</summary>
     private static string SlotText(int slot)
     {
         SaveData data = SaveSystem.Peek(slot);
         DateTime? at = SaveSystem.SavedAt(slot);
 
         string name = data != null && !string.IsNullOrEmpty(data.saveName) ? data.saveName : DefaultName(slot);
-        string detail = at.HasValue ? at.Value.ToString("M/d HH:mm") + "　" + AreaName(data != null ? data.entered_scene : null) : "空き";
-        return name + "\n<size=60%>" + detail + "</size>";
+        if (!at.HasValue) return name + "　<size=70%><alpha=#80>空き</size>";
+
+        string place = AreaName(data != null ? data.entered_scene : null);
+        return name + "　<size=70%><color=#FFD27A>" + place + "</color></size>\n" +
+               "<size=60%><alpha=#B0>" + at.Value.ToString("M/d HH:mm") + "</size>";
     }
 
     /// <summary>名前を付けていない枠の名前</summary>

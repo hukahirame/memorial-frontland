@@ -1,6 +1,7 @@
 ﻿using MemorialFloor.Domain;
 using MemorialFloor.Game;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class GameManager : MonoBehaviour
@@ -13,6 +14,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] Transform maincanvas;
     [SerializeField] private AreaTravel travel;
     [SerializeField] private SaveSystem saveSystem;
+
+    [Tooltip("遊ぶ画面の設定。「タイトルに戻る」を受ける")]
+    [SerializeField] private SettingsMenu settings;
 
     /// <summary>所持金。所有者はここ1つ（QuestManager.Quests と同じ形）</summary>
     public static readonly Wallet Coins = new Wallet();
@@ -30,6 +34,8 @@ public class GameManager : MonoBehaviour
         ShowCoins();
 
         Items.Load(itemdata.text);
+
+        settings.TitleRequested += ToTitle;
     }
 
     void Start()
@@ -43,6 +49,18 @@ public class GameManager : MonoBehaviour
     void OnDestroy()
     {
         Coins.Changed -= ShowCoins;
+        settings.TitleRequested -= ToTitle;
+    }
+
+    /// <summary>
+    /// 設定の「タイトルに戻る」。書いてよいときなら保存してから、常駐シーンごとタイトルに入れ替える。
+    /// 書けないとき（移っている途中、倒れているあいだ）は、10 秒おきの保存の最後のものが残る。遊びの状態はタイトルが戻す
+    /// </summary>
+    private void ToTitle()
+    {
+        saveSystem.TrySave();
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(AreaTravel.TitleScene);
     }
 
     private void ShowCoins()

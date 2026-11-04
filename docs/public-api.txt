@@ -462,9 +462,10 @@ Root.AdvanceDay(IRandom) : void
 Root.Calm(int) : void
 const Root.DailyGainHigh : int
 const Root.DailyGainLow : int
-const Root.DailyProgressLoss : int
+const Root.DailyProgressLossHigh : int
+const Root.DailyProgressLossLow : int
 Root.Danger.get : int
-Root.DecayProgressDaily() : void
+Root.DecayProgressDaily(IRandom) : void
 Root.Gain(int) : void
 Root.GainHigh.get : int
 Root.GainLow.get : int
@@ -489,6 +490,8 @@ Root.SpawnY.get : float
 Root.SpawnZ.get : float
 const Root.StampedeAccumulation : int
 const Root.StampedeRaiders : int
+const Root.SuppressGainDivisor : int
+const Root.SuppressProgress : int
 Root.UiX.get : float
 Root.UiY.get : float
 

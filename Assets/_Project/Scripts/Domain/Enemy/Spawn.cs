@@ -173,8 +173,8 @@ namespace MemorialFloor.Domain
     /// <summary>敵を湧かせるかどうかの規則</summary>
     public static class SpawnRule
     {
-        /// <summary>この攻略度から湧きが抑えられる</summary>
-        public const int SuppressProgress = 50;
+        /// <summary>この攻略度から湧きが抑えられる。【抑制】の段</summary>
+        public const int SuppressProgress = Root.SuppressProgress;
 
         /// <summary>攻略度が足りているときに見送る確率</summary>
         public const int SuppressPercent = 50;

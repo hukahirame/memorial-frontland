@@ -14,7 +14,7 @@ tunables: []
 ### 湧き
 
 - 湧きを見送る条件が 2 つあり、順に引く。抑制が決まった時点で以降は引かない
-  - 根源の攻略度が 50 以上なら、50% で見送る
+  - 根源の攻略度が 50 以上（【抑制】の段。日ごとの蓄積値も減る。[roots](roots.md)）なら、50% で見送る
   - 既に居る敵 1 体につき 3% ずつ見送る確率が上がる。数えるのはその湧き口から出ていま居る敵で、
     倒したものと場外へ落ちたものは数えない
 - 根源の無いシーンでは攻略度による抑制が掛からない。混み具合だけを見る
@@ -92,7 +92,7 @@ tunables: []
 - WHEN MainSite に着いて控えていた敵が湧いた、暗転が明けてからその数を知らせる
 - WHEN 敵が高さ -10 より下へ落ちた、場外として扱う
 - WHEN 核や候補を攻撃した、その耐久が減る。0 で壊れる。候補は残りの体力を、絵のてっぺんの上に赤いゲージで出す
-  （`WorldGauge`。木の柵の耐久のゲージと同じもの）
+  （`WorldGauge`。木の柵の耐久のゲージと同じ作りで、柵のより大きい。[outfield](outfield.md)）
 - WHEN 核が壊れた、膨らんでから縮んで見えなくなる。物は残り、湧き口として敵を出し続ける。
   壊れたあとにもう一度壊れることはない（[quest](quest.md) / [staging](staging.md)）
 
@@ -123,10 +123,10 @@ tunables: []
 
 | 項目 | 値 | 居場所 |
 |---|---|---|
-| 抑制が掛かる攻略度 | 50 | `SpawnRule.SuppressProgress` |
+| 抑制が掛かる攻略度 | 50 | `Root.SuppressProgress`（`SpawnRule.SuppressProgress` は同じ値） |
 | 抑制の確率（%） | 50 | `SpawnRule.SuppressPercent` |
 | 混み具合 1 体あたり（%） | 3 | `SpawnRule.CrowdPercentPerEnemy` |
-| 弱体化が掛かる攻略度 | 30 | `SpawnRule.WeakenProgress` |
+| 弱体化が掛かる攻略度 | 30 | `Root.RevealProgress`（`SpawnRule.WeakenProgress` は同じ値） |
 | 弱体化で減らす割合 | 0.2 | `SpawnRule.WeakenRatio` |
 | 討伐時に下がる蓄積値 | 3 | `SpawnRule.CalmPerDefeat` |
 | 待機を選ぶ割合（%） | 60 | `ActionRule.WaitPercent` |

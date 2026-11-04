@@ -112,16 +112,16 @@ namespace MemorialFloor.Domain
     public static class RollRule
     {
         /// <summary>全体の秒数。これが過ぎるまで次は出ない</summary>
-        public const float Seconds = 0.6f;
+        public const float Seconds = 0.7f;
 
         /// <summary>抜ける距離</summary>
         public const float Distance = 1.5f;
 
         /// <summary>回り始めから当たり始めるまで</summary>
-        public const float StrikeFrom = 0.13f;
+        public const float StrikeFrom = 0.16f;
 
         /// <summary>当たる長さ</summary>
-        public const float StrikeSeconds = 0.33f;
+        public const float StrikeSeconds = 0.39f;
 
         /// <summary>当たる範囲の、体からの半径。剣の振りが前へ届く距離（ケサで約 0.7、突きで約 0.85）より短い</summary>
         public const float Radius = 0.5f;

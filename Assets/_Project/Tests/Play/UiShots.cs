@@ -124,7 +124,7 @@ public class UiShots
         yield return Shot("13_root");
     }
 
-    //テストでは保存を読まないので、枠はどれも空きで、始めるボタンは保存の無いときの「はじめる」になる
+    //テストでは保存を読まないので、枠はどれも空き。空いた枠を押すと名前の画面になる
     [UnityTest]
     public IEnumerator タイトルの枠と名前の画面を撮る()
     {
@@ -134,12 +134,12 @@ public class UiShots
         yield return new WaitForSecondsRealtime(TitleSeconds);
         Component title = (Component)UnityEngine.Object.FindAnyObjectByType(GameType("Title"));
 
-        Call(title, "LoadFresh");
+        Call(title, "ShowPicker");
         yield return Frames(2);
         yield return Shot("00a_title_slots");
 
         //名前の欄の字は、Editor が描き方を組み立て終えるまで水色の四角で出ることがある。少し待ってから撮る
-        Call(title, "Load");
+        Call(title, "PressSlot", 1);
         yield return new WaitForSecondsRealtime(OpenSeconds);
         yield return Shot("00b_title_name");
     }
@@ -156,6 +156,68 @@ public class UiShots
 
         yield return new WaitForSecondsRealtime(AlertMark.PopSeconds + 0.1f);
         yield return Shot("14_alert");
+    }
+
+    //回避攻撃の途中。残像は回っているあいだに等しい間隔で 3 枚、正面を向いた姿で残る。2 枚めと 3 枚めが重なる頃と、回り終わる頃を撮る
+    [UnityTest]
+    public IEnumerator 回避攻撃の残像を撮る()
+    {
+        Directory.CreateDirectory(Folder);
+        yield return Boot();
+
+        Component player = GameObject.FindWithTag("Player").GetComponent(GameType("Player2"));
+        ((MonoBehaviour)player).StartCoroutine((IEnumerator)Call(player, "Roll", 1f, 1f));
+
+        yield return new WaitForSeconds(0.45f);
+        yield return Shot("17_roll_middle");
+
+        yield return new WaitForSeconds(0.15f);
+        yield return Shot("18_roll_end");
+    }
+
+    //木の柵の耐久のゲージ。満タン、削られた直後、減りきったあと、倒れて戻りかけのとき。
+    //拠点の左手前の、何も置いていない平らな所に立ち、右を向いて立てたときの所（体から 1 マス先の線）に柵を置く
+    [UnityTest]
+    public IEnumerator 柵のゲージを撮る()
+    {
+        Directory.CreateDirectory(Folder);
+        yield return Boot();
+
+        Vector3 open = new Vector3(-6f, 0.65f, -4f);
+        Component player = GameObject.FindWithTag("Player").GetComponent(GameType("Player2"));
+        player.GetComponent<Rigidbody>().position = open;
+        player.transform.position = open;
+
+        GameObject prefab = Resources.Load<GameObject>("Fence_obj");
+        Fence fence = UnityEngine.Object.Instantiate(prefab, new Vector3(-5.25f, 0f, -3.75f), Quaternion.Euler(0f, 90f, 0f)).GetComponent<Fence>();
+        yield return new WaitForSeconds(1f);
+        yield return Shot("19_fence_full");
+
+        fence.Ram(80, open);
+        yield return Frames(2);
+        yield return Shot("20_fence_hit");
+
+        yield return new WaitForSeconds(1f);
+        yield return Shot("21_fence_worn");
+
+        //倒れたあと戻るのは 3 秒後から 1 秒に 1 ずつなので、戻りかけた耐久を直に入れる
+        fence.Ram(fence.Durability, open);
+        fence.Restore(40, true, 0f);
+        yield return new WaitForSeconds(1f);
+        yield return Shot("22_fence_fallen");
+    }
+
+    //設定の歯車（持ち物のボタンの真下）と、開いた窓
+    [UnityTest]
+    public IEnumerator 設定の窓を撮る()
+    {
+        Directory.CreateDirectory(Folder);
+        yield return Boot();
+        yield return Shot("15_settings_button");
+
+        UnityEngine.Object.FindAnyObjectByType<SettingsMenu>().Open();
+        yield return new WaitForSecondsRealtime(OpenSeconds);
+        yield return Shot("16_settings_open");
     }
 
     [UnityTearDown]

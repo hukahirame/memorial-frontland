@@ -167,9 +167,9 @@ public class SaveSystem : MonoBehaviour
 
     /// <summary>
     /// 書いてよいときだけ書く。戻し終える前に書くと、保存を始めの状態で上書きする。
-    /// 移っている最中と倒れているあいだは、場所と体力が定まらない
+    /// 移っている最中と倒れているあいだは、場所と体力が定まらない。設定からタイトルに戻るときも呼ぶ
     /// </summary>
-    private void TrySave()
+    public void TrySave()
     {
         if (!Enabled || restorePending) return;
         if (travel.Current == null || travel.IsTraveling) return;

@@ -4,7 +4,8 @@ namespace MemorialFloor.Game
 {
     /// <summary>
     /// 回避攻撃の見た目。ためて縮み、伸びて小さく跳ねながら縦の軸で 1 回転し、降りて縮んでから戻る。
-    /// 回っているあいだは残像を残す。縮み伸びは足もとを地面に付けたまま行う。抜ける距離・無敵・当たりは持たない
+    /// 回っているあいだに、正面を向いた姿の残像を等しい間隔で数枚残す。縮み伸びは足もとを地面に付けたまま行う。
+    /// 抜ける距離・無敵・当たりは持たない
     /// </summary>
     public sealed class RollStaging
     {
@@ -23,14 +24,14 @@ namespace MemorialFloor.Game
         /// <summary>跳び出しで伸びる割合。縦に伸び、横に細る</summary>
         public const float Stretch = 0.1f;
 
-        /// <summary>残像を残す間隔（秒）</summary>
-        public const float AfterimageEvery = 0.05f;
+        /// <summary>残像の枚数。回っているあいだに等しい間隔で残す。多いと重なって体の形が分からなくなる</summary>
+        public const int AfterimageCount = 3;
 
         /// <summary>残像が消えきるまで（秒）</summary>
-        public const float AfterimageSeconds = 0.22f;
+        public const float AfterimageSeconds = 0.2f;
 
         /// <summary>残像の色。青みがかった半透明</summary>
-        public static readonly Color AfterimageTint = new Color(0.7f, 0.88f, 1f, 0.5f);
+        public static readonly Color AfterimageTint = new Color(0.7f, 0.88f, 1f, 0.4f);
 
         private readonly Transform _body;
         private readonly Transform _root;
@@ -45,7 +46,8 @@ namespace MemorialFloor.Game
         /// <summary>跳ねる高さを親の座標に直したもの</summary>
         private readonly float _hop;
 
-        private float _nextAfterimage;
+        /// <summary>残した残像の数</summary>
+        private int _afterimages;
 
         /// <summary>body を回す。root はプレイヤーの一番上、turn は回す角度（度）、feetY は足もとの高さ</summary>
         public RollStaging(Transform body, Transform root, float turn, float feetY)
@@ -77,13 +79,16 @@ namespace MemorialFloor.Game
             float tall = 1f - squash;
             _body.localScale = Vector3.Scale(_size, new Vector3(1f + squash, tall, 1f));
             _body.localPosition = _home + Vector3.up * (_feet * (1f - tall) + 4f * spin * (1f - spin) * _hop);
-            _body.localRotation = _rest * Quaternion.Euler(0f, _turn * Mathf.SmoothStep(0f, 1f, spin), 0f);
 
-            if (progress > WindupRatio && progress < spinTo && Time.time >= _nextAfterimage)
+            //残像は正面を向いた姿で写す。回っている途中の姿は、横向きで細い線になったり裏返ったりして、重なると形が崩れて見える
+            if (_afterimages < AfterimageCount && spin >= (_afterimages + 1f) / (AfterimageCount + 1f))
             {
+                _body.localRotation = _rest;
                 Afterimage.Leave(_body, _root, AfterimageTint, AfterimageSeconds);
-                _nextAfterimage = Time.time + AfterimageEvery;
+                _afterimages++;
             }
+
+            _body.localRotation = _rest * Quaternion.Euler(0f, _turn * Mathf.SmoothStep(0f, 1f, spin), 0f);
         }
 
         /// <summary>元の姿に戻す</summary>
