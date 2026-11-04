@@ -26,7 +26,6 @@ cd "$repo" || exit 1
 git init -q
 git config user.name flow-test
 git config user.email flow-test@example.invalid
-git config core.hooksPath .githooks
 git config core.autocrlf false
 
 mkdir -p .githooks tools/flow docs/systems tests src Assets/_Project/Tests Assets/_Project/Data
@@ -36,8 +35,11 @@ chmod +x .githooks/*
 
 printf '敵の攻撃力は `Slime.power` にある\n' > docs/systems/a.md
 echo a > tests/x.cs
+echo 'guid: 1' > tests/x.cs.meta
+printf 'Assert.That(hunger, Is.EqualTo(3));\n' > 'Assets/_Project/Tests/空腹 テスト.cs'
 echo a > src/a.cs
 echo a > README.md
+echo a > STATE.md
 echo a > Assets/_Project/Data/v.asset
 printf '# 公開API。手で編集しない。\n\nstatic class A\nstatic A.Run(int) : int\n\ninterface IRandom\nabstract IRandom.Next(int, int) : int\n' \
   > docs/public-api.txt
@@ -46,6 +48,8 @@ git commit -q -m "base
 
 Change-Type: chore"
 root=$(git rev-parse HEAD)
+# 土台は chore の判定に掛かる道を含むので、フックは積んだ後に効かせる
+git config core.hooksPath .githooks
 
 ng=0
 total=0
@@ -66,23 +70,29 @@ check() {
   fi
   git reset -q --hard "$root"
   git clean -qfd
-  rm -f "$(git rev-parse --git-dir)/flow-green"
+  rm -rf "$(git rev-parse --git-dir)/flow-green" "$(git rev-parse --git-dir)/flow"
 }
 
 # 1行目は件名、残りはトレーラー
 commit='f() { t=$1; shift; printf "x\n\nChange-Type: %s\n" "$t" > ../msg; for l in "$@"; do printf "%s\n" "$l" >> ../msg; done; git commit -q -F ../msg; }'
 
+# g <件名> <種別> で件名つきコミット。p <出力> <種別> <件名> <道>... で計画の md を書く
+plan='g() { printf "%s\n\nChange-Type: %s\n" "$1" "$2" > ../msg; git commit -q -F ../msg; }
+p() { out=$1; t=$2; s=$3; shift 3; { printf "# %s\n\n種別: %s\n\n## 範囲\n\n- 対象\n" "$s" "$t"; for l in "$@"; do printf "  - %s\n" "$l"; done; } > "$out"; }
+approve() { sh tools/flow/flow approve "$@" > /dev/null; }'
+
 echo "--- 宣言"
 check fail "宣言なし"                   'echo b >> README.md; git add -A; git commit -q -m x'
 check fail "不明な種別"                 "$commit; echo b >> README.md; git add -A; f wip"
-check fail "Change-Type が2行（docs → chore）" "$commit; echo b >> src/a.cs; git add -A; f docs 'Change-Type: chore'"
-check fail "Change-Type が2行（chore → docs）" "$commit; echo b >> src/a.cs; git add -A; f chore 'Change-Type: docs'"
-check pass "CRLF のメッセージ"          'echo b >> README.md; git add -A; printf "x\r\n\r\nChange-Type: docs\r\n" > ../msg; git commit -q -F ../msg'
+check fail "廃止した種別 docs"          "$commit; echo b >> README.md; git add -A; f docs"
+check fail "廃止した種別 test"          "$commit; echo b >> tests/x.cs; git add -A; f test"
+check fail "Change-Type が2行（tune → chore）" "$commit; echo b >> src/a.cs; git add -A; f tune 'Change-Type: chore'"
+check fail "Change-Type が2行（chore → tune）" "$commit; echo b >> src/a.cs; git add -A; f chore 'Change-Type: tune'"
+check pass "CRLF のメッセージ"          'echo b >> README.md; git add -A; printf "x\r\n\r\nChange-Type: chore\r\n" > ../msg; git commit -q -F ../msg'
 
 echo "--- REFACTOR-DIRTY"
 check fail "refactor で仕様書"          "$commit; echo b >> docs/systems/a.md; git add -A; f refactor"
-check pass "refactor で仕様書 + 解除"   "$commit; echo b >> docs/systems/a.md; git add -A; f refactor 'Spec-Changed: y'"
-check pass "CRLF のメッセージで解除"    'echo b >> docs/systems/a.md; git add -A; printf "x\r\n\r\nChange-Type: refactor\r\nSpec-Changed: y\r\n" > ../msg; git commit -q -F ../msg'
+check fail "refactor で仕様書 + 廃止した解除" "$commit; echo b >> docs/systems/a.md; git add -A; f refactor 'Spec-Changed: y'"
 check fail "refactor で日本語名の仕様書" "$commit; echo b > docs/systems/空腹.md; git add -A; f refactor"
 check pass "refactor で仕様書のコード名だけ差し替える" "$commit; sed -i 's/Slime\.power/EnemyStats.Power/' docs/systems/a.md; git add -A; f refactor"
 check fail "コード名の差し替えと一緒に文も変える" "$commit; sed -i 's/Slime\.power/EnemyStats.Power/; s/攻撃力/防御力/' docs/systems/a.md; git add -A; f refactor"
@@ -95,7 +105,7 @@ check fail "refactor でステージしていない .cs がある" "$commit; ech
 check fail "refactor で追跡していない .cs がある" "$commit; echo b >> src/a.cs; git add -A; echo c > src/new.cs; f refactor"
 check pass "refactor でテストが読まないものは残っていてよい" "$commit; echo b >> src/a.cs; git add -A; echo c >> README.md; f refactor"
 check pass "refactor を commit -a で"   "$commit; echo b >> src/a.cs; printf 'x\n\nChange-Type: refactor\n' > ../msg; git commit -q -a -F ../msg"
-check pass "通った木を積み直すときはテストを回さない" "$commit; echo b >> src/a.cs; git add -A; f refactor; a=\$(git rev-parse HEAD); echo c > docs/memo.md; git add -A; f docs; git reset -q --soft '$root'; git read-tree \$a; echo 1 > '$work/dotnet-exit'; git commit -q -C \$a"
+check pass "通った木を積み直すときはテストを回さない" "$commit; echo b >> src/a.cs; git add -A; f refactor; a=\$(git rev-parse HEAD); echo c > docs/memo.md; git add -A; f chore; git reset -q --soft '$root'; git read-tree \$a; echo 1 > '$work/dotnet-exit'; git commit -q -C \$a"
 
 echo "--- API-CHANGED"
 check pass "型を足す"                   "$commit; printf '\nclass B\nB.ctor()\n' >> docs/public-api.txt; git add -A; f refactor"
@@ -105,51 +115,85 @@ check fail "メンバを消す"               "$commit; sed -i '/^static A.Run/d
 check fail "static を外す"              "$commit; sed -i 's/^static A.Run/A.Run/' docs/public-api.txt; git add -A; f refactor"
 check fail "既存の interface にメンバを足す" "$commit; printf 'abstract IRandom.NextFloat(float, float) : float\n' >> docs/public-api.txt; git add -A; f refactor"
 check pass "メンバを消す + 解除"        "$commit; sed -i '/^static A.Run/d' docs/public-api.txt; git add -A; f refactor 'Api-Changed: y'"
+check pass "CRLF のメッセージで解除"    "sed -i '/^static A.Run/d' docs/public-api.txt; git add -A; printf 'x\r\n\r\nChange-Type: refactor\r\nApi-Changed: y\r\n' > ../msg; git commit -q -F ../msg"
 check pass "refactor 以外なら見ない"    "$commit; sed -i '/^static A.Run/d' docs/public-api.txt; git add -A; f feat"
 
-echo "--- FIX-TEST-WEAKENED"
-check fail "fix で既存テストを変える"   "$commit; echo b >> tests/x.cs; git add -A; f fix"
+echo "--- TEST-CHANGED"
+check fail "fix で既存テストの行を書き換える" "$commit; sed -i 's/a/c/' tests/x.cs; git add -A; f fix"
 check fail "fix で既存テストを消す"     "$commit; git rm -q tests/x.cs; f fix"
-check fail "fix で既存テストを移す"     "$commit; git mv tests/x.cs tests/y.cs; f fix"
-check pass "fix でテストを足す"         "$commit; echo b > tests/new.cs; git add -A; f fix"
-check pass "fix で既存テストを変える + 解除" "$commit; echo b >> tests/x.cs; git add -A; f fix 'Test-Change: y'"
-
-echo "--- DOCS-CODE"
-check fail "docs でコード"              "$commit; echo b >> src/a.cs; git add -A; f docs"
-check pass "docs で文書"                "$commit; echo b >> README.md; git add -A; f docs"
-check pass "docs で日本語名の文書"      "$commit; echo b > docs/メモ.md; git add -A; f docs"
-
-echo "--- TEST-CODE"
-check fail "test で実装"                "$commit; echo b >> src/a.cs; git add -A; f test"
-check pass "test でテスト"              "$commit; mkdir -p Assets/_Project/Tests; echo b > Assets/_Project/Tests/t.cs; git add -A; f test"
-check pass "test で生成物"              "$commit; printf '# 手で編集しない\n' > docs/gen.txt; git add -A; f test"
-check pass "test で空白入りの生成物"    "$commit; printf '# 手で編集しない\n' > 'docs/gen out.txt'; git add -A; f test"
-check fail "test で実装をテストへ移す"  "$commit; git mv src/a.cs tests/a.cs; f test"
+check pass "fix で新しいテストファイル" "$commit; echo b > tests/new.cs; git add -A; f fix"
+check pass "fix で既存テストファイルに足す" "$commit; echo b >> tests/x.cs; git add -A; f fix"
+check pass "fix で中身そのままの移動"   "$commit; git mv tests/x.cs tests/y.cs; f fix"
+check fail "fix で移して書き換える"     "$commit; git mv tests/x.cs tests/y.cs; sed -i 's/a/c/' tests/y.cs; git add -A; f fix"
+check fail "fix で Ignore を足す"       "$commit; echo '[Test, Ignore(\"x\")]' >> tests/x.cs; git add -A; f fix"
+check fail "fix で Assert.Pass を足す"  "$commit; echo 'Assert.Pass();' >> tests/x.cs; git add -A; f fix"
+check pass "fix で IgnoreCase を足す"   "$commit; echo 'StringComparison.OrdinalIgnoreCase' >> tests/x.cs; git add -A; f fix"
+check pass "テストの .meta は見ない"    "$commit; echo 'guid: 2' > tests/x.cs.meta; git add -A; f fix"
+check fail "空白と日本語名の Unity テストを書き換える" "$commit; sed -i 's/3/4/' 'Assets/_Project/Tests/空腹 テスト.cs'; git add -A; f fix"
+check fail "refactor で既存テストを書き換える" "$commit; sed -i 's/a/c/' tests/x.cs; git add -A; f refactor"
+check fail "chore で既存テストを書き換える" "$commit; sed -i 's/a/c/' tests/x.cs; git add -A; f chore"
+check fail "asset で既存テストを消す"   "$commit; git rm -q tests/x.cs; f asset"
+check pass "feat なら見ない"            "$commit; sed -i 's/a/c/' tests/x.cs; git rm -q tests/x.cs.meta; git add -A; f feat"
+check pass "承認の解除"                 "$commit; sed -i 's/a/c/' tests/x.cs; git add -A; f refactor 'Test-Changed: y'"
+check fail "廃止した解除 Test-Change"   "$commit; sed -i 's/a/c/' tests/x.cs; git add -A; f fix 'Test-Change: y'"
+check fail "amend で Test-Changed を消す" "$commit; sed -i 's/a/c/' tests/x.cs; git add -A; f chore 'Test-Changed: y'; printf 'x\n\nChange-Type: chore\n' > ../msg; git commit -q --amend -F ../msg"
 
 echo "--- TUNE-CODE"
 check fail "tune でコード"              "$commit; echo b >> src/a.cs; git add -A; f tune"
 check fail "tune で日本語名のコード"    "$commit; echo b > src/空腹.cs; git add -A; f tune"
 check pass "tune で値"                  "$commit; echo b >> Assets/_Project/Data/v.asset; git add -A; f tune"
+check pass "tune で値と文書"            "$commit; echo b >> Assets/_Project/Data/v.asset; echo b >> README.md; git add -A; f tune"
+check fail "tune でテスト"              "$commit; echo b >> Assets/_Project/Data/v.asset; echo b > tests/new.cs; git add -A; f tune"
+check fail "tune で実装をテストへ移す"  "$commit; git mv src/a.cs tests/a.cs; f tune"
 check fail "commit <path> で tune のコード" "$commit; echo b >> src/a.cs; printf 'x\n\nChange-Type: tune\n' > ../msg; git commit -q -F ../msg src/a.cs"
 
+echo "--- CHORE"
+check pass "chore で仕組み"             "$commit; echo b >> src/a.cs; echo b >> README.md; git add -A; f chore"
+check fail "chore でアセット"           "$commit; echo b >> Assets/_Project/Data/v.asset; git add -A; f chore"
+check pass "chore でテストと仕様書"     "$commit; echo b > Assets/_Project/Tests/t.cs; echo b >> tests/x.cs; echo b >> docs/systems/a.md; git add -A; f chore"
+check fail "chore でアセットを仕組みの道へ移す" "$commit; git mv Assets/_Project/Data/v.asset tools/v.asset; f chore"
+
+echo "--- 計画"
+check pass "計画が無ければ見ない"       "$plan; echo b >> README.md; git add -A; g x chore"
+check fail "--no-verify でも計画を見る" "$plan; p ../p1.md chore x src/a.cs; approve ../p1.md; echo b >> README.md; git add -A; printf 'x\n\nChange-Type: chore\n' > ../msg; git commit -q --no-verify -F ../msg"
+check pass "計画どおり。使った計画は docs/plans/ へ移る" "$plan; p ../p1.md chore x src/a.cs; approve ../p1.md; echo b >> src/a.cs; git add -A; g x chore; ls docs/plans/*-chore.md > /dev/null && test ! -e .git/flow/active"
+check pass "cancel すると計画と照合しない" "$plan; p ../p1.md chore y src/a.cs; approve ../p1.md; sh tools/flow/flow cancel > /dev/null; echo b >> README.md; git add -A; g x chore"
+check fail "種別が計画と違う"           "$plan; p ../p1.md tune x src/a.cs; approve ../p1.md; echo b >> src/a.cs; git add -A; g x chore"
+check fail "件名が計画と違う"           "$plan; p ../p1.md chore y src/a.cs; approve ../p1.md; echo b >> src/a.cs; git add -A; g x chore"
+check fail "範囲に無い既存ファイルを変える" "$plan; p ../p1.md chore x src/a.cs; approve ../p1.md; echo b >> README.md; git add -A; g x chore"
+check fail "範囲に無い既存ファイルを消す" "$plan; p ../p1.md chore x src/a.cs; approve ../p1.md; git rm -q README.md; g x chore"
+check fail "移動は元の道も範囲に要る"   "$plan; p ../p1.md chore x src/b.cs; approve ../p1.md; git mv src/a.cs src/b.cs; g x chore"
+check pass "新しいファイルは範囲に無くても足せる" "$plan; p ../p1.md chore x src/a.cs; approve ../p1.md; echo b >> src/a.cs; echo b > tools/new.sh; git add -A; g x chore"
+check pass "範囲の道の .meta"           "$plan; p ../p1.md chore x tests/x.cs; approve ../p1.md; echo 'guid: 2' > tests/x.cs.meta; git add -A; g x chore"
+check pass "STATE.md と生成物は常に通る" "$plan; p ../p1.md chore x src/a.cs; approve ../p1.md; echo b >> STATE.md; echo b >> docs/public-api.txt; git add -A; g x chore"
+check pass "空白と日本語の道"           "$plan; p ../p1.md chore x 'Assets/_Project/Tests/空腹 テスト.cs'; approve ../p1.md; echo b >> 'Assets/_Project/Tests/空腹 テスト.cs'; git add -A; g x chore"
+check pass "2つの計画を順に使う"        "$plan; p ../p1.md chore x1 src/a.cs; p ../p2.md tune x2 Assets/_Project/Data/v.asset; approve ../p1.md ../p2.md; echo b >> src/a.cs; git add -A; g x1 chore; echo b >> Assets/_Project/Data/v.asset; git add -A; g x2 tune; test ! -e .git/flow/active"
+check fail "2つ目で1つ目の計画を使う"   "$plan; p ../p1.md chore x1 src/a.cs; p ../p2.md tune x2 Assets/_Project/Data/v.asset; approve ../p1.md ../p2.md; echo b >> src/a.cs; git add -A; g x1 chore; echo c >> src/a.cs; git add -A; g x1 chore"
+check pass "落ちたコミットは計画を使わない" "$plan; p ../p1.md chore x src/a.cs; approve ../p1.md; echo b >> src/a.cs; git add -A; g x tune; g x chore"
+check pass "承認し直すと置き換わる"     "$plan; p ../p1.md chore y src/a.cs; approve ../p1.md; p ../p2.md chore x src/a.cs; approve ../p2.md; echo b >> src/a.cs; git add -A; g x chore"
+check fail "件名の無い計画は承認できない" "$plan; printf '種別: chore\n\n## 範囲\n' > ../p1.md; approve ../p1.md"
+check fail "範囲の節が無い計画は承認できない" "$plan; printf '# x\n\n種別: chore\n' > ../p1.md; approve ../p1.md"
+check fail "種別の無い計画は承認できない" "$plan; printf '# x\n\n## 範囲\n' > ../p1.md; approve ../p1.md"
+check pass "使い終わった計画はテストの読み残しに数えない" "$plan; p ../p1.md chore x1 src/a.cs; p ../p2.md refactor x2 src/a.cs; approve ../p1.md ../p2.md; echo b >> src/a.cs; git add -A; g x1 chore; echo c >> src/a.cs; git add src/a.cs; g x2 refactor"
+
 echo "--- amend"
-check fail "amend で種別だけ docs に変える" "$commit; echo b >> src/a.cs; git add -A; f chore; printf 'x\n\nChange-Type: docs\n' > ../msg; git commit -q --amend -F ../msg"
-check fail "amend で Spec-Changed を消す" "$commit; echo b >> docs/systems/a.md; git add -A; f refactor 'Spec-Changed: y'; printf 'x\n\nChange-Type: refactor\n' > ../msg; git commit -q --amend -F ../msg"
-check fail "amend --no-edit でコードを足す" "$commit; echo b >> README.md; git add -A; f docs; echo b >> src/a.cs; git add -A; git commit -q --amend --no-edit"
-check pass "amend --no-edit で文書を足す" "$commit; echo b >> README.md; git add -A; f docs; echo c >> README.md; git add -A; git commit -q --amend --no-edit"
+check fail "amend で種別だけ tune に変える" "$commit; echo b >> src/a.cs; git add -A; f chore; printf 'x\n\nChange-Type: tune\n' > ../msg; git commit -q --amend -F ../msg"
+check fail "amend で Api-Changed を消す" "$commit; sed -i '/^static A.Run/d' docs/public-api.txt; git add -A; f refactor 'Api-Changed: y'; printf 'x\n\nChange-Type: refactor\n' > ../msg; git commit -q --amend -F ../msg"
+check fail "amend --no-edit でコードを足す" "$commit; echo b >> Assets/_Project/Data/v.asset; git add -A; f tune; echo b >> src/a.cs; git add -A; git commit -q --amend --no-edit"
+check pass "amend --no-edit で値を足す" "$commit; echo b >> Assets/_Project/Data/v.asset; git add -A; f tune; echo c >> Assets/_Project/Data/v.asset; git add -A; git commit -q --amend --no-edit"
 check fail "amend -m で種別を変える"    "$commit; echo b >> src/a.cs; git add -A; f chore; git commit -q --amend -m 'x
 
 Change-Type: tune'"
 
 echo "--- 判定を通らない道"
-check fail "--no-verify でも見る"       "$commit; echo b >> src/a.cs; git add -A; printf 'x\n\nChange-Type: docs\n' > ../msg; git commit -q --no-verify -F ../msg"
+check fail "--no-verify でも見る"       "$commit; echo b >> src/a.cs; git add -A; printf 'x\n\nChange-Type: tune\n' > ../msg; git commit -q --no-verify -F ../msg"
 check fail "--no-verify で宣言を省く"   'echo b >> src/a.cs; git add -A; git commit -q --no-verify -m x'
-check fail "--no-verify で宣言を2行にする" "$commit; echo b >> src/a.cs; git add -A; printf 'x\n\nChange-Type: chore\nChange-Type: docs\n' > ../msg; git commit -q --no-verify -F ../msg"
+check fail "--no-verify で宣言を2行にする" "$commit; echo b >> src/a.cs; git add -A; printf 'x\n\nChange-Type: chore\nChange-Type: tune\n' > ../msg; git commit -q --no-verify -F ../msg"
 check fail "git revert は宣言が無いので止める" "$commit; echo b >> src/a.cs; git add -A; f chore; git revert --no-edit HEAD"
 check pass "git revert --no-commit の後に宣言してコミット" "$commit; echo b >> src/a.cs; git add -A; f chore; git revert --no-commit HEAD; f chore"
 check pass "reset では止めない"         "$commit; echo b >> src/a.cs; git add -A; f chore; git reset -q --hard HEAD^"
 check pass "ブランチの作成と checkout では止めない" "$commit; echo b >> src/a.cs; git add -A; f chore; git branch other; git checkout -q other; git checkout -q -"
-check pass "amend の後の普通のコミットは HEAD と比べる" "$commit; echo b >> src/a.cs; git add -A; f chore; echo c >> src/a.cs; git add -A; git commit -q --amend --no-edit; echo d >> README.md; git add -A; f docs"
+check pass "amend の後の普通のコミットは HEAD と比べる" "$commit; echo b >> src/a.cs; git add -A; f chore; echo c >> src/a.cs; git add -A; git commit -q --amend --no-edit; echo d >> Assets/_Project/Data/v.asset; git add -A; f tune"
 
 echo
 if [ "$ng" -eq 0 ]; then

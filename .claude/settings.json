@@ -37,6 +37,15 @@
       "PowerShell(git commit -n *)",
       "Bash(git -c *)",
       "PowerShell(git -c *)",
+      "Bash(git config *hooksPath*)",
+      "PowerShell(git config *hooksPath*)",
+      "Bash(git config *hookspath*)",
+      "PowerShell(git config *hookspath*)",
+      "Edit(.git/**)",
+      "Write(.git/**)",
+      "Bash(rm *.git/flow*)",
+      "PowerShell(Remove-Item *.git*flow*)",
+      "Read(docs/plans/**)",
       "Bash(unity command eval*)",
       "PowerShell(unity command eval*)",
       "Bash(unity command run_script*)",
@@ -45,6 +54,10 @@
       "PowerShell(unity command reload_file*)"
     ],
     "ask": [
+      "Bash(*flow approve*)",
+      "PowerShell(*flow approve*)",
+      "Bash(*flow cancel*)",
+      "PowerShell(*flow cancel*)",
       "Bash(unity command switch_build_target*)",
       "PowerShell(unity command switch_build_target*)",
       "Bash(unity command delete_asset *)",
@@ -90,6 +103,32 @@
               ".claude/hooks/log-unity-checkpoint.ps1"
             ],
             "if": "Bash(unity command *)",
+            "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "powershell.exe",
+            "args": [
+              "-NoProfile",
+              "-ExecutionPolicy",
+              "Bypass",
+              "-File",
+              ".claude/hooks/guard-dirty-scenes.ps1"
+            ],
+            "if": "PowerShell(unity command run_tests*)",
+            "timeout": 20
+          },
+          {
+            "type": "command",
+            "command": "powershell.exe",
+            "args": [
+              "-NoProfile",
+              "-ExecutionPolicy",
+              "Bypass",
+              "-File",
+              ".claude/hooks/guard-dirty-scenes.ps1"
+            ],
+            "if": "Bash(unity command run_tests*)",
             "timeout": 20
           }
         ]

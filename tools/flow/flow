@@ -4,15 +4,99 @@
 #
 #   flow declared --message <メッセージのファイル>   commit-msg と CI が呼ぶ。宣言だけを見る
 #   flow verify --commit <コミット>                 reference-transaction が呼ぶ。宣言と差分を見る
+#   flow approve <計画>...                          人間が承認した計画を、この順で使うものとして置く
+#   flow cancel                                     残っている計画を捨てる。計画を放置したまま別の作業をするとき
+#   flow settle                                     reference-transaction が呼ぶ。通ったコミットの計画を片付ける
 #
 # 見ているのは差分の形と宣言が合っているかだけで、中身は見ない。
 # 出力は回復手順として読めるようにする。1行1件、何を直すかまで書く。
 
 # 許す種別。一覧はここにだけ置く
-types="feat refactor fix tune asset test docs chore"
+types="feat refactor fix tune asset chore"
 
 command="$1"
 shift 2>/dev/null
+
+# 計画の置き場。.git の中なので追跡されず、エージェントは Edit / Write で書き換えられない（settings の deny）。
+#   active/   承認済みで、まだコミットに使っていない計画。名前の順に使う。これがあるときだけ計画と照合する
+#   pending   照合を通ったコミットと計画。ブランチに載ったら settle が計画を docs/plans/ へ移す
+git_dir=$(git rev-parse --git-dir 2>/dev/null)
+flow_dir="${git_dir:-.git}/flow"
+
+# 計画の md から読むもの。件名は最初の「# 」の行、種別は「種別: 」の行、
+# 範囲は「## 範囲」の節で字下げした箇条書き（字下げしない行は人間向けの見出し）
+plan_subject() { tr -d '\r' < "$1" | sed -n 's/^# //p' | head -1; }
+plan_type() { tr -d '\r' < "$1" | sed -n 's/^種別: *//p' | head -1 | tr -d ' '; }
+plan_paths() {
+  tr -d '\r' < "$1" | awk '
+    /^## / { inside = ($0 ~ /^## 範囲[ \t]*$/); next }
+    inside && /^[ \t]+- / { sub(/^[ \t]+- /, ""); gsub(/`/, ""); sub(/[ \t]+$/, ""); print }
+  '
+}
+
+case "$command" in
+  approve)
+    if [ $# -eq 0 ]; then
+      echo "E  承認する計画の md を1つ以上渡す"
+      exit 1
+    fi
+
+    for plan in "$@"; do
+      if [ ! -f "$plan" ]; then
+        echo "E  計画が無い: $plan"
+        exit 1
+      fi
+      if [ -z "$(plan_subject "$plan")" ]; then
+        echo "E  $plan に件名（# で始まる行）が無い"
+        exit 1
+      fi
+      if ! printf '%s\n' $types | grep -qx -- "$(plan_type "$plan")"; then
+        echo "E  $plan の「種別: 」が $(printf '%s' "$types" | tr ' ' '|') のどれでもない"
+        exit 1
+      fi
+      if ! tr -d '\r' < "$plan" | grep -q '^## 範囲[[:space:]]*$'; then
+        echo "E  $plan に「## 範囲」の節が無い"
+        exit 1
+      fi
+    done
+
+    # 承認し直すときは、残っている計画ごと置き換える
+    rm -rf "$flow_dir/active" "$flow_dir/pending"
+    mkdir -p "$flow_dir/active" || exit 1
+    n=0
+    for plan in "$@"; do
+      n=$((n + 1))
+      name=$(printf '%02d-%s.md' "$n" "$(plan_type "$plan")")
+      cp "$plan" "$flow_dir/active/$name" || exit 1
+      echo "承認  $name  $(plan_subject "$plan")"
+    done
+    exit 0
+    ;;
+  cancel)
+    rm -rf "$flow_dir/active" "$flow_dir/pending"
+    echo "残っていた計画を捨てた。以後のコミットは計画と照合しない"
+    exit 0
+    ;;
+  settle)
+    [ -f "$flow_dir/pending" ] || exit 0
+    read -r sha plan < "$flow_dir/pending"
+    rm -f "$flow_dir/pending"
+
+    # 載らなかったコミット（別の理由で取り消された更新）なら、計画は使っていない
+    git merge-base --is-ancestor "$sha" HEAD 2>/dev/null || exit 0
+    [ -f "$flow_dir/active/$plan" ] || exit 0
+
+    top=$(git rev-parse --show-toplevel) || exit 0
+    mkdir -p "$top/docs/plans"
+    mv "$flow_dir/active/$plan" \
+      "$top/docs/plans/$(date +%Y%m%d)-$(git rev-parse --short "$sha")-${plan#*-}"
+
+    if [ -z "$(ls "$flow_dir/active" 2>/dev/null)" ]; then
+      rm -rf "$flow_dir/active"
+    fi
+    exit 0
+    ;;
+esac
 
 commit=""
 message=""
@@ -93,6 +177,8 @@ text=$(printf '%s\n' "$raw" | tr -d '\r')
 declared "$text" || exit 1
 type=$(printf '%s\n' "$text" | sed -n 's/^Change-Type: \(.*\)$/\1/p')
 
+# 解除トレーラー。人間の承認と対になる判定にだけ置く。
+# エージェントは落ちたら出力に従って直すので、承認の無い解除は自分で足して通ってしまう
 trailer() {
   printf '%s\n' "$text" | grep -q "^$1: ."
 }
@@ -133,12 +219,11 @@ if [ "$type" = "refactor" ]; then
         printf '%s\n' "$spec"
       done)
 
-  if [ -n "$specs" ] && ! trailer Spec-Changed; then
+  if [ -n "$specs" ]; then
     echo "E  REFACTOR-DIRTY  refactor で仕様書が変わっている"
     printf '%s\n' "$specs" | sed 's/^/     /'
     echo "     コード名の差し替え以外の文が変わっている"
-    echo "     振る舞いが変わったなら feat か fix。変わっていないなら仕様書を戻す"
-    echo "     意図して変えたなら Spec-Changed: <理由> を足す"
+    echo "     振る舞いが変わったなら feat か fix。変わっていないなら仕様書を戻す。解除トレーラーは無い"
     failed=1
   fi
 fi
@@ -155,9 +240,10 @@ if [ "$type" = "refactor" ]; then
   green="$(git rev-parse --git-dir)/flow-green"
 
   if ! grep -qx "$tree" "$green" 2>/dev/null; then
-    dirty=$(git -c core.quotepath=false diff --name-only "$commit" -- '*.cs' docs/ tests/) \
+    # docs/plans/ はテストが読まず、使い終わった計画が追跡外で置かれるので数えない
+    dirty=$(git -c core.quotepath=false diff --name-only "$commit" -- '*.cs' docs/ tests/ ':!docs/plans/') \
       || broken "作業ツリーとコミットを比べられない"
-    untracked=$(git -c core.quotepath=false ls-files --others --exclude-standard -- '*.cs' docs/ tests/) \
+    untracked=$(git -c core.quotepath=false ls-files --others --exclude-standard -- '*.cs' docs/ tests/ ':!docs/plans/') \
       || broken "追跡していないファイルを読めない"
     loose=$(printf '%s\n%s\n' "$dirty" "$untracked" | grep -v '^$' | sort -u)
 
@@ -228,56 +314,43 @@ if [ "$type" = "refactor" ] && printf '%s\n' "$files" | grep -q '^docs/public-ap
   fi
 fi
 
-# FIX-TEST-WEAKENED
+# TEST-CHANGED
 #
-# fix で既存のテストを書き換えていないか。落ちるテストを緩めて直したことにする
-# のが一番静かな壊し方なので、書き換えたこと自体を表に出す。
-# テストを足すのは自由。見るのは既にあるファイルの変更と削除だけ。
-if [ "$type" = "fix" ]; then
-  touched=$(changed --diff-filter=MD "$base" "$commit" -- tests/ Assets/_Project/Tests/) \
-    || broken "テストの差分を取れない"
+# 既存のテストを緩めて通したことにするのが一番静かな壊し方なので、書き換えたこと自体を表に出す。
+# 振る舞いが変わる feat だけは、テストが付いて変わるのが正しいので見ない。
+# 足すのは自由。見るのは、既存ファイルから行が消えた・書き換わったこと、ファイルが消えたこと、
+# 足した行でテストを止めたこと。中身が同じままの移動は通す。
+if [ "$type" != "feat" ]; then
+  tab=$(printf '\t')
+  statuses=$(git -c core.quotepath=false diff-tree -r --no-commit-id --name-status -M100% \
+    "$base" "$commit" -- tests/ Assets/_Project/Tests/) || broken "テストの差分を取れない"
 
-  if [ -n "$touched" ] && ! trailer Test-Change; then
-    echo "E  FIX-TEST-WEAKENED  fix で既存のテストが変わっている"
-    printf '%s\n' "$touched" | sed 's/^/     /'
-    echo "     既存テストが落ちるなら、それは仕様が変わったということ（fix.md）"
-    echo "     やむを得ないなら Test-Change: <理由> を足す"
-    failed=1
-  fi
-fi
-
-# DOCS-CODE
-#
-# docs で触れるのは文書だけ。コードが混ざるなら種別が違う。
-if [ "$type" = "docs" ]; then
-  others=$(printf '%s\n' "$files" | grep -v -e '\.md$' -e '^docs/')
-
-  if [ -n "$others" ]; then
-    echo "E  DOCS-CODE  docs で文書以外が変わっている"
-    printf '%s\n' "$others" | sed 's/^/     /'
-    echo "     種別を変えるか、コミットを割る。解除トレーラーは無い"
-    failed=1
-  fi
-fi
-
-# TEST-CODE
-#
-# test で触れるのはテストだけ。実装が混ざると、テストが通ったことの意味が消える。
-if [ "$type" = "test" ]; then
-  # テストが作る生成物は数えない。実装をそこに隠せないので、見張る意味が無い。
-  # 見分けはコミットの中身の先頭の「手で編集しない」。生成物には必ず書いてある
-  others=$(printf '%s\n' "$files" | grep -v -e '^tests/' -e '^Assets/_Project/Tests/' \
-    | while IFS= read -r path; do
-        if git show "$commit:$path" 2>/dev/null | head -5 | grep -q "手で編集しない"; then
-          continue
-        fi
-        printf '%s\n' "$path"
+  touched=$(printf '%s\n' "$statuses" | grep -v '^$' \
+    | while IFS="$tab" read -r status path rest; do
+        case "$path" in *.meta) continue ;; esac
+        case "$status" in
+          D)
+            printf '%s（消えた）\n' "$path"
+            ;;
+          M)
+            patch=$(git -c core.quotepath=false diff-tree -p --unified=0 --no-renames "$base" "$commit" -- "$path") \
+              || { printf '%s（差分を取れない）\n' "$path"; continue; }
+            if printf '%s\n' "$patch" | grep '^-' | grep -qv '^--- \(a/\|/dev/null\)'; then
+              printf '%s（行が消えた・書き換わった）\n' "$path"
+            elif printf '%s\n' "$patch" | grep '^+' | grep -v '^+++ ' \
+                 | grep -qE '(^|[^A-Za-z])(Ignore|Explicit)([^A-Za-z]|$)|Assert\.(Pass|Ignore|Inconclusive)|Assume\.That'; then
+              printf '%s（テストを止める行を足した）\n' "$path"
+            fi
+            ;;
+        esac
       done)
 
-  if [ -n "$others" ]; then
-    echo "E  TEST-CODE  test でテスト以外が変わっている"
-    printf '%s\n' "$others" | sed 's/^/     /'
-    echo "     種別を変えるか、コミットを割る。解除トレーラーは無い"
+  if [ -n "$touched" ] && ! trailer Test-Changed; then
+    echo "E  TEST-CHANGED  $type で既存のテストが変わっている"
+    printf '%s\n' "$touched" | sed 's/^/     /'
+    echo "     振る舞いが変わったなら feat。変わっていないならテストを戻す"
+    echo "     git diff $(git rev-parse --short "$base") $(git rev-parse --short "$commit") -- tests/ Assets/_Project/Tests/"
+    echo "     を人間に提示して承認を取り、Test-Changed: <理由> を足す"
     failed=1
   fi
 fi
@@ -285,6 +358,7 @@ fi
 # TUNE-CODE
 #
 # tune は値だけ。コードが変わるなら、値を外に出す作業が先（tune.md）。
+# 調整値はテストで固定しない（tune.md）ので、テストの .cs も数える
 if [ "$type" = "tune" ]; then
   sources=$(printf '%s\n' "$files" | grep '\.cs$')
 
@@ -294,6 +368,82 @@ if [ "$type" = "tune" ]; then
     echo "     値を外に出す作業は feat か refactor。解除トレーラーは無い"
     failed=1
   fi
+fi
+
+# CHORE-CODE
+#
+# chore は仕組み・設定・ツール・文書。ゲームの中身が変わるなら種別が違う。
+# テストと仕様書は見ない。feat でも変えられるので、ここで止めても守れない。
+if [ "$type" = "chore" ]; then
+  game=$(printf '%s\n' "$files" | grep '^Assets/' | grep -v '^Assets/_Project/Tests/')
+
+  if [ -n "$game" ]; then
+    echo "E  CHORE-CODE  chore で Assets/ が変わっている"
+    printf '%s\n' "$game" | sed 's/^/     /'
+    echo "     ゲームのコードとアセットは feat / refactor / fix / tune / asset のどれか。解除トレーラーは無い"
+    failed=1
+  fi
+fi
+
+# PLAN-TYPE / PLAN-MESSAGE / PLAN-SCOPE
+#
+# 承認済みの計画があるあいだは、コミットがその順どおりか見る。
+# 計画とずれたら、計画を直して承認を取り直す。計画が無ければ何も見ない（/flow の外の作業）。
+plan=$(ls "$flow_dir/active" 2>/dev/null | sort | head -1)
+if [ -n "$plan" ]; then
+  active="$flow_dir/active/$plan"
+
+  if [ "$type" != "$(plan_type "$active")" ]; then
+    echo "E  PLAN-TYPE  計画の種別は $(plan_type "$active") なのに、Change-Type が $type"
+    echo "     計画: $active"
+    echo "     計画の順に種別を分けてコミットする。計画が違うなら直して承認を取り直す"
+    failed=1
+  fi
+
+  subject=$(printf '%s\n' "$text" | head -1)
+  if [ "$subject" != "$(plan_subject "$active")" ]; then
+    echo "E  PLAN-MESSAGE  件名が計画と違う"
+    echo "     計画: $(plan_subject "$active")"
+    echo "     実際: $subject"
+    echo "     件名は計画の「# 」の行をそのまま使う"
+    failed=1
+  fi
+
+  # 足すのは自由。見るのは既存ファイルの変更と削除だけ。
+  # STATE.md、生成物（先頭に「手で編集しない」）、範囲に書いた道の .meta は常に通す
+  allowed=$(plan_paths "$active")
+  outside=$(changed --diff-filter=MD "$base" "$commit" | while IFS= read -r path; do
+              [ -z "$path" ] && continue
+              printf '%s\n' "$allowed" | grep -qxF -- "$path" && continue
+              [ "$path" = "STATE.md" ] && continue
+              case "$path" in
+                *.meta)
+                  asset=${path%.meta}
+                  printf '%s\n' "$allowed" | grep -qxF -- "$asset" && continue
+                  # フォルダの .meta は、範囲にそのフォルダの中の道があれば通す
+                  printf '%s\n' "$allowed" | awk -v dir="$asset/" 'index($0, dir) == 1 { found = 1 } END { exit !found }' \
+                    && continue
+                  ;;
+              esac
+              git show "$base:$path" 2>/dev/null | head -5 | grep -q "手で編集しない" && continue
+              printf '%s\n' "$path"
+            done)
+
+  if [ -n "$outside" ]; then
+    echo "E  PLAN-SCOPE  計画の範囲に無い既存ファイルが変わっている"
+    printf '%s\n' "$outside" | sed 's/^/     /'
+    echo "     計画: $active"
+    echo "     戻すか、範囲に足した計画をチャットで提示して承認を取り直す（flow approve）"
+    failed=1
+  fi
+
+  if [ "$failed" -ne 0 ]; then
+    echo "     計画と関係の無いコミットなら、人間が sh tools/flow/flow cancel で計画を捨てる"
+  fi
+fi
+
+if [ "$failed" -eq 0 ] && [ -n "$plan" ]; then
+  echo "$commit $plan" > "$flow_dir/pending"
 fi
 
 exit $failed

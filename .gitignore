@@ -13,6 +13,10 @@
 !/[Aa]ssets/_[Pp]roject/
 !/[Aa]ssets/_[Pp]roject.meta
 
+# --- WebGL のひな形。Unity は Assets 直下の WebGLTemplates の中しか探さない ---
+!/[Aa]ssets/WebGLTemplates/
+!/[Aa]ssets/WebGLTemplates.meta
+
 # --- 他に許可を足すときの雛形（ディレクトリと .meta を対で） ---
 # !/[Aa]ssets/[Ee]ditor/
 # !/[Aa]ssets/[Ee]ditor.meta
@@ -63,7 +67,7 @@ crashlytics-build.properties
 *.VC.db
 *.tmp
 
-# ===== AI エージェント（ローカル設定のみ除外。CLAUDE.md / AGENTS.md は共有する） =====
+# ===== AI エージェント（ローカル設定のみ除外。CLAUDE.md は共有する） =====
 .claude/settings.local.json
 
 # ===== マージの残骸 =====
@@ -102,3 +106,6 @@ desktop.ini
 # エージェント作業開始時の作業ツリー記録（手元のデバッグ用。共有しない）
 /.claude/editor-changes.log
 /.claude/.unity-checkpoint-state
+
+# ===== 開発ジャーナル（手元のメモ。公開しない） =====
+docs/JOURNAL.md

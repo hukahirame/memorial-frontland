@@ -13,8 +13,14 @@ stdin=$(cat)
 # flow は休止中。開発に影響させないため何もしない。再開するときはこの行を消す
 exit 0
 
-[ "$1" = "prepared" ] || exit 0
 [ -f tools/flow/flow ] || exit 0
+
+case "$1" in
+  prepared) ;;
+  # 載った・取り消された後に、照合を通したコミットの計画を片付ける
+  committed|aborted) sh tools/flow/flow settle < /dev/null; exit 0 ;;
+  *) exit 0 ;;
+esac
 
 zero=0000000000000000000000000000000000000000
 failed=0
