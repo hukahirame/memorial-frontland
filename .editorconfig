@@ -123,12 +123,11 @@ dotnet_naming_style.i_pascal_case.capitalization = pascal_case
 dotnet_naming_style.i_pascal_case.required_prefix = I
 
 # --------------------------------------------------------------------------
-# 製品コードのみ。テストは構造の差分図の対象外なので var の制限をかけない
+# 製品コードのみ。テストには var の制限をかけない
 # --------------------------------------------------------------------------
 [Assets/_Project/Scripts/**.cs]
 
-# 右辺から型が明らかでないときは var を使わない [D-010]。
-# 層をまたぐ変数の型が字面に出ないと、構造の差分図から依存が消えるため。
+# 右辺から型が明らかでないときは var を使わない（docs/conventions.md の「型の明示」）。
 # Legacy にはアナライザが届かないので、そちらは conventions.md の担保のみ。
 csharp_style_var_for_built_in_types = false:warning
 csharp_style_var_when_type_is_apparent = true:silent

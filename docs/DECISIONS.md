@@ -2,22 +2,34 @@
 
 <!--
 このファイルの目的:
-AIとの対話や口頭で決まったことは記録しないと消える。その受け皿。
-迷ったら全部ここに書く。場所を間違えるコストがゼロになるよう設計している。
+選ばなかった案とその理由を残し、エージェントが知らずに逆へ直すのを防ぐ。
 
-追記のみ。過去のエントリは書き換えない。判断が変わったら新しく書き、
-古い方を status: Superseded by [D-YYY] にする。
+ADR にするのは、次をすべて満たす決定だけ。迷ったら書かない。
+- プロジェクト全体、または複数の仕組みにかかる
+- 戻すのが高くつくか、知らずに逆へ直されそうである
+- 却下した案と、その理由を書ける
+1 つの仕組みの中で済む決定は、その仕様書（docs/systems/）に振る舞いとして書き、理由は残さない。
+道具やエンジンの落とし穴は FRICTIONS.md、書き方の決まりは docs/conventions.md に書く。
+足すのは /adr で承認されたものだけ。**決定** に数・クラス名・ファイルの道を書かない（コードと仕様書が持つ）。
+
+本文（背景〜帰結）は書き換えない。見出しの下の status と scope は直してよい。
+- 選び直したら新しく書き、古い方を Superseded by [D-YYY] にする
+- 選び直さずにやめるだけなら Retired（理由 1 行）にする
+- 一部だけ古くなったら、status の後ろに括弧で書く
+採用中の ADR が実態と食い違ったら、気づいたその作業で status を直す。
 
 並びは D 番号の昇順。日付では区切らない。日付は各項目の date: が持つ。
 ID は既存の最大値 + 1。欠番・再利用はしない。
 date: は判断した日。過去の判断を後から起票したときは記録した日を入れ、
 判断した日と典拠のコミットを **背景** に書く。
+scope: はその決定が効いている道。採用中の ADR の scope に無い道があると、
+python tools/spec/build.py が問題として出す。
 
 --- テンプレート ---
 ## [D-XXX] タイトル
-status: Proposed | Accepted | Superseded by [D-YYY]
+status: Proposed | Accepted | Superseded by [D-YYY] | Retired（理由）
 date: YYYY-MM-DD
-scope: 影響を受けるパス（CIの存在チェック対象）
+scope: 決定が効いている道
 
 **背景** — なぜ今決める必要があるか。このセクションだけで状況が再現できること
 **検討した選択肢** — 却下案も Pros/Cons つきで。ここが空の記録は事後正当化
@@ -43,7 +55,7 @@ Play 通し・ビルド検証は未実施。壊れていた場合の検出はこ
 ## [D-002] バージョン管理を Git に一本化し、UVCS を廃止する
 status: Accepted
 date: 2026-08-23
-scope: Packages/manifest.json, .plasticignore, README.md
+scope: Packages/manifest.json, README.md
 
 **背景** — UVCS と Git を併用していたが、1プロジェクトを2リポジトリに分けると
 コード変更とアセット変更のアトミックなコミットが不可能になり、
@@ -90,7 +102,7 @@ ask は GUID を伴う資産操作（delete/move/rename_asset）、git push、Pr
 コミット済みの Git 状態と物理バックアップの3つ。deny は床上げであって天井ではない。
 
 ## [D-005] シーン内の参照割り当てはエージェントが行う
-status: Accepted
+status: Retired（エージェントが実装から実機の確認までする今の進め方に含まれる。権限の線は .claude/settings.json が持つ）
 date: 2026-08-25
 scope: Assets/_Project/Scenes/, .claude/settings.json
 
@@ -198,7 +210,7 @@ Domain / Game の型がどれかのスライスに出ていること。
 1枚に10型以上入るようになったとき。そこで切り直す。
 
 ## [D-010] 層をまたぐ変数は型を明示する。var を使わない
-status: Accepted
+status: Retired（理由だった差分図の字面の読み取りは [D-017] で無くなった。書き方の決まりとして docs/conventions.md と .editorconfig に残す）
 date: 2026-08-28
 scope: docs/conventions.md, .editorconfig, Assets/LegacyScripts
 
@@ -308,7 +320,7 @@ Legacy の公開メンバは載せない。多くが Inspector への口であ�
 並べても関心事の輪郭が見えないため。
 
 ## [D-013] クラス図の生成に PlantUmlClassDiagramGenerator を使わない
-status: Accepted
+status: Retired（図を作ることそのものを [D-017] でやめた）
 date: 2026-08-29
 scope: docs/dependencies-diagrams, tests/Domain.Tests/
 
@@ -370,7 +382,7 @@ scope: Assets/_Project/Scripts/Domain/, Assets/_Project/Scripts/Game/, .github/w
 リフレクション経由の呼び出しが増え、改名がコンパイルで止まらなくなること。
 
 ## [D-015] ゲーム設計は Notion に置く。docs/GDD.md は消さずに残す
-status: Accepted
+status: Superseded by [D-025]
 date: 2026-08-29
 scope: docs/GDD.md, README.md
 
@@ -396,7 +408,7 @@ DECISIONS.md へ移す。`docs/GDD.md` は残す。
 読めない箇所が現れること。そのとき DECISIONS.md へ移す。
 
 ## [D-016] PlayMode テストは判定せず、例外が出ないことだけを見る
-status: Accepted
+status: Retired（PlayMode のテストも振る舞いを判定するようになった）
 date: 2026-08-29
 scope: Assets/_Project/Tests/Play/
 
@@ -423,9 +435,9 @@ static のフラグとリストが残り、2本目以降が落ちるため（[D-
 不具合を、この網が続けて見逃すこと。
 
 ## [D-017] 依存を図にする仕組みを廃止し、型の被覆検査だけ残す
-status: Accepted
+status: Accepted（スライス表と被覆検査を残す所は [D-020] が覆した。効いているのは図を作らない所）
 date: 2026-08-30
-scope: docs/slices.txt, tests/Domain.Tests/
+scope: tests/Domain.Tests/
 
 **背景** — 現状図11枚と差分図を生成し、`dotnet test` が作り直していた。
 図は人間が読むためのもので、エージェントには読ませない前提だった（AGENTS.md の禁止）。
@@ -539,7 +551,7 @@ Game / Legacy の同名フォルダ」をなぞるだけになり、仕様書12�
 またはフォルダの中身が関心事と対応しなくなり仕様書の範囲が説明できなくなること。
 
 ## [D-021] 保存していないシーンが開いているときは、run_tests を始めさせずに止める
-status: Accepted
+status: Retired（道具の落とし穴とその対策なので FRICTIONS.md に移した。フックは残す）
 date: 2026-11-02
 scope: .claude/hooks/guard-dirty-scenes.ps1, .claude/settings.json, CLAUDE.md, AGENTS.md
 
@@ -608,7 +620,7 @@ Root3 のシーン・根源2の奥の出口・Build Settings をまとめて作�
 プレイヤーが縁から落ちて連れ戻される。
 
 ## [D-023] 根源3は上の階も遊べるようにし、場の外の高さを場所に、湧く地面を探す高さを核の候補に持たせる
-status: Accepted
+status: Retired（根源3の中の作り方。振る舞いは仕様書の enemy と player が持つ）
 date: 2026-11-02
 scope: Assets/_Project/Scripts/Domain/OutField/Field.cs, Assets/_Project/Scripts/Domain/Enemy/Spawn.cs, Assets/_Project/Scripts/Game/Scene/Area.cs, Assets/LegacyScripts/Player/Player2.cs, Assets/LegacyScripts/Enemy/Seeker.cs, Assets/LegacyScripts/Enemy/SpawnerCandidate.cs, Assets/LegacyScripts/Enemy/OF_Spawner.cs, Assets/LegacyScripts/Enemy/Slime.cs, Assets/_Project/Scripts/Editor/LookDev/FloodedMallBuilder.cs, Assets/_Project/Scripts/Editor/Roots/Root3Builder.cs
 
@@ -645,7 +657,7 @@ scope: Assets/_Project/Scripts/Domain/OutField/Field.cs, Assets/_Project/Scripts
 （どれも RootPlayTests が見る）。根源1・2 で敵の湧く数が減る。
 
 ## [D-024] 根源3は動かない物をまとめて描いて軽くし、オクルージョンカリングは使わない
-status: Accepted
+status: Retired（根源3の中の作り方。振る舞いは仕様書の staging が持ち、オクルージョンカリングの件は FRICTIONS.md に移した）
 date: 2026-11-02
 scope: Assets/_Project/Scripts/Editor/LookDev/FloodedMallBuilder.cs, Assets/_Project/Scripts/Editor/Roots/Root3Builder.cs, Assets/_Project/Scripts/Game/Staging/ViewSecurer.cs
 
@@ -674,3 +686,30 @@ PlayMode で画質を Android と同じ「中」にして数えると（Profiler
 素材集の像（`Statue_01A_Lod0`）は prefab に static の印が付いていて、根源1・2 では核が壊れて膨らむ動きが画面に出ていないはず。
 判断が誤りだった場合の検出条件: 根源3で動くはずの物が止まって見える（まとめ描きの印が付いた物は動かせない）。
 水面の上に描かれるはずの透ける物が、水に隠れる。
+
+## [D-025] 企画の正本は git に入れない手元のファイルに置き、Notion は練る場所にする
+status: Accepted
+date: 2026-11-05
+scope: .gitignore, tools/spec/build.py
+
+**背景** — [D-015] で企画（柱・コアループ）を Notion に置くとしたが、Notion にそのページは作られず、
+仕様書 12 本の「体験の意図」は空いたままだった。エージェントの多くは Notion を読めず、企画の判断が要る件が
+作業の記録に溜まっていた。ユーザーは企画も仕様のページ（spec.html）にまとめたい。一方でリリースするゲームなので、
+企画を公開リポジトリで読まれたくない（2026-11-05、ユーザー）。仕様のページは git に入れておらず、手元にしか無い。
+
+**検討した選択肢** —
+(a) Notion を正本のままにする。→ 却下。**読めない者がいる置き場は、ほかの文書から指せず、空のまま残る。**
+(b) 仕様のページを作るときに Notion から読み込む。→ 却下。合い鍵とネットへのつながりが要り、
+ページを作れるかが外のサービスに左右される。
+(c) 公開リポジトリに置く。→ 却下。リリース前の企画が誰にでも読める。
+(d) 非公開のリポジトリに置き、手元に clone する。→ 今は採らない。履歴とバックアップは残るが、
+1 人・1 台で練っているうちは、置き場をもう 1 つ持つ手間に見合わない。
+(e) git に入れない手元のファイルに置き、仕様のページの先頭に出す。
+
+**決定** — (e)。企画の正本は git に入れない手元のファイルとし、仕様のページはそれがあれば先頭に出す。
+Notion は練る場所で、決まったものだけを正本に書く。公開の文書は企画の中身を書き写さず、柱を番号だけで指す。
+[D-015] が「置かないと決めた印」として残したファイルは消す。理由はこの記録が持つ。
+
+**帰結** — 企画には履歴もバックアップも無い。`git clean -x` や PC の故障で消える。
+公開の clone では、仕様のページに企画は出ない。判断が誤りだった場合の検出条件: 企画を消した・前の版に戻したくなった、
+または別の PC で企画を読みたくなったこと。そのときは (d) に移る。

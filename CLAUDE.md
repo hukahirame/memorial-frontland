@@ -5,7 +5,7 @@
 
 - `run_tests --mode all` は `--async_tests` と併用できない。外側は成功を返し、理由は error にだけ出る
 
-- `run_tests` は、保存していないシーンが開いていると Unity の保存の窓で Editor ごと止まる。窓は CLI から押せない。始める前に `list_open_scenes` の `isDirty` を見る（Claude Code ではフックが止める。[D-021]）。`open_scene` は未保存の変更を尋ねずに捨てる
+- `run_tests` は、保存していないシーンが開いていると Unity の保存の窓で Editor ごと止まる。窓は CLI から押せない。始める前に `list_open_scenes` の `isDirty` を見る（Claude Code ではフックが止める。FRICTIONS.md）。`open_scene` は未保存の変更を尋ねずに捨てる
 
 ## 禁止
 

@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
+<title>仕様</title>
+<!--
+  仕様のページのひな形。tools/spec/build.py が docs/systems の仕様書・docs/DECISIONS.md・原簿を読み、
+  下の DATA に入れて .spec/spec.html を書く。中身はここに書かない（書いた所が 2 つになる）。
+-->
+<style>
+:root {
+  --bg: #f6f6f3; --panel: #ffffff; --sunk: #f0f0ec; --text: #1d1d1b; --muted: #6b6b66; --line: #e2e1dc;
+  --accent: #2f5fd0; --ok: #1f8a4c; --ng: #c8372d; --warn: #a86400;
+  --t-trigger: #2f5fd0; --t-while: #7a45c9; --t-if: #1f8a4c; --removed: #fcebe9;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151514; --panel: #1e1e1c; --sunk: #262624; --text: #ecebe6; --muted: #a09f98; --line: #34342f;
+    --accent: #86a8ff; --ok: #5cc98a; --ng: #ff7b70; --warn: #e0a64a;
+    --t-trigger: #86a8ff; --t-while: #c3a2ff; --t-if: #5cc98a; --removed: #3d2220;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151514; --panel: #1e1e1c; --sunk: #262624; --text: #ecebe6; --muted: #a09f98; --line: #34342f;
+  --accent: #86a8ff; --ok: #5cc98a; --ng: #ff7b70; --warn: #e0a64a;
+  --t-trigger: #86a8ff; --t-while: #c3a2ff; --t-if: #5cc98a; --removed: #3d2220;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.7 "Hiragino Sans", "Noto Sans JP", "Yu Gothic UI", Meiryo, sans-serif; }
+a { color: var(--accent); }
+code { font: 13px ui-monospace, Consolas, monospace; background: var(--sunk); padding: 1px 4px; border-radius: 4px; overflow-wrap: anywhere; }
+pre { font: 12.5px ui-monospace, Consolas, monospace; background: var(--sunk); padding: 8px 10px; border-radius: 8px; overflow-x: auto; }
+button, input { font: inherit; color: inherit; }
+
+.top { background: var(--panel); border-bottom: 1px solid var(--line); }
+.top-inner { max-width: 1200px; margin: 0 auto; padding: 12px 16px; }
+.top-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.top h1 { margin: 0; font-size: 19px; }
+.built { font-size: 12px; color: var(--muted); }
+.meta { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+.search { margin-top: 8px; width: 100%; max-width: 360px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--text); font-size: 13px; }
+
+.layout { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 24px; max-width: 1200px; margin: 0 auto; padding: 16px; }
+.toc { position: sticky; top: 16px; align-self: start; display: flex; flex-direction: column; gap: 5px; max-height: calc(100vh - 32px); overflow-y: auto; padding-bottom: 8px; }
+.toc-label { font-size: 12px; color: var(--muted); margin: 8px 2px 0; }
+.toc-label:first-child { margin-top: 0; }
+.toc button { display: flex; flex-direction: column; gap: 1px; text-align: left; padding: 5px 8px; line-height: 1.4; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
+.toc button[aria-current="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.toc-name { font-weight: 600; font-size: 13px; }
+.toc-sub { font-size: 11px; color: var(--warn); }
+main { min-width: 0; }
+@media (max-width: 760px) {
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .toc { position: static; flex-direction: row; overflow-x: auto; max-height: none; padding-bottom: 4px; }
+  .toc-label { display: none; }
+  .toc button { min-width: 112px; flex: 0 0 auto; }
+}
+
+.problems { background: var(--removed); border: 1px solid var(--ng); border-radius: 10px; padding: 10px 16px; margin-bottom: 12px; }
+.head { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+.head-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.head h2 { margin: 0; font-size: 20px; }
+.kind { font-size: 12px; color: var(--muted); }
+.purpose { margin: 6px 0 0; font-size: 15px; }
+.facts { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 8px; font-size: 12px; color: var(--muted); }
+
+.group { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 4px 16px 14px; margin-bottom: 12px; }
+.group h3 { font-size: 16px; margin: 12px 0 6px; display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.group h4 { font-size: 14px; margin: 14px 0 6px; color: var(--muted); }
+details.group > summary { cursor: pointer; font-weight: 600; font-size: 16px; margin: 12px 0 6px; }
+.items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.item { padding: 7px 10px; border: 1px solid var(--line); border-radius: 9px; overflow-wrap: anywhere; scroll-margin-top: 80px; }
+.item.d1 { margin-left: 22px; border-style: dotted; }
+.k-open .item { border-style: dashed; border-color: var(--warn); }
+.k-not .item { color: var(--muted); }
+.item.flash { outline: 2px solid var(--accent); }
+.hit { cursor: pointer; }
+.hit:hover { border-color: var(--accent); }
+.from { display: block; font-size: 11px; color: var(--muted); }
+.para { margin: 6px 0; overflow-wrap: anywhere; }
+.ears { font: 600 11px ui-monospace, Consolas, monospace; margin-right: 6px; }
+.e-trigger { color: var(--t-trigger); }
+.e-while { color: var(--t-while); }
+.e-if { color: var(--t-if); }
+.badge { font-size: 11px; padding: 0 6px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.badge.warn { color: var(--warn); border-color: currentColor; }
+.adr { font-size: 11px; padding: 0 5px; border-radius: 4px; border: 1px solid var(--line); background: var(--sunk); color: var(--ok); cursor: pointer; white-space: nowrap; }
+.adr.broken { color: var(--ng); cursor: default; }
+.adr.old { color: var(--muted); text-decoration: line-through; }
+.adr-entry { scroll-margin-top: 80px; }
+.adr-entry h3 .small { margin-left: auto; }
+.adr-entry details { margin-top: 6px; }
+.adr-entry summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+.adr-part { margin: 8px 0 0; font-size: 13px; }
+.adr-part b { display: block; color: var(--muted); font-size: 12px; }
+.adr-part p { margin: 2px 0 6px; overflow-wrap: anywhere; }
+.adr-old { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.adr-old li { padding: 7px 10px; border: 1px dashed var(--line); border-radius: 9px; color: var(--muted); overflow-wrap: anywhere; scroll-margin-top: 80px; }
+.adr-old li b { color: var(--text); font-weight: 600; }
+.adr-box { margin: 6px 0 2px; padding: 8px 10px; border-left: 3px solid var(--ok); background: var(--sunk); border-radius: 6px; font-size: 13px; }
+.adr-box p { margin: 4px 0 0; }
+.ext { text-decoration: underline dotted; }
+.small { font-size: 12px; color: var(--muted); font-weight: normal; }
+.scroll { overflow-x: auto; }
+table.md { border-collapse: collapse; width: 100%; font-size: 13px; margin: 8px 0; }
+table.md th, table.md td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
+table.md th { background: var(--sunk); white-space: nowrap; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; margin: 6px 0 4px; }
+.card { display: flex; flex-direction: column; gap: 3px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--sunk); color: inherit; text-decoration: none; }
+.card:hover { border-color: var(--accent); }
+.card-name { font-weight: 600; }
+.card-sum { font-size: 13px; }
+.card-links { font-size: 12px; color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+
+.pager { display: flex; justify-content: space-between; gap: 12px; margin: 4px 0 24px; font-size: 13px; }
+.pager a { text-decoration: none; padding: 6px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); }
+.pager a:hover { border-color: var(--accent); }
+.pager .next { margin-left: auto; text-align: right; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="top-title"><h1>仕様</h1><span class="built" id="built"></span></div>
+    <p class="meta">仕様書（docs/systems）と判断の記録（docs/DECISIONS.md）から作った見え方。直すときは元の文書を直し、<code>python tools/spec/build.py</code> で作り直す。</p>
+    <input type="search" id="search" class="search" placeholder="全ページから探す" aria-label="全ページから探す">
+  </div>
+</header>
+<div class="layout">
+  <nav class="toc" id="toc" aria-label="目次"></nav>
+  <main id="main"></main>
+</div>
+<script>
+(() => {
+  'use strict';
+  const DATA = /*DATA*/null;
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const SYSTEMS = DATA.systems;
+  // 企画は git に入れないので、無い手元もある（sections が null）
+  const CONCEPT = DATA.concept.sections ? { id: 'concept', name: '企画 📘', sections: DATA.concept.sections } : null;
+  const byId = new Map([...(CONCEPT ? [CONCEPT] : []), ...SYSTEMS].map((s) => [s.id, s]));
+  const KIND = { 体験の意図: 'intent', デフォルトと違う点: 'rules', 相互作用: 'links', やらないこと: 'not', 未決: 'open', 確認: 'check', 調整値: 'tune' };
+  const EARS = [['WHEN ', 'trigger'], ['WHILE ', 'while'], ['IF ', 'if']];
+
+  /** 「根源 🌳」を名前と絵文字に分ける */
+  const split = (name) => {
+    const m = name.match(/^(.*?)\s*(\p{Extended_Pictographic}[️‍\p{Extended_Pictographic}]*)$/u);
+    return m ? { title: m[1], icon: m[2] } : { title: name, icon: '📄' };
+  };
+  const sectionOf = (s, title) => s.sections.find((x) => x.title === title);
+  const listItems = (sec) => (sec ? sec.blocks.filter((b) => b.type === 'list').flatMap((b) => b.items) : []);
+  const unwritten = (sec) => !sec || sec.blocks.every((b) => b.type === 'p' && /^（未記入/.test(b.text));
+
+  // ── 文の小さな書式：`コード`・**太字**・[文](仕様書.md)・[D-000] ──
+  function inline(text) {
+    const codes = [];
+    let s = esc(text).replace(/`([^`]+)`/g, (_, c) => { codes.push(c); return `\u0001${codes.length - 1}\u0002`; });
+    s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, target) => {
+      const file = target.split('#')[0];
+      const id = !file.includes('/') && file.endsWith('.md') ? file.slice(0, -3) : null;
+      return id && byId.has(id) ? `<a href="#${id}" data-page="${id}">${label}</a>` : `<span class="ext" title="${target}">${label}</span>`;
+    });
+    s = s.replace(/\[(D-\d{3})\](?!\()/g, (_, id) => adrChip(id));
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    return s.replace(/\u0001(\d+)\u0002/g, (_, i) => `<code>${codes[i]}</code>`);
+  }
+  const ADR_STATE = { active: '採用', proposed: '保留', superseded: '置き換え済み', retired: '廃止' };
+  const live = (a) => a.state === 'active' || a.state === 'proposed';
+  function adrChip(id) {
+    const a = DATA.adrs[id];
+    if (!a) return `<span class="adr broken" title="判断の記録に無い">${id}</span>`;
+    return `<button type="button" class="adr${live(a) ? '' : ' old'}" data-adr="${id}" title="${esc(a.title)}（${ADR_STATE[a.state]}）">${id}</button>`;
+  }
+  function toggleAdr(button) {
+    const host = button.closest('li, p, td, .adr-box') || button.parentElement;
+    const id = button.dataset.adr;
+    const open = host.querySelector(`:scope > .adr-box[data-adr="${id}"]`);
+    if (open) { open.remove(); return; }
+    const a = DATA.adrs[id];
+    host.insertAdjacentHTML('beforeend', `<div class="adr-box" data-adr="${id}"><b>[${id}] ${esc(a.title)}</b> <span class="small">${esc(a.status)}</span>` +
+      `${a.decision ? `<p>決定 — ${inline(a.decision)}</p>` : ''}<p><a href="#adrs" data-page="adrs" data-anchor="adr-${id}">全文</a></p></div>`);
+  }
+
+  // ── 仕様書の塊 ──
+  function itemHtml(item, kind, anchor) {
+    let text = item.text, mark = '';
+    if (kind === 'links') {
+      const hit = EARS.find(([word]) => text.startsWith(word));
+      if (hit) { mark = `<span class="ears e-${hit[1]}">${hit[0].trim()}</span>`; text = text.slice(hit[0].length); }
+    }
+    const body = inline(text).replace(/ THEN /, ' <span class="ears e-if">THEN</span> ');
+    return `<li class="item d${item.depth}" id="${anchor}">${mark}${body}</li>`;
+  }
+  const tableHtml = (head, rows) =>
+    `<div class="scroll"><table class="md"><thead><tr>${head.map((h) => `<th>${inline(h)}</th>`).join('')}</tr></thead>` +
+    `<tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${c ? inline(c) : '—'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+  function blocksHtml(s, si, sec) {
+    const kind = KIND[sec.title] || 'rules';
+    return sec.blocks.map((b, bi) => {
+      const base = `${s.id}-${si}-${bi}`;
+      if (b.type === 'h') return `<h4>${inline(b.text)}</h4>`;
+      if (b.type === 'p') return `<p class="para" id="${base}">${inline(b.text)}</p>`;
+      if (b.type === 'code') return `<pre>${esc(b.text)}</pre>`;
+      if (b.type === 'table') return tableHtml(b.head, b.rows);
+      return `<ul class="items">${b.items.map((it, ii) => itemHtml(it, kind, `${base}-${ii}`)).join('')}</ul>`;
+    }).join('');
+  }
+  const sectionHtml = (s, sec) => {
+    const si = s.sections.indexOf(sec);
+    const kind = KIND[sec.title] || 'rules';
+    return `<section class="group k-${kind}"><h3>${esc(sec.title)}</h3>${blocksHtml(s, si, sec)}</section>`;
+  };
+  const head = (icon, title, kind, purpose, facts) =>
+    `<div class="head"><div class="head-title"><h2>${icon} ${esc(title)}</h2><span class="kind">${esc(kind)}</span></div>` +
+    (purpose ? `<p class="purpose">${purpose}</p>` : '') + (facts ? `<div class="facts">${facts}</div>` : '') + '</div>';
+  const pageLink = (id) => `<a href="#${id}" data-page="${id}">${esc(split(byId.get(id).name).title)}</a>`;
+
+  // ── ページ ──
+  function renderOverview() {
+    const written = SYSTEMS.filter((s) => !unwritten(sectionOf(s, '体験の意図'))).length;
+    let html = head('🗺️', 'このゲーム', '全体',
+      '仕組みごとの仕様書を、全体から細部へ読む順に並べたもの。中身は仕様書・判断の記録・原簿から作り、このページでは書き足さない。',
+      `<span>仕組み ${SYSTEMS.length}</span><span>体験の意図が書いてある仕組み ${written} / ${SYSTEMS.length}</span>`);
+    if (DATA.problems.length) html += `<div class="problems"><b>作るときに見つけた問題</b><ul>${DATA.problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>`;
+    html += `<section class="group"><h3>柱とコアループ</h3><p class="para">${CONCEPT ? `<a href="#concept" data-page="concept">企画</a>のページにある。` : '企画は公開しないので、この手元には無い。'}各仕組みの「体験の意図」は人が書き、柱を番号で指す。</p></section>`;
+    html += `<section class="group"><h3>仕組み <span class="small">docs/systems/INDEX.md の並び</span></h3><div class="cards">${SYSTEMS.map(card).join('')}</div></section>`;
+    const active = Object.values(DATA.adrs).filter(live).length;
+    html += `<section class="group"><h3>判断（ADR）</h3><p class="para">全体にかかる決定と、選ばなかった案。採用中 ${active} 件。<a href="#adrs" data-page="adrs">一覧</a></p></section>`;
+    return html;
+  }
+  const conceptBlanks = () => (CONCEPT ? CONCEPT.sections.filter(unwritten).length : 0);
+  function renderConcept() {
+    const facts = `<span>正本 <code>${esc(DATA.concept.source)}</code>（git に入れない）</span><span>練る場所 Notion</span>`;
+    let html = head('📘', '企画', '全体', '何のゲームか、柱、コアループ。公開しないので、正本は手元にしか無い（[D-025]）。'.replace(/\[(D-\d{3})\]/, (_, id) => adrChip(id)), facts);
+    if (!CONCEPT) return html + `<section class="group"><p class="para">この手元に <code>${esc(DATA.concept.source)}</code> が無い。</p></section>`;
+    for (const sec of CONCEPT.sections) {
+      html += unwritten(sec)
+        ? `<section class="group"><h3>${esc(sec.title)} <span class="badge warn">未記入（人が書く）</span></h3></section>`
+        : sectionHtml(CONCEPT, sec);
+    }
+    return html;
+  }
+  function renderAdrs() {
+    const all = Object.entries(DATA.adrs);
+    const now = all.filter(([, a]) => live(a));
+    const old = all.filter(([, a]) => !live(a));
+    const count = (state) => all.filter(([, a]) => a.state === state).length;
+    let html = head('⚖️', '判断（ADR）', '一覧',
+      '採用中の決定。何を ADR にするか、廃止と置き換えの決まりは docs/DECISIONS.md の冒頭にある。',
+      `<span>正本 <code>docs/DECISIONS.md</code></span><span>採用 ${count('active')}</span>${count('proposed') ? `<span>保留 ${count('proposed')}</span>` : ''}<span>置き換え済み ${count('superseded')}</span><span>廃止 ${count('retired')}</span>`);
+    const lines = (ps) => ps.map((p) => `<p>${p.map(inline).join('<br>')}</p>`).join('');
+    const part = (a, name) => (a.parts[name] ? `<div class="adr-part"><b>${name}</b>${lines(a.parts[name])}</div>` : '');
+    for (const [id, a] of now) {
+      const note = a.status.replace(/^\w+\s*/, '');
+      const facts = [];
+      if (a.scope.length) facts.push(`<span>効いている道：${a.scope.map((s) => `<code>${esc(s)}</code>`).join(' ')}</span>`);
+      facts.push(`<span>指している所：${a.refs.length ? a.refs.map((r) => `<code>${esc(r)}</code>`).join(' ') : 'なし'}</span>`);
+      html += `<section class="group adr-entry" id="adr-${id}"><h3>[${id}] ${esc(a.title)}<span class="small">${esc(a.date)}${a.state === 'proposed' ? '・保留' : ''}</span></h3>` +
+        (note ? `<p class="para small">${inline(note)}</p>` : '') +
+        `<div class="adr-part"><b>決定</b>${lines(a.parts['決定'] || [])}</div><div class="facts">${facts.join('')}</div>` +
+        `<details><summary>背景・検討した選択肢・帰結</summary>${part(a, '背景')}${part(a, '検討した選択肢')}${part(a, '帰結')}</details></section>`;
+    }
+    html += `<details class="group"><summary>置き換え済み・廃止 <span class="small">${old.length} 件</span></summary><ul class="adr-old">` +
+      old.map(([id, a]) => `<li id="adr-${id}"><b>[${id}] ${esc(a.title)}</b><br>${ADR_STATE[a.state]}${inline(a.status.replace(/^\w+(\s+by)?\s*/, '：'))}` +
+        `<details><summary>全文</summary>${part(a, '背景')}${part(a, '検討した選択肢')}${part(a, '決定')}${part(a, '帰結')}</details></li>`).join('') +
+      '</ul></details>';
+    return html;
+  }
+  function card(s) {
+    const { title, icon } = split(s.name);
+    const open = listItems(sectionOf(s, '未決')).length;
+    const chips = [];
+    if (unwritten(sectionOf(s, '体験の意図'))) chips.push('<span class="badge warn">体験の意図 未記入</span>');
+    if (open) chips.push(`<span class="badge">未決 ${open}</span>`);
+    const links = s.links.length ? `<span class="card-links">関わる仕組み：${s.links.map((id) => esc(split(byId.get(id).name).title)).join('・')}</span>` : '';
+    return `<a class="card" href="#${s.id}" data-page="${s.id}"><span class="card-name">${icon} ${esc(title)}</span><span class="card-sum">${esc(s.summary)}</span>${links}<span class="chips">${chips.join('')}</span></a>`;
+  }
+  function renderSystem(s) {
+    const { title, icon } = split(s.name);
+    const facts = [`<span>正本 <code>docs/systems/${s.id}.md</code></span>`];
+    const list = (v) => (v || '').replace(/[[\]]/g, '').trim();
+    if (list(s.meta.touches)) facts.push(`<span>保存などに触る：${esc(list(s.meta.touches))}</span>`);
+    if (list(s.meta.tunables)) facts.push(`<span>調整値の ScriptableObject：<code>${esc(list(s.meta.tunables))}</code></span>`);
+    if (s.links.length) facts.push(`<span>関わる仕組み：${s.links.map(pageLink).join('・')}</span>`);
+    let html = head(icon, title, '仕組み', esc(s.summary), facts.join(''));
+    for (const sec of s.sections) {
+      const kind = KIND[sec.title] || 'rules';
+      if (kind === 'intent' && unwritten(sec)) {
+        html += `<section class="group k-intent"><h3>${esc(sec.title)} <span class="badge warn">未記入（人が書く）</span></h3></section>`;
+      } else if (kind === 'tune') {
+        const rows = sec.blocks.filter((b) => b.type === 'table').reduce((n, b) => n + b.rows.length, 0);
+        html += `<details class="group k-tune"><summary>${esc(sec.title)} <span class="small">${rows} 行</span></summary>${blocksHtml(s, s.sections.indexOf(sec), sec)}</details>`;
+      } else {
+        html += sectionHtml(s, sec);
+      }
+    }
+    return html;
+  }
+  function renderCollected(title, icon, sectionTitle, purpose) {
+    const owners = [...(CONCEPT ? [CONCEPT] : []), ...SYSTEMS].filter((s) => sectionOf(s, sectionTitle) && !unwritten(sectionOf(s, sectionTitle)));
+    let html = head(icon, title, '一覧', purpose, '');
+    for (const s of owners) {
+      const sec = sectionOf(s, sectionTitle);
+      html += `<section class="group k-${KIND[sectionTitle]}"><h3>${pageLink(s.id)}</h3>${blocksHtml(s, s.sections.indexOf(sec), sec)}</section>`;
+    }
+    return html;
+  }
+  function renderItems() {
+    const it = DATA.items;
+    const nameOf = new Map(it.rows.map((r) => [r[0], r[1]]));
+    let html = head('🧺', 'アイテムとレシピ', '一覧', '原簿とレシピの今の中身。各欄の意味は仕様書（持ち物・クラフト）にある。',
+      `<span>原簿 <code>${esc(it.source)}</code></span><span>レシピ <code>${esc(it.recipeSource)}/*.asset</code></span>`);
+    html += `<section class="group"><h3>原簿</h3>${tableHtml(it.head, it.rows)}</section>`;
+    const rows = it.recipes.map((r) => [nameOf.get(r.product) || r.product, r.ingredients.map((g) => `${g.name} ${g.amount}`).join('・')]);
+    html += `<section class="group"><h3>レシピ</h3>${tableHtml(['作る品', '材料'], rows)}</section>`;
+    return html;
+  }
+
+  const PAGES = [
+    { key: 'concept', group: '全体', icon: '📘', title: '企画', render: renderConcept },
+    { key: 'overview', group: '全体', icon: '🗺️', title: 'このゲーム', render: renderOverview },
+    ...SYSTEMS.map((s) => ({ key: s.id, group: '仕組み', ...split(s.name), system: s, render: () => renderSystem(s) })),
+    { key: 'items', group: '一覧', icon: '🧺', title: 'アイテムとレシピ', render: renderItems },
+    { key: 'tunables', group: '一覧', icon: '🔢', title: '調整値', render: () => renderCollected('調整値', '🔢', '調整値', '各仕様書の「調整値」を集めたもの。') },
+    { key: 'open', group: '一覧', icon: '❓', title: '未決', render: () => renderCollected('未決', '❓', '未決', '各仕様書の「未決」を集めたもの。どれも人が決める。') },
+    { key: 'adrs', group: '一覧', icon: '⚖️', title: '判断（ADR）', render: renderAdrs },
+  ];
+
+  // ── 目次と移動 ──
+  const toc = document.getElementById('toc');
+  const main = document.getElementById('main');
+  const searchBox = document.getElementById('search');
+  let current = 'overview';
+
+  function renderToc() {
+    let html = '', group = null;
+    for (const p of PAGES) {
+      if (p.group !== group) { group = p.group; html += `<div class="toc-label">${esc(group)}</div>`; }
+      const open = p.system ? listItems(sectionOf(p.system, '未決')).length : 0;
+      const sub = open ? `未決 ${open}` : p.key === 'concept' ? (CONCEPT ? (conceptBlanks() ? `未記入 ${conceptBlanks()}` : '') : '手元に無い') : '';
+      html += `<button type="button" data-page="${p.key}" aria-current="${p.key === current}"><span class="toc-name">${p.icon} ${esc(p.title)}</span>${sub ? `<span class="toc-sub">${sub}</span>` : ''}</button>`;
+    }
+    toc.innerHTML = html;
+  }
+  function pager(index) {
+    const prev = PAGES[index - 1], next = PAGES[index + 1];
+    const a = (p, cls, label) => `<a class="${cls}" href="#${p.key}" data-page="${p.key}">${label}</a>`;
+    return `<nav class="pager">${prev ? a(prev, 'prev', `← ${prev.icon} ${esc(prev.title)}`) : ''}${next ? a(next, 'next', `${next.icon} ${esc(next.title)} →`) : ''}</nav>`;
+  }
+  function show(key, anchor) {
+    const index = Math.max(0, PAGES.findIndex((p) => p.key === key));
+    current = PAGES[index].key;
+    main.innerHTML = PAGES[index].render() + pager(index);
+    renderToc();
+    try { history.replaceState(null, '', '#' + current); } catch (e) { /* data: で開いたときは書き換えられない */ }
+    const target = anchor && document.getElementById(anchor);
+    for (let d = target && target.closest('details'); d; d = d.parentElement.closest('details')) d.open = true;
+    if (target) {
+      target.scrollIntoView({ block: 'center' });
+      target.classList.add('flash');
+      setTimeout(() => target.classList.remove('flash'), 1600);
+    } else {
+      window.scrollTo(0, 0);
+    }
+  }
+
+  // ── 探す ──
+  function search(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) { show(current); return; }
+    const hits = [];
+    for (const s of byId.values()) {
+      s.sections.forEach((sec, si) => sec.blocks.forEach((b, bi) => {
+        const base = `${s.id}-${si}-${bi}`;
+        const from = `${split(s.name).title} › ${sec.title}`;
+        const push = (text, anchor) => { if (text.toLowerCase().includes(q)) hits.push({ page: s.id, from, text, anchor }); };
+        if (b.type === 'list') b.items.forEach((item, ii) => push(item.text, `${base}-${ii}`));
+        else if (b.type === 'p') push(b.text, base);
+        else if (b.type === 'table') b.rows.forEach((row) => push(row.join(' ｜ '), ''));
+      }));
+    }
+    for (const [id, a] of Object.entries(DATA.adrs)) {
+      const text = `[${id}] ${a.title}`;
+      if (`${text} ${a.decision}`.toLowerCase().includes(q)) hits.push({ page: 'adrs', from: `判断（ADR）› ${ADR_STATE[a.state]}`, text, anchor: `adr-${id}` });
+    }
+    main.innerHTML = head('🔎', `「${query.trim()}」`, '探す', `${hits.length} 件`, '') +
+      `<section class="group"><ul class="items">${hits.slice(0, 300).map((h) =>
+        `<li class="item hit" data-page="${h.page}" data-anchor="${h.anchor}"><span class="from">${esc(h.from)}</span>${inline(h.text)}</li>`).join('')}</ul></section>`;
+  }
+
+  document.addEventListener('click', (e) => {
+    const adr = e.target.closest('[data-adr]');
+    if (adr && adr.tagName === 'BUTTON') { e.preventDefault(); toggleAdr(adr); return; }
+    const link = e.target.closest('[data-page]');
+    if (!link) return;
+    e.preventDefault();
+    searchBox.value = '';
+    show(link.dataset.page, link.dataset.anchor || null);
+  });
+  let timer = 0;
+  searchBox.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => search(searchBox.value), 120); });
+
+  document.getElementById('built').textContent = `${DATA.built} に作った`;
+  show(decodeURIComponent(location.hash.slice(1)) || (CONCEPT ? 'concept' : 'overview'));
+})();
+</script>
+</body>
+</html>

@@ -32,7 +32,9 @@
 - **保存していないシーンが開いていると、`run_tests` で Editor ごと止まる。**
   Test Framework が始めに保存するかを尋ねる窓を出し、人が押すまで主スレッドが止まる。
   `editor_status` も時間切れになる（窓を知らせる `blocked_by_dialog` は新しい Unity でしか出ない）。
-  → フックで先に止めるようにした（[D-021]）。片付けに `open_scene` を使わない。未保存の変更を尋ねずに捨てる
+  → フックで先に止める（`.claude/hooks/guard-dirty-scenes.ps1`）。テストの前に自動で保存も破棄もしない。
+  Editor は複数のセッションと人で共有しているので、ほかの作業途中の変更を書き込むか、尋ねずに消すことになる。
+  片付けに `open_scene` を使わない。未保存の変更を尋ねずに捨てる
 - **`cancel_tests` は安全なキャンセルではない。次の1回を道連れにする。**
   実測: 実行中に cancel → cancelled が返る → 再実行が running のまま固まる →
   もう一度 cancel で解ける → 再実行で完走。プロセスは殺さなくてよい
@@ -41,7 +43,7 @@
 - **PlayMode テストはテスト間でドメインを再読み込みしない。**static が残る。
   `GameManager.P_singleton` が true のまま残り、2 本目以降は誰も Player を
   起こさず NullReferenceException。TearDown は「Play を押し直した直後」まで戻す。
-  オブジェクトの破棄では足りない（[D-006] の実例、[D-016]）
+  オブジェクトの破棄では足りない（[D-006] の実例）
 - 生の `LoadScene` では `entered_scene` が更新されず、`SceneStarter.cs:67` の
   `FindIndex` が -1 を返す。実際のゲームでは起きない壊れ方をする。
   遷移は `GameManager.SceneTrans` を通す
@@ -86,7 +88,7 @@
 - `<>` は HTML タグと解釈される。素データは C# のまま持ち、描画側で逃がす
 - **`var` で受けた依存は字面に型名が出ないので図から消える。**`Root` への辺は
   3 本に見えて実際は 7 本だった。**Legacy → Domain の移行が 4 本ぶん少なく
-  見えていた**（[D-010] で `var` を禁じた背景）
+  見えていた**
 - 括弧を次の行に置くプロパティは正規表現から系統的に漏れる。
   `Root.Level` / `RootRegistry.All` / `Count` が図に出ていなかった
 - 図が GitHub 上で実際に描画されるか未確認
@@ -127,4 +129,18 @@
 - `puml-gen -dir` は入力のディレクトリ階層を出力先にそのまま再現する
 - winget で入れた JDK / Graphviz は、**起動済みのプロセスの PATH には反映されない。**
   VS Code もエージェントも再起動が要る
-- `.puml` の描画には Java が要る。Mermaid は GitHub と VS Code が標準で描く（[D-013]）
+- `.puml` の描画には Java が要る。Mermaid は GitHub と VS Code が標準で描く
+
+---
+
+## 2026-11-05
+
+- **Windows のタッチパッドは、キーを打っている最中と直後のタップとカーソルの移動を捨てる（Accidental Activation Prevention）。**
+  WASD で歩きながらタッチパッドで攻撃のスティックをタップ・ドラッグしても、ゲームに届かない。ゲームのコードは関係しない。
+  設定の「タッチパッドの感度」を「最も高い感度」にすると届く（ユーザーが確かめた）。感度は
+  `HKCU\Software\Microsoft\Windows\CurrentVersion\PrecisionTouchPad` の `AAPThreshold`（0 が最も高い。既定は 2）で読める。
+  アプリの側からこの抑止を止める手段は、Microsoft の Touchpad tuning guidelines には無い（OEM 向けのレジストリと、利用者の設定だけ）
+
+- **足して読み込む場所のシーンには、オクルージョンカリングを効かせられない。**Unity は遮蔽の情報を一度に 1 つしか読まず、
+  足して読み込むシーンは、先に読み込むシーンと一緒に焼く必要がある。場所のシーンは常駐シーンに足して読み込まれるので、
+  焼くと常駐シーンの側に入り、ある場所の遮蔽がほかの場所でも効いてしまう。描く回数は、動かない物をまとめて描いて減らす

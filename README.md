@@ -33,7 +33,7 @@
 
 - **エンジン**: Unity 6.3 LTS（6000.3.22f1）。2022.3.5f1 から移行
 - **言語**: C#
-- **対象プラットフォーム**: Android, Windows
+- **対象プラットフォーム**: WebGL, Android
 - **バージョン管理**: Gitで管理(昔はUVCSを使用)
 
 ---
@@ -69,9 +69,14 @@ Assets/
     Tests/Domain/     Domain 層のテスト
   LegacyScripts/      未整理のスクリプト（順次 _Project へ移す）
     Craft/            クラフトシステム
+    Day/              日の進行
+    Enemy/            敵とスポーン
     Inventory/        インベントリシステム
-    OutField/         フィールド生成
-    TextLabel/        テキスト表示
+    Player/           プレイヤー
+    Quest/            クエストシステム
+    Roots/            根源
+    Save/             セーブ / ロード
+    Scene/            シーン遷移
 tests/                dotnet からも回す Domain テスト
 docs/                 設計判断・コーディング規約
 ProjectSettings/      Unity プロジェクト設定

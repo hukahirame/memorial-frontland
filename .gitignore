@@ -17,6 +17,10 @@
 !/[Aa]ssets/WebGLTemplates/
 !/[Aa]ssets/WebGLTemplates.meta
 
+# --- そのまま書き出しに入る物（タイトルの背景の動画）。WebGL は動画を資産ではなく URL でしか流せない ---
+!/[Aa]ssets/StreamingAssets/
+!/[Aa]ssets/StreamingAssets.meta
+
 # --- 他に許可を足すときの雛形（ディレクトリと .meta を対で） ---
 # !/[Aa]ssets/[Ee]ditor/
 # !/[Aa]ssets/[Ee]ditor.meta
@@ -70,6 +74,12 @@ crashlytics-build.properties
 # ===== AI エージェント（ローカル設定のみ除外。CLAUDE.md は共有する） =====
 .claude/settings.local.json
 
+# ===== Python（tools の道具を動かすとできる） =====
+__pycache__/
+
+# ===== 仕様のページ（tools/spec/build.py が仕様書から作る） =====
+.spec/
+
 # ===== マージの残骸 =====
 *.orig
 *.rej
@@ -109,3 +119,7 @@ desktop.ini
 
 # ===== 開発ジャーナル（手元のメモ。公開しない） =====
 docs/JOURNAL.md
+
+# ===== 企画（リリース前に読まれたくないので公開しない。[D-025]） =====
+# 手元にしか無い。履歴もバックアップも無く、git clean -x でも消える
+docs/private/

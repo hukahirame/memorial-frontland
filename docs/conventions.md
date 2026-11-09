@@ -65,7 +65,7 @@ GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>();
 transform.GetChild(CHILDPLUS + index).Find("Text").GetComponent<Text>().text = ...
 ```
 
-## 型の明示 📐  [D-010]
+## 型の明示 📐
 
 ### Domain / Game の型を受ける変数は型を明示する
 
@@ -163,6 +163,9 @@ Data/Recipes/Torch.asset  ↔  productId: Torch
 
 ロジックは Domain に寄せて dotnet のテストで確かめる（CI でも走る）。
 見た目は撮影で確かめる（`UiShots`。名指しで回したときだけ走り、何も判定しない）。
+重さは測って確かめる（`Hitches`。根源1 で湧き・倒す・保存・零時などを 1 つずつ起こしてから流し、重いコマとそのコマで
+時間を食った処理を `Temp/Hitches.txt` に書く。2 分ほど。描く物の内訳と、画質の段ごとの描く回数は `Hitches.拠点と根源で描く物を数える`
+（`Temp/Renderers.txt`、1 分ほど）。名指しで回したときだけ走り、何も判定しない）。
 
 PlayMode のテストを足すのは、次の両方に当てはまるときだけ。
 
