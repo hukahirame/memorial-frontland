@@ -16,5 +16,5 @@
 
 ## ポインタ
 
-- [D-半角数字3桁]は、`docs/DECISIONS.md`に判断理由がある
+- [D-番号]は、`docs/DECISIONS.md`に判断理由がある
 - 取り決め: `docs/conventions.md`

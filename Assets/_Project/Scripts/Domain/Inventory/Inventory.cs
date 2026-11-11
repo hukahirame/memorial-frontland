@@ -5,7 +5,7 @@ namespace MemorialFloor.Domain
 {
     /// <summary>
     /// スロット1つぶん。空きは ItemId が空文字。
-    /// Unity の Inspector と JsonUtility が読むため、public フィールドで持つ（[D-007] の例外）。
+    /// Unity の Inspector と JsonUtility が読むため、public フィールドで持つ（[D-7] の例外）。
     /// </summary>
     [Serializable]
     public sealed class ItemSlot

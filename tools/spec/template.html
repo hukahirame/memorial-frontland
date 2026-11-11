@@ -4,13 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
-<title>仕様</title>
+<title>Admin</title>
 <!--
-  仕様のページのひな形。tools/spec/build.py が docs/systems の仕様書・docs/DECISIONS.md・原簿を読み、
-  下の DATA に入れて .spec/spec.html を書く。中身はここに書かない（書いた所が 2 つになる）。
+  管理のページのひな形。tools/spec/build.py が docs/systems の仕様書・docs/DECISIONS.md・原簿を読み、
+  下の DATA に入れて .spec/admin.html を書く。中身はここに書かない（書いた所が 2 つになる）。
 -->
 <style>
 :root {
+  color-scheme: light dark;
   --bg: #f6f6f3; --panel: #ffffff; --sunk: #f0f0ec; --text: #1d1d1b; --muted: #6b6b66; --line: #e2e1dc;
   --accent: #2f5fd0; --ok: #1f8a4c; --ng: #c8372d; --warn: #a86400;
   --t-trigger: #2f5fd0; --t-while: #7a45c9; --t-if: #1f8a4c; --removed: #fcebe9;
@@ -90,8 +91,16 @@ details.group > summary { cursor: pointer; font-weight: 600; font-size: 16px; ma
 .adr { font-size: 11px; padding: 0 5px; border-radius: 4px; border: 1px solid var(--line); background: var(--sunk); color: var(--ok); cursor: pointer; white-space: nowrap; }
 .adr.broken { color: var(--ng); cursor: default; }
 .adr.old { color: var(--muted); text-decoration: line-through; }
+.adr.open { color: var(--warn); }
+.state { font-size: 11px; font-weight: normal; padding: 0 6px; border-radius: 4px; border: 1px solid currentColor; white-space: nowrap; }
+.state[data-state="確定"] { color: var(--ok); }
+.state[data-state="保留中"] { color: var(--warn); }
+.state[data-state="棄却"] { color: var(--muted); }
+.state-head { font-size: 13px; color: var(--muted); margin: 16px 2px 6px; }
+.adr-title { font-weight: 600; text-decoration: none; }
+.none { color: var(--muted); font-size: 13px; margin: 6px 0; }
 .adr-entry { scroll-margin-top: 80px; }
-.adr-entry h3 .small { margin-left: auto; }
+.adr-entry h3 .date { margin-left: auto; }
 .adr-entry details { margin-top: 6px; }
 .adr-entry summary { cursor: pointer; font-size: 13px; color: var(--muted); }
 .adr-part { margin: 8px 0 0; font-size: 13px; }
@@ -126,7 +135,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
 <body>
 <header class="top">
   <div class="top-inner">
-    <div class="top-title"><h1>仕様</h1><span class="built" id="built"></span></div>
+    <div class="top-title"><h1>Admin</h1><span class="built" id="built"></span></div>
     <p class="meta">仕様書（docs/systems）と判断の記録（docs/DECISIONS.md）から作った見え方。直すときは元の文書を直し、<code>python tools/spec/build.py</code> で作り直す。</p>
     <input type="search" id="search" class="search" placeholder="全ページから探す" aria-label="全ページから探す">
   </div>
@@ -157,7 +166,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   const listItems = (sec) => (sec ? sec.blocks.filter((b) => b.type === 'list').flatMap((b) => b.items) : []);
   const unwritten = (sec) => !sec || sec.blocks.every((b) => b.type === 'p' && /^（未記入/.test(b.text));
 
-  // ── 文の小さな書式：`コード`・**太字**・[文](仕様書.md)・[D-000] ──
+  // ── 文の小さな書式：`コード`・**太字**・[文](仕様書.md)・[D-番号] ──
   function inline(text) {
     const codes = [];
     let s = esc(text).replace(/`([^`]+)`/g, (_, c) => { codes.push(c); return `\u0001${codes.length - 1}\u0002`; });
@@ -166,16 +175,18 @@ table.md th { background: var(--sunk); white-space: nowrap; }
       const id = !file.includes('/') && file.endsWith('.md') ? file.slice(0, -3) : null;
       return id && byId.has(id) ? `<a href="#${id}" data-page="${id}">${label}</a>` : `<span class="ext" title="${target}">${label}</span>`;
     });
-    s = s.replace(/\[(D-\d{3})\](?!\()/g, (_, id) => adrChip(id));
+    s = s.replace(/\[(D-\d+)\](?!\()/g, (_, id) => adrChip(id));
     s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     return s.replace(/\u0001(\d+)\u0002/g, (_, i) => `<code>${codes[i]}</code>`);
   }
-  const ADR_STATE = { active: '採用', proposed: '保留', superseded: '置き換え済み', retired: '廃止' };
-  const live = (a) => a.state === 'active' || a.state === 'proposed';
+  const live = (a) => a.state !== '棄却';
+  const stateBadge = (a) => `<span class="state" data-state="${esc(a.state)}">${esc(a.state)}</span>`;
+  const chosenText = (a) => (a.chosen ? `<span class="small">選択 (${esc(a.chosen)})</span>` : '');
   function adrChip(id) {
     const a = DATA.adrs[id];
     if (!a) return `<span class="adr broken" title="判断の記録に無い">${id}</span>`;
-    return `<button type="button" class="adr${live(a) ? '' : ' old'}" data-adr="${id}" title="${esc(a.title)}（${ADR_STATE[a.state]}）">${id}</button>`;
+    const look = a.state === '棄却' ? ' old' : a.state === '保留中' ? ' open' : '';
+    return `<button type="button" class="adr${look}" data-adr="${id}" title="${esc(a.title)}（${esc(a.state)}）">${id}</button>`;
   }
   function toggleAdr(button) {
     const host = button.closest('li, p, td, .adr-box') || button.parentElement;
@@ -183,7 +194,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     const open = host.querySelector(`:scope > .adr-box[data-adr="${id}"]`);
     if (open) { open.remove(); return; }
     const a = DATA.adrs[id];
-    host.insertAdjacentHTML('beforeend', `<div class="adr-box" data-adr="${id}"><b>[${id}] ${esc(a.title)}</b> <span class="small">${esc(a.status)}</span>` +
+    host.insertAdjacentHTML('beforeend', `<div class="adr-box" data-adr="${id}"><b>[${id}] ${esc(a.title)}</b> ${stateBadge(a)} ${chosenText(a)}` +
       `${a.decision ? `<p>決定 — ${inline(a.decision)}</p>` : ''}<p><a href="#adrs" data-page="adrs" data-anchor="adr-${id}">全文</a></p></div>`);
   }
 
@@ -227,17 +238,16 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     let html = head('🗺️', 'このゲーム', '全体',
       '仕組みごとの仕様書を、全体から細部へ読む順に並べたもの。中身は仕様書・判断の記録・原簿から作り、このページでは書き足さない。',
       `<span>仕組み ${SYSTEMS.length}</span><span>体験の意図が書いてある仕組み ${written} / ${SYSTEMS.length}</span>`);
-    if (DATA.problems.length) html += `<div class="problems"><b>作るときに見つけた問題</b><ul>${DATA.problems.map((p) => `<li>${esc(p)}</li>`).join('')}</ul></div>`;
-    html += `<section class="group"><h3>柱とコアループ</h3><p class="para">${CONCEPT ? `<a href="#concept" data-page="concept">企画</a>のページにある。` : '企画は公開しないので、この手元には無い。'}各仕組みの「体験の意図」は人が書き、柱を番号で指す。</p></section>`;
+    html += `<section class="group"><h3>企画</h3><p class="para">${CONCEPT ? `<a href="#concept" data-page="concept">企画</a>のページにある。` : '企画は公開しないので、この手元には無い。'}各仕組みの「体験の意図」は人が書く。</p></section>`;
     html += `<section class="group"><h3>仕組み <span class="small">docs/systems/INDEX.md の並び</span></h3><div class="cards">${SYSTEMS.map(card).join('')}</div></section>`;
     const active = Object.values(DATA.adrs).filter(live).length;
-    html += `<section class="group"><h3>判断（ADR）</h3><p class="para">全体にかかる決定と、選ばなかった案。採用中 ${active} 件。<a href="#adrs" data-page="adrs">一覧</a></p></section>`;
+    html += `<section class="group"><h3>判断（ADR）</h3><p class="para">人が選んだ案と、選ばなかった案。棄却でないもの ${active} 件。<a href="#adrs" data-page="adrs">一覧</a></p></section>`;
     return html;
   }
   const conceptBlanks = () => (CONCEPT ? CONCEPT.sections.filter(unwritten).length : 0);
   function renderConcept() {
     const facts = `<span>正本 <code>${esc(DATA.concept.source)}</code>（git に入れない）</span><span>練る場所 Notion</span>`;
-    let html = head('📘', '企画', '全体', '何のゲームか、柱、コアループ。公開しないので、正本は手元にしか無い（[D-025]）。'.replace(/\[(D-\d{3})\]/, (_, id) => adrChip(id)), facts);
+    let html = head('📘', '企画', '全体', '何のゲームかとコアループ。公開しないので、正本は手元にしか無い（[D-25]）。柱とやらないことは ADR に書く。'.replace(/\[(D-\d+)\]/, (_, id) => adrChip(id)), facts);
     if (!CONCEPT) return html + `<section class="group"><p class="para">この手元に <code>${esc(DATA.concept.source)}</code> が無い。</p></section>`;
     for (const sec of CONCEPT.sections) {
       html += unwritten(sec)
@@ -246,38 +256,66 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     }
     return html;
   }
+  const adrLines = (ps) => ps.map((p) => `<p>${p.map(inline).join('<br>')}</p>`).join('');
+  const adrPart = (a, name) => (a.parts[name] ? `<div class="adr-part"><b>${name}</b>${adrLines(a.parts[name])}</div>` : '');
+  const adrsOf = (state) => Object.entries(DATA.adrs).filter(([, a]) => a.state === state);
+  const adrCounts = () => ['確定', '保留中', '棄却'].map((state) => `<span>${state} ${adrsOf(state).length}</span>`).join('');
+  function adrEntry(id, a) {
+    const facts = [];
+    if (a.premises.length) facts.push(`<span>前提：${a.premises.map((p) => `${adrChip(p.id)} (${esc(p.option)})`).join(' ')}</span>`);
+    if (a.dependents.length) facts.push(`<span>これを前提にしている：${a.dependents.map(adrChip).join(' ')}</span>`);
+    if (a.systems.length) facts.push(`<span>仕組み：${a.systems.map(pageLink).join('・')}</span>`);
+    if (a.private) facts.push('<span>公開しない（docs/private/decisions.md）</span>');
+    if (a.scope.length) facts.push(`<span>効いている道：${a.scope.map((s) => `<code>${esc(s)}</code>`).join(' ')}</span>`);
+    facts.push(`<span>指している所：${a.refs.length ? a.refs.map((r) => `<code>${esc(r)}</code>`).join(' ') : 'なし'}</span>`);
+    const body = a.decision
+      ? `${adrPart(a, '決定')}<div class="facts">${facts.join('')}</div><details><summary>背景・検討した選択肢・帰結</summary>${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}${adrPart(a, '帰結')}${adrPart(a, '経緯')}</details>`
+      : `${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}${adrPart(a, '経緯')}<div class="facts">${facts.join('')}</div>`;
+    return `<section class="group adr-entry" id="adr-${id}"><h3>[${id}] ${esc(a.title)} ${stateBadge(a)} ${chosenText(a)}<span class="small date">${esc(a.date)}</span></h3>` +
+      (a.note ? `<p class="para small">${inline(a.note)}</p>` : '') + body + '</section>';
+  }
   function renderAdrs() {
-    const all = Object.entries(DATA.adrs);
-    const now = all.filter(([, a]) => live(a));
-    const old = all.filter(([, a]) => !live(a));
-    const count = (state) => all.filter(([, a]) => a.state === state).length;
     let html = head('⚖️', '判断（ADR）', '一覧',
-      '採用中の決定。何を ADR にするか、廃止と置き換えの決まりは docs/DECISIONS.md の冒頭にある。',
-      `<span>正本 <code>docs/DECISIONS.md</code></span><span>採用 ${count('active')}</span>${count('proposed') ? `<span>保留 ${count('proposed')}</span>` : ''}<span>置き換え済み ${count('superseded')}</span><span>廃止 ${count('retired')}</span>`);
-    const lines = (ps) => ps.map((p) => `<p>${p.map(inline).join('<br>')}</p>`).join('');
-    const part = (a, name) => (a.parts[name] ? `<div class="adr-part"><b>${name}</b>${lines(a.parts[name])}</div>` : '');
-    for (const [id, a] of now) {
-      const note = a.status.replace(/^\w+\s*/, '');
-      const facts = [];
-      if (a.scope.length) facts.push(`<span>効いている道：${a.scope.map((s) => `<code>${esc(s)}</code>`).join(' ')}</span>`);
-      facts.push(`<span>指している所：${a.refs.length ? a.refs.map((r) => `<code>${esc(r)}</code>`).join(' ') : 'なし'}</span>`);
-      html += `<section class="group adr-entry" id="adr-${id}"><h3>[${id}] ${esc(a.title)}<span class="small">${esc(a.date)}${a.state === 'proposed' ? '・保留' : ''}</span></h3>` +
-        (note ? `<p class="para small">${inline(note)}</p>` : '') +
-        `<div class="adr-part"><b>決定</b>${lines(a.parts['決定'] || [])}</div><div class="facts">${facts.join('')}</div>` +
-        `<details><summary>背景・検討した選択肢・帰結</summary>${part(a, '背景')}${part(a, '検討した選択肢')}${part(a, '帰結')}</details></section>`;
+      '1 件 1 問い。状態は確定・保留中・棄却の 3 つ。書き方は docs/DECISIONS.md の冒頭にある。',
+      `<span>正本 <code>docs/DECISIONS.md</code></span>${adrCounts()}`);
+    for (const state of ['保留中', '確定']) {
+      const list = adrsOf(state);
+      if (list.length) html += `<div class="state-head">${state} ${list.length} 件</div>` + list.map(([id, a]) => adrEntry(id, a)).join('');
     }
-    html += `<details class="group"><summary>置き換え済み・廃止 <span class="small">${old.length} 件</span></summary><ul class="adr-old">` +
-      old.map(([id, a]) => `<li id="adr-${id}"><b>[${id}] ${esc(a.title)}</b><br>${ADR_STATE[a.state]}${inline(a.status.replace(/^\w+(\s+by)?\s*/, '：'))}` +
-        `<details><summary>全文</summary>${part(a, '背景')}${part(a, '検討した選択肢')}${part(a, '決定')}${part(a, '帰結')}</details></li>`).join('') +
+    const old = adrsOf('棄却');
+    html += `<details class="group"><summary>棄却 <span class="small">${old.length} 件</span></summary><ul class="adr-old">` +
+      old.map(([id, a]) => `<li id="adr-${id}"><b>[${id}] ${esc(a.title)}</b><br>${inline(a.note)}` +
+        `<details><summary>全文</summary>${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}${adrPart(a, '決定')}${adrPart(a, '帰結')}${adrPart(a, '経緯')}</details></li>`).join('') +
       '</ul></details>';
     return html;
   }
+  // 入口。人の対応が要るものだけを出す
+  function nowItem(id, a) {
+    const where = a.systems.length ? `<span class="from">${a.systems.map((s) => esc(split(byId.get(s).name).title)).join('・')}</span>` : '';
+    return `<li class="item">${where}<a class="adr-title" href="#adrs" data-page="adrs" data-anchor="adr-${id}">[${id}] ${esc(a.title)}</a> ${chosenText(a)}${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}</li>`;
+  }
+  function nowGroup(title, hint, list) {
+    return `<section class="group"><h3>${title} <span class="small">${list.length} 件</span></h3><p class="para small">${hint}</p>` +
+      (list.length ? `<ul class="items">${list.map(([id, a]) => nowItem(id, a)).join('')}</ul>` : '<p class="none">なし</p>') + '</section>';
+  }
+  function renderNow() {
+    const open = adrsOf('保留中');
+    let html = head('🧭', 'いま', '全体', '人の対応が要るもの。決めたらチャットで「D-26 は (b) で試す」「D-26 は (b) で確定」のように伝える。', adrCounts());
+    if (DATA.problems.length) html += `<div class="problems"><b>ずれ</b><ul>${DATA.problems.map((p) => `<li>${inline(p)}</li>`).join('')}</ul></div>`;
+    html += nowGroup('決めて', 'まだ案を選んでいない問い。', open.filter(([, a]) => !a.chosen));
+    html += nowGroup('遊んで確かめて', '案を選んで試している問い。遊んで残すと決めたら確定にする。', open.filter(([, a]) => a.chosen));
+    if (!DATA.problems.length) html += '<section class="group"><h3>ずれ</h3><p class="none">なし</p></section>';
+    return html;
+  }
+  const decideCount = (s) => Object.values(DATA.adrs).filter((a) => a.state === '保留中' && a.systems.includes(s.id)).length;
   function card(s) {
     const { title, icon } = split(s.name);
-    const open = listItems(sectionOf(s, '未決')).length;
+    const decide = decideCount(s);
+    const rest = listItems(sectionOf(s, '未決')).filter((item) => !/\[D-\d+\]/.test(item.text)).length;
     const chips = [];
     if (unwritten(sectionOf(s, '体験の意図'))) chips.push('<span class="badge warn">体験の意図 未記入</span>');
-    if (open) chips.push(`<span class="badge">未決 ${open}</span>`);
+    if (decide) chips.push(`<span class="badge warn">決める ${decide}</span>`);
+    if (rest) chips.push(`<span class="badge">未決 ${rest}</span>`);
     const links = s.links.length ? `<span class="card-links">関わる仕組み：${s.links.map((id) => esc(split(byId.get(id).name).title)).join('・')}</span>` : '';
     return `<a class="card" href="#${s.id}" data-page="${s.id}"><span class="card-name">${icon} ${esc(title)}</span><span class="card-sum">${esc(s.summary)}</span>${links}<span class="chips">${chips.join('')}</span></a>`;
   }
@@ -289,6 +327,10 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     if (list(s.meta.tunables)) facts.push(`<span>調整値の ScriptableObject：<code>${esc(list(s.meta.tunables))}</code></span>`);
     if (s.links.length) facts.push(`<span>関わる仕組み：${s.links.map(pageLink).join('・')}</span>`);
     let html = head(icon, title, '仕組み', esc(s.summary), facts.join(''));
+    const working = Object.entries(DATA.adrs).filter(([, a]) => live(a) && (a.systems.includes(s.id) || a.refs.includes(`docs/systems/${s.id}.md`)));
+    if (working.length) {
+      html += `<section class="group"><h3>効いている判断</h3><ul class="items">${working.map(([id, a]) => `<li class="item">${adrChip(id)} ${esc(a.title)} ${stateBadge(a)} ${chosenText(a)}</li>`).join('')}</ul></section>`;
+    }
     for (const sec of s.sections) {
       const kind = KIND[sec.title] || 'rules';
       if (kind === 'intent' && unwritten(sec)) {
@@ -323,27 +365,27 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   }
 
   const PAGES = [
-    { key: 'concept', group: '全体', icon: '📘', title: '企画', render: renderConcept },
+    { key: 'now', group: '全体', icon: '🧭', title: 'いま', render: renderNow },
+    { key: 'adrs', group: '全体', icon: '⚖️', title: '判断（ADR）', render: renderAdrs },
     { key: 'overview', group: '全体', icon: '🗺️', title: 'このゲーム', render: renderOverview },
+    { key: 'concept', group: '全体', icon: '📘', title: '企画', render: renderConcept },
     ...SYSTEMS.map((s) => ({ key: s.id, group: '仕組み', ...split(s.name), system: s, render: () => renderSystem(s) })),
-    { key: 'items', group: '一覧', icon: '🧺', title: 'アイテムとレシピ', render: renderItems },
-    { key: 'tunables', group: '一覧', icon: '🔢', title: '調整値', render: () => renderCollected('調整値', '🔢', '調整値', '各仕様書の「調整値」を集めたもの。') },
-    { key: 'open', group: '一覧', icon: '❓', title: '未決', render: () => renderCollected('未決', '❓', '未決', '各仕様書の「未決」を集めたもの。どれも人が決める。') },
-    { key: 'adrs', group: '一覧', icon: '⚖️', title: '判断（ADR）', render: renderAdrs },
+    { key: 'items', group: 'データ', icon: '🧺', title: 'アイテムとレシピ', render: renderItems },
+    { key: 'tunables', group: 'データ', icon: '🔢', title: '調整値', render: () => renderCollected('調整値', '🔢', '調整値', '各仕様書の「調整値」を集めたもの。') },
   ];
 
   // ── 目次と移動 ──
   const toc = document.getElementById('toc');
   const main = document.getElementById('main');
   const searchBox = document.getElementById('search');
-  let current = 'overview';
+  let current = 'now';
 
   function renderToc() {
     let html = '', group = null;
     for (const p of PAGES) {
       if (p.group !== group) { group = p.group; html += `<div class="toc-label">${esc(group)}</div>`; }
-      const open = p.system ? listItems(sectionOf(p.system, '未決')).length : 0;
-      const sub = open ? `未決 ${open}` : p.key === 'concept' ? (CONCEPT ? (conceptBlanks() ? `未記入 ${conceptBlanks()}` : '') : '手元に無い') : '';
+      const decide = p.system ? decideCount(p.system) : p.key === 'now' ? adrsOf('保留中').length + DATA.problems.length : 0;
+      const sub = decide ? (p.system ? `決める ${decide}` : `対応 ${decide}`) : p.key === 'concept' ? (CONCEPT ? (conceptBlanks() ? `未記入 ${conceptBlanks()}` : '') : '手元に無い') : '';
       html += `<button type="button" data-page="${p.key}" aria-current="${p.key === current}"><span class="toc-name">${p.icon} ${esc(p.title)}</span>${sub ? `<span class="toc-sub">${sub}</span>` : ''}</button>`;
     }
     toc.innerHTML = html;
@@ -387,7 +429,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     }
     for (const [id, a] of Object.entries(DATA.adrs)) {
       const text = `[${id}] ${a.title}`;
-      if (`${text} ${a.decision}`.toLowerCase().includes(q)) hits.push({ page: 'adrs', from: `判断（ADR）› ${ADR_STATE[a.state]}`, text, anchor: `adr-${id}` });
+      if (`${text} ${a.decision}`.toLowerCase().includes(q)) hits.push({ page: 'adrs', from: `判断（ADR）› ${a.state}`, text, anchor: `adr-${id}` });
     }
     main.innerHTML = head('🔎', `「${query.trim()}」`, '探す', `${hits.length} 件`, '') +
       `<section class="group"><ul class="items">${hits.slice(0, 300).map((h) =>
@@ -407,7 +449,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   searchBox.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => search(searchBox.value), 120); });
 
   document.getElementById('built').textContent = `${DATA.built} に作った`;
-  show(decodeURIComponent(location.hash.slice(1)) || (CONCEPT ? 'concept' : 'overview'));
+  show(decodeURIComponent(location.hash.slice(1)) || 'now');
 })();
 </script>
 </body>

@@ -2,45 +2,53 @@
 
 <!--
 このファイルの目的:
-選ばなかった案とその理由を残し、エージェントが知らずに逆へ直すのを防ぐ。
+人が選んだ案と選ばなかった案を残し、エージェントが知らずに逆へ直すのを防ぐ。
 
-ADR にするのは、次をすべて満たす決定だけ。迷ったら書かない。
-- プロジェクト全体、または複数の仕組みにかかる
+1 件 1 問い。題名は問いにする。ADR にするのは、次をすべて満たすものだけ。迷ったら書かない。
+- プロジェクト全体や複数の仕組みにかかるか、1 つの仕組みの中でも人が狙いを選んだ振る舞いである
 - 戻すのが高くつくか、知らずに逆へ直されそうである
-- 却下した案と、その理由を書ける
-1 つの仕組みの中で済む決定は、その仕様書（docs/systems/）に振る舞いとして書き、理由は残さない。
+- 選択肢を書ける（保留中は、今の作りと問いだけでもよい）
+1 つの仕組みの中の作り方は、その仕様書（docs/systems/）に振る舞いとして書き、理由は残さない。
 道具やエンジンの落とし穴は FRICTIONS.md、書き方の決まりは docs/conventions.md に書く。
 足すのは /adr で承認されたものだけ。**決定** に数・クラス名・ファイルの道を書かない（コードと仕様書が持つ）。
 
-本文（背景〜帰結）は書き換えない。見出しの下の status と scope は直してよい。
-- 選び直したら新しく書き、古い方を Superseded by [D-YYY] にする
-- 選び直さずにやめるだけなら Retired（理由 1 行）にする
-- 一部だけ古くなったら、status の後ろに括弧で書く
-採用中の ADR が実態と食い違ったら、気づいたその作業で status を直す。
+状態は 3 つ。
+- 保留中: 人が確定していない。選択が空なら未決で、入っていれば試している案。
+- 確定: 人が確定した。変えるなら人に聞く。
+- 棄却: その問いをもう扱わない。括弧に理由を書く。
 
-並びは D 番号の昇順。日付では区切らない。日付は各項目の date: が持つ。
-ID は既存の最大値 + 1。欠番・再利用はしない。
-date: は判断した日。過去の判断を後から起票したときは記録した日を入れ、
-判断した日と典拠のコミットを **背景** に書く。
-scope: はその決定が効いている道。採用中の ADR の scope に無い道があると、
-python tools/spec/build.py が問題として出す。
+選び直すときは、同じ ADR の選択を変え、帰結を直し、経緯に 1 行足す。経緯は追記だけ。
+問いが変わる・分ける・まとめるときは新しく書き、古い方を棄却にする。
+一部だけ古くなったら、状態の後ろに括弧で書く。
+
+前提: は、その ADR の答えが変わったら読み直さないと事故になるものだけ書く。D-26(b) のように番号と選択肢で指す。
+関係がある程度なら本文で [D-26] と触れる。答えが変わると python tools/spec/build.py が問題として出す。
+範囲: はその決定が効いている道。棄却でない ADR の範囲に無い道があると、同じく問題として出す。
+
+並びは D 番号の昇順。ID は既存の最大値 + 1。欠番・再利用はしない。番号の頭に 0 を付けない。
+日付: は判断した日。過去の判断を後から起票したときは記録した日を入れ、判断した日と典拠のコミットを **背景** に書く。
+公開しない中身の ADR は docs/private/decisions.md に同じ形で置く。番号は同じ連番。
 
 --- テンプレート ---
-## [D-XXX] タイトル
-status: Proposed | Accepted | Superseded by [D-YYY] | Retired（理由）
-date: YYYY-MM-DD
-scope: 決定が効いている道
+## [D-X] 問い
+状態: 保留中 | 確定 | 棄却（理由）
+選択: (b)
+前提: D-26(b)
+日付: YYYY-MM-DD
+範囲: 決定が効いている道
 
 **背景** — なぜ今決める必要があるか。このセクションだけで状況が再現できること
 **検討した選択肢** — 却下案も Pros/Cons つきで。ここが空の記録は事後正当化
 **決定** — 何を選んだか
 **帰結** — 良い面、悪い面、監視すべき兆候（判断が誤りだった場合の検出条件）
+**経緯** — 日付と、どの案からどの案へ変えたか。選び直したときだけ
 -->
 
-## [D-001] Unity 6.3 LTS (6000.3.22f1) を採用する
-status: Accepted
-date: 2026-08-23
-scope: ProjectSettings/ProjectVersion.txt, Packages/
+## [D-1] Unity のどの版を使うか
+状態: 確定
+選択: (b)
+日付: 2026-08-23
+範囲: ProjectSettings/ProjectVersion.txt, Packages/
 
 **背景** — 2022.3.5f1 で開発していたが、Unity CLI / com.unity.pipeline による
 エージェント連携が Unity 6.0 以降を必須要件としていた。
@@ -49,13 +57,14 @@ scope: ProjectSettings/ProjectVersion.txt, Packages/
 最大の難所である URP 14→17 の RenderGraph 移行を回避できることが判明した。
 **決定** — (b)。6000.3.22f1 へ移行。
 **帰結** — API Updater が velocity→linearVelocity、PhysicMaterial→PhysicsMaterial を自動修正。
-vHierarchy が内部 API 変更で InvalidCastException を出したため削除した（[D-002] 参照）。
+vHierarchy が内部 API 変更で InvalidCastException を出したため削除した（[D-2] 参照）。
 Play 通し・ビルド検証は未実施。壊れていた場合の検出はここが最初の砦になる。
 
-## [D-002] バージョン管理を Git に一本化し、UVCS を廃止する
-status: Accepted
-date: 2026-08-23
-scope: Packages/manifest.json, README.md
+## [D-2] バージョン管理を何で行うか
+状態: 確定
+選択: (b)
+日付: 2026-08-23
+範囲: Packages/manifest.json, README.md
 
 **背景** — UVCS と Git を併用していたが、1プロジェクトを2リポジトリに分けると
 コード変更とアセット変更のアトミックなコミットが不可能になり、
@@ -66,10 +75,12 @@ scope: Packages/manifest.json, README.md
 **帰結** — third-party アセット 4.3 GB は .gitignore 対象のため Git では復旧できない。
 物理バックアップが唯一の防御手段になる。UVCS 側のリポジトリ本体は削除していない。
 
-## [D-003] エージェント制御を Unity 公式の Pipeline に委ね、自作の実行コマンド制限を撤回する
-status: Accepted
-date: 2026-08-25
-scope: AGENTS.md, .claude/settings.json, CODEOWNERS
+## [D-3] エージェントの操作をどう制限するか
+状態: 確定
+選択: (b)
+前提: D-1(b)
+日付: 2026-08-25
+範囲: AGENTS.md, .claude/settings.json, CODEOWNERS
 
 **背景** — 以前、エージェントの書き込み権限を `[CliCommand]` ホワイトリスト方式で
 物理的に制限する方針を採っていた。これは当時、公式のエージェント制御面が
@@ -85,10 +96,12 @@ experimental (0.5.0-exp.1) で破壊的変更があり得る。
 判断が誤りだった場合の検出条件: Pipeline の仕様変更で authoring_root や confirm が
 弱くなったとき。その時点で (a) の再検討が要る。
 
-## [D-004] エージェントの権限は「不可逆な操作のみ」を対象に絞る
-status: Accepted
-date: 2026-08-25
-scope: .claude/settings.json, AGENTS.md
+## [D-4] エージェントの何を止めるか
+状態: 確定
+選択: (b)
+前提: D-3(b)
+日付: 2026-08-25
+範囲: .claude/settings.json, AGENTS.md
 
 **背景** — 当初、`eval` / `reload_file` / `package_add` / `build` などを広く禁止する
 deny リストを設計したが、過剰であることが判明した。
@@ -101,10 +114,10 @@ ask は GUID を伴う資産操作（delete/move/rename_asset）、git push、Pr
 確実な担保は authoring_root（サーバ側）、confirm=true（サーバ側）、
 コミット済みの Git 状態と物理バックアップの3つ。deny は床上げであって天井ではない。
 
-## [D-005] シーン内の参照割り当てはエージェントが行う
-status: Retired（エージェントが実装から実機の確認までする今の進め方に含まれる。権限の線は .claude/settings.json が持つ）
-date: 2026-08-25
-scope: Assets/_Project/Scenes/, .claude/settings.json
+## [D-5] シーン内の参照割り当てはエージェントが行う
+状態: 棄却（エージェントが実装から実機の確認までする今の進め方に含まれる。権限の線は .claude/settings.json が持つ）
+日付: 2026-08-25
+範囲: Assets/_Project/Scenes/, .claude/settings.json
 
 **背景** — スクリプトに `[SerializeField]` を足すと、Inspector での参照割り当てが必ず発生する。
 手作業は面倒なうえ、ドラッグ先を間違えても静かに壊れる（実行するまで気づかない）。
@@ -113,7 +126,7 @@ scope: Assets/_Project/Scenes/, .claude/settings.json
 `unity command set_component_properties` で行う。
 シーン内コンポーネントへの値設定は deny にも ask にも入っておらず、境界が未定義だった。
 **決定** — (b)。シーン内コンポーネントへの値・参照の設定は、確認を取らずに実行してよい。
-**帰結** — [D-004] の「不可逆な操作のみ止める」に照らして矛盾しない。
+**帰結** — [D-4] の「不可逆な操作のみ止める」に照らして矛盾しない。
 値の設定は Undo 1ステップで戻せ、シーンは Git 追跡下なので `git restore` でも戻せる。
 差分も読める。今回の割り当ては +5 −2 行で、`recipeDefinitions` の追加と
 `craftdata` の削除がそのまま現れた。シーン全体が再シリアライズされる場合
@@ -121,10 +134,11 @@ scope: Assets/_Project/Scenes/, .claude/settings.json
 そのため変更履歴用の専用ログは設けない。git の差分とコミットメッセージが記録になる。
 GUID を動かす操作（`move_asset` / `rename_asset` / `delete_asset`）は引き続き ask のまま。
 
-## [D-006] `static` を状態置き場にしない
-status: Accepted
-date: 2026-08-25
-scope: docs/conventions.md, Assets/_Project/
+## [D-6] `static` を状態置き場にしてよいか
+状態: 確定
+選択: (b)
+日付: 2026-08-25
+範囲: docs/conventions.md, Assets/_Project/
 
 **背景** — 既存コードは可変な状態の多くを static フィールドに置いている
 （`Player2.playerhp` / `GameManager.entered_scene` / `Sun2.daytime` /
@@ -137,10 +151,12 @@ scope: docs/conventions.md, Assets/_Project/
 Legacy は据え置き、機能を移行するときに従う。
 検出は将来 Analyzer に落とせる見込みがあり、落ちたら conventions.md から削除する。
 
-## [D-007] public 可変フィールドを避ける。ただし ScriptableObject は例外
-status: Accepted
-date: 2026-08-25
-scope: docs/conventions.md, .editorconfig, tests/Domain.Tests/
+## [D-7] public 可変フィールドをどこまで許すか
+状態: 確定
+選択: (b)
+前提: D-14(c)
+日付: 2026-08-25
+範囲: docs/conventions.md, .editorconfig, tests/Domain.Tests/
 
 **背景** — 今日見つけた問題の多くが「public な状態に外から直接触れる」ことに
 起因していた（`pi.items = items` / `Player2.speed *= 1.3f`）。
@@ -157,10 +173,11 @@ Unity のコンパイルは .NET SDK を通らないため、Game 層は検出�
 （不変性・読み方・生成コードが同じ）であり、`exclude_structs` という設定の例外を
 足さずに済む方を選んだ。等価な選択肢が2つあるなら、設定を足さない方を採る。
 
-## [D-008] テストメソッド名は日本語の平叙文にする
-status: Accepted
-date: 2026-08-25
-scope: Assets/_Project/Tests/
+## [D-8] テストメソッド名をどう書くか
+状態: 確定
+選択: (b)
+日付: 2026-08-25
+範囲: Assets/_Project/Tests/
 
 **背景** — エージェントが実装とテストの両方を書く。テストはエージェントの理解を
 固定するため、その理解が仕様と食い違っていても緑になる。
@@ -174,10 +191,10 @@ scope: Assets/_Project/Tests/
 **帰結** — 人間はテスト一覧を眺めるだけで、エージェントの理解と仕様のずれに気づける。
 この理由が失われると規則が恣意的に見えるため、必ず参照できる状態に保つこと。
 
-## [D-009] 構造の確認は、生成した差分図と手で維持する現状図の二段で行う
-status: Superseded by [D-017]（[D-011] が現状図の維持を覆し、[D-017] が図そのものを廃止した）
-date: 2026-08-28
-scope: docs/dependencies-diagrams, docs/dependencies-diff-diagrams, tools/diagram-diff.ps1
+## [D-9] 構造の確認は、生成した差分図と手で維持する現状図の二段で行う
+状態: 棄却（[D-17] に置き換え。[D-11] が現状図の維持を覆し、[D-17] が図そのものを廃止した）
+日付: 2026-08-28
+範囲: docs/dependencies-diagrams, docs/dependencies-diff-diagrams, tools/diagram-diff.ps1
 
 **背景** — 複数クラスをまたぐ変更のあと、何がどう繋がり直したのかが
 git diff からは読み取れない。行の増減しか見えず、依存の増減が見えない。
@@ -209,10 +226,10 @@ Domain / Game の型がどれかのスライスに出ていること。
 判断が誤りだった場合の検出条件: スライスが機能と対応しなくなり、
 1枚に10型以上入るようになったとき。そこで切り直す。
 
-## [D-010] 層をまたぐ変数は型を明示する。var を使わない
-status: Retired（理由だった差分図の字面の読み取りは [D-017] で無くなった。書き方の決まりとして docs/conventions.md と .editorconfig に残す）
-date: 2026-08-28
-scope: docs/conventions.md, .editorconfig, Assets/LegacyScripts
+## [D-10] 層をまたぐ変数は型を明示する。var を使わない
+状態: 棄却（理由だった差分図の字面の読み取りは [D-17] で無くなった。書き方の決まりとして docs/conventions.md と .editorconfig に残す）
+日付: 2026-08-28
+範囲: docs/conventions.md, .editorconfig, Assets/LegacyScripts
 
 **背景** — `var root = RootsManager.Roots.Find(...)` と書くと、ソースの字面に
 `Root` が現れない。構造の差分図は Legacy を字面で解析している（リフレクションが
@@ -235,15 +252,15 @@ Legacy 全体を書き換える必要もない。
 型を書けば**読み手にも層の境界が見える**。
 
 機械で強制できるのは `_Project` だけ。Legacy では文章による担保にとどまる
-（[D-007] と同じ構図）。判断が誤りだった場合の検出条件: 図に出ない依存が
+（[D-7] と同じ構図）。判断が誤りだった場合の検出条件: 図に出ない依存が
 再び見つかったとき。そのときは (c) を検討する。
 
-## [D-011] 現状図も生成する。切り方は Domain のファイル分割に従う
-status: Superseded by [D-017]
-date: 2026-08-28
-scope: docs/dependencies-diagrams, tests/Domain.Tests/SliceDiagramGenerator.cs, .claude/skills/class-diff-diagram
+## [D-11] 現状図も生成する。切り方は Domain のファイル分割に従う
+状態: 棄却（[D-17] に置き換え）
+日付: 2026-08-28
+範囲: docs/dependencies-diagrams, tests/Domain.Tests/SliceDiagramGenerator.cs, .claude/skills/class-diff-diagram
 
-**背景** — [D-009] は現状図を人が維持する形にした。理由は「どう切るかは機械に
+**背景** — [D-9] は現状図を人が維持する形にした。理由は「どう切るかは機械に
 決められない」。だがこれは成り立っていなかった。維持を人に任せた図は、
 更新の手間より放置の楽さが勝つので必ず腐る。実際 `roots.md` は `RewardUI` が
 `Root` を使うようになったことを反映しておらず、`SliceDiagramTests` は
@@ -282,14 +299,14 @@ scope: docs/dependencies-diagrams, tests/Domain.Tests/SliceDiagramGenerator.cs, 
 持たないとスライスを切れないため。
 
 手順と書式は `.claude/skills/class-diff-diagram/SKILL.md`。
-[D-009] が `structure-diff/` と書いているのは誤りで、この名前が正しい。
+[D-9] が `structure-diff/` と書いているのは誤りで、この名前が正しい。
 
-## [D-012] Legacy の関心事は表で名指しする。ファイル構成からは導かない
-status: Superseded by [D-017]
-date: 2026-08-28
-scope: docs/dependencies-diagrams, .claude/skills/class-diff-diagram
+## [D-12] Legacy の関心事は表で名指しする。ファイル構成からは導かない
+状態: 棄却（[D-17] に置き換え）
+日付: 2026-08-28
+範囲: docs/dependencies-diagrams, .claude/skills/class-diff-diagram
 
-**背景** — [D-011] は「Domain のファイル1つ = 図1枚」で切った。Domain には
+**背景** — [D-11] は「Domain のファイル1つ = 図1枚」で切った。Domain には
 3ファイルしかないため、これだと図に出るのは62型のうち十数型で、残りの
 Legacy 50型は地図のどこにも載らない。Domain 分離を進める土台としては
 「今どこに何が絡んでいるか」こそ見たいので、これでは足りない。
@@ -298,7 +315,7 @@ Legacy 50型は地図のどこにも載らない。Domain 分離を進める土�
 (a) Legacy もファイル1つ = 図1枚。→ 47枚になる。`Wink.cs` 1枚に意味が無い。
 (b) ディレクトリで切る。→ Craft/ Inventory/ OutField/ TextLabel/ は取れるが、
     47ファイル中35が root 直下に平置きで、残りが1枚35型になる。
-(c) 連結成分やクラスタリングで切る。→ [D-011] で却下済み。`dep` が
+(c) 連結成分やクラスタリングで切る。→ [D-11] で却下済み。`dep` が
     ファイル単位の弱い辺なので、Legacy では全体が1つに繋がって切れない。
 (d) 核を人が名指しし、周りは機械が描く。
 
@@ -311,7 +328,7 @@ Legacy 50型は地図のどこにも載らない。Domain 分離を進める土�
 **帰結** — すべての型がちょうど1つの核に入っていることをテストが見張るので、
 表はコードの索引を兼ねる。型を足して割り当てを忘れると落ちる。
 
-Legacy を核とする図は大きい。最大で25節点になった（player.md）。[D-011] は
+Legacy を核とする図は大きい。最大で25節点になった（player.md）。[D-11] は
 12型を切り直しの兆候としたが、それは Domain の話で、遠因はファイルの切り方に
 あるから直せる。Legacy が大きいのは絡まっているという事実そのもので、図の
 欠陥ではない。**大きさは読むべき情報**として残す。分離が進めば自然に縮む。
@@ -319,10 +336,10 @@ Legacy を核とする図は大きい。最大で25節点になった（player.m
 Legacy の公開メンバは載せない。多くが Inspector への口であって設計ではなく、
 並べても関心事の輪郭が見えないため。
 
-## [D-013] クラス図の生成に PlantUmlClassDiagramGenerator を使わない
-status: Retired（図を作ることそのものを [D-017] でやめた）
-date: 2026-08-29
-scope: docs/dependencies-diagrams, tests/Domain.Tests/
+## [D-13] クラス図の生成に PlantUmlClassDiagramGenerator を使わない
+状態: 棄却（図を作ることそのものを [D-17] でやめた）
+日付: 2026-08-29
+範囲: docs/dependencies-diagrams, tests/Domain.Tests/
 
 **背景** — 現状図は SliceDiagramTests が生成しているが、C# の読み取りは
 DependencyGraphGenerator.cs の正規表現に依存している（384行中13箇所）。構文木を
@@ -353,10 +370,11 @@ Mermaid は GitHub と VS Code が標準で描くため閲覧環境の要求が�
 DependencyGraphGenerator が式形式メンバ・ネストしたジェネリクス・複数行
 シグネチャのいずれかを取りこぼし、図が実態とずれること。そのとき (b) を実装する。
 
-## [D-014] Domain を UnityEngine 非依存にし、asmdef で物理強制する
-status: Accepted
-date: 2026-08-29
-scope: Assets/_Project/Scripts/Domain/, Assets/_Project/Scripts/Game/, .github/workflows/domain-tests.yml
+## [D-14] Domain のエンジン非依存をどう守るか
+状態: 確定
+選択: (c)
+日付: 2026-08-29
+範囲: Assets/_Project/Scripts/Domain/, Assets/_Project/Scripts/Game/, .github/workflows/domain-tests.yml
 
 **背景** — 2026-08-25（4c5cc3a）の判断を後から起票する。`Assets/_Project/Scripts`
 を分割するにあたり、Domain がエンジンに依存しないことをどう担保するかを決める
@@ -369,6 +387,7 @@ scope: Assets/_Project/Scripts/Domain/, Assets/_Project/Scripts/Game/, .github/w
 (b) 単一アセンブリのまま置く。→ 却下。Domain のテストに Unity Editor の起動が
 必要になる。**エンジンを起動しないと回らないテストは、CI でも手元でも回す頻度が
 落ちる。**
+(c) asmdef で物理的に止める。
 
 **決定** — Domain の asmdef は `noEngineReferences: true`、`references: []` とする。
 依存は Game → Domain の一方向のみ。Domain は UnityEngine を参照しない。
@@ -378,13 +397,13 @@ scope: Assets/_Project/Scripts/Domain/, Assets/_Project/Scripts/Game/, .github/w
 代償として、asmdef 側から Legacy（Assembly-CSharp）を参照できない。参照は
 一方向で、Legacy への asmdef 付与は HeroEditor が gitignore されているため今は
 行えない。この制約は既に実害を出しており、PlayMode テストは `GameManager.SceneTrans`
-をリフレクションで呼んでいる（[D-016] 参照）。判断が誤りだった場合の検出条件:
+をリフレクションで呼んでいる（[D-16] 参照）。判断が誤りだった場合の検出条件:
 リフレクション経由の呼び出しが増え、改名がコンパイルで止まらなくなること。
 
-## [D-015] ゲーム設計は Notion に置く。docs/GDD.md は消さずに残す
-status: Superseded by [D-025]
-date: 2026-08-29
-scope: docs/GDD.md, README.md
+## [D-15] ゲーム設計は Notion に置く。docs/GDD.md は消さずに残す
+状態: 棄却（[D-25] に置き換え）
+日付: 2026-08-29
+範囲: docs/GDD.md, README.md
 
 **背景** — 2026-08-27（c4df091）の判断を後から起票する。分厚い GDD は複数人の
 ズレを防ぐ道具であり、現在1人では防ぐべきズレが無い。実際 Inventory と Craft の
@@ -407,10 +426,10 @@ DECISIONS.md へ移す。`docs/GDD.md` は残す。
 見直す。判断が誤りだった場合の検出条件: Notion を参照しないとコードの意図が
 読めない箇所が現れること。そのとき DECISIONS.md へ移す。
 
-## [D-016] PlayMode テストは判定せず、例外が出ないことだけを見る
-status: Retired（PlayMode のテストも振る舞いを判定するようになった）
-date: 2026-08-29
-scope: Assets/_Project/Tests/Play/
+## [D-16] PlayMode テストは判定せず、例外が出ないことだけを見る
+状態: 棄却（PlayMode のテストも振る舞いを判定するようになった）
+日付: 2026-08-29
+範囲: Assets/_Project/Tests/Play/
 
 **背景** — 2026-08-27（9b1233e）の判断を後から起票する。Domain 分割が作る壊れ方は
 「コンパイルは通るが Play すると null」であり、EditMode / dotnet テストでは
@@ -427,17 +446,18 @@ scope: Assets/_Project/Tests/Play/
 **決定** — PlayMode テストは判定を書かず、例外が出ないことだけを見る。Unity Test
 Framework が LogError と例外を自動で失敗にするため、これだけで網になる。TearDown
 は「Play を押し直した直後の状態に戻す」まで行う。オブジェクトの破棄では足りない。
-static のフラグとリストが残り、2本目以降が落ちるため（[D-006] の実例）。
+static のフラグとリストが残り、2本目以降が落ちるため（[D-6] の実例）。
 
-**帰結** — シーン遷移は `GameManager.SceneTrans` をリフレクションで呼ぶ（[D-014]
+**帰結** — シーン遷移は `GameManager.SceneTrans` をリフレクションで呼ぶ（[D-14]
 の一方向依存による）。改名がコンパイルではなく実行時に落ちる点はスモークテスト
 として許容する。判断が誤りだった場合の検出条件: 例外は出ないが壊れている
 不具合を、この網が続けて見逃すこと。
 
-## [D-017] 依存を図にする仕組みを廃止し、型の被覆検査だけ残す
-status: Accepted（スライス表と被覆検査を残す所は [D-020] が覆した。効いているのは図を作らない所）
-date: 2026-08-30
-scope: tests/Domain.Tests/
+## [D-17] 依存を図にし続けるか
+状態: 確定（スライス表と被覆検査を残す所は [D-20] が覆した。効いているのは図を作らない所）
+選択: (c)
+日付: 2026-08-30
+範囲: tests/Domain.Tests/
 
 **背景** — 現状図11枚と差分図を生成し、`dotnet test` が作り直していた。
 図は人間が読むためのもので、エージェントには読ませない前提だった（AGENTS.md の禁止）。
@@ -451,6 +471,7 @@ scope: tests/Domain.Tests/
 (b) 検査ごと全部やめる。→ 却下。型を足したとき関心事への割り当てを忘れる事故は
 実際に起きており（`Day.cs` の3型）、検査がそれを止めた。**出力をやめる判断は、
 その出力を作る過程で得ていた検査までやめる理由にはならない。**
+(c) 図の生成だけを廃止し、型の被覆検査は残す。
 
 **決定** — 現状図・差分図の生成を廃止する。`docs/dependencies-diagrams/`、
 `docs/dependencies-diff-diagrams/`、`tools/diagram-diff.ps1` を削除する。
@@ -462,10 +483,11 @@ scope: tests/Domain.Tests/
 判断が誤りだった場合の検出条件: 複数クラスをまたぐ変更で「何を参照しなくなったか」が
 分からず、同じ調査を繰り返すこと。
 
-## [D-018] ファイルの移動は .meta と対で行い、GUID の一致を照合する
-status: Accepted
-date: 2026-09-10
-scope: AGENTS.md, Assets/
+## [D-18] ファイルの移動をどう扱うか
+状態: 確定
+選択: (c)
+日付: 2026-09-10
+範囲: AGENTS.md, Assets/
 
 **背景** — エージェントによるファイル移動を「GUID が壊れる」という理由で禁止していた。
 しかし壊れるのは移動そのものではなく、`.meta` を置き去りにしたときだけである。
@@ -480,6 +502,7 @@ GUID は `.meta` の中にあり、対で動かせば保たれる。実測でも
 (b) 無条件に許可する。→ 却下。失敗が静かだから。GUID が壊れた症状は
 Missing Script で、そのシーンを開くまで気づかない。**検出できない失敗を
 許可してはいけない。**
+(c) `.meta` と対で移動し、GUID の一致を照合する。
 
 **決定** — `.meta` を持つファイルは、本体と `.meta` を必ず対で移動する。
 `.cs` に限らず prefab・テクスチャ・asmdef・フォルダも同じ。
@@ -495,10 +518,11 @@ rename として出て内容の差分が 0 になるため、レビュー可能�
 シーンには以前からの Missing Mono Script が残っており、目視では新旧を
 区別できない。だから機械での照合を必須にしている。
 
-## [D-019] ゲームデータの置き場はテーブルごとに決める
-status: Accepted
-date: 2026-09-10
-scope: docs/conventions.md, Assets/_Project/Resources/, Assets/_Project/Data/
+## [D-19] ゲームデータをどの形式で持つか
+状態: 確定
+選択: (d)
+日付: 2026-09-10
+範囲: docs/conventions.md, Assets/_Project/Resources/, Assets/_Project/Data/
 
 **背景** — レシピは ScriptableObject、アイテム原簿は CSV という混在状態にあり、
 どちらを選ぶかの基準が書かれていなかった。ItemCatalog で CSV の解析を Domain に
@@ -514,6 +538,7 @@ scope: docs/conventions.md, Assets/_Project/Resources/, Assets/_Project/Data/
 **表で表せない構造を表に入れると、列が増えて中身が空になる。**
 (c) スプレッドシートを編集元にし、ビルド時に SO を生成する。→ 今は採らない。
 規模に対して変換器の維持費が見合わない。数百行になったら再検討する。
+(d) テーブルごとに決める。
 
 **決定** — テーブルごとに決める。入れ子・可変長・他アセットへの参照があるものは
 ScriptableObject にする。平坦で行数が多く一括編集するものは CSV に置き、Domain で
@@ -522,13 +547,14 @@ ScriptableObject にする。平坦で行数が多く一括編集するものは
 **帰結** — 混在が続くため、データを足すたびに判断が要る。判断が誤りだった場合の
 検出条件: CSV に固定枠の空列が増え始めること。そのときは ScriptableObject へ移す。
 
-## [D-020] 関心事の単位をフォルダに一本化し、スライス表を廃止する
-status: Accepted
-date: 2026-09-14
-scope: docs/systems/, tests/Domain.Tests/, Assets/_Project/Scripts/Domain/
+## [D-20] 関心事の単位を何で持つか
+状態: 確定
+選択: (c)
+日付: 2026-09-14
+範囲: docs/systems/, tests/Domain.Tests/, Assets/_Project/Scripts/Domain/
 
 **背景** — 関心事を `docs/slices.txt`（スライス表）とフォルダの2か所で持っていた。
-表は依存図を切るために作り、[D-017] で図をやめた後も被覆検査のために残した。
+表は依存図を切るために作り、[D-17] で図をやめた後も被覆検査のために残した。
 その後 Legacy を関心事ごとのフォルダに分けたため、表の12行は「Domain のファイル +
 Game / Legacy の同名フォルダ」をなぞるだけになり、仕様書12本の id もフォルダ名と一致していた。
 型を足すたびに表の書き換えが要り、Domain 分割はその費用を払い続ける作業だった。
@@ -538,6 +564,7 @@ Game / Legacy の同名フォルダ」をなぞるだけになり、仕様書12�
 表が検出していたのは「どこにも属さない型」だけで、それはフォルダでも検出できる。
 (b) Domain は平置きのまま、ファイル名から関心事を引く。→ 却下。`Health.cs` と
 `Attack.cs` がプレイヤーだと分かるのは表があるからで、名前からは決まらない。
+(c) 関心事の単位をフォルダに一本化する。
 
 **決定** — 関心事の単位は層の直下のフォルダとし、Domain / Game / Legacy の同じ名前の
 フォルダを1つの関心事とする。Domain もフォルダに分ける。仕様書の id はフォルダ名を
@@ -550,10 +577,10 @@ Game / Legacy の同名フォルダ」をなぞるだけになり、仕様書12�
 判断が誤りだった場合の検出条件: 1つの関心事を複数のフォルダ名で持ちたくなること、
 またはフォルダの中身が関心事と対応しなくなり仕様書の範囲が説明できなくなること。
 
-## [D-021] 保存していないシーンが開いているときは、run_tests を始めさせずに止める
-status: Retired（道具の落とし穴とその対策なので FRICTIONS.md に移した。フックは残す）
-date: 2026-11-02
-scope: .claude/hooks/guard-dirty-scenes.ps1, .claude/settings.json, CLAUDE.md, AGENTS.md
+## [D-21] 保存していないシーンが開いているときは、run_tests を始めさせずに止める
+状態: 棄却（道具の落とし穴とその対策なので FRICTIONS.md に移した。フックは残す）
+日付: 2026-11-02
+範囲: .claude/hooks/guard-dirty-scenes.ps1, .claude/settings.json, CLAUDE.md, AGENTS.md
 
 **背景** — 開いているシーンに保存していない変更があると、Test Framework はテストの始めに
 保存するかを尋ねる窓（Scene(s) Have Been Modified）を出す（`SaveModifiedSceneTask`）。
@@ -583,10 +610,10 @@ Editor が 10 秒答えないときと、一覧を読めないときも止める
 判断が誤りだった場合の検出条件: Editor が自分でシーンを未保存にし（再コンパイルのたびなど）、
 フックが毎回止めて作業が進まなくなること。そのときは未保存にする元を突き止めて直す。
 
-## [D-022] 根源3は見た目を試す組み立ての処理から作り、遊べるのは下の階だけにする
-status: Superseded by [D-023]（覆したのは (d) の 2 階を見るだけにする所。(b) の組み立て方は今も有効）
-date: 2026-11-02
-scope: Assets/_Project/Scripts/Editor/Roots/Root3Builder.cs, Assets/_Project/Scripts/Editor/LookDev/FloodedMallBuilder.cs, Assets/_Project/Scripts/Game/Scene/Area.cs, Assets/LegacyScripts/Enemy/OF_Spawner.cs, Assets/LegacyScripts/Enemy/Slime.cs
+## [D-22] 根源3は見た目を試す組み立ての処理から作り、遊べるのは下の階だけにする
+状態: 棄却（[D-23] に置き換え。覆したのは (d) の 2 階を見るだけにする所。(b) の組み立て方は今も有効）
+日付: 2026-11-02
+範囲: Assets/_Project/Scripts/Editor/Roots/Root3Builder.cs, Assets/_Project/Scripts/Editor/LookDev/FloodedMallBuilder.cs, Assets/_Project/Scripts/Game/Scene/Area.cs, Assets/LegacyScripts/Enemy/OF_Spawner.cs, Assets/LegacyScripts/Enemy/Slime.cs
 
 **背景** — ユーザーが、見た目を試した水没モール（`Scenes/LookDev/FloodedMall.unity`）を根源3として
 ゲームに入れ、色違いのスライムを出すよう頼んだ（2026-11-02）。根源1・2 のシーンは手で置いた Cube でできている。
@@ -619,13 +646,13 @@ Root3 のシーン・根源2の奥の出口・Build Settings をまとめて作�
 判断が誤りだった場合の検出条件: 根源3で敵が湧かない、または水の底や 2 階に湧く（湧いた敵の高さを見る）。
 プレイヤーが縁から落ちて連れ戻される。
 
-## [D-023] 根源3は上の階も遊べるようにし、場の外の高さを場所に、湧く地面を探す高さを核の候補に持たせる
-status: Retired（根源3の中の作り方。振る舞いは仕様書の enemy と player が持つ）
-date: 2026-11-02
-scope: Assets/_Project/Scripts/Domain/OutField/Field.cs, Assets/_Project/Scripts/Domain/Enemy/Spawn.cs, Assets/_Project/Scripts/Game/Scene/Area.cs, Assets/LegacyScripts/Player/Player2.cs, Assets/LegacyScripts/Enemy/Seeker.cs, Assets/LegacyScripts/Enemy/SpawnerCandidate.cs, Assets/LegacyScripts/Enemy/OF_Spawner.cs, Assets/LegacyScripts/Enemy/Slime.cs, Assets/_Project/Scripts/Editor/LookDev/FloodedMallBuilder.cs, Assets/_Project/Scripts/Editor/Roots/Root3Builder.cs
+## [D-23] 根源3は上の階も遊べるようにし、場の外の高さを場所に、湧く地面を探す高さを核の候補に持たせる
+状態: 棄却（根源3の中の作り方。振る舞いは仕様書の enemy と player が持つ）
+日付: 2026-11-02
+範囲: Assets/_Project/Scripts/Domain/OutField/Field.cs, Assets/_Project/Scripts/Domain/Enemy/Spawn.cs, Assets/_Project/Scripts/Game/Scene/Area.cs, Assets/LegacyScripts/Player/Player2.cs, Assets/LegacyScripts/Enemy/Seeker.cs, Assets/LegacyScripts/Enemy/SpawnerCandidate.cs, Assets/LegacyScripts/Enemy/OF_Spawner.cs, Assets/LegacyScripts/Enemy/Slime.cs, Assets/_Project/Scripts/Editor/LookDev/FloodedMallBuilder.cs, Assets/_Project/Scripts/Editor/Roots/Root3Builder.cs
 
 **背景** — ユーザーが、根源3の 2 階に上がれるようにし、少ない核の候補（3 つ）を増やすよう頼んだ（2026-11-02）。
-[D-022] では 2 階を見るだけにしていた。2 階を遊ぶには、[D-022] の (c) に挙げた 3 つを直す必要がある。
+[D-22] では 2 階を見るだけにしていた。2 階を遊ぶには、[D-22] の (c) に挙げた 3 つを直す必要がある。
 プレイヤーは高さ 4 を超えると連れ戻されるが、上の階の床がちょうど 4 にある（`FieldBounds.EscapeHeight`）。
 敵の湧く地面は高さ 5 から真下へ探すので、上の階の床を当たる物にすると、核が下の階にあっても上の階に湧く（`Seeker`）。
 プレイヤーは transform を動かして歩くので、段の角に当たると止まる（`Player2`）。
@@ -656,10 +683,10 @@ scope: Assets/_Project/Scripts/Domain/OutField/Field.cs, Assets/_Project/Scripts
 判断が誤りだった場合の検出条件: 根源3で敵が核と違う階に湧く。プレイヤーが上の階で連れ戻される。エスカレーターを上れない
 （どれも RootPlayTests が見る）。根源1・2 で敵の湧く数が減る。
 
-## [D-024] 根源3は動かない物をまとめて描いて軽くし、オクルージョンカリングは使わない
-status: Retired（根源3の中の作り方。振る舞いは仕様書の staging が持ち、オクルージョンカリングの件は FRICTIONS.md に移した）
-date: 2026-11-02
-scope: Assets/_Project/Scripts/Editor/LookDev/FloodedMallBuilder.cs, Assets/_Project/Scripts/Editor/Roots/Root3Builder.cs, Assets/_Project/Scripts/Game/Staging/ViewSecurer.cs
+## [D-24] 根源3は動かない物をまとめて描いて軽くし、オクルージョンカリングは使わない
+状態: 棄却（根源3の中の作り方。振る舞いは仕様書の staging が持ち、オクルージョンカリングの件は FRICTIONS.md に移した）
+日付: 2026-11-02
+範囲: Assets/_Project/Scripts/Editor/LookDev/FloodedMallBuilder.cs, Assets/_Project/Scripts/Editor/Roots/Root3Builder.cs, Assets/_Project/Scripts/Game/Staging/ViewSecurer.cs
 
 **背景** — ユーザーが、見た目をほぼ変えずに重さを減らせるかを尋ね、テストは最低限にと頼んだ（2026-11-02）。
 根源3のモールは、組み立ての処理が Cube や板を 1 つずつ置いたもので、描く物が約 1000 ある。static の印は像と岩の 13 だけだった。
@@ -687,12 +714,13 @@ PlayMode で画質を Android と同じ「中」にして数えると（Profiler
 判断が誤りだった場合の検出条件: 根源3で動くはずの物が止まって見える（まとめ描きの印が付いた物は動かせない）。
 水面の上に描かれるはずの透ける物が、水に隠れる。
 
-## [D-025] 企画の正本は git に入れない手元のファイルに置き、Notion は練る場所にする
-status: Accepted
-date: 2026-11-05
-scope: .gitignore, tools/spec/build.py
+## [D-25] 企画の正本をどこに置くか
+状態: 確定
+選択: (e)
+日付: 2026-11-05
+範囲: .gitignore, tools/spec/build.py
 
-**背景** — [D-015] で企画（柱・コアループ）を Notion に置くとしたが、Notion にそのページは作られず、
+**背景** — [D-15] で企画（柱・コアループ）を Notion に置くとしたが、Notion にそのページは作られず、
 仕様書 12 本の「体験の意図」は空いたままだった。エージェントの多くは Notion を読めず、企画の判断が要る件が
 作業の記録に溜まっていた。ユーザーは企画も仕様のページ（spec.html）にまとめたい。一方でリリースするゲームなので、
 企画を公開リポジトリで読まれたくない（2026-11-05、ユーザー）。仕様のページは git に入れておらず、手元にしか無い。
@@ -708,8 +736,177 @@ scope: .gitignore, tools/spec/build.py
 
 **決定** — (e)。企画の正本は git に入れない手元のファイルとし、仕様のページはそれがあれば先頭に出す。
 Notion は練る場所で、決まったものだけを正本に書く。公開の文書は企画の中身を書き写さず、柱を番号だけで指す。
-[D-015] が「置かないと決めた印」として残したファイルは消す。理由はこの記録が持つ。
+[D-15] が「置かないと決めた印」として残したファイルは消す。理由はこの記録が持つ。
 
 **帰結** — 企画には履歴もバックアップも無い。`git clean -x` や PC の故障で消える。
 公開の clone では、仕様のページに企画は出ない。判断が誤りだった場合の検出条件: 企画を消した・前の版に戻したくなった、
 または別の PC で企画を読みたくなったこと。そのときは (d) に移る。
+
+## [D-26] 攻略度が 100 に届いたら何が起きるか
+状態: 保留中
+選択:
+日付: 2026-11-09
+範囲: docs/systems/roots.md
+
+**背景** — 仕様書 roots の未決から移した。いまは 100 に届くと止まるだけ。
+
+**検討した選択肢** —
+(a) 止まるだけ（今の作り）
+
+## [D-27] 報酬のアイテムが持ち物に入りきらないときどうするか
+状態: 保留中
+選択:
+日付: 2026-11-09
+範囲: docs/systems/quest.md
+
+**背景** — 仕様書 quest の未決から移した。`Reward.Kind` は任意のアイテム ID を取れるが、どのクエストも使っていない。
+
+**検討した選択肢** —
+(a) 消える（今の作り）
+(b) 落とす
+(c) 受け取りを待たせる
+
+## [D-28] クエストの発行を必ず翌日にするか
+状態: 保留中
+選択:
+日付: 2026-11-09
+範囲: docs/systems/day.md
+
+**背景** — 仕様書 day の未決から移した。保留を挟むのが意図かが決まっていない。
+
+**検討した選択肢** —
+(a) 翌日にする（今の作り）
+(b) 当日に発行する
+
+## [D-29] 何日目かを持つか
+状態: 保留中
+選択:
+日付: 2026-11-09
+範囲: docs/systems/day.md
+
+**背景** — 仕様書 day の未決から移した。経過秒は保存されるが、何日目かは保存する対象が無い。クエストの期限や根源の追加を入れるなら要る。
+
+**検討した選択肢** —
+(a) 持たない（今の作り）
+(b) 持つ
+
+## [D-30] 遊んでいる最中に地形を生成するか
+状態: 保留中
+選択:
+日付: 2026-11-09
+範囲: docs/systems/outfield.md
+
+**背景** — 仕様書 outfield の未決から移した。シードは根源が持っているが、使う者が居ない。手で置いたシーンを使っている。
+
+**検討した選択肢** —
+(a) 手で置いたシーンを使う（今の作り）
+(b) 遊んでいる最中に生成する
+
+## [D-31] Root1 の地形の正典を何にするか
+状態: 保留中
+選択:
+日付: 2026-11-09
+範囲: docs/systems/outfield.md
+
+**背景** — 仕様書 outfield の未決から移した。Root2 と MainSite は地図にしていない。Root3 は組み立ての処理が作る。
+
+**検討した選択肢** —
+(a) 手で置いた Cube のまま（今の作り）
+(b) 地図から組んだものに置き換える
+
+## [D-32] 木を切る操作を入れるか
+状態: 保留中
+選択:
+日付: 2026-11-09
+範囲: docs/systems/outfield.md
+
+**背景** — 仕様書 outfield の未決から移した。
+
+**検討した選択肢** —
+(a) 入れない（今の作り）
+(b) 入れる
+
+## [D-33] 始まりの持ち物をどうするか
+状態: 保留中
+選択:
+日付: 2026-11-09
+範囲: docs/systems/inventory.md
+
+**背景** — 仕様書 inventory の未決から移した。起動時に木の枝 14 個と鉄の剣 1 本が入り、鉄の剣は装備した状態で始まる。枝 14 個がデバッグ用か、始まりの持ち物かが決まっていない。
+
+**検討した選択肢** —
+(a) 枝 14 個も始まりの持ち物にする（今の作り）
+(b) 枝 14 個はデバッグ用なので外す
+
+## [D-34] 持ち物が埋まったときの逃げ道をどうするか
+状態: 保留中
+選択:
+日付: 2026-11-09
+範囲: docs/systems/inventory.md
+
+**背景** — 仕様書 inventory の未決から移した。スロットを増やす手段も捨てる手段も無く、15 枠が埋まると以後は何も拾えず何も作れない。画面には 4 段（20）まで収まる。
+
+**検討した選択肢** —
+(a) 何も足さない（今の作り）
+(b) 捨てられるようにする
+(c) 枠を増やせるようにする
+
+## [D-35] 同じ装備品を複数持ったとき効果を重ねるか
+状態: 保留中
+選択:
+日付: 2026-11-09
+範囲: docs/systems/inventory.md
+
+**背景** — 仕様書 inventory の未決から移した。俊敏の首飾りを 2 つ持つと +0.6 になり、剛力のペンダントも持つ数だけ足す。
+
+**検討した選択肢** —
+(a) 重ねる（今の作り）
+(b) 重ねない
+
+## [D-36] 作った品をどこへ出すか
+状態: 保留中
+選択:
+日付: 2026-11-09
+範囲: docs/systems/craft.md
+
+**背景** — 仕様書 craft の未決から移した。作業台から離れて作ると、品は離れた作業台に落ちる。拾わずに拠点を出ると、拠点のシーンと一緒に消える。
+
+**検討した選択肢** —
+(a) 作業台に落とす（今の作り）
+(b) 直接持ち物へ入れる
+
+## [D-37] 品を買う場所をどうするか
+状態: 保留中
+選択:
+日付: 2026-11-09
+範囲: docs/systems/craft.md
+
+**背景** — 仕様書 craft の未決から移した。
+
+**検討した選択肢** —
+(a) 作業台で買う（今の作り）
+(b) 店を別に置く
+
+## [D-38] 材料 5 種以上のレシピを作るか
+状態: 保留中
+選択:
+日付: 2026-11-09
+範囲: docs/systems/craft.md
+
+**背景** — 仕様書 craft の未決から移した。作るなら UI の作り直しが要る。
+
+**検討した選択肢** —
+(a) 作らない（今の作り）
+(b) 作る
+
+## [D-39] 保存の形が変わったときの互換をどうするか
+状態: 保留中
+選択:
+日付: 2026-11-09
+範囲: docs/systems/save.md
+
+**背景** — 仕様書 save の未決から移した。いまは版を持っていない。欠けた欄は空のまま読まれる。
+
+**検討した選択肢** —
+(a) 版を持たない（今の作り）
+(b) 版を持つ

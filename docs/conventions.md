@@ -28,7 +28,7 @@ for (int i = 0; i < int.Parse(demand1.text); i++) pi.UnloadInventory(target1);
 coin = int.Parse(GameObject.Find("CoinText").GetComponent<TextMeshProUGUI>().text);
 ```
 
-### `static` を状態置き場にしない  [D-006]
+### `static` を状態置き場にしない  [D-6]
 
 ```csharp
 // ❌ NG
@@ -86,7 +86,7 @@ var recipes = new Dictionary<string, Recipe>();   // ✅ new が型を言って�
 var index = 0;                                    // ✅
 ```
 
-## フィールドの公開 🔓  [D-007]
+## フィールドの公開 🔓  [D-7]
 
 書き換え可能な public インスタンスフィールドを作らない。
 `const` / `static readonly` は対象外。
@@ -105,7 +105,7 @@ public IReadOnlyList<string> Items => _items;
 **例外: ScriptableObject と `[Serializable]` のデータ入れ物は public フィールドで良い。**
 その代わり SO は読み取り専用として扱い、実行中に書き換えない。
 
-## ゲームデータの置き場 🗄️  [D-019]
+## ゲームデータの置き場 🗄️  [D-19]
 
 入れ子・可変長・他アセットへの参照があるものは ScriptableObject。
 平坦で行数が多く一括編集するものは CSV に置き、Domain で解析する。
@@ -150,7 +150,7 @@ ScriptableObject のファイル名は、中身の ID と一致させる。
 Data/Recipes/Torch.asset  ↔  productId: Torch
 ```
 
-### テストメソッド 🧪  [D-008]
+### テストメソッド 🧪  [D-8]
 
 日本語の平叙文。振る舞いだけを書き、メソッド名や引数など呼び出し方は含めない。
 

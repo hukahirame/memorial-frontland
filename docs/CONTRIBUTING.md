@@ -75,7 +75,7 @@ AI との対話で決まったことは、書かなければ消えます。
 | 「毎回こう書く」という取り決め | `docs/conventions.md` |
 | 道具やエンジンの落とし穴 | `FRICTIONS.md` |
 | 検証可能な振る舞い | テストコード |
-| 企画（柱・コアループ） | `docs/private/concept.md`（git に入れない。練るのは Notion） |
+| 企画（何のゲームか・コアループ） | `docs/private/concept.md`（git に入れない。練るのは Notion） |
 | エージェントへの実行指示・禁止事項 | `/CLAUDE.md` |
 
 **迷ったら書かない。**
@@ -100,8 +100,8 @@ AI との対話で決まったことは、書かなければ消えます。
 | `docs/DECISIONS.md` | なぜそう作られているか。判断の記録 |
 | `docs/conventions.md` | 機械で強制できない取り決め |
 | `docs/systems/` | 関心事ごとの仕様書。関心事のフォルダと1対1 |
-| `docs/private/concept.md` | 企画。公開しないので git に入れず、作った人の手元にしか無い（[D-025]） |
-| `.spec/spec.html` | 仕様書を全体から細部へ読むページ。`python tools/spec/build.py` で仕様書から作る（git には入れない） |
+| `docs/private/concept.md` | 企画。公開しないので git に入れず、作った人の手元にしか無い（[D-25]） |
+| `.spec/admin.html` | 人の対応が要るものを先に出すページ。仕様書も全体から細部へ読める。`python tools/spec/build.py` で仕様書から作る（git には入れない） |
 | `/CLAUDE.md` | エージェントへの実行指示 |
 | `/README.md` | プロジェクトの概要（外部向け） |
 

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """企画（docs/private/concept.md）・仕様書（docs/systems/*.md）・判断の記録（docs/DECISIONS.md）から、
-仕様のページ .spec/spec.html を作る。企画は git に入れないので、無ければ「この手元に無い」と出す。
+管理のページ .spec/admin.html を作る。企画は git に入れないので、無ければ「この手元に無い」と出す。
 
 ページは見え方で、何も書き足さない。中身は仕様書・判断の記録・原簿から毎回読む。
 直すときは元の文書を直して、作り直す。
-文書どうしの食い違い（無いリンク先、廃止した ADR を指す所、採用中の ADR の scope に無い道）は
+文書どうしの食い違い（無いリンク先、棄却した ADR を指す所、棄却でない ADR の範囲に無い道、前提の答えの違い）は
 問題として出し、終了コード 1 で終わる。
 
     python tools/spec/build.py
@@ -21,15 +21,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SYSTEMS = ROOT / "docs" / "systems"
 DECISIONS = ROOT / "docs" / "DECISIONS.md"
+PRIVATE_DECISIONS = ROOT / "docs" / "private" / "decisions.md"  # 公開しない中身の ADR。無い手元もある
 ITEMS = ROOT / "Assets" / "_Project" / "Resources" / "ItemData.csv"
 RECIPES = ROOT / "Assets" / "_Project" / "Data" / "Recipes"
-CONCEPT = ROOT / "docs" / "private" / "concept.md"  # 企画。git に入れない（[D-025]）ので、無い手元もある
+CONCEPT = ROOT / "docs" / "private" / "concept.md"  # 企画。git に入れない（[D-25]）ので、無い手元もある
 TEMPLATE = Path(__file__).with_name("template.html")
-OUT = ROOT / ".spec" / "spec.html"
+OUT = ROOT / ".spec" / "admin.html"
 
 BULLET = re.compile(r"^(\s*)[-*] (.*)$")
 LINK = re.compile(r"\[([^\]]+)\]\(([^)\s]+)\)")
-ADR_REF = re.compile(r"\[(D-\d{3})\](?!\()")
+ADR_REF = re.compile(r"\[(D-\d+)\](?!\()")
+PREMISE = re.compile(r"(D-\d+)\(([a-z])\)")
+# 効いている仕組みを範囲の道から引く。関心事はフォルダ名を小文字にしたもの（[D-20]）
+SCOPE_SYSTEM = re.compile(r"docs/systems/(\w+)\.md|(?:Scripts/(?:Domain|Game)|LegacyScripts)/(\w+)/")
 SEPARATOR = re.compile(r"^:?-+:?$")
 
 
@@ -158,10 +162,10 @@ def index_rows() -> list[dict]:
     return rows
 
 
-ADR_PARTS = ("背景", "検討した選択肢", "決定", "帰結")
-ADR_STATES = (("Accepted", "active"), ("Proposed", "proposed"), ("Superseded", "superseded"), ("Retired", "retired"))
+ADR_PARTS = ("背景", "検討した選択肢", "決定", "帰結", "経緯")
+ADR_STATES = ("確定", "保留中", "棄却")
 NEW_LINE = re.compile(r"^(\s{2,}|\([a-z]\)|[-*] |\d+\. )")
-# [D-xxx] を探す文書。DECISIONS.md の中の参照と、作業の記録（STATE.md）は昔の判断を語るので見ない
+# [D-番号] を探す文書。DECISIONS.md の中の参照と、作業の記録（STATE.md）は昔の判断を語るので見ない
 REFERRERS = ("docs/systems/*.md", "docs/conventions.md", "docs/CONTRIBUTING.md", "README.md",
              "CLAUDE.md", "AGENTS.md", "FRICTIONS.md", ".editorconfig", ".claude/commands/*.md",
              "Assets/_Project/**/*.cs", "Assets/LegacyScripts/**/*.cs")
@@ -184,44 +188,80 @@ def paragraphs(text: str) -> list[list[str]]:
     return out
 
 
-def decisions() -> dict:
-    adrs = {}
-    for chunk in re.split(r"\n(?=## \[D-\d{3}\])", read(DECISIONS)):
-        head = re.match(r"## \[(D-\d{3})\] (.+)", chunk)
-        if not head:
+def adr_entry(chunk: str, private: bool) -> tuple[str, dict] | None:
+    head = re.match(r"## \[(D-\d+)\] (.+)", chunk)
+    if not head:
+        return None
+    field = lambda name: (m.group(1).strip() if (m := re.search(rf"^{name}:[ \t]*(.*)$", chunk, re.M)) else "")
+    status = field("状態")
+    state = next((s for s in ADR_STATES if status.startswith(s)), "")
+    chosen = re.fullmatch(r"\(([a-z])\)", field("選択"))
+    parts = {}
+    for i, name in enumerate(ADR_PARTS):
+        rest = "|".join(re.escape(n) for n in ADR_PARTS[i + 1:]) or "$^"
+        m = re.search(rf"\*\*{name}\*\*\s*[—-]\s*(.*?)(?=\n\*\*(?:{rest})\*\*|\Z)", chunk, re.S)
+        if m:
+            parts[name] = paragraphs(m.group(1))
+    return head.group(1), {
+        "title": head.group(2).strip(),
+        "state": state,
+        "note": status[len(state):].strip().removeprefix("（").removesuffix("）"),
+        "chosen": chosen.group(1) if chosen else "",
+        "premise": field("前提"),
+        "premises": [{"id": adr, "option": option} for adr, option in PREMISE.findall(field("前提"))],
+        "date": field("日付"),
+        "scope": [p.strip() for p in field("範囲").split(",") if p.strip()],
+        "decision": " ".join(" ".join(lines) for lines in parts.get("決定", [])),
+        "parts": parts,
+        "private": private,
+        "refs": [],
+        "dependents": [],
+        "systems": [],
+    }
+
+
+def decisions() -> tuple[dict, list[str]]:
+    adrs, problems = {}, []
+    for path, private in ((DECISIONS, False), (PRIVATE_DECISIONS, True)):
+        if not path.exists():
             continue
-        field = lambda name: (m.group(1).strip() if (m := re.search(rf"^{name}: (.+)$", chunk, re.M)) else "")
-        status = field("status")
-        state = next((s for word, s in ADR_STATES if status.startswith(word)), "active")
-        parts = {}
-        for i, name in enumerate(ADR_PARTS):
-            rest = "|".join(re.escape(n) for n in ADR_PARTS[i + 1:]) or "$^"
-            m = re.search(rf"\*\*{name}\*\*\s*[—-]\s*(.*?)(?=\n\*\*(?:{rest})\*\*|\Z)", chunk, re.S)
-            if m:
-                parts[name] = paragraphs(m.group(1))
-        adrs[head.group(1)] = {
-            "title": head.group(2).strip(),
-            "status": status,
-            "state": state,
-            "date": field("date"),
-            "scope": [p.strip() for p in field("scope").split(",") if p.strip()],
-            "decision": " ".join(" ".join(lines) for lines in parts.get("決定", [])),
-            "parts": parts,
-            "refs": [],
-        }
-    return adrs
+        for chunk in re.split(r"\n(?=## \[D-\d+\])", read(path)):
+            entry = adr_entry(chunk, private)
+            if entry:
+                if entry[0] in adrs:
+                    problems.append(f"[{entry[0]}] が 2 か所にある")
+                adrs[entry[0]] = entry[1]
+    return dict(sorted(adrs.items(), key=lambda pair: int(pair[0][2:]))), problems
 
 
 def adr_problems(adrs: dict) -> list[str]:
-    """採用中の ADR の scope に無い道と、廃止・置き換え済み・無い ADR を指している所。指している所は adrs に控える"""
+    """棄却でない ADR の範囲に無い道、前提の答えの違い、棄却した・無い ADR を指している所。指している所は adrs に控える"""
     problems = []
     for adr_id, adr in adrs.items():
-        if adr["state"] not in ("active", "proposed"):
+        if not adr["state"]:
+            problems.append(f"[{adr_id}] の状態が確定・保留中・棄却のどれでもない")
             continue
+        if adr["state"] == "棄却":
+            continue
+        if adr["state"] == "確定" and not adr["chosen"]:
+            problems.append(f"確定の [{adr_id}] に選択が無い")
         for scope in adr["scope"]:
             found = any(ROOT.glob(scope)) if any(c in scope for c in "*?[") else (ROOT / scope).exists()
             if not found:
-                problems.append(f"採用中の [{adr_id}] の scope にある {scope} が無い")
+                problems.append(f"[{adr_id}] の範囲にある {scope} が無い")
+        if adr["premise"] and not adr["premises"]:
+            problems.append(f"[{adr_id}] の前提が D-26(b) の形でない")
+        for premise in adr["premises"]:
+            base = adrs.get(premise["id"])
+            if base is None:
+                problems.append(f"[{adr_id}] の前提 [{premise['id']}] が判断の記録に無い")
+                continue
+            base["dependents"].append(adr_id)
+            if base["state"] == "棄却":
+                problems.append(f"[{adr_id}] の前提 [{premise['id']}] が棄却された")
+            elif base["chosen"] != premise["option"]:
+                now = f"({base['chosen']})" if base["chosen"] else "未決"
+                problems.append(f"[{adr_id}] の前提は [{premise['id']}]({premise['option']}) だが、今の答えは {now}")
     files = sorted({path for pattern in REFERRERS for path in ROOT.glob(pattern) if path.is_file()})
     for path in files:
         name = str(path.relative_to(ROOT)).replace("\\", "/")
@@ -232,8 +272,8 @@ def adr_problems(adrs: dict) -> list[str]:
                 problems.append(f"{name} の [{adr_id}] が判断の記録に無い")
                 continue
             adr["refs"].append(name)
-            if adr["state"] in ("superseded", "retired"):
-                problems.append(f"{name} が{'置き換え済み' if adr['state'] == 'superseded' else '廃止'}の [{adr_id}] を指している")
+            if adr["state"] == "棄却":
+                problems.append(f"{name} が棄却の [{adr_id}] を指している")
     return problems
 
 
@@ -255,11 +295,10 @@ def items() -> dict:
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8")
-    adrs = decisions()
+    adrs, problems = decisions()
     rows = index_rows()
     order = [row["id"] for row in rows]
     ids = set(order)
-    problems = []
     systems = []
     for row in rows:
         path = SYSTEMS / f"{row['id']}.md"
@@ -285,6 +324,9 @@ def main() -> int:
         if path.stem != "INDEX" and path.stem not in ids:
             problems.append(f"{path.name} が INDEX.md に無い")
     problems += adr_problems(adrs)
+    for adr in adrs.values():
+        hits = {(m.group(1) or m.group(2)).lower() for scope in adr["scope"] if (m := SCOPE_SYSTEM.search(scope))}
+        adr["systems"] = [i for i in order if i in hits]
 
     data = {
         "built": datetime.now().strftime("%Y-%m-%d %H:%M"),

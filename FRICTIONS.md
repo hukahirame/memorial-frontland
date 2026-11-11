@@ -43,7 +43,7 @@
 - **PlayMode テストはテスト間でドメインを再読み込みしない。**static が残る。
   `GameManager.P_singleton` が true のまま残り、2 本目以降は誰も Player を
   起こさず NullReferenceException。TearDown は「Play を押し直した直後」まで戻す。
-  オブジェクトの破棄では足りない（[D-006] の実例）
+  オブジェクトの破棄では足りない（[D-6] の実例）
 - 生の `LoadScene` では `entered_scene` が更新されず、`SceneStarter.cs:67` の
   `FindIndex` が -1 を返す。実際のゲームでは起きない壊れ方をする。
   遷移は `GameManager.SceneTrans` を通す
