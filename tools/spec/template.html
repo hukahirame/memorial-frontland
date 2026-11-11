@@ -42,14 +42,20 @@ button, input { font: inherit; color: inherit; }
 .top h1 { margin: 0; font-size: 19px; }
 .built { font-size: 12px; color: var(--muted); }
 .meta { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
-.search { margin-top: 8px; width: 100%; max-width: 360px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--text); font-size: 13px; }
+.tools { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.search { flex: 1 1 auto; min-width: 0; max-width: 360px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--text); font-size: 13px; }
+.nav, .to-top { width: 32px; height: 32px; padding: 0; line-height: 1; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); cursor: pointer; }
+.nav:hover:not(:disabled), .to-top:hover { border-color: var(--accent); }
+.nav:disabled { color: var(--muted); opacity: .5; cursor: default; }
+.to-top { position: fixed; right: 16px; bottom: 16px; z-index: 5; width: 40px; height: 40px; box-shadow: 0 2px 8px rgba(0, 0, 0, .15); }
+.to-top[hidden] { display: none; }
 
 .layout { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 24px; max-width: 1200px; margin: 0 auto; padding: 16px; }
 .toc { position: sticky; top: 16px; align-self: start; display: flex; flex-direction: column; gap: 5px; max-height: calc(100vh - 32px); overflow-y: auto; padding-bottom: 8px; }
 .toc-label { font-size: 12px; color: var(--muted); margin: 8px 2px 0; }
 .toc-label:first-child { margin-top: 0; }
-.toc button { display: flex; flex-direction: column; gap: 1px; text-align: left; padding: 5px 8px; line-height: 1.4; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
-.toc button[aria-current="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.toc a { display: flex; flex-direction: column; gap: 1px; text-align: left; padding: 5px 8px; line-height: 1.4; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: inherit; text-decoration: none; }
+.toc a[aria-current="page"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .toc-name { font-weight: 600; font-size: 13px; }
 .toc-sub { font-size: 11px; color: var(--warn); }
 main { min-width: 0; }
@@ -57,7 +63,7 @@ main { min-width: 0; }
   .layout { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .toc { position: static; flex-direction: row; overflow-x: auto; max-height: none; padding-bottom: 4px; }
   .toc-label { display: none; }
-  .toc button { min-width: 112px; flex: 0 0 auto; }
+  .toc a { min-width: 112px; flex: 0 0 auto; }
 }
 
 .problems { background: var(--removed); border: 1px solid var(--ng); border-radius: 10px; padding: 10px 16px; margin-bottom: 12px; }
@@ -137,9 +143,14 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   <div class="top-inner">
     <div class="top-title"><h1>Admin</h1><span class="built" id="built"></span></div>
     <p class="meta">仕様書（docs/systems）と判断の記録（docs/DECISIONS.md）から作った見え方。直すときは元の文書を直し、<code>python tools/spec/build.py</code> で作り直す。</p>
-    <input type="search" id="search" class="search" placeholder="全ページから探す" aria-label="全ページから探す">
+    <div class="tools">
+      <button type="button" id="back" class="nav" title="戻る" aria-label="戻る">←</button>
+      <button type="button" id="forward" class="nav" title="進む" aria-label="進む">→</button>
+      <input type="search" id="search" class="search" placeholder="全ページから探す（/ キー）" aria-label="全ページから探す">
+    </div>
   </div>
 </header>
+<button type="button" id="top" class="to-top" title="先頭へ" aria-label="先頭へ" hidden>↑</button>
 <div class="layout">
   <nav class="toc" id="toc" aria-label="目次"></nav>
   <main id="main"></main>
@@ -150,6 +161,8 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   const DATA = /*DATA*/null;
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  /** ページと、その中の場所を指す住所。#roots や #adrs/adr-D-34。ブラウザの戻る・進む・再読み込み・新しいタブで開くがこれで効く */
+  const href = (page, anchor) => '#' + page + (anchor ? '/' + anchor : '');
   const SYSTEMS = DATA.systems;
   // 企画は git に入れないので、無い手元もある（sections が null）
   const CONCEPT = DATA.concept.sections ? { id: 'concept', name: '企画 📘', sections: DATA.concept.sections } : null;
@@ -195,7 +208,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     if (open) { open.remove(); return; }
     const a = DATA.adrs[id];
     host.insertAdjacentHTML('beforeend', `<div class="adr-box" data-adr="${id}"><b>[${id}] ${esc(a.title)}</b> ${stateBadge(a)} ${chosenText(a)}` +
-      `${a.decision ? `<p>決定 — ${inline(a.decision)}</p>` : ''}<p><a href="#adrs" data-page="adrs" data-anchor="adr-${id}">全文</a></p></div>`);
+      `${a.decision ? `<p>決定 — ${inline(a.decision)}</p>` : ''}<p><a href="${href('adrs', 'adr-' + id)}" data-page="adrs" data-anchor="adr-${id}">全文</a></p></div>`);
   }
 
   // ── 仕様書の塊 ──
@@ -291,7 +304,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   // 入口。人の対応が要るものだけを出す
   function nowItem(id, a) {
     const where = a.systems.length ? `<span class="from">${a.systems.map((s) => esc(split(byId.get(s).name).title)).join('・')}</span>` : '';
-    return `<li class="item">${where}<a class="adr-title" href="#adrs" data-page="adrs" data-anchor="adr-${id}">[${id}] ${esc(a.title)}</a> ${chosenText(a)}${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}</li>`;
+    return `<li class="item">${where}<a class="adr-title" href="${href('adrs', 'adr-' + id)}" data-page="adrs" data-anchor="adr-${id}">[${id}] ${esc(a.title)}</a> ${chosenText(a)}${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}</li>`;
   }
   function nowGroup(title, hint, list) {
     return `<section class="group"><h3>${title} <span class="small">${list.length} 件</span></h3><p class="para small">${hint}</p>` +
@@ -365,6 +378,9 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   const toc = document.getElementById('toc');
   const main = document.getElementById('main');
   const searchBox = document.getElementById('search');
+  const backButton = document.getElementById('back');
+  const forwardButton = document.getElementById('forward');
+  const topButton = document.getElementById('top');
   let current = 'now';
 
   function renderToc() {
@@ -373,7 +389,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
       if (p.group !== group) { group = p.group; html += `<div class="toc-label">${esc(group)}</div>`; }
       const decide = p.system ? decideCount(p.system) : p.key === 'now' ? adrsOf('保留中').length + DATA.problems.length : 0;
       const sub = decide ? (p.system ? `決める ${decide}` : `対応 ${decide}`) : p.key === 'concept' ? (CONCEPT ? (conceptBlanks() ? `未記入 ${conceptBlanks()}` : '') : '手元に無い') : '';
-      html += `<button type="button" data-page="${p.key}" aria-current="${p.key === current}"><span class="toc-name">${p.icon} ${esc(p.title)}</span>${sub ? `<span class="toc-sub">${sub}</span>` : ''}</button>`;
+      html += `<a href="${href(p.key)}" data-page="${p.key}"${p.key === current ? ' aria-current="page"' : ''}><span class="toc-name">${p.icon} ${esc(p.title)}</span>${sub ? `<span class="toc-sub">${sub}</span>` : ''}</a>`;
     }
     toc.innerHTML = html;
   }
@@ -382,15 +398,18 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     const a = (p, cls, label) => `<a class="${cls}" href="#${p.key}" data-page="${p.key}">${label}</a>`;
     return `<nav class="pager">${prev ? a(prev, 'prev', `← ${prev.icon} ${esc(prev.title)}`) : ''}${next ? a(next, 'next', `${next.icon} ${esc(next.title)} →`) : ''}</nav>`;
   }
-  function show(key, anchor) {
+  /** y は戻る・進む・再読み込みで来たときの、前に見ていた位置。無ければ指された場所か先頭へ */
+  function show(key, anchor, y) {
     const index = Math.max(0, PAGES.findIndex((p) => p.key === key));
     current = PAGES[index].key;
     main.innerHTML = PAGES[index].render() + pager(index);
     renderToc();
-    try { history.replaceState(null, '', '#' + current); } catch (e) { /* data: で開いたときは書き換えられない */ }
+    document.title = `${PAGES[index].title} — Admin`;
     const target = anchor && document.getElementById(anchor);
     for (let d = target && target.closest('details'); d; d = d.parentElement.closest('details')) d.open = true;
-    if (target) {
+    if (y != null) {
+      window.scrollTo(0, y);
+    } else if (target) {
       target.scrollIntoView({ block: 'center' });
       target.classList.add('flash');
       setTimeout(() => target.classList.remove('flash'), 1600);
@@ -399,10 +418,77 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     }
   }
 
+  // ── 住所（#ページ/場所、#q=探す言葉）と履歴 ──
+  function parse(hash) {
+    let raw = hash.replace(/^#/, '');
+    try { raw = decodeURIComponent(raw); } catch (e) { /* 崩れた住所はそのまま読む */ }
+    if (raw.startsWith('q=')) return { query: raw.slice(2) };
+    const cut = raw.indexOf('/');
+    return cut < 0 ? { page: raw || 'now', anchor: null } : { page: raw.slice(0, cut), anchor: raw.slice(cut + 1) };
+  }
+  function render(r, y) {
+    if (r.query !== undefined) {
+      if (searchBox.value.trim() !== r.query) searchBox.value = r.query;
+      search(r.query);
+      window.scrollTo(0, y || 0);
+    } else {
+      searchBox.value = '';
+      show(r.page, r.anchor, y);
+    }
+  }
+  // 履歴の 1 件ごとに、住所と見ていた位置を控える。住所を URL に書けない開き方（アプリの中の写しなど）でも、戻る・進むが効く
+  let shown = null;  // いま描いている住所
+  let index = 0;     // このページを開いてから何件目の履歴に居るか
+  let last = 0;      // 進むで行ける、いちばん先の件
+  const setState = (method, hash, y) => {
+    const state = { route: hash, y, i: index };
+    try { history[method](state, '', hash); return; } catch (e) { /* URL を書き換えられない。住所は state だけに持つ */ }
+    try { history[method](state, ''); } catch (e) { /* 履歴が使えない。移るだけになる */ }
+  };
+  const saveScroll = () => { if (shown) setState('replaceState', shown, window.scrollY); };
+  const stateY = (state) => (state && typeof state.y === 'number' ? state.y : null);
+  function draw(hash, y) {
+    shown = hash;
+    render(parse(hash), y);
+    // ブラウザが履歴の前後を教えてくれるならそれを使い、教えてくれない開き方では自分で数えた件で決める
+    const nav = window.navigation && window.navigation.currentEntry ? window.navigation : null;
+    backButton.disabled = nav ? !nav.canGoBack : index === 0;
+    forwardButton.disabled = nav ? !nav.canGoForward : index >= last;
+  }
+  /** 移る。replace は履歴を足さずに今の 1 件を差し替える（探す言葉を打っている途中） */
+  function navigate(hash, replace) {
+    saveScroll();
+    if (hash !== shown) {
+      if (!replace) { index += 1; last = index; }
+      setState(replace ? 'replaceState' : 'pushState', hash, 0);
+    }
+    draw(hash, null);
+  }
+  window.addEventListener('popstate', (e) => {
+    if (e.state && typeof e.state.route === 'string') {
+      index = typeof e.state.i === 'number' ? e.state.i : index;
+      draw(e.state.route, stateY(e.state));
+    } else {
+      // 住所を手で打ち替えた。ブラウザが足した 1 件に、住所と件を控える
+      index += 1;
+      last = index;
+      setState('replaceState', location.hash || href('now'), 0);
+      draw(location.hash || href('now'), null);
+    }
+  });
+  // 住所を手で打ち替えたとき。popstate で描き終えていれば何もしない
+  window.addEventListener('hashchange', () => { if (location.hash && location.hash !== shown) draw(location.hash, null); });
+  let scrollTimer = 0;
+  window.addEventListener('scroll', () => {
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(saveScroll, 150);
+    topButton.hidden = window.scrollY < 600;
+  }, { passive: true });
+
   // ── 探す ──
   function search(query) {
     const q = query.trim().toLowerCase();
-    if (!q) { show(current); return; }
+    document.title = `「${query.trim()}」を探す — Admin`;
     const hits = [];
     for (const s of byId.values()) {
       s.sections.forEach((sec, si) => sec.blocks.forEach((b, bi) => {
@@ -428,15 +514,43 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     if (adr && adr.tagName === 'BUTTON') { e.preventDefault(); toggleAdr(adr); return; }
     const link = e.target.closest('[data-page]');
     if (!link) return;
+    if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;  // 新しいタブや窓で開くのはブラウザに任せる
     e.preventDefault();
-    searchBox.value = '';
-    show(link.dataset.page, link.dataset.anchor || null);
+    navigate(href(link.dataset.page, link.dataset.anchor || null));
   });
+  backButton.addEventListener('click', () => history.back());
+  forwardButton.addEventListener('click', () => history.forward());
+  topButton.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  const searching = () => parse(shown || '').query !== undefined;
   let timer = 0;
-  searchBox.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => search(searchBox.value), 120); });
+  searchBox.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const q = searchBox.value.trim();
+      if (q) navigate('#q=' + encodeURIComponent(q), searching());
+      else if (searching()) navigate(href(current), true);
+    }, 120);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === '/' && document.activeElement !== searchBox) {
+      e.preventDefault();
+      searchBox.focus();
+      searchBox.select();
+    } else if (e.key === 'Escape' && document.activeElement === searchBox) {
+      searchBox.value = '';
+      searchBox.blur();
+      if (searching()) navigate(href(current), true);
+    }
+  });
 
   document.getElementById('built').textContent = `${DATA.built} に作った`;
-  show(decodeURIComponent(location.hash.slice(1)) || 'now');
+  try { history.scrollRestoration = 'manual'; } catch (e) { /* 無くても動く */ }
+  // 再読み込みでは、控えた住所と位置から始める
+  const first = history.state && typeof history.state.route === 'string' ? history.state.route : location.hash || href('now');
+  index = last = history.state && typeof history.state.i === 'number' ? history.state.i : 0;
+  setState('replaceState', first, stateY(history.state) || 0);
+  draw(first, stateY(history.state));
 })();
 </script>
 </body>
