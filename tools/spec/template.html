@@ -154,7 +154,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   // 企画は git に入れないので、無い手元もある（sections が null）
   const CONCEPT = DATA.concept.sections ? { id: 'concept', name: '企画 📘', sections: DATA.concept.sections } : null;
   const byId = new Map([...(CONCEPT ? [CONCEPT] : []), ...SYSTEMS].map((s) => [s.id, s]));
-  const KIND = { 体験の意図: 'intent', デフォルトと違う点: 'rules', 相互作用: 'links', やらないこと: 'not', 未決: 'open', 確認: 'check', 調整値: 'tune' };
+  const KIND = { 用語: 'terms', 受け入れ条件: 'links', やらないこと: 'not', 未決: 'open' };
   const EARS = [['WHEN ', 'trigger'], ['WHILE ', 'while'], ['IF ', 'if']];
 
   /** 「根源 🌳」を名前と絵文字に分ける */
@@ -234,20 +234,19 @@ table.md th { background: var(--sunk); white-space: nowrap; }
 
   // ── ページ ──
   function renderOverview() {
-    const written = SYSTEMS.filter((s) => !unwritten(sectionOf(s, '体験の意図'))).length;
     let html = head('🗺️', 'このゲーム', '全体',
-      '仕組みごとの仕様書を、全体から細部へ読む順に並べたもの。中身は仕様書・判断の記録・原簿から作り、このページでは書き足さない。',
-      `<span>仕組み ${SYSTEMS.length}</span><span>体験の意図が書いてある仕組み ${written} / ${SYSTEMS.length}</span>`);
-    html += `<section class="group"><h3>企画</h3><p class="para">${CONCEPT ? `<a href="#concept" data-page="concept">企画</a>のページにある。` : '企画は公開しないので、この手元には無い。'}各仕組みの「体験の意図」は人が書く。</p></section>`;
+      '仕組みごとの仕様書を、全体から細部へ読む順に並べたもの。仕様書は受け入れ条件で、狙いは企画、案の選び方は設計判断が持つ。中身は仕様書・判断の記録・原簿から作り、このページでは書き足さない。',
+      `<span>仕組み ${SYSTEMS.length}</span>`);
+    html += `<section class="group"><h3>企画</h3><p class="para">${CONCEPT ? `<a href="#concept" data-page="concept">企画</a>のページにある。` : '企画は公開しないので、この手元には無い。'}人が書くのは企画だけ。</p></section>`;
     html += `<section class="group"><h3>仕組み <span class="small">docs/systems/INDEX.md の並び</span></h3><div class="cards">${SYSTEMS.map(card).join('')}</div></section>`;
     const active = Object.values(DATA.adrs).filter(live).length;
-    html += `<section class="group"><h3>判断（ADR）</h3><p class="para">人が選んだ案と、選ばなかった案。棄却でないもの ${active} 件。<a href="#adrs" data-page="adrs">一覧</a></p></section>`;
+    html += `<section class="group"><h3>設計判断</h3><p class="para">人が選んだ案と、選ばなかった案。棄却でないもの ${active} 件。<a href="#adrs" data-page="adrs">一覧</a></p></section>`;
     return html;
   }
   const conceptBlanks = () => (CONCEPT ? CONCEPT.sections.filter(unwritten).length : 0);
   function renderConcept() {
     const facts = `<span>正本 <code>${esc(DATA.concept.source)}</code>（git に入れない）</span><span>練る場所 Notion</span>`;
-    let html = head('📘', '企画', '全体', '何のゲームかとコアループ。公開しないので、正本は手元にしか無い（[D-25]）。柱とやらないことは ADR に書く。'.replace(/\[(D-\d+)\]/, (_, id) => adrChip(id)), facts);
+    let html = head('📘', '企画', '全体', '何のゲームかとコアループ。公開しないので、正本は手元にしか無い（[D-25]）。柱とやらないことは設計判断に書く。'.replace(/\[(D-\d+)\]/, (_, id) => adrChip(id)), facts);
     if (!CONCEPT) return html + `<section class="group"><p class="para">この手元に <code>${esc(DATA.concept.source)}</code> が無い。</p></section>`;
     for (const sec of CONCEPT.sections) {
       html += unwritten(sec)
@@ -275,7 +274,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
       (a.note ? `<p class="para small">${inline(a.note)}</p>` : '') + body + '</section>';
   }
   function renderAdrs() {
-    let html = head('⚖️', '判断（ADR）', '一覧',
+    let html = head('⚖️', '設計判断', '一覧',
       '1 件 1 問い。状態は確定・保留中・棄却の 3 つ。書き方は docs/DECISIONS.md の冒頭にある。',
       `<span>正本 <code>docs/DECISIONS.md</code></span>${adrCounts()}`);
     for (const state of ['保留中', '確定']) {
@@ -313,7 +312,6 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     const decide = decideCount(s);
     const rest = listItems(sectionOf(s, '未決')).filter((item) => !/\[D-\d+\]/.test(item.text)).length;
     const chips = [];
-    if (unwritten(sectionOf(s, '体験の意図'))) chips.push('<span class="badge warn">体験の意図 未記入</span>');
     if (decide) chips.push(`<span class="badge warn">決める ${decide}</span>`);
     if (rest) chips.push(`<span class="badge">未決 ${rest}</span>`);
     const links = s.links.length ? `<span class="card-links">関わる仕組み：${s.links.map((id) => esc(split(byId.get(id).name).title)).join('・')}</span>` : '';
@@ -324,24 +322,13 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     const facts = [`<span>正本 <code>docs/systems/${s.id}.md</code></span>`];
     const list = (v) => (v || '').replace(/[[\]]/g, '').trim();
     if (list(s.meta.touches)) facts.push(`<span>保存などに触る：${esc(list(s.meta.touches))}</span>`);
-    if (list(s.meta.tunables)) facts.push(`<span>調整値の ScriptableObject：<code>${esc(list(s.meta.tunables))}</code></span>`);
     if (s.links.length) facts.push(`<span>関わる仕組み：${s.links.map(pageLink).join('・')}</span>`);
     let html = head(icon, title, '仕組み', esc(s.summary), facts.join(''));
     const working = Object.entries(DATA.adrs).filter(([, a]) => live(a) && (a.systems.includes(s.id) || a.refs.includes(`docs/systems/${s.id}.md`)));
     if (working.length) {
       html += `<section class="group"><h3>効いている判断</h3><ul class="items">${working.map(([id, a]) => `<li class="item">${adrChip(id)} ${esc(a.title)} ${stateBadge(a)} ${chosenText(a)}</li>`).join('')}</ul></section>`;
     }
-    for (const sec of s.sections) {
-      const kind = KIND[sec.title] || 'rules';
-      if (kind === 'intent' && unwritten(sec)) {
-        html += `<section class="group k-intent"><h3>${esc(sec.title)} <span class="badge warn">未記入（人が書く）</span></h3></section>`;
-      } else if (kind === 'tune') {
-        const rows = sec.blocks.filter((b) => b.type === 'table').reduce((n, b) => n + b.rows.length, 0);
-        html += `<details class="group k-tune"><summary>${esc(sec.title)} <span class="small">${rows} 行</span></summary>${blocksHtml(s, s.sections.indexOf(sec), sec)}</details>`;
-      } else {
-        html += sectionHtml(s, sec);
-      }
-    }
+    for (const sec of s.sections) html += sectionHtml(s, sec);
     return html;
   }
   function renderCollected(title, icon, sectionTitle, purpose) {
@@ -366,12 +353,12 @@ table.md th { background: var(--sunk); white-space: nowrap; }
 
   const PAGES = [
     { key: 'now', group: '全体', icon: '🧭', title: 'いま', render: renderNow },
-    { key: 'adrs', group: '全体', icon: '⚖️', title: '判断（ADR）', render: renderAdrs },
+    { key: 'adrs', group: '全体', icon: '⚖️', title: '設計判断', render: renderAdrs },
+    { key: 'open', group: '全体', icon: '❓', title: '未決', render: () => renderCollected('未決', '❓', '未決', '各仕様書の「未決」を集めたもの。人が決めていない振る舞い。複数の振る舞いや作りが決まる問いは設計判断にある。') },
     { key: 'overview', group: '全体', icon: '🗺️', title: 'このゲーム', render: renderOverview },
     { key: 'concept', group: '全体', icon: '📘', title: '企画', render: renderConcept },
     ...SYSTEMS.map((s) => ({ key: s.id, group: '仕組み', ...split(s.name), system: s, render: () => renderSystem(s) })),
     { key: 'items', group: 'データ', icon: '🧺', title: 'アイテムとレシピ', render: renderItems },
-    { key: 'tunables', group: 'データ', icon: '🔢', title: '調整値', render: () => renderCollected('調整値', '🔢', '調整値', '各仕様書の「調整値」を集めたもの。') },
   ];
 
   // ── 目次と移動 ──
@@ -429,7 +416,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     }
     for (const [id, a] of Object.entries(DATA.adrs)) {
       const text = `[${id}] ${a.title}`;
-      if (`${text} ${a.decision}`.toLowerCase().includes(q)) hits.push({ page: 'adrs', from: `判断（ADR）› ${a.state}`, text, anchor: `adr-${id}` });
+      if (`${text} ${a.decision}`.toLowerCase().includes(q)) hits.push({ page: 'adrs', from: `設計判断› ${a.state}`, text, anchor: `adr-${id}` });
     }
     main.innerHTML = head('🔎', `「${query.trim()}」`, '探す', `${hits.length} 件`, '') +
       `<section class="group"><ul class="items">${hits.slice(0, 300).map((h) =>

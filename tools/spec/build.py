@@ -4,7 +4,7 @@
 
 ページは見え方で、何も書き足さない。中身は仕様書・判断の記録・原簿から毎回読む。
 直すときは元の文書を直して、作り直す。
-文書どうしの食い違い（無いリンク先、棄却した ADR を指す所、棄却でない ADR の範囲に無い道、前提の答えの違い）は
+文書どうしの食い違い（無いリンク先、棄却した設計判断を指す所、棄却でない設計判断の範囲に無い道、前提の答えの違い）は
 問題として出し、終了コード 1 で終わる。
 
     python tools/spec/build.py
@@ -21,7 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SYSTEMS = ROOT / "docs" / "systems"
 DECISIONS = ROOT / "docs" / "DECISIONS.md"
-PRIVATE_DECISIONS = ROOT / "docs" / "private" / "decisions.md"  # 公開しない中身の ADR。無い手元もある
+PRIVATE_DECISIONS = ROOT / "docs" / "private" / "decisions.md"  # 公開しない中身の設計判断。無い手元もある
 ITEMS = ROOT / "Assets" / "_Project" / "Resources" / "ItemData.csv"
 RECIPES = ROOT / "Assets" / "_Project" / "Data" / "Recipes"
 CONCEPT = ROOT / "docs" / "private" / "concept.md"  # 企画。git に入れない（[D-25]）ので、無い手元もある
@@ -32,6 +32,7 @@ BULLET = re.compile(r"^(\s*)[-*] (.*)$")
 LINK = re.compile(r"\[([^\]]+)\]\(([^)\s]+)\)")
 ADR_REF = re.compile(r"\[(D-\d+)\](?!\()")
 PREMISE = re.compile(r"(D-\d+)\(([a-z])\)")
+OPTION = re.compile(r"(?<![\w\]])\(([a-z])\)")  # 選択肢の頭の (a)。D-26(b) のような前提の指し方は数えない
 # 効いている仕組みを範囲の道から引く。関心事はフォルダ名を小文字にしたもの（[D-20]）
 SCOPE_SYSTEM = re.compile(r"docs/systems/(\w+)\.md|(?:Scripts/(?:Domain|Game)|LegacyScripts)/(\w+)/")
 SEPARATOR = re.compile(r"^:?-+:?$")
@@ -235,7 +236,7 @@ def decisions() -> tuple[dict, list[str]]:
 
 
 def adr_problems(adrs: dict) -> list[str]:
-    """棄却でない ADR の範囲に無い道、前提の答えの違い、棄却した・無い ADR を指している所。指している所は adrs に控える"""
+    """棄却でない設計判断の範囲に無い道、選択肢の不足、前提の答えの違い、棄却した・無い設計判断を指している所。指している所は adrs に控える"""
     problems = []
     for adr_id, adr in adrs.items():
         if not adr["state"]:
@@ -245,6 +246,9 @@ def adr_problems(adrs: dict) -> list[str]:
             continue
         if adr["state"] == "確定" and not adr["chosen"]:
             problems.append(f"確定の [{adr_id}] に選択が無い")
+        options = " ".join(" ".join(lines) for lines in adr["parts"].get("検討した選択肢", []))
+        if len(set(OPTION.findall(options))) < 2:
+            problems.append(f"[{adr_id}] の選択肢が 2 つ未満。選ぶものが無い問いは設計判断にしない")
         for scope in adr["scope"]:
             found = any(ROOT.glob(scope)) if any(c in scope for c in "*?[") else (ROOT / scope).exists()
             if not found:
@@ -309,7 +313,7 @@ def main() -> int:
         sections = parse_body(body)
         links = set()
         for section in sections:
-            if section["title"] != "相互作用":
+            if section["title"] != "受け入れ条件":
                 continue
             for text in texts([section]):
                 links.update(Path(target).stem for _, target in LINK.findall(text) if target.endswith(".md"))

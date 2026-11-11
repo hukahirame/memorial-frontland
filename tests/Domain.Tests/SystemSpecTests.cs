@@ -16,10 +16,7 @@ namespace MemorialFloor.Domain.Tests
         private const string Directory = "docs/systems";
 
         /// <summary>どの仕様書にも要る欄</summary>
-        private static readonly string[] RequiredSections =
-        {
-            "体験の意図", "デフォルトと違う点", "相互作用", "やらないこと", "未決", "確認", "調整値"
-        };
+        private static readonly string[] RequiredSections = { "受け入れ条件", "やらないこと", "未決" };
 
         /// <summary>frontmatter に要る鍵</summary>
         private static readonly string[] RequiredKeys = { "id", "name", "touches" };
