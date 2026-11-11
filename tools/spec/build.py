@@ -106,7 +106,7 @@ def parse_body(body: str) -> list[dict]:
             block = None
             continue
         if not line.strip():
-            if block and block["type"] == "p":
+            if block and block["type"] in ("p", "table"):
                 block = None
             continue
         cells = table_cells(line)
