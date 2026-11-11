@@ -118,9 +118,6 @@ desktop.ini
 /.claude/editor-changes.log
 /.claude/.unity-checkpoint-state
 
-# ===== 開発ジャーナル（手元のメモ。公開しない） =====
-docs/JOURNAL.md
-
 # ===== 企画（リリース前に読まれたくないので公開しない。[D-25]） =====
 # 手元にしか無い。履歴もバックアップも無く、git clean -x でも消える
 docs/private/
