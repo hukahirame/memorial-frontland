@@ -101,7 +101,7 @@ AI との対話で決まったことは、書かなければ消えます。
 | `docs/conventions.md` | 機械で強制できない取り決め |
 | `docs/systems/` | 関心事ごとの仕様書（受け入れ条件）。関心事のフォルダと1対1。書き方は `INDEX.md` |
 | `docs/private/concept.md` | 企画。公開しないので git に入れず、作った人の手元にしか無い（[D-25]） |
-| `.spec/admin.html` | 人の対応が要るものを先に出すページ。仕様書も全体から細部へ読める。`python tools/spec/build.py` で仕様書から作る（git には入れない） |
+| `.spec/admin.html` | 人の対応が要るものを先に出すページ。仕様書も全体から細部へ読める。`python tools/spec/build.py` で仕様書から作る（git には入れない）。Cloudflare に上げる手順は `tools/spec/wrangler.jsonc` の冒頭 |
 | `/CLAUDE.md` | エージェントへの実行指示 |
 | `/README.md` | プロジェクトの概要（外部向け） |
 

@@ -79,6 +79,7 @@ __pycache__/
 
 # ===== 管理のページ（tools/spec/build.py が仕様書から作る） =====
 .spec/
+.wrangler/
 
 # ===== マージの残骸 =====
 *.orig

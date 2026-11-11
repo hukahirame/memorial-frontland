@@ -1,0 +1,15 @@
+// 管理のページ（.spec/admin.html）を Cloudflare Workers に上げる設定。
+// 公開しない企画が入るので、CI ではなく手元から上げる。開けるのは誕生日を知っている人だけ（worker.js）。
+//   python tools/spec/build.py
+//   npx --yes wrangler@4.20.0 deploy --config tools/spec/wrangler.jsonc
+// 誕生日（8 桁）と Turnstile の秘密鍵は、次を打って入れる（git には入れない）。
+//   npx --yes wrangler@4.20.0 secret put PASSWORD --config tools/spec/wrangler.jsonc
+//   npx --yes wrangler@4.20.0 secret put TURNSTILE_SECRET --config tools/spec/wrangler.jsonc
+{
+  "name": "memorial-floor-admin",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "../../.spec", "binding": "ASSETS", "run_worker_first": true },
+  // Turnstile のサイトキー（公開してよい鍵）。ダッシュボードの Turnstile でウィジェットを作ると出る
+  "vars": { "TURNSTILE_SITEKEY": "0x4AAAAAAF8xdYXi1z1nKJmJ" }
+}
