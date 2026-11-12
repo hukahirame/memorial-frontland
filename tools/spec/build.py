@@ -21,7 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SYSTEMS = ROOT / "docs" / "systems"
 DECISIONS = ROOT / "docs" / "DECISIONS.md"
-PRIVATE_DECISIONS = ROOT / "docs" / "private" / "decisions.md"  # 公開しない中身の設計判断。無い手元もある
+PRIVATE_DECISIONS = ROOT / "docs" / "private" / "DECISIONS.md"  # 公開しない中身の設計判断。無い手元もある
 ITEMS = ROOT / "Assets" / "_Project" / "Resources" / "ItemData.csv"
 RECIPES = ROOT / "Assets" / "_Project" / "Data" / "Recipes"
 CONCEPT = ROOT / "docs" / "private" / "concept.md"  # 企画。git に入れない（[D-25]）ので、無い手元もある

@@ -259,7 +259,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   const conceptBlanks = () => (CONCEPT ? CONCEPT.sections.filter(unwritten).length : 0);
   function renderConcept() {
     const facts = `<span>正本 <code>${esc(DATA.concept.source)}</code>（git に入れない）</span><span>練る場所 Notion</span>`;
-    let html = head('📘', '企画', '全体', '何のゲームかとコアループ。公開しないので、正本は手元にしか無い（[D-25]）。柱とやらないことは設計判断に書く。'.replace(/\[(D-\d+)\]/, (_, id) => adrChip(id)), facts);
+    let html = head('📘', '企画', '全体', 'ゲームが何で出来ていて、どうつながるか。公開しないので、正本は手元にしか無い（[D-25]）。'.replace(/\[(D-\d+)\]/, (_, id) => adrChip(id)), facts);
     if (!CONCEPT) return html + `<section class="group"><p class="para">この手元に <code>${esc(DATA.concept.source)}</code> が無い。</p></section>`;
     for (const sec of CONCEPT.sections) {
       html += unwritten(sec)
@@ -277,7 +277,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     if (a.premises.length) facts.push(`<span>前提：${a.premises.map((p) => `${adrChip(p.id)} (${esc(p.option)})`).join(' ')}</span>`);
     if (a.dependents.length) facts.push(`<span>これを前提にしている：${a.dependents.map(adrChip).join(' ')}</span>`);
     if (a.systems.length) facts.push(`<span>仕組み：${a.systems.map(pageLink).join('・')}</span>`);
-    if (a.private) facts.push('<span>公開しない（docs/private/decisions.md）</span>');
+    if (a.private) facts.push('<span>公開しない（docs/private/DECISIONS.md）</span>');
     if (a.scope.length) facts.push(`<span>効いている道：${a.scope.map((s) => `<code>${esc(s)}</code>`).join(' ')}</span>`);
     facts.push(`<span>指している所：${a.refs.length ? a.refs.map((r) => `<code>${esc(r)}</code>`).join(' ') : 'なし'}</span>`);
     const body = a.decision
