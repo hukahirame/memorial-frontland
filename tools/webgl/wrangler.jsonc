@@ -1,0 +1,11 @@
+// WebGL の書き出しを Cloudflare Workers に上げ、誰でもブラウザで遊べるようにする設定。手元から上げる。
+//   python -I tools/webgl/site.py
+//   npx --yes wrangler@4.20.0 deploy --config tools/webgl/wrangler.jsonc
+// site.py が Builds/WebGL を Builds/WebGL.site へ写し、Cloudflare の上限（1 ファイル 25 MiB）を超えるファイルを分ける。
+// 分けたファイルは worker.js がつないで返す。ほかのファイルは Worker を通らずに返る。
+{
+  "name": "memorial-frontland",
+  "main": "worker.js",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "../../Builds/WebGL.site", "binding": "ASSETS" }
+}

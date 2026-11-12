@@ -31,6 +31,10 @@ fan-out 昇順で読む。
   書き出しは画面を出さない Edge でタイトルまで開けると確かめてから `Builds/WebGL` を差し替える（`smoke.py`）。開けなければ止まり、前の書き出しが残る。
   手元で開くのは `Builds/WebGL/遊ぶ.cmd`（サーバーを窓を出さずに裏で立ててブラウザで開く）。`index.html` を直に開いても Unity は起動しない（ブラウザが中身の読み込みを止める）。
   裏のサーバーは、ゲームのページを閉じて 3 分ほどで自分で止まる（ページが 20 秒ごとに送る便りが 3 分来ないと止まる）
+- 誰でも遊べる置き場所は https://memorial-frontland.umiideaworks.workers.dev/ （Cloudflare Workers、2026-11-12）。GitHub の About に載せた。
+  書き出したあと、手元から `python -I tools/webgl/site.py` と `npx --yes wrangler@4.20.0 deploy --config tools/webgl/wrangler.jsonc` で上げる。
+  Cloudflare は 1 ファイル 25 MiB までなので、`site.py` が .data を分けて置き、`worker.js` がつないで返す。
+  ログインが切れていたら `npx --yes wrangler@4.20.0 login --browser=false` の URL を Claude in Chrome で開いて許可する
 - 文書は 3 層（2026-11-11、ユーザーの決定）。企画（人が書く。`docs/private/concept.md`）、設計判断（`docs/DECISIONS.md`）、
   受け入れ条件（仕様書 `docs/systems/`）。人が書くのは企画だけで、承認するのは設計判断の状態だけ
 - 仕様書は受け入れ条件だけにした（同日）。欄は 用語・受け入れ条件・やらないこと・未決。体験の意図・確認・調整値の欄は消した。
