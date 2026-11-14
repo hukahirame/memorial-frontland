@@ -173,3 +173,12 @@
 - 遊んで詰める数のうち、コードの定数に無いものがある。Inspector にあるのは 1 日の長さ・始めの所持金・持ち物の枠の数・
   体力の自然回復・場所ごとの立ち位置と場の範囲・暗転の長さ。prefab にあるのは木の柵の耐久と当たり・敵の攻撃力と落とす割合。
   品ごとの値は原簿（`ItemData.csv`）、レシピは `Data/Recipes/`
+
+## 2026-11-14 公開しない文書の暗号（[D-25]）
+
+- **`docs/private` は git-crypt の暗号で入れる。git の設定（`filter.git-crypt.*`・`diff.git-crypt.textconv`）には `git-crypt.exe` の絶対の道が書かれる。**
+  この手元は winget の `AGWA.git-crypt` で、道は `%LOCALAPPDATA%\Microsoft\WinGet\Packages\AGWA.git-crypt_…\git-crypt.exe`。
+  入れ直しや版上げで道が変わると、`filter.git-crypt.required` のために `docs/private` を含む `git add` が失敗する。そのときは鍵を入れ直す（`git-crypt unlock <鍵>`）
+- **winget で入れた直後は、開いているシェルの PATH に `git-crypt` が無い。**シェルを開き直すまでは上の道で呼ぶ
+- **鍵の無い clone では `docs/private` が暗号のバイナリのまま置かれ、その中に足したファイルは平文のままコミットに入る。**
+  コミットと push の前にフック（`.claude/hooks/guard-private-plaintext.sh`）が止める。`tools/spec/build.py` は暗号のファイルを無いものとして扱う

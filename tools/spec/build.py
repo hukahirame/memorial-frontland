@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """企画（docs/private/concept.md）・仕様書（docs/systems/*.md）・判断の記録（docs/DECISIONS.md）から、
-管理のページ .spec/admin.html を作る。企画は git に入れないので、無ければ「この手元に無い」と出す。
+管理のページ .spec/admin.html を作る。企画は暗号で git に入れるので、鍵の無い手元では「この手元では読めない」と出す。
 
 ページは見え方で、何も書き足さない。中身は仕様書・判断の記録・原簿から毎回読む。
 直すときは元の文書を直して、作り直す。
@@ -21,10 +21,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SYSTEMS = ROOT / "docs" / "systems"
 DECISIONS = ROOT / "docs" / "DECISIONS.md"
-PRIVATE_DECISIONS = ROOT / "docs" / "private" / "DECISIONS.md"  # 公開しない中身の設計判断。無い手元もある
+PRIVATE_DECISIONS = ROOT / "docs" / "private" / "DECISIONS.md"  # 公開しない中身の設計判断。鍵の無い手元では読めない
 ITEMS = ROOT / "Assets" / "_Project" / "Resources" / "ItemData.csv"
 RECIPES = ROOT / "Assets" / "_Project" / "Data" / "Recipes"
-CONCEPT = ROOT / "docs" / "private" / "concept.md"  # 企画。git に入れない（[D-25]）ので、無い手元もある
+CONCEPT = ROOT / "docs" / "private" / "concept.md"  # 企画。暗号で git に入れる（[D-25]）ので、鍵の無い手元では読めない
 TEMPLATE = Path(__file__).with_name("template.html")
 OUT = ROOT / ".spec" / "admin.html"
 
@@ -40,6 +40,14 @@ SEPARATOR = re.compile(r"^:?-+:?$")
 
 def read(path: Path) -> str:
     return path.read_text(encoding="utf-8-sig").replace("\r\n", "\n")
+
+
+def readable(path: Path) -> bool:
+    """公開しない文書は git-crypt の暗号で入れてある。鍵の無い clone では暗号のまま置かれるので、無いものと同じに扱う"""
+    if not path.exists():
+        return False
+    with path.open("rb") as f:
+        return not f.read(10).startswith(b"\x00GITCRYPT")
 
 
 def table_cells(line: str) -> list[str] | None:
@@ -224,7 +232,7 @@ def adr_entry(chunk: str, private: bool) -> tuple[str, dict] | None:
 def decisions() -> tuple[dict, list[str]]:
     adrs, problems = {}, []
     for path, private in ((DECISIONS, False), (PRIVATE_DECISIONS, True)):
-        if not path.exists():
+        if not readable(path):
             continue
         for chunk in re.split(r"\n(?=## \[D-\d+\])", read(path)):
             entry = adr_entry(chunk, private)
@@ -335,7 +343,7 @@ def main() -> int:
     data = {
         "built": datetime.now().strftime("%Y-%m-%d %H:%M"),
         "concept": {"source": str(CONCEPT.relative_to(ROOT)).replace("\\", "/"),
-                    "sections": parse_body(read(CONCEPT)) if CONCEPT.exists() else None},
+                    "sections": parse_body(read(CONCEPT)) if readable(CONCEPT) else None},
         "systems": systems,
         "adrs": adrs,
         "items": items(),

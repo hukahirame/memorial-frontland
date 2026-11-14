@@ -164,7 +164,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   /** ページと、その中の場所を指す住所。#roots や #adrs/adr-D-34。ブラウザの戻る・進む・再読み込み・新しいタブで開くがこれで効く */
   const href = (page, anchor) => '#' + page + (anchor ? '/' + anchor : '');
   const SYSTEMS = DATA.systems;
-  // 企画は git に入れないので、無い手元もある（sections が null）
+  // 企画は暗号で git に入れるので、鍵の無い手元では読めない（sections が null）
   const CONCEPT = DATA.concept.sections ? { id: 'concept', name: '企画 📘', sections: DATA.concept.sections } : null;
   const byId = new Map([...(CONCEPT ? [CONCEPT] : []), ...SYSTEMS].map((s) => [s.id, s]));
   const KIND = { 用語: 'terms', 受け入れ条件: 'links', やらないこと: 'not', 未決: 'open' };
@@ -250,7 +250,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     let html = head('🗺️', 'このゲーム', '全体',
       '仕組みごとの仕様書を、全体から細部へ読む順に並べたもの。仕様書は受け入れ条件で、狙いは企画、案の選び方は設計判断が持つ。中身は仕様書・判断の記録・原簿から作り、このページでは書き足さない。',
       `<span>仕組み ${SYSTEMS.length}</span>`);
-    html += `<section class="group"><h3>企画</h3><p class="para">${CONCEPT ? `<a href="#concept" data-page="concept">企画</a>のページにある。` : '企画は公開しないので、この手元には無い。'}人が書くのは企画だけ。</p></section>`;
+    html += `<section class="group"><h3>企画</h3><p class="para">${CONCEPT ? `<a href="#concept" data-page="concept">企画</a>のページにある。` : '企画は暗号で入れてあり、この手元では読めない。'}人が書くのは企画だけ。</p></section>`;
     html += `<section class="group"><h3>仕組み <span class="small">docs/systems/INDEX.md の並び</span></h3><div class="cards">${SYSTEMS.map(card).join('')}</div></section>`;
     const active = Object.values(DATA.adrs).filter(live).length;
     html += `<section class="group"><h3>設計判断</h3><p class="para">人が選んだ案と、選ばなかった案。棄却でないもの ${active} 件。<a href="#adrs" data-page="adrs">一覧</a></p></section>`;
@@ -258,9 +258,9 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   }
   const conceptBlanks = () => (CONCEPT ? CONCEPT.sections.filter(unwritten).length : 0);
   function renderConcept() {
-    const facts = `<span>正本 <code>${esc(DATA.concept.source)}</code>（git に入れない）</span><span>練る場所 Notion</span>`;
-    let html = head('📘', '企画', '全体', 'ゲームが何で出来ていて、どうつながるか。公開しないので、正本は手元にしか無い（[D-25]）。'.replace(/\[(D-\d+)\]/, (_, id) => adrChip(id)), facts);
-    if (!CONCEPT) return html + `<section class="group"><p class="para">この手元に <code>${esc(DATA.concept.source)}</code> が無い。</p></section>`;
+    const facts = `<span>正本 <code>${esc(DATA.concept.source)}</code>（暗号で git に入れる）</span><span>確定していないことも書く</span>`;
+    let html = head('📘', '企画', '全体', 'ゲームが何で出来ていて、どうつながるか。公開しないので、正本は暗号で git に入れてある（[D-25]）。'.replace(/\[(D-\d+)\]/, (_, id) => adrChip(id)), facts);
+    if (!CONCEPT) return html + `<section class="group"><p class="para">この手元では <code>${esc(DATA.concept.source)}</code> を読めない（無いか、git-crypt の鍵が無い）。</p></section>`;
     for (const sec of CONCEPT.sections) {
       html += unwritten(sec)
         ? `<section class="group"><h3>${esc(sec.title)} <span class="badge warn">未記入（人が書く）</span></h3></section>`

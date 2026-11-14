@@ -1,3 +1,6 @@
+## sh は CRLF だと動かない（Windows でも LF で置く） ##
+*.sh text eol=lf
+
 ## Unity ##
 *.cs diff=csharp text
 *.cginc text
@@ -84,3 +87,5 @@
 LightingData.asset filter=lfs diff=lfs merge=lfs -text
 *.cubemap filter=lfs diff=lfs merge=lfs -text
 *.hdr filter=lfs diff=lfs merge=lfs -text
+## 公開しない文書は暗号で入れる（[D-25]）。上の lfs より後に置き、こちらを効かせる ##
+docs/private/** filter=git-crypt diff=git-crypt

@@ -15,5 +15,5 @@
 
 ## ポインタ
 
-- [D-番号]は、`docs/DECISIONS.md`に判断理由がある
+- [D-番号]は、`docs/DECISIONS.md`に判断理由がある。ゲームの中身の判断は `docs/private/DECISIONS.md`（暗号で git に入れる。鍵の無い手元では読めない）
 - 取り決め: `docs/conventions.md`

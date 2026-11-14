@@ -117,7 +117,3 @@ desktop.ini
 # エージェント作業開始時の作業ツリー記録（手元のデバッグ用。共有しない）
 /.claude/editor-changes.log
 /.claude/.unity-checkpoint-state
-
-# ===== 企画（リリース前に読まれたくないので公開しない。[D-25]） =====
-# 手元にしか無い。履歴もバックアップも無く、git clean -x でも消える
-docs/private/
