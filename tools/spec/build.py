@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """企画（docs/private/concept.md）・仕様書（docs/systems/*.md）・判断の記録（docs/DECISIONS.md）から、
-管理のページ .spec/admin.html を作る。企画は暗号で git に入れるので、鍵の無い手元では「この手元では読めない」と出す。
+管理のページ .spec/admin.html を作る。docs は暗号で git に入れる（[D-25]）ので、鍵の無い手元では作らずに終わる。
 
 ページは見え方で、何も書き足さない。中身は仕様書・判断の記録・原簿から毎回読む。
 直すときは元の文書を直して、作り直す。
@@ -43,7 +43,7 @@ def read(path: Path) -> str:
 
 
 def readable(path: Path) -> bool:
-    """公開しない文書は git-crypt の暗号で入れてある。鍵の無い clone では暗号のまま置かれるので、無いものと同じに扱う"""
+    """docs は git-crypt の暗号で入れてある。鍵の無い clone では暗号のまま置かれるので、無いものと同じに扱う"""
     if not path.exists():
         return False
     with path.open("rb") as f:
@@ -307,6 +307,9 @@ def items() -> dict:
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8")
+    if not (readable(DECISIONS) and readable(SYSTEMS / "INDEX.md")):
+        print("docs が暗号のままで読めない。git-crypt の鍵を入れてから作る（git-crypt unlock <鍵>）")
+        return 1
     adrs, problems = decisions()
     rows = index_rows()
     order = [row["id"] for row in rows]

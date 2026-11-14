@@ -87,5 +87,11 @@
 LightingData.asset filter=lfs diff=lfs merge=lfs -text
 *.cubemap filter=lfs diff=lfs merge=lfs -text
 *.hdr filter=lfs diff=lfs merge=lfs -text
-## 公開しない文書は暗号で入れる（[D-25]）。上の lfs より後に置き、こちらを効かせる ##
-docs/private/** filter=git-crypt diff=git-crypt
+## docs と、作業の記録・落とし穴の記録は暗号で入れる（[D-25]）。上の lfs より後に置き、こちらを効かせる ##
+docs/** filter=git-crypt diff=git-crypt
+/STATE.md filter=git-crypt diff=git-crypt
+/FRICTIONS.md filter=git-crypt diff=git-crypt
+## テストが作って比べる一覧は平文のまま（CI は鍵を持たない） ##
+docs/public-api.txt !filter !diff
+docs/dependency-list.md !filter !diff
+docs/asset-baseline.txt !filter !diff
