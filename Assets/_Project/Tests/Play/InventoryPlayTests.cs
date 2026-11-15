@@ -46,6 +46,131 @@ public class InventoryPlayTests
         Assert.AreEqual("Speedneckless", ((ItemDefinition)Field(info, "current").GetValue(info)).ItemId);
     }
 
+    [UnityTest]
+    public IEnumerator 捨てた品は向いている側へ落ち一度離れて戻るまで拾わない()
+    {
+        yield return Boot();
+        for (int i = 0; i < 3; i++) Assert.AreEqual(1, (int)Call(Inventory(), "LoadInventory", "Slimejelly", 0));
+
+        Transform player = GameObject.FindWithTag("Player").transform;
+        float side = (float)GameType("Player2").GetProperty("Side").GetValue(player.GetComponent(GameType("Player2")));
+        Vector3 from = player.position;
+
+        //放ったまま待つ。体に押し出されず、向いている側へ落ちる
+        Press(BoxOf("Slimejelly"));
+        Call(Info(), "Throw");
+        Assert.AreEqual(2, Count("Slimejelly"), "捨てても減らない");
+        Dropitem tossed = Drops("Slimejelly").SingleOrDefault();
+        Assert.IsNotNull(tossed, "捨てた品が落ちていない");
+
+        yield return new WaitForSeconds(LandSeconds);
+        Assert.AreEqual(side, Mathf.Sign(tossed.transform.position.x - from.x), "向いている側へ落ちない");
+        Assert.Less(Mathf.Abs(tossed.transform.position.z - from.z), DepthTolerance, "奥行きへ押し出された");
+        UnityEngine.Object.Destroy(tossed.gameObject);
+        yield return null;
+
+        //拾わない時間が過ぎても、重なったまま離れないうちは拾わない
+        Call(Info(), "Throw");
+        Dropitem drop = Drops("Slimejelly").SingleOrDefault();
+        Assert.IsNotNull(drop, "2 つ目の捨てた品が落ちていない");
+        yield return Hold(drop, player, DiscardHoldSeconds);
+        Assert.AreEqual(1, Count("Slimejelly"), "離れないうちに拾い直した");
+
+        //一度離れて戻れば拾う
+        yield return Away(drop, player);
+        yield return Hold(drop, player, ReturnSeconds);
+        Assert.AreEqual(2, Count("Slimejelly"), "離れて戻っても拾わない");
+    }
+
+    [UnityTest]
+    public IEnumerator 装備している武器は最後の1本だけ捨てない()
+    {
+        yield return Boot();
+        Assert.AreEqual(1, Count("Ironsword"), "始まりの鉄の剣が 1 本でない");
+
+        Press(BoxOf("Ironsword"));
+        Call(Info(), "Throw");
+        yield return null;
+
+        Assert.AreEqual(1, Count("Ironsword"), "装備している最後の剣を捨てた");
+        Assert.IsEmpty(Drops("Ironsword"), "捨てていない剣が落ちている");
+
+        //2 本あれば捨てられ、装備は残る
+        Assert.AreEqual(1, (int)Call(Inventory(), "LoadInventory", "Ironsword", 0));
+        Call(Info(), "Throw");
+        yield return null;
+
+        Assert.AreEqual(1, Count("Ironsword"), "2 本あるのに捨てられない");
+        Assert.AreEqual(1, Drops("Ironsword").Count, "捨てた剣が落ちていない");
+        Assert.AreEqual("Ironsword", ((Equipment)StaticField("Weapon", "Equipped").GetValue(null)).ItemId, "捨てたら装備が外れた");
+    }
+
+    /// <summary>捨てた品を拾わない秒（Info_set）。過ぎたかを見るので、少し足して待つ</summary>
+    private const float DiscardHoldSeconds = 3.5f;
+
+    /// <summary>放った品が落ちきるまでの待ち</summary>
+    private const float LandSeconds = 1f;
+
+    /// <summary>奥行きへのずれの許容。押し出されると拾う当たりの半径ほど飛ぶ</summary>
+    private const float DepthTolerance = 0.3f;
+
+    /// <summary>離れたあと、重ねて拾うのを待つ秒</summary>
+    private const float ReturnSeconds = 0.5f;
+
+    /// <summary>離すときの高さ。拾う当たりの外になり、壁にも当たらない</summary>
+    private const float AwayHeight = 5f;
+
+    /// <summary>離しておく物理の段の数。落とし物が離れたことに気づくまで</summary>
+    private const int AwaySteps = 3;
+
+    //落とし物をプレイヤーに重ねたまま待つ。放られて離れるので、毎段置き直す
+    private static IEnumerator Hold(Dropitem drop, Transform player, float seconds)
+    {
+        float end = Time.time + seconds;
+        while (Time.time < end && drop != null)
+        {
+            drop.transform.position = player.position;
+            yield return new WaitForFixedUpdate();
+        }
+
+        yield return null;
+    }
+
+    //落とし物をプレイヤーの真上の高い所へ離す。プレイヤーが離れたのと同じに見える
+    private static IEnumerator Away(Dropitem drop, Transform player)
+    {
+        for (int i = 0; i < AwaySteps && drop != null; i++)
+        {
+            drop.transform.position = player.position + Vector3.up * AwayHeight;
+            yield return new WaitForFixedUpdate();
+        }
+    }
+
+    private static int Count(string itemId)
+    {
+        Component inventory = Inventory();
+        MemorialFloor.Domain.Inventory rule = (MemorialFloor.Domain.Inventory)GameType("PlayerInventory").GetProperty("Inventory").GetValue(inventory);
+
+        return rule.CountOf(itemId);
+    }
+
+    private static List<Dropitem> Drops(string itemId)
+    {
+        return UnityEngine.Object.FindObjectsByType<Dropitem>(FindObjectsSortMode.None)
+            .Where(drop => drop.GetComponent<SpriteRenderer>().sprite.name == itemId)
+            .ToList();
+    }
+
+    private static Component BoxOf(string itemId)
+    {
+        Component inventory = Inventory();
+        IReadOnlyList<ItemSlot> slots = (IReadOnlyList<ItemSlot>)GameType("PlayerInventory").GetProperty("Slots").GetValue(inventory);
+        int index = slots.ToList().FindIndex(slot => slot.ItemId == itemId);
+        Assert.GreaterOrEqual(index, 0, itemId + " が持ち物に無い");
+
+        return BoxAt(index);
+    }
+
     [UnityTearDown]
     public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
     {
