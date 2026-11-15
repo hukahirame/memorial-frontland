@@ -6,6 +6,7 @@
 直すときは元の文書を直して、作り直す。
 文書どうしの食い違い（無いリンク先、棄却した設計判断を指す所、棄却でない設計判断の範囲に無い道、前提の答えの違い）と、
 仕様書の欠け（足りない欄、仕様書の無い関心事のフォルダ）は、問題として出し、終了コード 1 で終わる。
+作るたびに Cloudflare にも上げ、上げてあるページを手元と同じにする（[D-41]）。上げられなかったときも終了コード 1。
 
     python tools/spec/build.py
 """
@@ -14,6 +15,8 @@ from __future__ import annotations
 import csv
 import json
 import re
+import shutil
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -222,16 +225,21 @@ def adr_entry(chunk: str, private: bool) -> tuple[str, dict] | None:
         m = re.search(rf"\*\*{name}\*\*\s*[—-]\s*(.*?)(?=\n\*\*(?:{rest})\*\*|\Z)", chunk, re.S)
         if m:
             parts[name] = paragraphs(m.group(1))
+    choices = " ".join(" ".join(lines) for lines in parts.get("検討した選択肢", []))
     return head.group(1), {
         "title": head.group(2).strip(),
         "state": state,
         "note": status[len(state):].strip().removeprefix("（").removesuffix("）"),
         "chosen": chosen.group(1) if chosen else "",
+        "options": sorted(set(OPTION.findall(choices))),  # ページで選べる案
+        "notice": bool(field("注意")),
         "premise": field("前提"),
         "premises": [{"id": adr, "option": option} for adr, option in PREMISE.findall(field("前提"))],
         "date": field("日付"),
         "scope": [p.strip() for p in field("範囲").split(",") if p.strip()],
         "decision": " ".join(" ".join(lines) for lines in parts.get("決定", [])),
+        # 人に見てほしいこと。注意: の行と、前提の答えが変わったこと（adr_problems が足す）
+        "attention": [note] if (note := field("注意")) else [],
         "parts": parts,
         "private": private,
         "refs": [],
@@ -265,8 +273,7 @@ def adr_problems(adrs: dict) -> list[str]:
             continue
         if adr["state"] == "確定" and not adr["chosen"]:
             problems.append(f"確定の [{adr_id}] に選択が無い")
-        options = " ".join(" ".join(lines) for lines in adr["parts"].get("検討した選択肢", []))
-        if len(set(OPTION.findall(options))) < 2:
+        if len(adr["options"]) < 2:
             problems.append(f"[{adr_id}] の選択肢が 2 つ未満。選ぶものが無い問いは設計判断にしない")
         for scope in adr["scope"]:
             found = any(ROOT.glob(scope)) if any(c in scope for c in "*?[") else (ROOT / scope).exists()
@@ -281,10 +288,12 @@ def adr_problems(adrs: dict) -> list[str]:
                 continue
             base["dependents"].append(adr_id)
             if base["state"] == "棄却":
+                adr["attention"].append(f"前提の [{premise['id']}] が棄却された")
                 problems.append(f"[{adr_id}] の前提 [{premise['id']}] が棄却された")
             elif base["chosen"] != premise["option"]:
                 now = f"({base['chosen']})" if base["chosen"] else "未決"
-                problems.append(f"[{adr_id}] の前提は [{premise['id']}]({premise['option']}) だが、今の答えは {now}")
+                adr["attention"].append(f"前提は [{premise['id']}] の ({premise['option']}) だが、今の答えは {now}")
+                problems.append(f"[{adr_id}] の前提は [{premise['id']}] の ({premise['option']}) だが、今の答えは {now}")
     files = sorted({path for pattern in REFERRERS for path in ROOT.glob(pattern) if path.is_file()})
     for path in files:
         name = str(path.relative_to(ROOT)).replace("\\", "/")
@@ -378,7 +387,27 @@ def main() -> int:
     print(f"{OUT.relative_to(ROOT)} を作った（仕組み {len(systems)}・判断 {len(adrs)}）")
     for problem in problems:
         print("  問題: " + problem)
-    return 1 if problems else 0
+    failure = upload()
+    print("Cloudflare に上げた" if failure is None
+          else f"  上げられなかった: {failure}（ログインが切れていたら npx --yes wrangler@4.20.0 login）")
+    return 1 if problems or failure else 0
+
+
+def upload() -> str | None:
+    """上げられなかったら理由を返す。"""
+    npx = shutil.which("npx")
+    if not npx:
+        return "npx が無い"
+    command = [npx, "--yes", "wrangler@4.20.0", "deploy", "--config", "tools/spec/wrangler.jsonc"]
+    try:
+        run = subprocess.run(command, cwd=ROOT, stdin=subprocess.DEVNULL, capture_output=True,
+                             text=True, encoding="utf-8", errors="replace", timeout=300)
+    except subprocess.TimeoutExpired:
+        return "5 分たっても終わらなかった"
+    if run.returncode == 0:
+        return None
+    lines = [line.strip() for line in (run.stdout + run.stderr).splitlines() if line.strip()]
+    return " / ".join(lines[-3:]) or f"wrangler が {run.returncode} で終わった"
 
 
 if __name__ == "__main__":

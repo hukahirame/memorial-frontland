@@ -12,7 +12,7 @@ export default {
     const token = await digest(birthday(env.PASSWORD));
 
     if (readCookie(request) === token) {
-      if (url.pathname === "/") return Response.redirect(new URL("/admin", url), 302);
+      if (url.pathname === "/") return Response.redirect(new URL("/admin" + url.search, url), 302);
       return env.ASSETS.fetch(request);
     }
     if (request.method !== "POST") return loginPage(env, "", 200);
@@ -27,7 +27,7 @@ export default {
     return new Response(null, {
       status: 303,
       headers: {
-        Location: url.pathname,
+        Location: url.pathname + url.search,
         "Set-Cookie": `${COOKIE}=${token}; Path=/; Max-Age=2592000; HttpOnly; Secure; SameSite=Lax`,
       },
     });

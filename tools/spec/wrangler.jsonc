@@ -1,6 +1,6 @@
 // 管理のページ（.spec/admin.html）を Cloudflare Workers に上げる設定。
 // 公開しない企画が入るので、CI ではなく手元から上げる。開けるのは誕生日を知っている人だけ（worker.js）。
-//   python tools/spec/build.py
+// python tools/spec/build.py が、ページを作るたびに次を打って上げる。
 //   npx --yes wrangler@4.20.0 deploy --config tools/spec/wrangler.jsonc
 // 誕生日（8 桁）と Turnstile の秘密鍵は、次を打って入れる（git には入れない）。
 //   npx --yes wrangler@4.20.0 secret put PASSWORD --config tools/spec/wrangler.jsonc

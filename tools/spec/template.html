@@ -98,6 +98,8 @@ details.group > summary { cursor: pointer; font-weight: 600; font-size: 16px; ma
 .adr.broken { color: var(--ng); cursor: default; }
 .adr.old { color: var(--muted); text-decoration: line-through; }
 .adr.open { color: var(--warn); }
+.adr.marked::after { content: '!'; color: var(--warn); font-weight: bold; margin-left: 2px; }
+.attention { color: var(--warn); font-size: 12px; margin: 4px 0; overflow-wrap: anywhere; }
 .state { font-size: 11px; font-weight: normal; padding: 0 6px; border-radius: 4px; border: 1px solid currentColor; white-space: nowrap; }
 .state[data-state="確定"] { color: var(--ok); }
 .state[data-state="保留中"] { color: var(--warn); }
@@ -117,6 +119,15 @@ details.group > summary { cursor: pointer; font-weight: 600; font-size: 16px; ma
 .adr-old li b { color: var(--text); font-weight: 600; }
 .adr-box { margin: 6px 0 2px; padding: 8px 10px; border-left: 3px solid var(--ok); background: var(--sunk); border-radius: 6px; font-size: 13px; }
 .adr-box p { margin: 4px 0 0; }
+.pick { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 6px; }
+.pick:empty { display: none; }
+.pick button, .connect { height: 26px; padding: 0 7px; font-size: 12px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); cursor: pointer; }
+.pick button:hover:not(:disabled), .connect:hover { border-color: var(--accent); }
+.pick button:disabled { opacity: .45; cursor: default; }
+.pick .opt[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.pick .opt + [data-act] { margin-left: 4px; }
+.pick-state { font-size: 12px; color: var(--muted); margin-left: 4px; }
+.pick-state.ng { color: var(--ng); }
 .ext { text-decoration: underline dotted; }
 .small { font-size: 12px; color: var(--muted); font-weight: normal; }
 .scroll { overflow-x: auto; }
@@ -195,11 +206,15 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   const live = (a) => a.state !== '棄却';
   const stateBadge = (a) => `<span class="state" data-state="${esc(a.state)}">${esc(a.state)}</span>`;
   const chosenText = (a) => (a.chosen ? `<span class="small">選択 (${esc(a.chosen)})</span>` : '');
+  // 注意の印。注意: の行か、前提の答えが変わったもの。人が見たら注意: の行を消す
+  const marked = (a) => live(a) && a.attention.length > 0;
+  const markBadge = (a) => (marked(a) ? ' <span class="badge warn">注意</span>' : '');
+  const markText = (a) => (marked(a) ? `<p class="attention">${a.attention.map(inline).join('<br>')}</p>` : '');
   function adrChip(id) {
     const a = DATA.adrs[id];
     if (!a) return `<span class="adr broken" title="判断の記録に無い">${id}</span>`;
-    const look = a.state === '棄却' ? ' old' : a.state === '保留中' ? ' open' : '';
-    return `<button type="button" class="adr${look}" data-adr="${id}" title="${esc(a.title)}（${esc(a.state)}）">${id}</button>`;
+    const look = (a.state === '棄却' ? ' old' : a.state === '保留中' ? ' open' : '') + (marked(a) ? ' marked' : '');
+    return `<button type="button" class="adr${look}" data-adr="${id}" title="${esc(a.title)}（${esc(a.state)}${marked(a) ? '・注意' : ''}）">${id}</button>`;
   }
   function toggleAdr(button) {
     const host = button.closest('li, p, td, .adr-box') || button.parentElement;
@@ -207,8 +222,8 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     const open = host.querySelector(`:scope > .adr-box[data-adr="${id}"]`);
     if (open) { open.remove(); return; }
     const a = DATA.adrs[id];
-    host.insertAdjacentHTML('beforeend', `<div class="adr-box" data-adr="${id}"><b>[${id}] ${esc(a.title)}</b> ${stateBadge(a)} ${chosenText(a)}` +
-      `${a.decision ? `<p>決定 — ${inline(a.decision)}</p>` : ''}<p><a href="${href('adrs', 'adr-' + id)}" data-page="adrs" data-anchor="adr-${id}">全文</a></p></div>`);
+    host.insertAdjacentHTML('beforeend', `<div class="adr-box" data-adr="${id}"><b>[${id}] ${esc(a.title)}</b> ${stateBadge(a)}${markBadge(a)} ${chosenText(a)}` +
+      `${markText(a)}${a.decision ? `<p>決定 — ${inline(a.decision)}</p>` : ''}<p><a href="${href('adrs', 'adr-' + id)}" data-page="adrs" data-anchor="adr-${id}">全文</a></p></div>`);
   }
 
   // ── 仕様書の塊 ──
@@ -271,20 +286,21 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   const adrLines = (ps) => ps.map((p) => `<p>${p.map(inline).join('<br>')}</p>`).join('');
   const adrPart = (a, name) => (a.parts[name] ? `<div class="adr-part"><b>${name}</b>${adrLines(a.parts[name])}</div>` : '');
   const adrsOf = (state) => Object.entries(DATA.adrs).filter(([, a]) => a.state === state);
-  const adrCounts = () => ['確定', '保留中', '棄却'].map((state) => `<span>${state} ${adrsOf(state).length}</span>`).join('');
+  const markedCount = () => Object.values(DATA.adrs).filter(marked).length;
+  const adrCounts = () => ['確定', '保留中', '棄却'].map((state) => `<span>${state} ${adrsOf(state).length}</span>`).join('') +
+    (markedCount() ? `<span>注意 ${markedCount()}</span>` : '');
   function adrEntry(id, a) {
     const facts = [];
     if (a.premises.length) facts.push(`<span>前提：${a.premises.map((p) => `${adrChip(p.id)} (${esc(p.option)})`).join(' ')}</span>`);
     if (a.dependents.length) facts.push(`<span>これを前提にしている：${a.dependents.map(adrChip).join(' ')}</span>`);
     if (a.systems.length) facts.push(`<span>仕組み：${a.systems.map(pageLink).join('・')}</span>`);
     if (a.private) facts.push('<span>公開しない（docs/private/DECISIONS.md）</span>');
-    if (a.scope.length) facts.push(`<span>効いている道：${a.scope.map((s) => `<code>${esc(s)}</code>`).join(' ')}</span>`);
     facts.push(`<span>指している所：${a.refs.length ? a.refs.map((r) => `<code>${esc(r)}</code>`).join(' ') : 'なし'}</span>`);
     const body = a.decision
       ? `${adrPart(a, '決定')}<div class="facts">${facts.join('')}</div><details><summary>背景・検討した選択肢・帰結</summary>${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}${adrPart(a, '帰結')}${adrPart(a, '経緯')}</details>`
       : `${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}${adrPart(a, '経緯')}<div class="facts">${facts.join('')}</div>`;
-    return `<section class="group adr-entry" id="adr-${id}"><h3>[${id}] ${esc(a.title)} ${stateBadge(a)} ${chosenText(a)}<span class="small date">${esc(a.date)}</span></h3>` +
-      (a.note ? `<p class="para small">${inline(a.note)}</p>` : '') + body + '</section>';
+    return `<section class="group adr-entry" id="adr-${id}"><h3>[${id}] ${esc(a.title)} ${stateBadge(a)}${markBadge(a)} ${chosenText(a)}<span class="small date">${esc(a.date)}</span></h3>` +
+      markText(a) + (a.note ? `<p class="para small">${inline(a.note)}</p>` : '') + body + '</section>';
   }
   function renderAdrs() {
     let html = head('⚖️', '設計判断', '一覧',
@@ -304,7 +320,154 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   // 入口。人の対応が要るものだけを出す
   function nowItem(id, a) {
     const where = a.systems.length ? `<span class="from">${a.systems.map((s) => esc(split(byId.get(s).name).title)).join('・')}</span>` : '';
-    return `<li class="item">${where}<a class="adr-title" href="${href('adrs', 'adr-' + id)}" data-page="adrs" data-anchor="adr-${id}">[${id}] ${esc(a.title)}</a> ${chosenText(a)}${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}</li>`;
+    return `<li class="item">${where}<a class="adr-title" href="${href('adrs', 'adr-' + id)}" data-page="adrs" data-anchor="adr-${id}">[${id}] ${esc(a.title)}</a>${markBadge(a)} ${chosenText(a)}${markText(a)}${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}` +
+      `<div class="pick" data-pick="${id}">${pickRow(id)}</div></li>`;
+  }
+
+  // ── 答える ──
+  // docs フォルダをつないだブラウザでだけ出し、押すと設計判断の md を直に書き換える（File System Access API）。
+  // つなぐ口は ?answer を付けて開いたときだけ出す。つないだフォルダは、このブラウザの IndexedDB に覚える。
+  let folder = null;     // つないだ docs フォルダ
+  let synced = false;    // 開いてから md を読み、表示に入れたか
+  let connectNote = '';
+  const selected = {};   // チップで選んだ、まだ押していない案
+  const notes = {};      // 行の後ろに出す一言 { text, ng }
+  const ANSWER = { try: '試す', confirm: '確定', seen: '見た' };
+  const FILES = [['DECISIONS.md'], ['private', 'DECISIONS.md']];
+  const fileOf = (a) => FILES[a.private ? 1 : 0];
+  const canConnect = () => !folder && 'showDirectoryPicker' in window && new URLSearchParams(location.search).has('answer');
+  function pickRow(id) {
+    if (!folder) return '';
+    const a = DATA.adrs[id];
+    const choice = selected[id] || a.chosen;
+    let html = '';
+    if (a.state === '保留中') {
+      html += a.options.map((o) => `<button type="button" class="opt" data-opt="${o}" aria-pressed="${o === choice}">(${o})</button>`).join('');
+      html += ['try', 'confirm'].map((act) => `<button type="button" data-act="${act}"${choice ? '' : ' disabled'}>${ANSWER[act]}</button>`).join('');
+    }
+    if (a.notice) html += '<button type="button" data-act="seen">見た</button>';
+    if (notes[id]) html += `<span class="pick-state${notes[id].ng ? ' ng' : ''}">${esc(notes[id].text)}</span>`;
+    return html;
+  }
+  function store(mode, use) {
+    return new Promise((resolve, reject) => {
+      const open = indexedDB.open('admin', 1);
+      open.onupgradeneeded = () => open.result.createObjectStore('kv');
+      open.onerror = () => reject(open.error);
+      open.onsuccess = () => {
+        const db = open.result, req = use(db.transaction('kv', mode).objectStore('kv'));
+        req.onsuccess = () => { db.close(); resolve(req.result); };
+        req.onerror = () => { db.close(); reject(req.error); };
+      };
+    });
+  }
+  async function fileHandle(path) {
+    let dir = folder;
+    for (const name of path.slice(0, -1)) dir = await dir.getDirectoryHandle(name);
+    return dir.getFileHandle(path[path.length - 1]);
+  }
+  // BOM を落とさずに読む。書き戻すと BOM も改行もそのまま残る
+  const readLines = async (handle) => {
+    const text = new TextDecoder('utf-8', { ignoreBOM: true }).decode(await (await handle.getFile()).arrayBuffer());
+    return { lines: text.split(/\r?\n/), eol: text.includes('\r\n') ? '\r\n' : '\n' };
+  };
+  // 見出しの次の行から最初の空行までが、状態・選択・注意などの行（build.py の adr_entry と同じ所を読む）
+  function headOf(lines, id) {
+    const start = lines.findIndex((l) => l.startsWith(`## [${id}] `));
+    if (start < 0) return null;
+    let end = start + 1;
+    while (end < lines.length && lines[end].trim() && !/^## \[D-\d+\]/.test(lines[end])) end += 1;
+    const field = (name) => { const l = lines.slice(start + 1, end).find((x) => x.startsWith(name + ':')); return l ? l.slice(name.length + 1).trim() : ''; };
+    const chosen = /^\(([a-z])\)$/.exec(field('選択'));
+    return { start, end, state: ['確定', '保留中', '棄却'].find((s) => field('状態').startsWith(s)) || '', chosen: chosen ? chosen[1] : '', note: field('注意') };
+  }
+  // 注意は文で比べる。文が書き換わったのに気づかず、人が読む前に消さないように
+  const noteOf = (a) => (a.notice ? a.attention[0] : '');
+  const differs = (a, h) => a.state !== h.state || a.chosen !== h.chosen || noteOf(a) !== h.note;
+  function adopt(a, h) {
+    a.attention = [...(h.note ? [h.note] : []), ...a.attention.slice(a.notice ? 1 : 0)];
+    Object.assign(a, { state: h.state, chosen: h.chosen, notice: !!h.note });
+  }
+  // 状態・選択・日付を書き換えて注意を消す。選び直したときだけ、経緯に 1 行足す（docs/DECISIONS.md の冒頭）
+  function answered(lines, h, a, action, option) {
+    const d = new Date(), today = [d.getFullYear(), d.getMonth() + 1, d.getDate()].map((n) => String(n).padStart(2, '0')).join('-');
+    const head = lines.slice(h.start + 1, h.end).filter((l) => !l.startsWith('注意:'));
+    const set = (name, value, after) => {
+      const i = head.findIndex((l) => l.startsWith(name + ':'));
+      if (i >= 0) head[i] = `${name}: ${value}`;
+      else head.splice(head.findIndex((l) => l.startsWith(after + ':')) + 1, 0, `${name}: ${value}`);
+    };
+    if (action === 'confirm') { set('状態', '確定'); set('日付', today, '選択'); }
+    if (action !== 'seen') set('選択', `(${option})`, '状態');
+    let last = lines.findIndex((l, i) => i > h.start && /^## \[D-\d+\]/.test(l));
+    for (last = (last < 0 ? lines.length : last) - 1; last >= h.end && !lines[last].trim(); last -= 1);
+    const history = [];
+    if (action !== 'seen' && a.chosen && a.chosen !== option) {
+      const line = `${today}、管理のページで (${a.chosen}) から (${option}) へ変えた（ユーザー）。`;
+      history.push('', lines.slice(h.end, last + 1).some((l) => l.startsWith('**経緯**')) ? line : `**経緯** — ${line}`);
+    }
+    return [...lines.slice(0, h.start + 1), ...head, ...lines.slice(h.end, last + 1), ...history, ...lines.slice(last + 1)];
+  }
+  async function answer(row, action) {
+    const id = row.dataset.pick, a = DATA.adrs[id];
+    const option = action === 'seen' ? '' : selected[id] || a.chosen;
+    row.querySelectorAll('button').forEach((b) => { b.disabled = true; });
+    let redraw = false;
+    try {
+      if ((await folder.requestPermission({ mode: 'readwrite' })) !== 'granted') throw new Error('書くのを許可されなかった');
+      const file = await fileHandle(fileOf(a));
+      const { lines, eol } = await readLines(file);
+      const h = headOf(lines, id);
+      if (!h) throw new Error(`${fileOf(a).join('/')} に無い`);
+      if (differs(a, h)) {
+        // 表示がいまの記録と違う（ほかで書き換えられた）。書かずに、いまの記録で出し直して押し直してもらう
+        adopt(a, h);
+        delete selected[id];
+        notes[id] = { text: `記録が変わっていた（いま ${h.state}${h.chosen ? `・選択 (${h.chosen})` : ''}）`, ng: true };
+        redraw = true;
+      } else {
+        const writer = await file.createWritable();
+        await writer.write(answered(lines, h, a, action, option).join(eol));
+        await writer.close();
+        adopt(a, { state: action === 'confirm' ? '確定' : a.state, chosen: action === 'seen' ? a.chosen : option, note: '' });
+        delete selected[id];
+        notes[id] = { text: `「${action === 'seen' ? '見た' : `(${option}) で${ANSWER[action]}`}」を書いた` };
+      }
+      // 開いたときは許可が切れていて読めなかった。ほかの行も、いまの記録で出し直す
+      if (!synced) { await syncFromDisk(); redraw = true; }
+    } catch (e) {
+      notes[id] = { text: `書けなかった（${e.message || e.name}）`, ng: true };
+    }
+    if (redraw) render(parse(shown), window.scrollY);
+    const now = document.querySelector(`.pick[data-pick="${id}"]`);
+    if (now) now.innerHTML = pickRow(id);
+  }
+  // 許可が残っていれば、開いたときに記録を読み、ページを作ったあとの答えを表示に入れる
+  async function syncFromDisk() {
+    if ((await folder.queryPermission({ mode: 'readwrite' })) !== 'granted') return;
+    for (const path of FILES) {
+      let lines;
+      try { ({ lines } = await readLines(await fileHandle(path))); } catch (e) { continue; }
+      for (const [id, a] of Object.entries(DATA.adrs)) {
+        const h = fileOf(a) === path && headOf(lines, id);
+        if (h && differs(a, h)) adopt(a, h);
+      }
+    }
+    synced = true;
+  }
+  async function connect() {
+    let dir;
+    try { dir = await window.showDirectoryPicker({ id: 'memorial-floor-docs', mode: 'readwrite' }); } catch (e) { return; }
+    try {
+      await dir.getFileHandle('DECISIONS.md');
+      folder = dir;
+      connectNote = '';
+      await store('readwrite', (s) => s.put(dir, 'docs')).catch(() => {});
+      await syncFromDisk().catch(() => {});
+    } catch (e) {
+      connectNote = 'DECISIONS.md のある docs フォルダを選んでください';
+    }
+    render(parse(shown), window.scrollY);
   }
   function nowGroup(title, hint, list) {
     return `<section class="group"><h3>${title} <span class="small">${list.length} 件</span></h3><p class="para small">${hint}</p>` +
@@ -313,9 +476,11 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   function renderNow() {
     const open = adrsOf('保留中');
     let html = head('🧭', 'いま', '全体', '人の対応が要るもの。決めたらチャットで「D-26 は (b) で試す」「D-26 は (b) で確定」のように伝える。', adrCounts());
+    if (canConnect()) html += `<p class="para small"><button type="button" class="connect">docs フォルダをつなぐ</button>${connectNote ? ` <span class="pick-state ng">${esc(connectNote)}</span>` : ''}</p>`;
     if (DATA.problems.length) html += `<div class="problems"><b>ずれ</b><ul>${DATA.problems.map((p) => `<li>${inline(p)}</li>`).join('')}</ul></div>`;
     html += nowGroup('決めて', 'まだ案を選んでいない問い。', open.filter(([, a]) => !a.chosen));
     html += nowGroup('遊んで確かめて', '案を選んで試している問い。遊んで残すと決めたら確定にする。', open.filter(([, a]) => a.chosen));
+    html += nowGroup('見て', '確定だが、変わったことがあって注意の印が付いた問い。', adrsOf('確定').filter(([, a]) => marked(a)));
     if (!DATA.problems.length) html += '<section class="group"><h3>ずれ</h3><p class="none">なし</p></section>';
     return html;
   }
@@ -341,7 +506,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     let html = head(icon, title, '仕組み', esc(s.summary), facts.join(''));
     const working = Object.entries(DATA.adrs).filter(([, a]) => live(a) && (a.systems.includes(s.id) || a.refs.includes(`docs/systems/${s.id}.md`)));
     if (working.length) {
-      html += `<section class="group"><h3>効いている判断</h3><ul class="items">${working.map(([id, a]) => `<li class="item">${adrChip(id)} ${esc(a.title)} ${stateBadge(a)} ${chosenText(a)}</li>`).join('')}</ul></section>`;
+      html += `<section class="group"><h3>効いている判断</h3><ul class="items">${working.map(([id, a]) => `<li class="item">${adrChip(id)} ${esc(a.title)} ${stateBadge(a)}${markBadge(a)} ${chosenText(a)}</li>`).join('')}</ul></section>`;
     }
     for (const sec of s.sections) html += sectionHtml(s, sec);
     return html;
@@ -389,7 +554,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     let html = '', group = null;
     for (const p of PAGES) {
       if (p.group !== group) { group = p.group; html += `<div class="toc-label">${esc(group)}</div>`; }
-      const decide = p.system ? decideCount(p.system) : p.key === 'now' ? adrsOf('保留中').length + DATA.problems.length : 0;
+      const decide = p.system ? decideCount(p.system) : p.key === 'now' ? adrsOf('保留中').length + DATA.problems.length + adrsOf('確定').filter(([, a]) => marked(a)).length : 0;
       const sub = decide ? (p.system ? `決める ${decide}` : `対応 ${decide}`) : p.key === 'concept' ? (CONCEPT ? (conceptBlanks() ? `未記入 ${conceptBlanks()}` : '') : '手元に無い') : '';
       html += `<a href="${href(p.key)}" data-page="${p.key}"${p.key === current ? ' aria-current="page"' : ''}><span class="toc-name">${p.icon} ${esc(p.title)}</span>${sub ? `<span class="toc-sub">${sub}</span>` : ''}</a>`;
     }
@@ -512,6 +677,14 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   }
 
   document.addEventListener('click', (e) => {
+    const button = e.target.closest('.pick[data-pick] button');
+    if (button) {
+      const row = button.closest('.pick');
+      if (button.dataset.opt) { selected[row.dataset.pick] = button.dataset.opt; row.innerHTML = pickRow(row.dataset.pick); }
+      else answer(row, button.dataset.act);
+      return;
+    }
+    if (e.target.closest('.connect')) { connect(); return; }
     const adr = e.target.closest('[data-adr]');
     if (adr && adr.tagName === 'BUTTON') { e.preventDefault(); toggleAdr(adr); return; }
     const link = e.target.closest('[data-page]');
@@ -551,8 +724,21 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   // 再読み込みでは、控えた住所と位置から始める
   const first = history.state && typeof history.state.route === 'string' ? history.state.route : location.hash || href('now');
   index = last = history.state && typeof history.state.i === 'number' ? history.state.i : 0;
-  setState('replaceState', first, stateY(history.state) || 0);
-  draw(first, stateY(history.state));
+  // 控えた位置が無ければ（新しく開いた）null のまま渡し、住所の場所へ飛ばす
+  const startY = stateY(history.state);
+  setState('replaceState', first, startY || 0);
+  draw(first, startY);
+  if ('showDirectoryPicker' in window) {
+    store('readonly', (s) => s.get('docs'))
+      .then(async (dir) => {
+        if (!dir) return;
+        folder = dir;
+        await syncFromDisk().catch(() => {});
+        // 行が入って高さが変わるので、控えた位置へ戻し直す
+        render(parse(shown), startY != null ? startY : window.scrollY);
+      })
+      .catch(() => { /* 覚えたフォルダが無い。答える行は出さない */ });
+  }
 })();
 </script>
 </body>

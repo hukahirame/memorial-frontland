@@ -80,6 +80,8 @@ __pycache__/
 # ===== 管理のページ（tools/spec/build.py が仕様書から作る） =====
 .spec/
 .wrangler/
+# 上げるときに wrangler が控え（アカウントの名前入り）を置く
+/node_modules/
 
 # ===== マージの残骸 =====
 *.orig
