@@ -33,8 +33,7 @@
     <Compile Include="SourceIndex.cs" />
     <Compile Include="DependencyList.cs" />
     <Compile Include="DependencyListTests.cs" />
-    <Compile Include="SystemSpecTests.cs" />
-    <Compile Include="SpecConformanceTests.cs" />
+    <Compile Include="ConcernFolderTests.cs" />
     <Compile Include="PublicApiTests.cs" />
   </ItemGroup>
 

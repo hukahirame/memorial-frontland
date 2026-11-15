@@ -327,12 +327,14 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     const chips = [];
     if (decide) chips.push(`<span class="badge warn">決める ${decide}</span>`);
     if (rest) chips.push(`<span class="badge">未決 ${rest}</span>`);
+    if (!s.built) chips.push('<span class="badge">まだ作っていない</span>');
     const links = s.links.length ? `<span class="card-links">関わる仕組み：${s.links.map((id) => esc(split(byId.get(id).name).title)).join('・')}</span>` : '';
     return `<a class="card" href="#${s.id}" data-page="${s.id}"><span class="card-name">${icon} ${esc(title)}</span><span class="card-sum">${esc(s.summary)}</span>${links}<span class="chips">${chips.join('')}</span></a>`;
   }
   function renderSystem(s) {
     const { title, icon } = split(s.name);
     const facts = [`<span>正本 <code>docs/systems/${s.id}.md</code></span>`];
+    if (!s.built) facts.push('<span>まだ作っていない（関心事のフォルダが無く、受け入れ条件だけ先に置いた）</span>');
     const list = (v) => (v || '').replace(/[[\]]/g, '').trim();
     if (list(s.meta.touches)) facts.push(`<span>保存などに触る：${esc(list(s.meta.touches))}</span>`);
     if (s.links.length) facts.push(`<span>関わる仕組み：${s.links.map(pageLink).join('・')}</span>`);

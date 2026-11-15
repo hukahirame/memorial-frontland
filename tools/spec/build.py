@@ -4,8 +4,8 @@
 
 ページは見え方で、何も書き足さない。中身は仕様書・判断の記録・原簿から毎回読む。
 直すときは元の文書を直して、作り直す。
-文書どうしの食い違い（無いリンク先、棄却した設計判断を指す所、棄却でない設計判断の範囲に無い道、前提の答えの違い）は
-問題として出し、終了コード 1 で終わる。
+文書どうしの食い違い（無いリンク先、棄却した設計判断を指す所、棄却でない設計判断の範囲に無い道、前提の答えの違い）と、
+仕様書の欠け（足りない欄、仕様書の無い関心事のフォルダ）は、問題として出し、終了コード 1 で終わる。
 
     python tools/spec/build.py
 """
@@ -36,6 +36,11 @@ OPTION = re.compile(r"(?<![\w\]])\(([a-z])\)")  # 選択肢の頭の (a)。D-26(
 # 効いている仕組みを範囲の道から引く。関心事はフォルダ名を小文字にしたもの（[D-20]）
 SCOPE_SYSTEM = re.compile(r"docs/systems/(\w+)\.md|(?:Scripts/(?:Domain|Game)|LegacyScripts)/(\w+)/")
 SEPARATOR = re.compile(r"^:?-+:?$")
+# 関心事のフォルダを置く層。その直下のフォルダが関心事で、仕様書の id はフォルダ名を小文字にしたもの（[D-20]）
+LAYERS = [ROOT / "Assets" / "_Project" / "Scripts" / "Domain", ROOT / "Assets" / "_Project" / "Scripts" / "Game",
+          ROOT / "Assets" / "LegacyScripts"]
+SPEC_KEYS = ("id", "name", "touches")  # 仕様書の frontmatter に要る鍵
+SPEC_SECTIONS = ("受け入れ条件", "やらないこと", "未決")  # どの仕様書にも要る欄
 
 
 def read(path: Path) -> str:
@@ -157,6 +162,12 @@ def texts(sections: list[dict]) -> list[str]:
             elif block["type"] in ("p", "h"):
                 out.append(block["text"])
     return out
+
+
+def concerns() -> set[str]:
+    """関心事の名前。層の直下にあり、C# のソースを持つフォルダの名前を小文字にしたもの"""
+    return {folder.name.lower() for layer in LAYERS if layer.is_dir()
+            for folder in layer.iterdir() if folder.is_dir() and any(folder.rglob("*.cs"))}
 
 
 def index_rows() -> list[dict]:
@@ -314,6 +325,7 @@ def main() -> int:
     rows = index_rows()
     order = [row["id"] for row in rows]
     ids = set(order)
+    folders = concerns()
     systems = []
     for row in rows:
         path = SYSTEMS / f"{row['id']}.md"
@@ -322,6 +334,11 @@ def main() -> int:
             continue
         meta, body = split_frontmatter(read(path))
         sections = parse_body(body)
+        if meta.get("id") != row["id"]:
+            problems.append(f"{row['id']}.md の id が {meta.get('id') or '無い'}。ファイル名と同じにする")
+        problems += [f"{row['id']}.md の frontmatter に {key} が無い" for key in SPEC_KEYS if key not in meta]
+        titles = {section["title"] for section in sections}
+        problems += [f"{row['id']}.md に ## {title} が無い" for title in SPEC_SECTIONS if title not in titles]
         links = set()
         for section in sections:
             if section["title"] != "受け入れ条件":
@@ -333,11 +350,13 @@ def main() -> int:
                 name = target.split("#")[0]
                 if name.endswith(".md") and not (SYSTEMS / name).resolve().exists():
                     problems.append(f"{row['id']}.md のリンク先 {name} が無い")
-        systems.append({**row, "meta": meta, "sections": sections,
+        systems.append({**row, "meta": meta, "sections": sections, "built": row["id"] in folders,
                         "links": [i for i in order if i in links and i != row["id"]]})
-    for path in sorted(SYSTEMS.glob("*.md")):
-        if path.stem != "INDEX" and path.stem not in ids:
-            problems.append(f"{path.name} が INDEX.md に無い")
+    specs = {path.stem for path in SYSTEMS.glob("*.md") if path.stem != "INDEX"}
+    for name in sorted(specs - ids):
+        problems.append(f"{name}.md が INDEX.md に無い")
+    for name in sorted(folders - specs):
+        problems.append(f"関心事のフォルダ {name} に仕様書が無い。docs/systems/{name}.md を足す")
     problems += adr_problems(adrs)
     for adr in adrs.values():
         hits = {(m.group(1) or m.group(2)).lower() for scope in adr["scope"] if (m := SCOPE_SYSTEM.search(scope))}
