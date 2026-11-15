@@ -15,7 +15,6 @@ namespace MemorialFloor.Domain.Tests
     ///
     /// 使う側の書き方が通らなくなる変化は、既存の行が消えるか書き換わる形で出るようにする。
     /// static や out や get / set まで1行に含めるのはそのため。足しただけなら行が増えるだけで済む。
-    /// flow verify の API-CHANGED はこの性質に頼っている（tools/flow/flow-rules/refactor.md）。
     /// </summary>
     public class PublicApiTests
     {
