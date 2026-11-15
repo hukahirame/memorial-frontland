@@ -10,11 +10,14 @@ using TMPro;
 
 public class Player2 : MonoBehaviour
 {
-    /// <summary>攻撃のスティックの代わりに押すキー。向きは矢印キーで決める</summary>
-    public const KeyCode AttackKey = KeyCode.RightShift;
+    /// <summary>攻撃のスティックの代わりに押すキー。Enter とテンキーの Enter のどちらでもよく、2 つで 1 つのキーとして扱う。向きは矢印キーで決める</summary>
+    public static readonly KeyCode[] AttackKeys = { KeyCode.Return, KeyCode.KeypadEnter };
 
-    /// <summary>画面の案内に出す、攻撃のキーの名前。AttackKey を変えたら合わせる</summary>
-    public const string AttackKeyName = "右Shift";
+    /// <summary>画面の案内に出す、攻撃のキーの名前。AttackKeys を変えたら合わせる</summary>
+    public const string AttackKeyName = "Enter";
+
+    /// <summary>攻撃のキーを押して構えているか。2 つの Enter を続けて押しても、構えるのも振るのも 1 度にする</summary>
+    private bool attackKeyHeld;
 
     /// <summary>ジャンプボタンの代わりに押すキー。離したときに跳ぶ</summary>
     public const KeyCode JumpKey = KeyCode.Space;
@@ -132,6 +135,10 @@ public class Player2 : MonoBehaviour
         solidBody = SolidBody();
         KeyHint.Put((RectTransform)jumpbutton.transform, JumpKey.ToString());
         if (joystick_atk.TryGetComponent(out JoystickEffect_ATK effect)) effect.Bind(this);
+
+        //遊ぶあいだ、Enter（攻撃）と Space（ジャンプ）と矢印・WASD は遊びの操作に使う。画面のボタンの決定や選びの移動にも取られると、
+        //マウスで押したボタンが選ばれたまま残り、攻撃や跳ぶたびにそのボタンもまた押される。キーで押すボタンは KeyShortcut が受け持つ
+        if (UnityEngine.EventSystems.EventSystem.current != null) UnityEngine.EventSystems.EventSystem.current.sendNavigationEvents = false;
     }
 
     private Collider SolidBody()
@@ -187,10 +194,16 @@ public class Player2 : MonoBehaviour
 
         if (Input.GetKeyUp(JumpKey)) Jump();
 
-        //攻撃のキーは攻撃のスティックと同じで、押して構え、離した瞬間の向きへ振る
-        if (Input.GetKeyDown(AttackKey)) AttackDown();
-        if (Input.GetKeyUp(AttackKey))
+        //攻撃のキーは攻撃のスティックと同じで、押して構え、離した瞬間の向きへ振る。2 つの Enter は、どちらも離したときに振る。
+        //押してすぐ離した 1 コマでも振れるよう、押したかと押しているかを分けて見る
+        if (!attackKeyHeld && AnyAttackKey(Input.GetKeyDown))
         {
+            attackKeyHeld = true;
+            AttackDown();
+        }
+        if (attackKeyHeld && !AnyAttackKey(Input.GetKey))
+        {
+            attackKeyHeld = false;
             AttackUp();
             StartCoroutine(Attack());
         }
@@ -466,6 +479,17 @@ public class Player2 : MonoBehaviour
     private static float KeyAxis(KeyCode positive, KeyCode negative)
     {
         return (Input.GetKey(positive) ? 1f : 0f) - (Input.GetKey(negative) ? 1f : 0f);
+    }
+
+    /// <summary>攻撃のキーのどれかが state に当てはまるか。state は Input.GetKey など</summary>
+    private static bool AnyAttackKey(System.Func<KeyCode, bool> state)
+    {
+        foreach (KeyCode key in AttackKeys)
+        {
+            if (state(key)) return true;
+        }
+
+        return false;
     }
 
     public void AttackDown(){ atk_mode = true; /*speed *= 0.64f;*/ }//いらないかも
