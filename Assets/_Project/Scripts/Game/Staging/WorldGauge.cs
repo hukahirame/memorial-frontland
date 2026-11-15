@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace MemorialFloor.Game
@@ -52,6 +53,17 @@ namespace MemorialFloor.Game
 
         private Texture2D _texture;
         private Color32[] _pixels;
+
+        private Layers _layers;
+
+        /// <summary>中身を _filledColor で塗った絵</summary>
+        private Color32[] _filled;
+        private Color _filledColor;
+
+        /// <summary>前に描いた、中身と白く残ったぶんの列の数。どちらも同じなら絵は変わらない</summary>
+        private int _paintedFill = -1;
+        private int _paintedTrail = -1;
+
         private Color _color;
         private float _ratio = 1f;
         private float _trail = 1f;
@@ -127,35 +139,153 @@ namespace MemorialFloor.Game
             if (_texture != null) Destroy(_texture);
         }
 
-        //縁・空き・白く残ったぶん・中身と刻みを、1 枚の絵に描き直す。縁の外は透明にし、境目はなめらかにする
+        //減るたび、戻るたびに呼ばれる（柵は戻るあいだ毎コマ）。画素ごとの計算はせず、塗っておいた絵から列を写すだけにする
         private void Paint()
         {
-            int width = _texture.width;
-            int height = _texture.height;
-            float rim = Rim * Density;
-            float inside = width - 2f * rim;
-
-            for (int y = 0; y < height; y++)
+            if (_layers == null) _layers = Layers.Of(_texture.width, _texture.height);
+            if (_filled == null || !_filledColor.Equals(_color))
             {
-                float py = y + 0.5f;
-                float up = Mathf.Clamp01((py - rim) / (height - 2f * rim));
+                _filled = _layers.Filled(_color);
+                _filledColor = _color;
+                _paintedFill = -1;
+            }
 
+            int fill = _layers.ColumnsBelow(_ratio);
+            int trail = _layers.ColumnsBelow(_trail);
+            if (fill == _paintedFill && trail == _paintedTrail) return;
+
+            int width = _texture.width;
+            for (int row = 0; row < _pixels.Length; row += width)
+            {
+                System.Array.Copy(_filled, row, _pixels, row, fill);
+                System.Array.Copy(_layers.Trailing, row + fill, _pixels, row + fill, trail - fill);
+                System.Array.Copy(_layers.Empty, row + trail, _pixels, row + trail, width - trail);
+            }
+
+            _paintedFill = fill;
+            _paintedTrail = trail;
+            _texture.SetPixels32(_pixels);
+            _texture.Apply(false);
+        }
+
+        /// <summary>
+        /// 中身・白く残ったぶん・空きの 3 通りに塗った絵。縁・透け・刻み・艶は画素ごとに決まっていて、残りの割合では変わらず、
+        /// 変わるのは列ごとにどれを塗るかだけ。絵は大きさと中身の色で決まるので、同じもののゲージどうしで使い回す。書き換えない
+        /// </summary>
+        private sealed class Layers
+        {
+            private static readonly Dictionary<Vector2Int, Layers> Made = new Dictionary<Vector2Int, Layers>();
+
+            public readonly Color32[] Trailing;
+            public readonly Color32[] Empty;
+
+            private readonly int _width;
+            private readonly int _height;
+
+            /// <summary>列ごとの、中身の左端を 0、右端を 1 とした位置。左から右へ増える</summary>
+            private readonly float[] _along;
+
+            /// <summary>列ごとの、刻みの上か</summary>
+            private readonly bool[] _tick;
+
+            /// <summary>行ごとの、中身の高さ。下端が 0、上端が 1</summary>
+            private readonly float[] _up;
+
+            /// <summary>画素ごとの、中身を縁の色と混ぜる割合（縁の内側で 1）と、不透明度（帯の外で 0）。中身の色によらない</summary>
+            private readonly float[] _edge;
+            private readonly float[] _alpha;
+
+            private readonly Dictionary<Color, Color32[]> _filled = new Dictionary<Color, Color32[]>();
+
+            public static Layers Of(int width, int height)
+            {
+                var size = new Vector2Int(width, height);
+                if (!Made.TryGetValue(size, out Layers layers))
+                {
+                    layers = new Layers(width, height);
+                    Made[size] = layers;
+                }
+
+                return layers;
+            }
+
+            //縁・透け・刻み・艶の形は色によらないので、画素ごとの計算はここで 1 度だけにする。縁の外は透明にし、境目はなめらかにする
+            private Layers(int width, int height)
+            {
+                _width = width;
+                _height = height;
+
+                float rim = Rim * Density;
+                float inside = width - 2f * rim;
+                _along = new float[width];
+                _tick = new bool[width];
                 for (int x = 0; x < width; x++)
                 {
                     float px = x + 0.5f;
-                    float along = (px - rim) / inside;
-
-                    Color body = along < _ratio ? Shade(_color, up) : along < _trail ? TrailColor : EmptyColor;
-                    if (OnTick(along, inside)) body = Color.Lerp(body, Color.black, 0.4f);
-
-                    Color color = Color.Lerp(RimColor, body, Mathf.Clamp01(0.5f - Pill(px, py, width, height, rim)));
-                    color.a = Mathf.Clamp01(0.5f - Pill(px, py, width, height, 0f)) * Opacity;
-                    _pixels[y * width + x] = color;
+                    _along[x] = (px - rim) / inside;
+                    _tick[x] = OnTick(_along[x], inside);
                 }
+
+                _up = new float[height];
+                _edge = new float[width * height];
+                _alpha = new float[width * height];
+                for (int y = 0; y < height; y++)
+                {
+                    float py = y + 0.5f;
+                    _up[y] = Mathf.Clamp01((py - rim) / (height - 2f * rim));
+
+                    for (int x = 0; x < width; x++)
+                    {
+                        float px = x + 0.5f;
+                        _edge[y * width + x] = Mathf.Clamp01(0.5f - Pill(px, py, width, height, rim));
+                        _alpha[y * width + x] = Mathf.Clamp01(0.5f - Pill(px, py, width, height, 0f)) * Opacity;
+                    }
+                }
+
+                Trailing = Paint(up => TrailColor);
+                Empty = Paint(up => EmptyColor);
             }
 
-            _texture.SetPixels32(_pixels);
-            _texture.Apply(false);
+            /// <summary>中身を color で塗った絵</summary>
+            public Color32[] Filled(Color color)
+            {
+                if (!_filled.TryGetValue(color, out Color32[] layer))
+                {
+                    layer = Paint(up => Shade(color, up));
+                    _filled[color] = layer;
+                }
+
+                return layer;
+            }
+
+            /// <summary>位置が value に届かない列の数。白く残ったぶんは中身より短くならないので、中身の数以上になる</summary>
+            public int ColumnsBelow(float value)
+            {
+                int count = 0;
+                while (count < _along.Length && _along[count] < value) count++;
+                return count;
+            }
+
+            //中身を body で塗り、刻みを暗くし、縁と混ぜて透けを入れる。body は中身の高さから色を返す
+            private Color32[] Paint(System.Func<float, Color> body)
+            {
+                var layer = new Color32[_width * _height];
+                for (int y = 0; y < _height; y++)
+                {
+                    Color fill = body(_up[y]);
+                    Color ticked = Color.Lerp(fill, Color.black, 0.4f);
+
+                    for (int x = 0; x < _width; x++)
+                    {
+                        int i = y * _width + x;
+                        Color color = Color.Lerp(RimColor, _tick[x] ? ticked : fill, _edge[i]);
+                        color.a = _alpha[i];
+                        layer[i] = color;
+                    }
+                }
+
+                return layer;
+            }
         }
 
         //中身の色。下ほど暗く、上寄りに白い艶の帯を入れる。up は中身の下端が 0、上端が 1

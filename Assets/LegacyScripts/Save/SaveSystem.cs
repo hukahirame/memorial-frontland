@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.IO;
+using System.Threading.Tasks;
 using MemorialFloor.Game;
 using UnityEngine;
 
@@ -67,6 +68,7 @@ public class SaveSystem : MonoBehaviour
 
     public static bool HasSaveIn(int slot)
     {
+        FinishWriting();
         return Enabled && File.Exists(SlotPath(slot));
     }
 
@@ -120,6 +122,7 @@ public class SaveSystem : MonoBehaviour
 
     public static void Erase(int slot)
     {
+        FinishWriting();
         string path = SlotPath(slot);
         if (File.Exists(path)) File.Delete(path);
         if (File.Exists(path + ".tmp")) File.Delete(path + ".tmp");
@@ -129,7 +132,7 @@ public class SaveSystem : MonoBehaviour
     {
         savedata = new SaveData();
 
-        if (Enabled && File.Exists(FilePath)) Load();
+        if (HasSave) Load();
 
         //はじめから始めた枠には、タイトルで決めた名前を付ける。続きからなら読んだ保存の名前のまま
         if (!restorePending) savedata.saveName = PendingName;
@@ -145,15 +148,19 @@ public class SaveSystem : MonoBehaviour
         travel.Entered -= Restore;
     }
 
-    //裏に回したアプリは、そのまま落とされることがある
+    //裏に回したアプリは、そのまま落とされることがある。書き終えるまで待ってから手放す
     private void OnApplicationPause(bool paused)
     {
-        if (paused) TrySave();
+        if (!paused) return;
+
+        TrySave();
+        FinishWriting();
     }
 
     private void OnApplicationQuit()
     {
         TrySave();
+        FinishWriting();
     }
 
     private IEnumerator Autosave()
@@ -181,12 +188,54 @@ public class SaveSystem : MonoBehaviour
     public void Save()
     {
         savedata.SyncStatic(travel.Where, placed);
+        Write(FilePath, JsonUtility.ToJson(savedata));
+    }
 
-        //書いている途中で落ちても前の保存を壊さないよう、別のファイルに書いてから差し替える
-        string writing = FilePath + ".tmp";
-        File.WriteAllText(writing, JsonUtility.ToJson(savedata));
-        File.Copy(writing, FilePath, true);
-        File.Delete(writing);
+    /// <summary>
+    /// 裏で書いている途中の保存。ファイルに書くのは数ミリ秒かかり、遊んでいるあいだに挟むとそのコマが遅れて引っかかる。
+    /// 書くのは前の書き込みが終わってからなので、古い中身があとから新しい中身を上書きすることはない
+    /// </summary>
+    private static Task pendingWrites = Task.CompletedTask;
+
+    private static readonly object WritingGate = new object();
+
+    //中身はここで固めて渡す。WebGL は裏で動かせないので、その場で書く
+    private static void Write(string path, string json)
+    {
+        if (Application.platform == RuntimePlatform.WebGLPlayer)
+        {
+            WriteNow(path, json);
+            return;
+        }
+
+        lock (WritingGate)
+        {
+            pendingWrites = pendingWrites.ContinueWith(_ => WriteNow(path, json), TaskScheduler.Default);
+        }
+    }
+
+    //書いている途中で落ちても前の保存を壊さないよう、別のファイルに書いてから差し替える
+    private static void WriteNow(string path, string json)
+    {
+        try
+        {
+            string tmp = path + ".tmp";
+            File.WriteAllText(tmp, json);
+            File.Copy(tmp, path, true);
+            File.Delete(tmp);
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("保存を書けなかった：" + e.Message);
+        }
+    }
+
+    /// <summary>裏で書いている保存を書き終えるまで待つ。保存のファイルを読む・消す前と、手放す直前に呼ぶ</summary>
+    private static void FinishWriting()
+    {
+        Task last;
+        lock (WritingGate) last = pendingWrites;
+        last.Wait();
     }
 
     /// <summary>保存してあった根源とクエストを戻す。最初の場所に着く前に 1 度だけ呼ぶ。戻さなければ false</summary>
