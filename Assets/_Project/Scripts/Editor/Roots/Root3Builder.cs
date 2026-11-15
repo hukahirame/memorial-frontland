@@ -41,9 +41,6 @@ namespace MemorialFloor.Editor
         /// <summary>核の候補。根源2と同じ素材集の像。当たりが無いので足す</summary>
         private const string CandidatePrefab = "Assets/Dark_Fantasy/Assets/Prefabs_Grp/BASIC/Statues/Statue_01A_Lod0.prefab";
 
-        /// <summary>一日の長さ（秒）。拠点・根源1・根源2 と同じ</summary>
-        private const float DayLength = 120f;
-
         /// <summary>像の大きさの倍率。広いモールでも核の候補が目に付くよう人より大きくし、上の階の床の下（高さ 3.5）に収める</summary>
         private const float CandidateScale = 1.2f;
 
@@ -59,16 +56,10 @@ namespace MemorialFloor.Editor
         /// <summary>上の階の床の高さ</summary>
         private const float Upper = FloodedMallBuilder.UpperFloor;
 
-        /// <summary>
-        /// モールを置く位置。場の外へ飛ばされたプレイヤーは、どの場所でも (-2, 0.65, -2) へ戻される（Player2）。
-        /// そこが左の通路の床になるよう、モールを右へずらす
-        /// </summary>
+        /// <summary>モールを置く位置。場所の原点から右へずらし、左の壁を原点の少し左に立てる。場所そのものは場所を並べる道具（WorldLayout）が世界に置く</summary>
         private static readonly Vector3 Offset = new Vector3(12f, 0f, 0f);
 
-        /// <summary>場の外へ飛ばされたプレイヤーが戻される地点（Player2 に書かれている）</summary>
-        private static readonly Vector3 Rescue = new Vector3(-2f, 0.65f, -2f);
-
-        /// <summary>根源2から来たとき、始めたとき、倒れたあとに立つ地点。左の壁の扉の右</summary>
+        /// <summary>根源2から来たとき、始めたとき、倒れたとき、場の外から連れ戻されたときに立つ地点。左の壁の扉の右</summary>
         private static readonly Vector3 Arrival = new Vector3(-1.5f, 0.6f, -3f);
 
         /// <summary>根源2へ戻る出口。左の壁の扉の前</summary>
@@ -79,8 +70,11 @@ namespace MemorialFloor.Editor
 
         private const string SignName = "TX Village Props 1_13";
 
-        /// <summary>場の範囲。XL, XS, ZL, ZS の順。下の階の通路を囲む壁より少し内側。手前は開いている</summary>
-        private static readonly Vector4 Exposition = new Vector4(27.9f, -3.9f, 15.9f, -4.2f);
+        /// <summary>
+        /// 場の範囲。XL, XS, ZL, ZS の順。下の階の通路を囲む壁より少し内側。手前は開いている。
+        /// 左は扉口のある壁の外の面まで。根源2の場の範囲と切れ目なくつなぎ、扉口を歩いて抜けられるようにする
+        /// </summary>
+        private static readonly Vector4 Exposition = new Vector4(27.9f, -4.9f, 15.9f, -4.2f);
 
         /// <summary>
         /// 核の候補（像）を置く所。下の階と上の階に 7 つずつ、左・右・奥の通路に散らす。
@@ -97,7 +91,7 @@ namespace MemorialFloor.Editor
         /// <summary>湧きの起点を置いておく所。核が決まると核の子になるので、どこでもよい</summary>
         private static readonly Vector3 SeekerAt = new Vector3(12f, 0.2f, 13.5f);
 
-        /// <summary>根源2の奥の出口。根源1の奥の出口と同じ形</summary>
+        /// <summary>根源2の奥の出口。根源1の奥の出口と同じ形。根源2の場所の原点からの位置</summary>
         private static readonly Vector3 Root2ExitAt = new Vector3(23f, 0.25f, -1f);
 
         /// <summary>根源3から根源2へ戻ってきたときに立つ地点。根源2の場所（Area）からの相対で、根源1と同じ</summary>
@@ -110,6 +104,7 @@ namespace MemorialFloor.Editor
             FloodedMallBuilder.BuildPlace(ScenePath, Offset, (scene, mall) => Play(mall, enemy));
             WireRoot2();
             AddToBuild();
+            WorldLayout.LayOut("Root3");
 
             foreach (string path in PlaceLooks.Shoot(ScenePath))
             {
@@ -230,7 +225,6 @@ namespace MemorialFloor.Editor
             // 立つ所と、核の候補の下に床があるか。床が無いと、着いたとたんに落ちて場の外とみなされる。像を置く前に見る
             Physics.SyncTransforms();
             Floor(Arrival, 0f, "根源2から来たときに立つ地点");
-            Floor(Rescue, 0f, "場の外から戻される地点");
             foreach (Vector3 at in Candidates) Floor(at, at.y, "核の候補");
 
             GameObject statue = Load<GameObject>(CandidatePrefab);
@@ -322,7 +316,7 @@ namespace MemorialFloor.Editor
         }
 
         /// <summary>
-        /// 日の光を一日の巡りにつなぐ。巡りは場所に置いた Sun2 が進めるので、無いと根源3に居るあいだ夜が来ない。
+        /// 日の光を一日の巡りにつなぐ。巡りは常駐シーンの Sun2 が進め、強さは場所の光の Daylight が受け取るので、無いと根源3に居るあいだ夜が来ない。
         /// 日差しの筋も日の光の強さに合わせ、組んだときの強さで素材どおりの濃さにする
         /// </summary>
         private static void Sun(Transform mall)
@@ -335,10 +329,7 @@ namespace MemorialFloor.Editor
 
             if (sun == null) throw new InvalidOperationException("モールに日の光が無い");
 
-            SerializedObject cycle = new SerializedObject(sun.gameObject.AddComponent(Legacy("Sun2")));
-            cycle.FindProperty("aroundtime").floatValue = DayLength;
-            cycle.FindProperty("lighting").objectReferenceValue = sun;
-            cycle.ApplyModifiedPropertiesWithoutUndo();
+            sun.gameObject.AddComponent<Daylight>();
 
             Transform beams = mall.Find("Sunbeams");
             if (beams == null) throw new InvalidOperationException("モールに日差しの筋が無い");
@@ -388,7 +379,7 @@ namespace MemorialFloor.Editor
                     BoxCollider model = near.GetComponent<BoxCollider>();
                     GameObject exit = new GameObject("ST_Root3");
                     exit.tag = near.tag;
-                    exit.transform.position = Root2ExitAt;
+                    exit.transform.position = area.ToWorld(Root2ExitAt);
                     Door(exit, model.size, model.center, ExitKind.ToNext);
                 }
 

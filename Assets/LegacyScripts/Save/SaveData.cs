@@ -14,11 +14,11 @@ public class SaveData
     public string entered_scene;
     public int daytime;
     public int coin;
-    public Vector3 respawn;
+    public Vector3 respawn; //立ち位置。entered_scene の場所の原点からの位置
     public List<ItemSlot> slots = new List<ItemSlot>();
     public string equipped = ""; //装備している武器の ID。素手と、これを足す前の保存は空
     public List<string> enemies = new List<string>(); //現シーンのみ
-    public List<Vector3> respawns = new List<Vector3>(); //現シーンのみ
+    public List<Vector3> respawns = new List<Vector3>(); //現シーンのみ。場所の原点からの位置
     public List<int> enemyHps = new List<int>(); //現シーンのみ。respawns と同じ添字の残りの体力。0 と、足りない保存の敵は新しく湧いた敵として出す
 
     //置いた物。同じ添字の7つで1つ。saveObjects はアイテム ID、saveObjectsYaw は y 軸まわりの向き（度）、
@@ -57,7 +57,10 @@ public class SaveData
         equipped = Weapon.Equipped.ItemId;
 
         coin = GameManager.Coins.Amount;
-        respawn = GameObject.FindWithTag("Player").transform.position;
+
+        //座標は今いる場所の原点からの位置で書く。場所を世界のどこへ置き直しても、前の保存が同じ所を指す
+        Area here = Here();
+        respawn = Local(here, GameObject.FindWithTag("Player").transform.position);
 
         enemies.Clear();
         respawns.Clear();
@@ -69,8 +72,11 @@ public class SaveData
             IDamageable damageable = enemy.GetComponent<IDamageable>();
             if (damageable != null && damageable.CurrentHp <= 0) continue;
 
+            //隣の場所も読み込んであるとき、そちらの敵は書かない。戻すのは保存した場所に入ったときだけ
+            if (here != null && enemy.scene != here.Scene) continue;
+
             enemies.Add(enemy.name);
-            respawns.Add(enemy.transform.position);
+            respawns.Add(Local(here, enemy.transform.position));
             enemyHps.Add(damageable != null ? damageable.CurrentHp : 0);
         }
 
@@ -176,14 +182,30 @@ public class SaveData
         GameManager.Coins.SetAmount(coin);
 
         //立ち位置は保存した場所のもの。エディタで場所のシーンから始めると、保存した場所とは違う場所に着く
-        if (arrivedAreaId == entered_scene) GameObject.FindWithTag("Player").transform.position = respawn;
+        if (arrivedAreaId == entered_scene)
+        {
+            Area here = Here();
+            GameObject.FindWithTag("Player").transform.position = here != null ? here.ToWorld(respawn) : respawn;
+        }
 
         //enemies関連は、MainSpawner生成が遅れるため、そっちで処理
 
         //シーンの静的状態は、いずれシード値から復元できるように
     }
 
-    /// <summary>置いた物を控えへ戻す。場所に入ったときに置き直される</summary>
+    /// <summary>今いる場所。着く前は null</summary>
+    private static Area Here()
+    {
+        AreaTravel travel = UnityEngine.Object.FindAnyObjectByType<AreaTravel>();
+        return travel != null ? travel.Current : null;
+    }
+
+    private static Vector3 Local(Area here, Vector3 world)
+    {
+        return here != null ? here.ToLocal(world) : world;
+    }
+
+    /// <summary>置いた物を控えへ戻す。場所に入ったときに置き直される。位置は場所の原点からの位置のまま控える</summary>
     public void LoadPlacements(PlacementLedger ledger)
     {
         Dictionary<string, List<Placement>> byArea = new Dictionary<string, List<Placement>>();

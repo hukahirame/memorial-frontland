@@ -94,12 +94,16 @@ public class RootPlayTests
         yield return null;
     }
 
+    /// <summary>いま居る根源の湧き口。隣の根源も読み込んであるので、今いる場所のシーンの中から探す</summary>
     private static MonoBehaviour Spawner()
     {
-        UnityEngine.Object spawner = UnityEngine.Object.FindAnyObjectByType(GameType("OF_Spawner"));
+        Scene here = Travel().Current.Scene;
+        MonoBehaviour spawner = UnityEngine.Object.FindObjectsByType(GameType("OF_Spawner"), FindObjectsSortMode.None)
+            .Cast<MonoBehaviour>()
+            .FirstOrDefault(found => found.gameObject.scene == here);
         Assert.IsNotNull(spawner, "根源に湧き口が無い");
 
-        return (MonoBehaviour)spawner;
+        return spawner;
     }
 
     /// <summary>いま居る根源の敵。場外へ落ちて消えたものは数えない</summary>

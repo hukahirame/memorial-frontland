@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using MemorialFloor.Domain;
 using MemorialFloor.Game;
@@ -157,6 +158,7 @@ public class Craft : MonoBehaviour//Craftchildから実行。対応するsetを�
         GameObject drop = Instantiate(dropcapsule,
             bench.transform.position + new Vector3(0, 0.5f, 0),
             Quaternion.identity);
+        SceneManager.MoveGameObjectToScene(drop, bench.scene);
         drop.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(itemId);
     }
 

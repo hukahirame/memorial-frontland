@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using MemorialFloor.Domain;
 using MemorialFloor.Game;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// 拠点の湧き口。根源の氾濫で拠点に攻め込んだ敵を出す。拠点のシーンにだけ置く。
-/// 出した敵は拠点の中心を目指す。拠点を離れるときに生き残っている敵は位置と体力を控え、戻ったときに同じところへ出す
+/// 出した敵は拠点の中心を目指す。拠点のシーンを手放すときに生き残っている敵は位置と体力を控え、読み込み直したときに同じところへ出す
 /// </summary>
 public class MS_Spawner : MonoBehaviour
 {
@@ -25,6 +26,9 @@ public class MS_Spawner : MonoBehaviour
     /// <summary>攻め込んだ敵が目指す、拠点の中心。場の範囲の真ん中</summary>
     private Vector3 center;
 
+    /// <summary>拠点の場所。控える敵の位置は、ここの原点からの位置で持つ。見つからなければ null</summary>
+    private Area home;
+
     /// <summary>ここから出した敵。倒されて消えたものは null になる</summary>
     private readonly List<GameObject> raiders = new List<GameObject>();
 
@@ -32,13 +36,13 @@ public class MS_Spawner : MonoBehaviour
     {
         enemy = (GameObject)Resources.Load("Slime");
 
-        Area area = Area.In(gameObject.scene);
-        if (area != null) bounds = Exposition.ToBounds(area.Exposition);
+        home = Area.In(gameObject.scene);
+        if (home != null) bounds = Exposition.ToBounds(home.Exposition);
         center = bounds != null ? new Vector3(bounds.CenterX, transform.position.y, bounds.CenterZ) : transform.position;
 
         //移動の入口は常駐シーンにあり、シーンを跨ぐ参照は持てないので引く
         travel = FindAnyObjectByType<AreaTravel>();
-        if (travel != null) travel.Leaving += Retreat;
+        if (travel != null) travel.Unloading += Retreat;
 
         //留守のあいだに攻め込んだ敵と、離れる前に生き残っていた敵
         int arrived = Release();
@@ -56,7 +60,7 @@ public class MS_Spawner : MonoBehaviour
 
     void OnDestroy()
     {
-        if (travel != null) travel.Leaving -= Retreat;
+        if (travel != null) travel.Unloading -= Retreat;
     }
 
     void Update()
@@ -77,7 +81,7 @@ public class MS_Spawner : MonoBehaviour
         return kept.Count;
     }
 
-    /// <summary>拠点を離れる。生き残っている敵は拠点のシーンと一緒に消えるので、位置と体力を控える</summary>
+    /// <summary>拠点のシーンを手放す。生き残っている敵はシーンと一緒に消えるので、位置と体力を控える</summary>
     private void Retreat(Area area)
     {
         if (area.Scene != gameObject.scene) return;
@@ -86,7 +90,7 @@ public class MS_Spawner : MonoBehaviour
         raiders.Clear();
     }
 
-    /// <summary>生き残っている敵の位置と体力。拠点に居るあいだに保存するときも写す</summary>
+    /// <summary>生き残っている敵の位置と体力。拠点に居るあいだに保存するときも写す。位置は拠点の原点からの位置</summary>
     public List<Raider> Survivors()
     {
         List<Raider> alive = new List<Raider>();
@@ -94,7 +98,7 @@ public class MS_Spawner : MonoBehaviour
         {
             if (!IsAlive(raider)) continue;
 
-            Vector3 at = raider.transform.position;
+            Vector3 at = home != null ? home.ToLocal(raider.transform.position) : raider.transform.position;
             IDamageable damageable = raider.GetComponent<IDamageable>();
             alive.Add(new Raider(at.x, at.y, at.z, damageable != null ? damageable.CurrentHp : Raider.FullHp));
         }
@@ -118,6 +122,7 @@ public class MS_Spawner : MonoBehaviour
         if (kept.HasPosition)
         {
             pos = new Vector3(kept.X, kept.Y, kept.Z);
+            if (home != null) pos = home.ToWorld(pos);
         }
         else
         {
@@ -129,6 +134,7 @@ public class MS_Spawner : MonoBehaviour
 
         //MainSite に対応する根源は無いため、攻略度による弱体化は行わない
         GameObject raider = Instantiate(enemy, pos, Quaternion.identity);
+        SceneManager.MoveGameObjectToScene(raider, gameObject.scene);
         raider.GetComponent<Slime>().SetGoal(center);
 
         IDamageable damageable = raider.GetComponent<IDamageable>();

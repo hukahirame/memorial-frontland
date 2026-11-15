@@ -5,7 +5,8 @@
         "MemorialFloor.Domain",
         "Unity.TextMeshPro",
         "UnityEngine.UI",
-        "Unity.ProBuilder"
+        "Unity.ProBuilder",
+        "Unity.Postprocessing.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

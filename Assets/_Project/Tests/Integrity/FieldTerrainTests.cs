@@ -49,7 +49,8 @@ namespace MemorialFloor.Tests.Integrity
 
             try
             {
-                List<Shape> actual = FieldMaps.Cubes(scene).Select(Actual).ToList();
+                Vector3 origin = OriginOf(scene);
+                List<Shape> actual = FieldMaps.Cubes(scene).Select(cube => Actual(cube, origin)).ToList();
                 List<string> missing = new List<string>();
 
                 foreach (Shape shape in expected)
@@ -86,13 +87,25 @@ namespace MemorialFloor.Tests.Integrity
                 entry.colliderSize);
         }
 
-        private static Shape Actual(GameObject cube)
+        /// <summary>場所を世界のどこに置いたか。地図の座標は場所の原点からの位置</summary>
+        private static Vector3 OriginOf(Scene scene)
+        {
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                Area area = root.GetComponent<Area>();
+                if (area != null) return area.Origin;
+            }
+
+            return Vector3.zero;
+        }
+
+        private static Shape Actual(GameObject cube, Vector3 origin)
         {
             BoxCollider box = cube.GetComponent<BoxCollider>();
 
             return new Shape(
                 cube.name,
-                cube.transform.position,
+                cube.transform.position - origin,
                 cube.transform.rotation,
                 cube.transform.lossyScale,
                 cube.GetComponent<MeshRenderer>().sharedMaterial,

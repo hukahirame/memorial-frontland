@@ -1,7 +1,12 @@
 ﻿using MemorialFloor.Domain;
+using MemorialFloor.Game;
 using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// 一日の巡り。常駐シーンに 1 つだけ置く。場所をいくつ読み込んでいても、時計はここで 1 つだけ進める。
+/// 場所の日の光の強さは Daylight へ配る
+/// </summary>
 public class Sun2 : MonoBehaviour
 {
     /// <summary>1日の経過。所有者はここ1つ（QuestManager.Quests と同じ形）</summary>
@@ -12,8 +17,6 @@ public class Sun2 : MonoBehaviour
 
     // 名前を変えるとシーンに保存済みの値が外れる。公開をやめても名前は据え置くこと
     [SerializeField] private float aroundtime = 120; // 1日のゲーム内時間(秒)
-
-    [SerializeField] private Light lighting;
 
     private float maxIntensity = 1.8f;
     private float minIntensity = 0.3f;
@@ -33,8 +36,7 @@ public class Sun2 : MonoBehaviour
                 GameObject.FindWithTag("RootsManager").GetComponent<RootsManager>().Dayover();
             }
 
-            lighting.intensity = DayClock.LightIntensity(
-                Cycle.HourAt(aroundtime), minIntensity, maxIntensity);
+            Daylight.Show(DayClock.LightIntensity(Cycle.HourAt(aroundtime), minIntensity, maxIntensity));
 
             yield return new WaitForSeconds(1f);
             Cycle.Advance();

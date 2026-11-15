@@ -38,10 +38,6 @@ public class Player2 : MonoBehaviour
     public bool on_ground = false;
     public static Rigidbody playerrb;
     public static float speed = 1;
-    public Vector4 expos;
-
-    /// <summary>これより高く上がったら場の外とみなす。場所に着くたびに入れ替わる</summary>
-    private float ceiling = FieldBounds.EscapeHeight;
     [SerializeField] public Character character;
     [SerializeField] private Animator animator;
     [SerializeField] private Transform body;
@@ -151,13 +147,6 @@ public class Player2 : MonoBehaviour
         return null;
     }
 
-    /// <summary>着いた場所の、場の範囲と場の外とみなす高さを受け取る</summary>
-    public void Bind(Area area)
-    {
-        expos = area.Exposition;
-        ceiling = area.Ceiling;
-    }
-
     /// <summary>いま地面に立っているか。on_ground は Update でしか書き直さないので、置き直した直後は古い</summary>
     public bool Grounded()
     {
@@ -208,14 +197,17 @@ public class Player2 : MonoBehaviour
             StartCoroutine(Attack());
         }
 
-        //緊急脱出用。場の範囲は着いたときに入れ替わるので、移っているあいだは見ない。止めた体には速さも入れられない
-        if (!travel.IsTraveling)
+        //緊急脱出用。場の範囲は立っている所の場所のもの。境目では隣の場所の範囲に入るので、押し戻さずに歩いて越えられる。
+        //移っているあいだは見ない。止めた体には速さも入れられない
+        Area field = travel.FieldAt(transform.position);
+        if (!travel.IsTraveling && field != null)
         {
             Vector3 pos = transform.position;
-            FieldBounds bounds = Exposition.ToBounds(expos, ceiling);
+            FieldBounds bounds = Exposition.ToBounds(field.Exposition, field.Ceiling);
             if (bounds.HasEscaped(pos.x, pos.y, pos.z))
             {
-                transform.position = new Vector3(-2, 0.65f, -2);
+                //今いる場所の決まった地点（根源なら入口）へ連れ戻す
+                transform.position = travel.Current.PointFor(Arrival.Home);
                 playerrb.linearVelocity = Vector3.right * 2;
             }
             else
@@ -371,9 +363,14 @@ public class Player2 : MonoBehaviour
             other, other.transform.position, other.transform.rotation, out _, out _);
     }
 
-    /// <summary>出口に入ったら、受注にかかわらず隣の場所へ移る</summary>
+    /// <summary>
+    /// 出口に入ったら、受注にかかわらず隣の場所へ移る。隣が読み込んであれば、そのまま歩いて境目を越える（AreaTravel）。
+    /// まだ読み込めていなければ、覆って移る
+    /// </summary>
     private void EnterExit(Exit exit)
     {
+        if (travel.CanWalk(exit.Kind, RootsManager.RootIds())) return;
+
         travel.Through(exit.Kind, RootsManager.RootIds());
     }
 

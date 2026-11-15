@@ -73,7 +73,7 @@ namespace MemorialFloor.Domain
         public float UiX { get; }
         public float UiY { get; }
 
-        /// <summary>スポーン地点は初回入場時に決まる。未設定を座標で表さない</summary>
+        /// <summary>スポーン地点は初回入場時に決まる。未設定を座標で表さない。座標は根源の場所の原点からの位置</summary>
         public bool HasSpawnPoint { get; private set; }
         public float SpawnX { get; private set; }
         public float SpawnY { get; private set; }

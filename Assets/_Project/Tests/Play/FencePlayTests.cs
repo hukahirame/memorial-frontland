@@ -54,7 +54,7 @@ public class FencePlayTests
     }
 
     [UnityTest]
-    public IEnumerator 場所を移って戻っても柵は同じ所に同じ向きで立っている()
+    public IEnumerator 場所を手放して戻っても柵は同じ所に同じ向きで立っている()
     {
         yield return Boot();
         Face(Right);
@@ -64,9 +64,10 @@ public class FencePlayTests
         yield return null;
         Vector3 stood = Single().transform.position;
 
-        Travel().Go(Route.To("Root1", Arrival.FromPrevious));
+        //拠点の隣（根源1）では拠点も読み込んだままなので、2 つ離れた根源2へ行って拠点を手放す
+        Travel().Go(Route.To("Root2", Arrival.FromPrevious));
         yield return Arrive();
-        Assert.AreEqual(0, Fences().Length, "拠点の柵が根源に立っている");
+        Assert.AreEqual(0, Fences().Length, "手放した拠点の柵が残っている");
 
         Travel().Go(Route.To(TravelRule.BaseAreaId, Arrival.FromNext));
         yield return Arrive();

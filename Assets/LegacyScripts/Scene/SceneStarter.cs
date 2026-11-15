@@ -4,7 +4,7 @@ using MemorialFloor.Game;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>場所に着いたときの処理全般。常駐シーンに置き、移動の入口から呼ばれる</summary>
+/// <summary>場所を読み込んだときと、場所に着いたときの処理全般。常駐シーンに置き、移動の入口から呼ばれる</summary>
 public class SceneStarter : MonoBehaviour
 {
     /// <summary>拠点の BGM に 1 曲目を選ぶ確率（%）</summary>
@@ -21,29 +21,40 @@ public class SceneStarter : MonoBehaviour
 
     private void Awake()
     {
+        //隣の場所を先に読み込むのに、根源の並びを渡す
+        travel.Lineup = RootsManager.RootIds;
+        travel.Loaded += Load;
         travel.Entered += Enter;
         travel.Leaving += Leave;
     }
 
     private void OnDestroy()
     {
+        travel.Loaded -= Load;
         travel.Entered -= Enter;
         travel.Leaving -= Leave;
     }
 
     private void Leave(Area area)
     {
-        questManager.Leave(TravelRule.RootOfArea(area.Id, area.Kind));
+        questManager.Leave(area.RootId);
+    }
+
+    private void Load(Area area)
+    {
+        if (area.Kind == AreaKind.Root) SpawnerDecide(area);
     }
 
     private void Enter(Area area)
     {
-        player.Bind(area);
         Player2.BindHpView(hpView);
 
         if (area.Kind == AreaKind.Root)
         {
-            SpawnerDecide(area);
+            //根源へ入ると核の耐久が戻る。隣として読み込んだまま入り直したときも
+            OF_Spawner core = area.Find<OF_Spawner>();
+            if (core != null) core.Mend();
+
             JumpReset();
             PlayBgm("solarisnoame");
             questManager.StartQuest();
@@ -63,15 +74,33 @@ public class SceneStarter : MonoBehaviour
         questManager.Arrived(area.Kind, rewardUI);
     }
 
-    private void PlayBgm(string clip)
+    /// <summary>鳴らそうとしている曲。読み終える前に次の曲を頼まれたら、前の曲は鳴らさない</summary>
+    private string wantedBgm;
+
+    /// <summary>
+    /// 曲を替える。曲は大きく、同じコマで読むと数百ミリ秒止まるので、裏で読み、読み終えてから鳴らす。
+    /// 読み終えるまでは何も鳴らさない。場所に着いたときは、読み終えるまで覆いを開けない
+    /// </summary>
+    public void PlayBgm(string clip)
     {
-        bgm.clip = (AudioClip)Resources.Load(clip);
-        bgm.Play();
+        wantedBgm = clip;
+        bgm.Stop();
+
+        ResourceRequest loading = Resources.LoadAsync<AudioClip>(clip);
+        if (travel.IsTraveling) travel.HoldVeilFor(loading);
+
+        loading.completed += _ =>
+        {
+            if (wantedBgm != clip || bgm == null) return;
+
+            bgm.clip = (AudioClip)loading.asset;
+            bgm.Play();
+        };
     }
 
     private void SpawnerDecide(Area area)
     {
-        Root root = RootsManager.Roots.Find(travel.Where.RootId);
+        Root root = RootsManager.Roots.Find(area.RootId);
         if (root == null) return;
 
         List<GameObject> candidates = new List<GameObject>();
@@ -82,15 +111,16 @@ public class SceneStarter : MonoBehaviour
 
         if (candidates.Count == 0) return;
 
-        //足した部品は場所を離れると消えるので、入るたびに置く。位置は初回に選んで控え、2 回目からはそこに置き直す
+        //足した部品はシーンと一緒に消えるので、読み込むたびに置く。位置は初回に選んで控え、2 回目からはそこに置き直す。
+        //控える位置は場所の原点からの位置
         GameObject chosen = root.HasSpawnPoint
-            ? Nearest(candidates, new Vector3(root.SpawnX, root.SpawnY, root.SpawnZ))
+            ? Nearest(candidates, area.ToWorld(new Vector3(root.SpawnX, root.SpawnY, root.SpawnZ)))
             : candidates[Random.Range(0, candidates.Count)];
         chosen.AddComponent<OF_Spawner>().Bind(area.Exposition, root.Id);
 
         if (root.HasSpawnPoint) return;
 
-        Vector3 targetpos = chosen.transform.position;
+        Vector3 targetpos = area.ToLocal(chosen.transform.position);
         root.PlaceSpawnPoint(targetpos.x, targetpos.y, targetpos.z);
     }
 

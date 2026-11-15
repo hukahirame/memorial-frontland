@@ -119,6 +119,11 @@ namespace MemorialFloor.Editor
         /// <summary>柱の高さ。上に天窓の梁が載る</summary>
         private const float PillarHeight = 9f;
 
+        /// <summary>手前の場所へ通じる扉口の幅と高さ。枠はこの外側に立つ</summary>
+        private const float DoorWidth = 2.2f;
+
+        private const float DoorHeight = 2.8f;
+
         /// <summary>折れた柱に残った高さ。上の階の床の下に収まる</summary>
         private const float BrokenPillarHeight = 3f;
 
@@ -532,9 +537,6 @@ namespace MemorialFloor.Editor
             Opaque("MallSteel", Steel, 0.45f, 0.7f);
             Transparent("MallGlass", Glass, 0.9f);
 
-            // 場所の出口の扉。奥の見えない暗がり
-            Opaque("MallDoor", new Color(0.05f, 0.045f, 0.04f), 0.1f, 0f);
-
             // 店の中は外の光の当たり方に関係なく見えるよう、絵を自ら光らせる。ガラスの照り返しは滑らかさで出す
             Material shopGlass = Opaque("MallShopGlass", ShopGlass, 0.88f, 0f);
             shopGlass.mainTexture = shop;
@@ -844,11 +846,13 @@ namespace MemorialFloor.Editor
                 Shopfront(root, UpperFloor);
             });
 
-            // 下の階に、手前の場所へ戻る扉を開けた壁。扉の奥は暗がり
+            // 下の階に、手前の場所へ通じる扉口を開けた壁。扉口は開いていて、外（根源2）から歩いて入れる。壁は扉口の上と両脇だけ
             Piece("MallWallDoor", root =>
             {
-                Box(root, "Cube_Wall", new Vector3(0f, PillarHeight / 2f, 0.2f), new Vector3(Cell, PillarHeight, 0.4f), "MallConcrete", true);
-                Box(root, "Door", new Vector3(0f, 1.4f, -0.02f), new Vector3(2.2f, 2.8f, 0.04f), "MallDoor", false);
+                float post = (Cell - DoorWidth) / 2f;
+                Box(root, "Cube_Wall", new Vector3(0f, (DoorHeight + PillarHeight) / 2f, 0.2f), new Vector3(Cell, PillarHeight - DoorHeight, 0.4f), "MallConcrete", true);
+                Box(root, "Cube_Wall", new Vector3(-(Cell - post) / 2f, DoorHeight / 2f, 0.2f), new Vector3(post, DoorHeight, 0.4f), "MallConcrete", true);
+                Box(root, "Cube_Wall", new Vector3((Cell - post) / 2f, DoorHeight / 2f, 0.2f), new Vector3(post, DoorHeight, 0.4f), "MallConcrete", true);
                 Box(root, "Door_Frame", new Vector3(0f, 2.9f, -0.04f), new Vector3(2.6f, 0.22f, 0.08f), "MallTrim", false);
                 Box(root, "Door_Frame", new Vector3(-1.2f, 1.4f, -0.04f), new Vector3(0.2f, 2.8f, 0.08f), "MallTrim", false);
                 Box(root, "Door_Frame", new Vector3(1.2f, 1.4f, -0.04f), new Vector3(0.2f, 2.8f, 0.08f), "MallTrim", false);

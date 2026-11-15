@@ -43,8 +43,9 @@ public class SavePlayTests
         Assert.AreEqual(saved, player.position);
     }
 
+    //隣の場所も読み込んでおくので、保存した根源の敵は、その根源を読み込んだときに戻る
     [UnityTest]
-    public IEnumerator 保存した敵は保存した根源に入ったときだけ戻る()
+    public IEnumerator 保存した敵は保存した根源を読み込んだときだけ戻る()
     {
         yield return Boot();
         object data = Loaded("Root2", Vector3.zero);
@@ -52,11 +53,12 @@ public class SavePlayTests
         ((List<string>)FieldOf(data, "enemies").GetValue(data)).Add("Slime");
         respawns.Add(new Vector3(0f, 1f, 0f));
 
-        yield return GoToRoot("Root1");
+        //拠点に居るあいだは、隣の根源1だけを読み込む
+        yield return Loading("Root1");
         Assert.AreEqual(1, respawns.Count, "保存していない根源で、保存した敵が戻された");
 
         yield return GoToRoot("Root2");
-        Assert.AreEqual(0, respawns.Count, "保存した根源に入っても、保存した敵が戻らない");
+        Assert.AreEqual(0, respawns.Count, "保存した根源を読み込んでも、保存した敵が戻らない");
     }
 
     [UnityTest]
@@ -64,12 +66,16 @@ public class SavePlayTests
     {
         yield return Boot();
 
-        //湧いた敵の立つところなら、戻した敵も床の上に出る
+        //湧いた敵の立つところなら、戻した敵も床の上に出る。保存の位置は場所の原点からの位置
         yield return GoToRoot("Root2");
         Component wild = SlimesHere().FirstOrDefault();
         Assert.IsNotNull(wild, "根源2に敵が湧かない");
-        Vector3 ground = wild.transform.position;
-        yield return GoToRoot("Root1");
+        Vector3 ground = Travel().Current.ToLocal(wild.transform.position);
+
+        //拠点へ戻ると、2 つ離れた根源2は手放される
+        Travel().Go(Route.To(TravelRule.BaseAreaId, Arrival.Home));
+        yield return Arrive();
+        Assert.IsFalse(SceneManager.GetSceneByName("Root2").isLoaded, "拠点に居るのに根源2を手放さない");
 
         object data = Loaded("Root2", Vector3.zero);
         ((List<string>)FieldOf(data, "enemies").GetValue(data)).Add("Slime");
@@ -332,6 +338,17 @@ public class SavePlayTests
         Assert.IsNotNull(restore, "SaveSystem.Restore が見つからない");
 
         restore.Invoke(save, new object[] { arrived });
+    }
+
+    //隣の場所として読み込み終え、その場所の Start とコルーチンが一巡するまで待つ
+    private static IEnumerator Loading(string areaId)
+    {
+        AreaTravel travel = Travel();
+        float giveUp = Time.realtimeSinceStartup + TravelSeconds;
+        while (!travel.Present.Any(area => area.Id == areaId) && Time.realtimeSinceStartup < giveUp) yield return null;
+        Assert.IsTrue(travel.Present.Any(area => area.Id == areaId), areaId + " が読み込まれない");
+
+        for (int i = 0; i < SettleFrames; i++) yield return null;
     }
 
     private static IEnumerator GoToRoot(string rootId)

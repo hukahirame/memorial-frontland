@@ -21,7 +21,10 @@ namespace MemorialFloor.Game
         [Tooltip("始めたときと倒れたあとに立つ地点。空なら入口")]
         [SerializeField] private Transform home;
 
-        [Tooltip("場の範囲。XL, XS, ZL, ZS の順")]
+        [Tooltip("場所を世界のどこに置いたか。場所の物はこれだけずらして置いてある。場所を並べる道具（Tools/World）が書く")]
+        [SerializeField] private Vector3 origin;
+
+        [Tooltip("場の範囲。XL, XS, ZL, ZS の順。場所の原点からの位置")]
         [SerializeField] private Vector4 exposition;
 
         [Tooltip("根源の核から湧く敵。空なら緑のスライム（Resources の Slime）")]
@@ -43,15 +46,47 @@ namespace MemorialFloor.Game
             get { return kind; }
         }
 
-        public Vector4 Exposition
+        /// <summary>この場所にある根源の Id。根源でない場所なら null</summary>
+        public string RootId
         {
-            get { return exposition; }
+            get { return TravelRule.RootOfArea(Id, kind); }
         }
 
-        /// <summary>プレイヤーを場の外とみなす高さ</summary>
+        /// <summary>場所を世界のどこに置いたか。保存する座標は、ここからの位置で持つ</summary>
+        public Vector3 Origin
+        {
+            get { return origin; }
+        }
+
+        /// <summary>場の範囲。世界の座標で、XL, XS, ZL, ZS の順</summary>
+        public Vector4 Exposition
+        {
+            get { return new Vector4(exposition.x + origin.x, exposition.y + origin.x, exposition.z + origin.z, exposition.w + origin.z); }
+        }
+
+        /// <summary>プレイヤーを場の外とみなす高さ。世界の座標</summary>
         public float Ceiling
         {
-            get { return ceiling; }
+            get { return ceiling + origin.y; }
+        }
+
+        /// <summary>世界の座標を、この場所の原点からの位置にする。保存に書くときに使う</summary>
+        public Vector3 ToLocal(Vector3 world)
+        {
+            return world - origin;
+        }
+
+        /// <summary>この場所の原点からの位置を、世界の座標にする。保存から戻すときに使う</summary>
+        public Vector3 ToWorld(Vector3 local)
+        {
+            return local + origin;
+        }
+
+        /// <summary>世界の座標の点が、場の範囲（横と奥行き）の中にあるか</summary>
+        public bool Covers(Vector3 world)
+        {
+            Vector4 bounds = Exposition;
+            return world.x <= bounds.x && world.x >= bounds.y && world.z <= bounds.z && world.z >= bounds.w;
         }
 
         /// <summary>根源の核から湧く敵の prefab。決めていない場所は null</summary>
@@ -73,6 +108,32 @@ namespace MemorialFloor.Game
             if (arrival == Arrival.FromNext && farEntrance != null) point = farEntrance;
 
             return (point != null ? point : transform).position;
+        }
+
+        /// <summary>この場所のシーンにある、その種類の出口。無ければ null</summary>
+        public Exit ExitOf(ExitKind exitKind)
+        {
+            foreach (GameObject root in Scene.GetRootGameObjects())
+            {
+                foreach (Exit exit in root.GetComponentsInChildren<Exit>(true))
+                {
+                    if (exit.Kind == exitKind) return exit;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>この場所のシーンにある T。止めてある物も探す。無ければ null</summary>
+        public T Find<T>() where T : Component
+        {
+            foreach (GameObject root in Scene.GetRootGameObjects())
+            {
+                T found = root.GetComponentInChildren<T>(true);
+                if (found != null) return found;
+            }
+
+            return null;
         }
 
         /// <summary>シーンのルートに置かれた場所。無ければ null</summary>

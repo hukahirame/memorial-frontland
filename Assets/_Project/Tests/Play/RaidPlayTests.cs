@@ -10,7 +10,7 @@ using UnityEngine.TestTools;
 using MemorialFloor.Domain;
 using MemorialFloor.Game;
 
-//根源の氾濫で拠点に敵が攻め込むことと、拠点を離れても攻め込んだ敵が位置と体力ごと残ること。
+//根源の氾濫で拠点に敵が攻め込むことと、拠点を手放しても攻め込んだ敵が位置と体力ごと残ること。
 //根源へ入り直しても、湧き口が同じ位置に置かれること。零時を待たず RootsManager.Dayover を直に呼ぶ
 public class RaidPlayTests
 {
@@ -22,6 +22,9 @@ public class RaidPlayTests
 
     /// <summary>生き残った敵に負わせる傷。満タンと見分けられればよい</summary>
     private const int Wound = 100;
+
+    /// <summary>拠点から 2 つ離れた根源。ここに居るあいだは拠点を手放している（今いる場所と隣だけを読み込む）</summary>
+    private const string AwayFromBase = "Root2";
 
     [UnityTest]
     public IEnumerator 拠点に居るあいだの氾濫はすぐ湧き口のまわりにまとめて湧く()
@@ -42,13 +45,14 @@ public class RaidPlayTests
         AssertNearGate(RaidersHere());
     }
 
+    //拠点の隣（根源1）に居るあいだは拠点も読み込んであり、攻め込んだ敵はすぐ拠点に湧く。控えるのは拠点を手放してから
     [UnityTest]
-    public IEnumerator 留守のあいだの氾濫は戻ったときに湧き口のまわりに湧く()
+    public IEnumerator 拠点を手放しているあいだの氾濫は戻ったときに湧き口のまわりに湧く()
     {
         yield return Boot();
         int atBase = SlimesHere();
 
-        yield return GoTo("Root1");
+        yield return GoTo(AwayFromBase);
 
         BringToEdgeOfStampede("Root1");
         Dayover();
@@ -64,7 +68,7 @@ public class RaidPlayTests
     }
 
     [UnityTest]
-    public IEnumerator 拠点を離れるとき生き残っている敵は戻ったときに同じところへ同じ体力で湧く()
+    public IEnumerator 拠点を手放すとき生き残っている敵は戻ったときに同じところへ同じ体力で湧く()
     {
         yield return Boot();
 
@@ -85,7 +89,7 @@ public class RaidPlayTests
         hurt.TakeDamage(Wound);
         int left = hurt.CurrentHp;
 
-        yield return GoTo("Root1");
+        yield return GoTo(AwayFromBase);
 
         Assert.AreEqual(Root.StampedeRaiders, Raid().Kept.Count, "生き残っている敵が控えられない");
         Assert.IsTrue(Raid().Kept.All(raider => raider.HasPosition), "位置が控えられない");
@@ -117,7 +121,7 @@ public class RaidPlayTests
         IDamageable raider = RaidersHere()[0].GetComponent<IDamageable>();
         raider.TakeDamage(raider.CurrentHp);
 
-        yield return GoTo("Root1");
+        yield return GoTo(AwayFromBase);
         Assert.AreEqual(Root.StampedeRaiders - 1, Raid().Kept.Count);
     }
 

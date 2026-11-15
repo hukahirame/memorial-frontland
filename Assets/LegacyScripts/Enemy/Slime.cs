@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MemorialFloor.Game;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using MemorialFloor.Domain;
 
@@ -306,12 +307,13 @@ public class Slime : MonoBehaviour, IDamageable
         foreach (string s in DropRule.Roll(drops, chanceDrops, UnityRandom.Shared))
         {
             GameObject d = Instantiate(dropcapsule,transform.position,Quaternion.identity);
+            SceneManager.MoveGameObjectToScene(d, gameObject.scene);
             d.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(s);
             Vector3 v = new Vector3(Random.Range(0, 1f), Random.Range(0.5f, 1), Random.Range(0, 1f)) * 2;
             d.GetComponent<Rigidbody>().AddForce(v, ForceMode.Impulse);
         }
         string target = string.IsNullOrEmpty(questTarget) ? gameObject.name : questTarget;
-        GameObject.FindWithTag("QuestManager").GetComponent<QuestManager>().SyncQuest(target);
+        GameObject.FindWithTag("QuestManager").GetComponent<QuestManager>().SyncQuestIn(target, homeRootId);
         Root root = RootsManager.Roots.Find(homeRootId);
         if (root != null) root.Calm(SpawnRule.CalmPerDefeat);
         Destroy(gameObject);

@@ -18,6 +18,9 @@ public class SceneSmokeTests
     /// <summary>移動が終わるのを待つ上限（実時間の秒）。暗転と明転を含む</summary>
     private const float TravelSeconds = 10f;
 
+    /// <summary>出口から、歩いて越えたとみなすまで境目の向こうへ出る距離。境目を越えたとみなす幅（AreaTravel.CrossMargin）より広く、出口の当たりより外</summary>
+    private const float BeyondExit = 1.5f;
+
     [UnityTest]
     public IEnumerator 常駐シーンから拠点に着く()
     {
@@ -66,27 +69,43 @@ public class SceneSmokeTests
     }
 
     [UnityTest]
-    public IEnumerator 受注していなくても拠点の出口に入るだけで根源へ移る()
+    public IEnumerator 受注していなくても拠点の境目を歩いて越えるだけで根源へ移る()
     {
         yield return Boot();
 
-        StepIntoExit(ExitKind.ToNext);
+        yield return WalkAcross(ExitKind.ToNext);
         yield return ArriveAt("Root1");
 
         Assert.AreEqual("Root1", SceneManager.GetActiveScene().name);
     }
 
     [UnityTest]
-    public IEnumerator Root1の奥の出口からRoot2へ行き戻ると奥の出口の前に立つ()
+    public IEnumerator 今いる場所とその隣だけを読み込んでおく()
     {
         yield return Boot();
-        StepIntoExit(ExitKind.ToNext);
+        Travel().Go(Route.To("Root2", Arrival.FromPrevious));
+        yield return Arrive();
+
+        AreaTravel travel = Travel();
+        string[] expected = { "Root1", "Root2", "Root3" };
+        float giveUp = Time.realtimeSinceStartup + TravelSeconds;
+        while (!expected.All(id => travel.Present.Any(area => area.Id == id)) && Time.realtimeSinceStartup < giveUp) yield return null;
+
+        CollectionAssert.AreEquivalent(expected, travel.Present.Select(area => area.Id).ToArray(), "根源2の隣が読み込まれない");
+        Assert.IsFalse(SceneManager.GetSceneByName(TravelRule.BaseAreaId).isLoaded, "2 つ離れた拠点を手放さない");
+    }
+
+    [UnityTest]
+    public IEnumerator Root1の奥の境目からRoot2へ行き戻ると奥の出口の前に立つ()
+    {
+        yield return Boot();
+        yield return WalkAcross(ExitKind.ToNext);
         yield return ArriveAt("Root1");
 
-        StepIntoExit(ExitKind.ToNext);
+        yield return WalkAcross(ExitKind.ToNext);
         yield return ArriveAt("Root2");
 
-        StepIntoExit(ExitKind.ToPrevious);
+        yield return WalkAcross(ExitKind.ToPrevious);
         yield return ArriveAt("Root1");
 
         Vector3 at = GameObject.FindWithTag("Player").transform.position;
@@ -109,16 +128,16 @@ public class SceneSmokeTests
     }
 
     [UnityTest]
-    public IEnumerator Root2の奥の出口からRoot3へ行き戻ると奥の出口の前に立つ()
+    public IEnumerator Root2の奥の扉口からRoot3へ行き戻ると奥の出口の前に立つ()
     {
         yield return Boot();
         Travel().Go(Route.To("Root2", Arrival.FromPrevious));
         yield return Arrive();
 
-        StepIntoExit(ExitKind.ToNext);
+        yield return WalkAcross(ExitKind.ToNext);
         yield return ArriveAt("Root3");
 
-        StepIntoExit(ExitKind.ToPrevious);
+        yield return WalkAcross(ExitKind.ToPrevious);
         yield return ArriveAt("Root2");
 
         Vector3 at = GameObject.FindWithTag("Player").transform.position;
@@ -226,12 +245,26 @@ public class SceneSmokeTests
         yield return Arrive();
     }
 
-    //プレイヤーを出口の上へ置く。高さはそのままにして、歩いて入ったときと同じ重なり方にする
-    private static void StepIntoExit(ExitKind kind)
+    //境目の向こうの場所が読み込まれるのを待ち、プレイヤーを出口から境目の向こうへ置く。高さはそのまま。
+    //歩いて越えたときと同じく、画面を覆わずに移ることも見る
+    private static IEnumerator WalkAcross(ExitKind kind)
     {
+        AreaTravel travel = Travel();
+        float giveUp = Time.realtimeSinceStartup + TravelSeconds;
+        while (!travel.CanWalk(kind, RootIds()) && Time.realtimeSinceStartup < giveUp) yield return null;
+        Assert.IsTrue(travel.CanWalk(kind, RootIds()), "境目の向こうの場所が読み込まれない");
+
+        string from = travel.Where.AreaId;
         Transform player = GameObject.FindWithTag("Player").transform;
         Vector3 at = ExitHere(kind).transform.position;
-        player.position = new Vector3(at.x, player.position.y, at.z);
+        float toward = kind == ExitKind.ToNext ? 1f : -1f;
+        player.position = new Vector3(at.x + toward * BeyondExit, player.position.y, at.z);
+
+        for (int i = 0; i < SettleFrames && travel.Where.AreaId == from; i++)
+        {
+            Assert.IsFalse(travel.IsTraveling, "歩いて境目を越えたのに画面を覆った");
+            yield return null;
+        }
     }
 
     //いま居る場所の、その種類の出口

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace MemorialFloor.Game
 {
@@ -16,6 +17,7 @@ namespace MemorialFloor.Game
         public static void Leave(Transform body, Transform root, Color tint, float seconds)
         {
             var ghost = new GameObject("Afterimage");
+            SceneManager.MoveGameObjectToScene(ghost, root.gameObject.scene);
             Transform top = ghost.transform;
             top.SetPositionAndRotation(root.position, root.rotation);
             top.localScale = root.lossyScale;

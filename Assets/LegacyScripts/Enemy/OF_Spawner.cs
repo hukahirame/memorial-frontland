@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using MemorialFloor.Domain;
 using MemorialFloor.Game;
+using UnityEngine.SceneManagement;
 
 public class OF_Spawner : MonoBehaviour
 {
@@ -68,9 +69,11 @@ public class OF_Spawner : MonoBehaviour
         gameObject.tag = "MainSpawner";
         spawnrange = Random.Range(6f, 12f);
 
-        seeker = GameObject.Find("Seeker");
+        //地面を探す役は、湧き口と同じ場所のものを使う。ほかの場所も読み込んであると、名前で引けばそちらをつかむ
+        Area here = Area.In(gameObject.scene);
+        seeker_cs = here.Find<Seeker>();
+        seeker = seeker_cs.gameObject;
         seeker.transform.parent = transform;
-        seeker_cs = seeker.GetComponent<Seeker>();
 
         SpawnerCandidate candidate = GetComponent<SpawnerCandidate>();
         if (candidate != null)
@@ -80,22 +83,22 @@ public class OF_Spawner : MonoBehaviour
         }
 
         //湧く敵は場所が決める。決めていない場所は緑のスライム
-        Area here = Area.In(gameObject.scene);
-        enemy = here != null && here.Enemy != null ? here.Enemy : (GameObject)Resources.Load("Slime");
+        enemy = here.Enemy != null ? here.Enemy : (GameObject)Resources.Load("Slime");
 
         //移動の入口は常駐シーンにあり、シーンを跨ぐ参照は持てないので引く
         travel = FindAnyObjectByType<AreaTravel>();
 
         //保存した敵は、保存した根源に入ったときにだけ戻す。拠点に攻め込んだ敵は、拠点の控え（RootsManager.Raid）が持つ。
-        //体力を持たない前の保存の敵は、新しく湧いた敵として出す
+        //体力を持たない前の保存の敵は、新しく湧いた敵として出す。保存の位置は場所の原点からの位置
         SaveData sd = GameObject.Find("GameManager").GetComponent<SaveSystem>().savedata;
-        if (here != null && here.Id == sd.entered_scene && sd.respawns.Count > 0)
+        if (here.Id == sd.entered_scene && sd.respawns.Count > 0)
         {
             for (int i = 0; i < sd.respawns.Count; i++)
             {
                 int hp = i < sd.enemyHps.Count ? sd.enemyHps[i] : 0;
-                if (hp > 0) Revive(sd.respawns[i], hp);
-                else Put(sd.respawns[i]);
+                Vector3 at = here.ToWorld(sd.respawns[i]);
+                if (hp > 0) Revive(at, hp);
+                else Put(at);
             }
 
             sd.enemies.Clear();
@@ -121,7 +124,7 @@ public class OF_Spawner : MonoBehaviour
         {
             yield return new WaitForSeconds(Random.Range(15, 30));
 
-            //移動のあいだは出さない。根源を離れる途中に出すと、着いた先のシーンに入る
+            //移動のあいだは出さない。離れる途中に出すと、根源のシーンと一緒に消える
             if (travel != null && travel.IsTraveling) continue;
 
             Spawn(spawnrange);
@@ -151,6 +154,7 @@ public class OF_Spawner : MonoBehaviour
         if (SpawnRule.ShouldSuppress(root, Alive(), UnityRandom.Shared)) return;
 
         var obj = Instantiate(enemy, pos, Quaternion.identity);
+        SceneManager.MoveGameObjectToScene(obj, gameObject.scene);
         Slime slime = obj.GetComponent<Slime>();
         if (slime != null) slime.SetHome(rootId);
         seeker.gameObject.SetActive(false);
@@ -166,6 +170,7 @@ public class OF_Spawner : MonoBehaviour
     private void Revive(Vector3 pos, int hp)
     {
         GameObject obj = Instantiate(enemy, pos, Quaternion.identity);
+        SceneManager.MoveGameObjectToScene(obj, gameObject.scene);
         Slime slime = obj.GetComponent<Slime>();
         if (slime != null) slime.SetHome(rootId);
 
@@ -185,7 +190,7 @@ public class OF_Spawner : MonoBehaviour
     public void Stampede(int amount)
     {
         for (int i = 0; i < amount; i++) Spawn(spawnrange * 2);
-        Vector3 stoppos = GameObject.Find("ST_MainSite").transform.position;
+        Vector3 stoppos = Area.In(gameObject.scene).ExitOf(ExitKind.ToPrevious).transform.position;
         Put(BesideExit(stoppos));
         Put(BesideExit(stoppos));
      //   tower1.SetActive(false);
@@ -215,14 +220,13 @@ public class OF_Spawner : MonoBehaviour
         health.Take(damage);
         if (health.IsDead)
         {
-            GameObject.Find("GameManager").GetComponent<AudioSource>().clip =(AudioClip) Resources.Load("dark city");
-            GameObject.Find("GameManager").GetComponent<AudioSource>().Play();
+            FindAnyObjectByType<SceneStarter>().PlayBgm("dark city");
             Stampede(Random.Range(4,7));
-            GameObject.FindWithTag("QuestManager").GetComponent<QuestManager>().SyncQuest("MainSpawner");
+            GameObject.FindWithTag("QuestManager").GetComponent<QuestManager>().SyncQuestIn("MainSpawner", rootId);
             var colliders = GetComponents<Collider>();
             foreach (Collider collider in colliders) { collider.enabled = false; }
             GameObject.Find("MiddleText").GetComponent<MiddleText>().Midtxt_Anim("敵が大量発生しています");
-            StartCoroutine(Burst());
+            burst = StartCoroutine(Burst());
             return true;
         }
 
@@ -235,7 +239,7 @@ public class OF_Spawner : MonoBehaviour
     /// </summary>
     private IEnumerator Burst()
     {
-        Vector3 size = transform.localScale;
+        burstSize = transform.localScale;
         for (float t = 0f; t < BurstSeconds; t += Time.deltaTime)
         {
             float k = t / BurstSeconds;
@@ -243,11 +247,48 @@ public class OF_Spawner : MonoBehaviour
                 ? Mathf.Lerp(1f, BurstSwell, k / 0.3f)
                 : Mathf.Lerp(BurstSwell, 0f, (k - 0.3f) / 0.7f);
 
-            transform.localScale = size * scale;
+            transform.localScale = burstSize * scale;
             yield return null;
         }
 
-        foreach (Renderer shown in GetComponentsInChildren<Renderer>()) shown.enabled = false;
-        transform.localScale = size;
+        foreach (Renderer shown in GetComponentsInChildren<Renderer>())
+        {
+            if (!shown.enabled) continue;
+
+            shown.enabled = false;
+            hidden.Add(shown);
+        }
+        transform.localScale = burstSize;
+        burst = null;
+    }
+
+    /// <summary>壊れる前の大きさ。膨らんでいる途中で直したときに戻す</summary>
+    private Vector3 burstSize;
+
+    private Coroutine burst;
+
+    /// <summary>壊れて見えなくした描画</summary>
+    private readonly List<Renderer> hidden = new List<Renderer>();
+
+    /// <summary>
+    /// 核の耐久を戻し、壊れていれば立て直す。プレイヤーが根源に入ったときに呼ぶ（SceneStarter）。
+    /// 根源は隣として読み込んだまま出入りすることがあり、読み直さなくても入るたびに戻す
+    /// </summary>
+    public void Mend()
+    {
+        if (!health.IsDead) return;
+
+        if (burst != null)
+        {
+            StopCoroutine(burst);
+            burst = null;
+            transform.localScale = burstSize;
+        }
+
+        foreach (Renderer shown in hidden) if (shown != null) shown.enabled = true;
+        hidden.Clear();
+        foreach (Collider collider in GetComponents<Collider>()) collider.enabled = true;
+
+        health.SetCurrent(health.Max);
     }
 }

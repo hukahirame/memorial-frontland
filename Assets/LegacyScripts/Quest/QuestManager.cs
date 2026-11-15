@@ -274,17 +274,24 @@ public class QuestManager : MonoBehaviour // タスク風にクエ管理。成�
         return quest.CoreBroken ? DefeatObjective : BreachObjective;
     }
 
+    /// <summary>プレイヤーが居る根源で target を倒した</summary>
     public void SyncQuest(string target) // クエ進捗追加、外部から呼ぶ
+    {
+        SyncQuestIn(target, travel.Where.RootId);
+    }
+
+    /// <summary>rootId の根源で target を倒した。根源の外なら rootId は null。プレイヤーの居場所ではなく、倒した物の居た根源で進める</summary>
+    public void SyncQuestIn(string target, string rootId)
     {
         //サブは達成したその場で一覧から消えるので、写しを回す
         foreach (Quest quest in new List<Quest>(Quests.All))
         {
             if (!quest.AdvancesOn(target)) continue;
 
-            if (quest.Kind == QuestKind.Sub && quest.RootId == travel.Where.RootId) SyncQuestSub(quest);
+            if (quest.Kind == QuestKind.Sub && quest.RootId == rootId) SyncQuestSub(quest);
             else if (quest.Kind == QuestKind.Common) SyncQuestSub(quest);
             //受けた調査と決壊は、対象の根源の中でだけ進む。通り道の根源で核を壊しても進めない
-            else if (quest.Id == ordered_id && quest.RootId == travel.Where.RootId) SyncQuestSub(quest);
+            else if (quest.Id == ordered_id && quest.RootId == rootId) SyncQuestSub(quest);
         }
     }
 
