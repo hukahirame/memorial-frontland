@@ -158,6 +158,20 @@ public class UiShots
         yield return Shot("14_alert");
     }
 
+    //タイトルの背景の動画が流れているか。時間をずらした 2 枚で、滝や水面が動いていることを見る
+    [UnityTest]
+    public IEnumerator タイトルの背景の動画を撮る()
+    {
+        Directory.CreateDirectory(Folder);
+
+        yield return SceneManager.LoadSceneAsync("Title", LoadSceneMode.Single);
+        yield return new WaitForSecondsRealtime(2.5f);
+        yield return Shot("00c_title_movie_a");
+
+        yield return new WaitForSecondsRealtime(1.5f);
+        yield return Shot("00d_title_movie_b");
+    }
+
     //回避攻撃の途中。残像は回っているあいだに等しい間隔で 3 枚、正面を向いた姿で残る。2 枚めと 3 枚めが重なる頃と、回り終わる頃を撮る
     [UnityTest]
     public IEnumerator 回避攻撃の残像を撮る()
