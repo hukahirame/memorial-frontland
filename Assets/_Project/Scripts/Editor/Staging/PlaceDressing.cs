@@ -657,7 +657,7 @@ namespace MemorialFloor.Editor
         private const string MainSiteScene = "Assets/_Project/Scenes/MainSite.unity";
 
         /// <summary>
-        /// 拠点と根源1・2 の動かない物（地面の塊・坂・壁・石垣・飾りの岩など）に、まとめて描く印（static batching）を付ける。根源3と同じ軽くし方（[D-024]）。
+        /// 拠点と根源1・2 の動かない物（地面の塊・坂・壁・石垣・飾りの岩など）に、まとめて描く印（static batching）を付ける。根源3と同じ軽くし方。
         /// 動く物には付けない: スクリプト・Animator・Rigidbody を自分か親に持つ物、核の候補（像。壊れると膨らむ）、まとめると崩れる素材
         /// （カメラを向く板の木、風で揺れる草木。シェーダーが DisableBatching を宣言する）。
         /// 核の候補に前から付いていた印（素材集の像の prefab が持つ）は外す。付いたままだと、壊れて膨らむ動きが画面に出ない
