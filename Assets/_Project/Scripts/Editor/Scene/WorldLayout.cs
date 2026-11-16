@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using MemorialFloor.Domain;
 using MemorialFloor.Game;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -13,7 +14,9 @@ namespace MemorialFloor.Editor
     /// 場所を 1 つの世界の座標に並べ、隣どうしを地続きにする（[D-42]）。
     /// 場所は手前から奥へ横一列に並べ、隣の場の範囲の端どうしを合わせる。場所の物はまとめてずらし、ずらした量を Area の原点に書く。
     /// 境目の向こうへはみ出した物は片付ける。床や壁の箱は境目で切り、飾りは境目を越えた分が多ければ消す。
-    /// 後ろの地形は場所ごとに写しを作り、境目の向こうに穴を開ける。何度回しても同じ結果になる
+    /// 後ろの地形は場所ごとに写しを作り、境目の向こうに穴を開ける。
+    /// 外どうしの境目（両側の地面が地形の塗り TerrainBlock）では、地面と崖の塗りを境目の前後で隣の塗りへまだらに移し、
+    /// 両側の出口の看板を 1 本の柱にまとめる。建物の扉口の境目はそのまま。何度回しても同じ結果になる
     /// </summary>
     public static class WorldLayout
     {
@@ -22,8 +25,31 @@ namespace MemorialFloor.Editor
         /// <summary>場所の並び。手前から奥へ。拠点、根源の順で、RootsManager の根源の並びと同じ</summary>
         private static readonly string[] Line = { "MainSite", "Root1", "Root2", "Root3" };
 
-        /// <summary>後ろの地形の写しを置く所</summary>
+        /// <summary>後ろの地形の写しと、境目の塗りの素材を置く所</summary>
         private const string TerrainFolder = "Assets/_Project/Art/Places";
+
+        /// <summary>地形の塗りのシェーダー。境目の塗りは、これに _SEAM を点けた素材</summary>
+        private const string TerrainShader = "MemorialFloor/TerrainBlock";
+
+        private const string SeamKeyword = "_SEAM";
+
+        /// <summary>境目の前後それぞれ、これだけの幅で隣の塗りへ移る。境目で切った塊（最大 3）を覆う</summary>
+        private const float SeamHalfWidth = 3f;
+
+        /// <summary>隣の塗りが混ざるまだらの、1 つの斑の大きさ</summary>
+        private const float SeamGrain = 1.2f;
+
+        /// <summary>
+        /// 手前へ戻る看板を、奥へ進む看板より下げる量。2 枚の矢印の板が上下に並び、柱が 1 本に見える。
+        /// 下の看板は上の看板の後ろに描き、上の板が下の柱の頭を隠す
+        /// </summary>
+        private const float SignDrop = 0.3f;
+
+        /// <summary>描く順。奥行きが 1 増えるごとに -100。プレイヤーと敵（DynamicLayer）と同じ</summary>
+        private const float OrderPerDepth = -100f;
+
+        /// <summary>境目の継ぎ目を隠す飾りを置くルートの名前。片付けの対象にしない</summary>
+        public const string SeamDressing = "Seam";
 
         /// <summary>飾りが境目の向こうへこれより大きくはみ出したら消す。隣の場所の物に食い込んで見える</summary>
         private const float Overhang = 0.3f;
@@ -74,6 +100,11 @@ namespace MemorialFloor.Editor
                 Physics.SyncTransforms();
                 Trim(scene, left, right);
                 Terrains(scene, left, right);
+
+                Material ground = GroundOf(scene);
+                Unseam(scene, ground);
+                if (hasPrevious) Seam(scene, ground, at - 1, at, bounds.y);
+                if (hasNext) Seam(scene, ground, at, at + 1, bounds.x);
 
                 Debug.Log(scene.name + " を " + origin + " に置いた。場の範囲 x " + bounds.y + "〜" + bounds.x);
             });
@@ -134,7 +165,7 @@ namespace MemorialFloor.Editor
             int removed = 0, cut = 0;
             foreach (Transform shown in all)
             {
-                if (shown == null || !IsPlain(shown.gameObject)) continue;
+                if (shown == null || !IsPlain(shown.gameObject) || IsSeamPiece(shown)) continue;
 
                 Bounds? own = OwnBounds(shown.gameObject);
                 if (own == null) continue;
@@ -173,6 +204,12 @@ namespace MemorialFloor.Editor
             }
 
             return true;
+        }
+
+        /// <summary>境目に置く物か。出口の看板と、継ぎ目を隠す飾りは、境目をまたいでも片付けない</summary>
+        private static bool IsSeamPiece(Transform shown)
+        {
+            return shown.root.name == SeamDressing || shown.GetComponentInParent<Exit>(true) != null;
         }
 
         /// <summary>その物そのものの見た目と当たりの範囲。子は含めない。どちらも無ければ null</summary>
@@ -313,6 +350,176 @@ namespace MemorialFloor.Editor
             data.SetHoles(0, 0, surface);
             EditorUtility.SetDirty(data);
             AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// x にある、場所 leftAt と rightAt の境目をつなぐ。この場所（scene）の側だけを直す。
+        /// 両側とも地面が地形の塗りなら（外どうし）、境目の前後の塊に境目の塗りを当て、看板を 1 本の柱にまとめる
+        /// </summary>
+        private static void Seam(Scene scene, Material ground, int leftAt, int rightAt, float x)
+        {
+            bool isLeft = scene.name == Line[leftAt];
+            Material other = PeekGround(Line[isLeft ? rightAt : leftAt]);
+            if (ground == null || other == null) return;
+
+            Material seam = SeamMaterial(isLeft ? ground : other, isLeft ? other : ground, Line[leftAt] + Line[rightAt], x);
+            int painted = 0;
+            foreach (MeshRenderer shown in Renderers(scene))
+            {
+                if (shown.sharedMaterial != ground) continue;
+
+                Bounds bounds = shown.bounds;
+                if (bounds.max.x < x - SeamHalfWidth || bounds.min.x > x + SeamHalfWidth) continue;
+
+                shown.sharedMaterial = seam;
+                painted++;
+            }
+
+            Sign(scene, isLeft, Line[leftAt], x);
+
+            Debug.Log(scene.name + ": " + Line[leftAt] + " と " + Line[rightAt] + " の境目の塗りを " + painted + " 個の塊に当てた");
+        }
+
+        /// <summary>場所の地面の塗り。地形の塗り（境目の塗りを除く）のうち、いちばん多くの物が使う素材。建物の中の場所は null</summary>
+        private static Material GroundOf(Scene scene)
+        {
+            Dictionary<Material, int> counts = new Dictionary<Material, int>();
+            foreach (MeshRenderer shown in Renderers(scene))
+            {
+                Material material = shown.sharedMaterial;
+                if (material == null || material.shader.name != TerrainShader || IsSeam(material)) continue;
+
+                counts[material] = counts.TryGetValue(material, out int count) ? count + 1 : 1;
+            }
+
+            Material most = null;
+            foreach (KeyValuePair<Material, int> pair in counts)
+            {
+                if (most == null || pair.Value > counts[most]) most = pair.Key;
+            }
+
+            return most;
+        }
+
+        /// <summary>ほかの場所の地面の塗り。シーンは開かずに読む</summary>
+        private static Material PeekGround(string sceneName)
+        {
+            Scene scene = EditorSceneManager.OpenPreviewScene(PathOf(sceneName));
+
+            try
+            {
+                return GroundOf(scene);
+            }
+            finally
+            {
+                EditorSceneManager.ClosePreviewScene(scene);
+            }
+        }
+
+        private static bool IsSeam(Material material)
+        {
+            return material != null && material.shader.name == TerrainShader && material.IsKeywordEnabled(SeamKeyword);
+        }
+
+        /// <summary>前に回したときに当てた境目の塗りを、場所の地面の塗りに戻す。境目の幅を変えても古い塗りが残らない</summary>
+        private static void Unseam(Scene scene, Material ground)
+        {
+            if (ground == null) return;
+
+            foreach (MeshRenderer shown in Renderers(scene))
+            {
+                if (IsSeam(shown.sharedMaterial)) shown.sharedMaterial = ground;
+            }
+        }
+
+        /// <summary>
+        /// 境目の塗りの素材。左の場所の塗りから、x の前後 SeamHalfWidth で右の場所の塗りへ移る。
+        /// 在れば書き換える。作り直すと GUID が変わり、シーンからの参照が切れる
+        /// </summary>
+        private static Material SeamMaterial(Material left, Material right, string name, float x)
+        {
+            string path = TerrainFolder + "/Seam" + name + ".mat";
+            Material seam = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (seam == null)
+            {
+                seam = new Material(left.shader);
+                AssetDatabase.CreateAsset(seam, path);
+            }
+
+            seam.shader = left.shader;
+            seam.CopyPropertiesFromMaterial(left);
+            seam.SetTexture("_NextTopTex", right.GetTexture("_TopTex"));
+            seam.SetTexture("_NextSideTex", right.GetTexture("_SideTex"));
+            seam.SetColor("_NextTopTint", right.GetColor("_TopTint"));
+            seam.SetColor("_NextSideTint", right.GetColor("_SideTint"));
+            seam.SetFloat("_NextTopScale", right.GetFloat("_TopScale"));
+            seam.SetFloat("_NextSideScale", right.GetFloat("_SideScale"));
+            seam.SetFloat("_NextUnderwater", right.GetFloat("_Underwater"));
+            seam.SetFloat("_NextGlossiness", right.GetFloat("_Glossiness"));
+            seam.SetFloat("_SeamX", x);
+            seam.SetFloat("_SeamWidth", SeamHalfWidth);
+            seam.SetFloat("_SeamGrain", SeamGrain);
+            seam.SetFloat("_Seam", 1f);
+            seam.EnableKeyword(SeamKeyword);
+
+            EditorUtility.SetDirty(seam);
+            AssetDatabase.SaveAssets();
+            return seam;
+        }
+
+        /// <summary>
+        /// 境目の看板を 1 本の柱にまとめる。左の場所の奥へ進む看板を境目に立て、右の場所の手前へ戻る看板を、
+        /// 同じ所に SignDrop だけ下げて後ろに立てる。片方の場所しか読み込んでいないときは、それぞれ 1 枚の看板に見える
+        /// </summary>
+        private static void Sign(Scene scene, bool isLeft, string leftName, float x)
+        {
+            SpriteRenderer sign = SignOf(scene, isLeft ? ExitKind.ToNext : ExitKind.ToPrevious);
+            if (sign == null) return;
+
+            Vector3 top = isLeft ? sign.transform.position : PeekSign(leftName);
+            Vector3 at = new Vector3(x, top.y - (isLeft ? 0f : SignDrop), top.z);
+            sign.transform.position = at;
+            sign.sortingOrder = Mathf.RoundToInt(at.z * OrderPerDepth) - (isLeft ? 0 : 1);
+        }
+
+        /// <summary>その出口の看板。無ければ null</summary>
+        private static SpriteRenderer SignOf(Scene scene, ExitKind kind)
+        {
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                foreach (Exit exit in root.GetComponentsInChildren<Exit>(true))
+                {
+                    if (exit.Kind == kind) return exit.GetComponentInChildren<SpriteRenderer>(true);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>ほかの場所の、奥へ進む看板の位置。シーンは開かずに読む</summary>
+        private static Vector3 PeekSign(string sceneName)
+        {
+            Scene scene = EditorSceneManager.OpenPreviewScene(PathOf(sceneName));
+
+            try
+            {
+                SpriteRenderer sign = SignOf(scene, ExitKind.ToNext);
+                if (sign == null) throw new InvalidOperationException(sceneName + " に奥へ進む出口の看板が無い");
+
+                return sign.transform.position;
+            }
+            finally
+            {
+                EditorSceneManager.ClosePreviewScene(scene);
+            }
+        }
+
+        private static IEnumerable<MeshRenderer> Renderers(Scene scene)
+        {
+            foreach (GameObject root in scene.GetRootGameObjects())
+            {
+                foreach (MeshRenderer shown in root.GetComponentsInChildren<MeshRenderer>(true)) yield return shown;
+            }
         }
 
         /// <summary>シーンのルートに置かれた場所。プレビューで開いたシーンからも引く</summary>
