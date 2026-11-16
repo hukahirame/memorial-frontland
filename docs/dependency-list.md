@@ -168,7 +168,7 @@
 ↑ 🟦 `OutField` **1** — FieldBounds **1**  
 ↑ 🟦 `Scene` **43** — ExitKind **8**, TravelRule **8**, Arrival **7**, Placement **7**, Route **7**, AreaKind **2**, PlacementLedger **2**, Whereabouts **2**  
 ↑ 🟩 `OutField` **4** — Exposition **2**, Fence **2**  
-↑ 🟩 `Staging` **5** — PressFeedback **3**, KeyHint **1**, UiStage **1**  
+↑ 🟩 `Staging` **6** — PressFeedback **3**, KeyHint **1**, Music **1**, UiStage **1**  
 
 ↓ 🟩 `OutField` **2** — Area **2**  
 ↓ 🟩 `Staging` **11** — Area **10**, AreaTravel **1**  
@@ -188,7 +188,7 @@
 ↑ 🟩 `Scene` **11** — Area **10**, AreaTravel **1**  
 
 ↓ 🟩 `OutField` **6** — TempAudio **4**, WorldGauge **2**  
-↓ 🟩 `Scene` **5** — PressFeedback **3**, KeyHint **1**, UiStage **1**  
+↓ 🟩 `Scene` **6** — PressFeedback **3**, KeyHint **1**, Music **1**, UiStage **1**  
 ↓ 🟨 `Craft` **4** — TempAudio **2**, CloseManager **1**, MiddleText **1**  
 ↓ 🟨 `Day` **1** — MiddleText **1**  
 ↓ 🟨 `Enemy` **6** — AlertMark **2**, MiddleText **2**, WorldGauge **2**  
@@ -196,7 +196,7 @@
 ↓ 🟨 `Player` **27** — TempAudio **7**, HitStop **6**, MainCamera **5**, KeyHint **4**, AttackGuide **2**, RollStaging **2**, BigText **1**  
 ↓ 🟨 `Quest` **5** — BigText **3**, MiddleText **2**  
 ↓ 🟨 `Roots` **7** — CloseManager **4**, MiddleText **3**  
-↓ 🟨 `Scene` **1** — PressFeedback **1**  
+↓ 🟨 `Scene` **2** — Music **1**, PressFeedback **1**  
 
 ### 🟨Craft 🔨 
 
@@ -344,7 +344,7 @@
 ↑ 🟦 `Wallet` **2** — Wallet **2**  
 ↑ 🟩 `OutField` **1** — Exposition **1**  
 ↑ 🟩 `Scene` **9** — Area **4**, AreaTravel **4**, SettingsMenu **1**  
-↑ 🟩 `Staging` **1** — PressFeedback **1**  
+↑ 🟩 `Staging` **2** — Music **1**, PressFeedback **1**  
 ↑ 🟨 `Day` **2** — Sun2 **2**  
 ↑ 🟨 `Enemy` **4** — OF_Spawner **4**  
 ↑ 🟨 `Player` **9** — Player2 **9**  

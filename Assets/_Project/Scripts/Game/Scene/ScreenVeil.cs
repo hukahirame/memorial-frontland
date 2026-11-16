@@ -4,7 +4,7 @@ using UnityEngine;
 namespace MemorialFloor.Game
 {
     /// <summary>
-    /// 場所を移るときの暗転。画面を黒で覆い、BGM の音量も一緒に下げる。
+    /// 場所を移るときの暗転。画面を黒で覆い、曲の音量も一緒に下げる。
     /// 始めは覆っておき、最初の場所に着いてから開ける。常駐シーンの UI だけが映る一瞬を見せないため
     /// </summary>
     public sealed class ScreenVeil : MonoBehaviour
@@ -18,14 +18,10 @@ namespace MemorialFloor.Game
         [SerializeField] private CanvasGroup cover;
 
         [Tooltip("覆うあいだ音量を下げる。空なら画面だけ")]
-        [SerializeField] private AudioSource bgm;
-
-        /// <summary>開けたときの音量。覆う前の値に戻す</summary>
-        private float _volume = 1f;
+        [SerializeField] private Music music;
 
         private void Awake()
         {
-            if (bgm != null) _volume = bgm.volume;
             Apply(1f);
         }
 
@@ -57,7 +53,7 @@ namespace MemorialFloor.Game
         private void Apply(float alpha)
         {
             cover.alpha = alpha;
-            if (bgm != null) bgm.volume = _volume * (1f - alpha);
+            if (music != null) music.Veil = alpha;
         }
     }
 }

@@ -686,6 +686,7 @@ GameObject:
   - component: {fileID: 64990616}
   - component: {fileID: 64990618}
   - component: {fileID: 64990619}
+  - component: {fileID: 64990620}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -862,6 +863,19 @@ MonoBehaviour:
     raiders: 0
     baseRaiders: []
     plannedRoots: []
+--- !u!114 &64990620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64990615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7001f09d3ad43464b89c89d44dff904a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.Music
+  source: {fileID: 64990618}
 --- !u!1 &82685811
 GameObject:
   m_ObjectHideFlags: 0
@@ -8298,7 +8312,7 @@ MonoBehaviour:
   player: {fileID: 2480583501242932787}
   hpView: {fileID: 1576346943}
   jumpButton: {fileID: 1430129986}
-  bgm: {fileID: 64990618}
+  music: {fileID: 64990620}
   questManager: {fileID: 654698120}
   rewardUI: {fileID: 1118225129}
   rewardPoint: {fileID: 2039307014}
@@ -14243,7 +14257,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.ScreenVeil
   fadeSeconds: 0.3
   cover: {fileID: 1343940972}
-  bgm: {fileID: 64990618}
+  music: {fileID: 64990620}
 --- !u!1 &1347357869
 GameObject:
   m_ObjectHideFlags: 0
@@ -18440,7 +18454,6 @@ MonoBehaviour:
   joystick: {fileID: 1473679946}
   joystick_atk: {fileID: 0}
   on_ground: 0
-  expos: {x: 0, y: 0, z: 0, w: 0}
   character: {fileID: 0}
   animator: {fileID: 0}
   body: {fileID: 0}

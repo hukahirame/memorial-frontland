@@ -14,7 +14,7 @@ public class SceneStarter : MonoBehaviour
     [SerializeField] private Player2 player;
     [SerializeField] private Slider hpView;
     [SerializeField] private Button jumpButton;
-    [SerializeField] private AudioSource bgm;
+    [SerializeField] private Music music;
     [SerializeField] private QuestManager questManager;
     [SerializeField] private RewardUI rewardUI;
     [SerializeField] private Transform rewardPoint;
@@ -78,23 +78,23 @@ public class SceneStarter : MonoBehaviour
     private string wantedBgm;
 
     /// <summary>
-    /// 曲を替える。曲は大きく、同じコマで読むと数百ミリ秒止まるので、裏で読み、読み終えてから鳴らす。
-    /// 読み終えるまでは何も鳴らさない。場所に着いたときは、読み終えるまで覆いを開けない
+    /// 曲を替える。曲は大きく、同じコマで読むと数百ミリ秒止まるので、裏で読み、読み終えてから替える。
+    /// 読み終えるまでは前の曲が鳴り続け、替えるときは重ねて移る（境目を歩いて越えたとき）。
+    /// 同じ曲が鳴っていれば流し続ける。覆って移るときは、読み終えるまで覆いを開けず、覆いの裏ですぐ替える
     /// </summary>
     public void PlayBgm(string clip)
     {
         wantedBgm = clip;
-        bgm.Stop();
+        if (music.IsPlaying && music.Clip != null && music.Clip.name == clip) return;
 
         ResourceRequest loading = Resources.LoadAsync<AudioClip>(clip);
         if (travel.IsTraveling) travel.HoldVeilFor(loading);
 
         loading.completed += _ =>
         {
-            if (wantedBgm != clip || bgm == null) return;
+            if (wantedBgm != clip || music == null) return;
 
-            bgm.clip = (AudioClip)loading.asset;
-            bgm.Play();
+            music.Play((AudioClip)loading.asset, travel.IsTraveling);
         };
     }
 
