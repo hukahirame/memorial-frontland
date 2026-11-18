@@ -28,7 +28,6 @@ namespace MemorialFloor.Game
         [SerializeField, FormerlySerializedAs("rewardUI")] private RewardUI _rewardUI;
         [SerializeField] private SaveSystem _save;
         [SerializeField] private PlayerHealth _player;
-        [SerializeField] private MiddleText _middleText;
 
         [Tooltip("結果の画面を出す所")]
         [SerializeField, FormerlySerializedAs("rewardPoint")] private Transform _rewardPoint;
@@ -37,7 +36,7 @@ namespace MemorialFloor.Game
 
         private void Awake()
         {
-            _enemies = new EnemyContext(_travel, _roots, _quests, _player, _middleText);
+            _enemies = new EnemyContext(_travel, _roots, _quests, _player);
 
             //隣の場所を先に読み込むのに、根源の並びを渡す
             _travel.Lineup = _roots.RootIds;

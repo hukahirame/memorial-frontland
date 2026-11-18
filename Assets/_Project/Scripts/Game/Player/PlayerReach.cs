@@ -4,7 +4,7 @@ using UnityEngine;
 namespace MemorialFloor.Game
 {
     /// <summary>
-    /// 手の届くもの。作業台と柵のそばでは Allmaity にボタンを出し、出口に入ったら隣の場所へ移る。
+    /// 手の届くもの。作業台と柵のそばでは Allmaity にボタンを出し、出口に入ったら隣の場所へ移り、落ちた品は持ち物へ入れる。
     /// 剣や視界確保の当たりもプレイヤーの子で、その出入りもここへ届く。作業台と出口は体の固い当たりが重なったときだけ数える
     /// </summary>
     public sealed class PlayerReach : MonoBehaviour
@@ -20,6 +20,9 @@ namespace MemorialFloor.Game
         [SerializeField] private Allmaity _allmaity;
         [SerializeField] private AreaTravel _travel;
 
+        [Tooltip("落ちた品を拾って入れる先")]
+        [SerializeField] private PlayerInventory _inventory;
+
         /// <summary>手の届く範囲にある柵。「柵を壊す」で、いちばん近いものを壊す</summary>
         private readonly List<Fence> _fencesInReach = new List<Fence>();
 
@@ -33,6 +36,12 @@ namespace MemorialFloor.Game
         private void Update()
         {
             ForgetGoneFences();
+        }
+
+        /// <summary>落ちた品を拾って持ち物に入れる。入る枠が無ければ拾わずに false</summary>
+        public bool PickUp(string itemId, int durability)
+        {
+            return _inventory.LoadInventory(itemId, durability) == 1;
         }
 
         //入るときは外接する箱で見る（入った瞬間の浅い重なりも取りこぼさない）。出るときは形で見る（剣だけが抜けても消さない）

@@ -15,7 +15,7 @@ namespace MemorialFloor.Game
     public sealed class RootCore : MonoBehaviour
     {
         /// <summary>核の札と、調査・決壊クエストの対象の名前</summary>
-        public const string Tag = "MainSpawner";
+        public const string Tag = QuestBook.CoreTarget;
 
         /// <summary>核の耐久</summary>
         private const int MaxHp = 100;
@@ -222,7 +222,7 @@ namespace MemorialFloor.Game
             Stampede(Random.Range(StampedeMin, StampedeMax));
             _context.Quests.DefeatIn(Tag, _rootId);
             foreach (Collider part in GetComponents<Collider>()) part.enabled = false;
-            _context.MiddleText.Midtxt_Anim("敵が大量発生しています");
+            _context.Roots.ReportStampede();
             _burst = StartCoroutine(Burst());
         }
 

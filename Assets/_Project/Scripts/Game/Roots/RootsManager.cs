@@ -7,20 +7,34 @@ namespace MemorialFloor.Game
 {
     /// <summary>
     /// 根源の持ち主。根源の並びと、拠点に攻め込んだ敵の控えを持ち、零時ごとに根源を動かす（蓄積・氾濫・攻略度の減り）。
-    /// 常駐シーンに 1 つ置く
+    /// 常駐シーンに 1 つ置く。知らせの文字は出さず、起きたことをイベントで伝える（RootNotices が出す）
     /// </summary>
     public sealed class RootsManager : MonoBehaviour
     {
         [SerializeField] private Sun _sun;
-        [SerializeField] private MiddleText _middleText;
 
         public RootRegistry Roots { get; } = new RootRegistry();
 
         /// <summary>拠点に攻め込んだ敵の控え。氾濫で足し、拠点の MS_Spawner が出す</summary>
         public BaseRaid Raid { get; } = new BaseRaid();
 
-        /// <summary>根源が氾濫した。氾濫の知らせを出した直後に知らせる</summary>
+        /// <summary>根源が氾濫して、拠点に敵が攻め込んだ。同じ根源の Overflowed より先に知らせる</summary>
+        public event Action<Root> Invaded;
+
+        /// <summary>
+        /// 根源が氾濫した。決壊はこれを受けて出る。Invaded と分けて後に知らせるのは、
+        /// 攻め込まれた知らせを決壊が出た知らせより先に出すため（同じイベントの受け手どうしは順番が決まらない）
+        /// </summary>
         public event Action<Root> Overflowed;
+
+        /// <summary>根源が次の零時に氾濫しそう。零時の終わりに、攻略度を減らしたあとで知らせる</summary>
+        public event Action<Root> OverflowForeseen;
+
+        /// <summary>根源の核が壊れ、敵が大量に湧いた</summary>
+        public event Action Stampeded;
+
+        /// <summary>拠点を読み込み、控えていた攻め込んだ敵を出した。数は出した敵の数</summary>
+        public event Action<int> RaidersReleased;
 
         //始めのクエストと保存の戻しが根源を引くので、どの Start よりも先に作る
         private void Awake()
@@ -64,7 +78,7 @@ namespace MemorialFloor.Game
                 if (raiders == 0) continue;
 
                 Raid.Invade(raiders);
-                _middleText.Midtxt_Anim(root.Name + "が氾濫し、拠点に敵が攻め込みました");
+                Invaded?.Invoke(root);
                 Overflowed?.Invoke(root);
             }
 
@@ -73,8 +87,20 @@ namespace MemorialFloor.Game
             //予兆は攻略度を減らしたあとで見る。次の零時に増える量は、そのときの攻略度で決まる
             foreach (Root root in Roots.All)
             {
-                if (root.MayOverflowNextDay) _middleText.Midtxt_Anim(root.Name + "が次の零時に氾濫しそうです");
+                if (root.MayOverflowNextDay) OverflowForeseen?.Invoke(root);
             }
+        }
+
+        /// <summary>根源の核が壊れて敵が大量に湧いた。場所のシーンに居る核（RootCore）が呼ぶ</summary>
+        public void ReportStampede()
+        {
+            Stampeded?.Invoke();
+        }
+
+        /// <summary>拠点を読み込み、控えていた敵を出した。拠点のシーンに居る湧き口（RaidGate）が呼ぶ</summary>
+        public void ReportRaidersReleased(int count)
+        {
+            RaidersReleased?.Invoke(count);
         }
 
         /// <summary>gainLow から gainHigh は、攻略度 0 のときに日ごとに増える蓄積値の幅。既に同じ Id があれば何もしない</summary>

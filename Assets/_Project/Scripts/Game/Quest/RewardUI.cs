@@ -14,6 +14,7 @@ namespace MemorialFloor.Game
 
         [SerializeField] private QuestManager _quests;
         [SerializeField] private RootsManager _roots;
+        [SerializeField] private ItemBook _items;
         [SerializeField, FormerlySerializedAs("toptxt")] private TextMeshProUGUI _title;
         [SerializeField, FormerlySerializedAs("sidetxt")] private TextMeshProUGUI _details;
         [SerializeField, FormerlySerializedAs("resulttxt")] private TextMeshProUGUI _result;
@@ -44,13 +45,11 @@ namespace MemorialFloor.Game
             _title.text = "「" + root.Name + "」のクエスト結果";
             _details.text = "◎危険度：" + root.Danger + "\n\n";
 
+            //失敗なら、進みは結果を受け取ったときに始めに戻っている（QuestBook.TakeOutcome）。受注は残るので、もう一度挑める
             if (outcome == QuestOutcome.Failed)
             {
                 _result.text = "失敗";
                 _result.color = _failColor;
-
-                //達成していても、根源を出る前に倒れたらやり直し。受注は残すので、もう一度挑める
-                quest.SetProgress(0);
             }
             else
             {
@@ -59,11 +58,11 @@ namespace MemorialFloor.Game
 
                 //受け取るのは達成済みのすべて。表示もそれに合わせる。攻略度は上限で止まる
                 List<Quest> cleared = _quests.Cleared();
-                _details.text += string.Format("◎攻略度　{0} % → {1} %\n\n", root.Progress, root.ProgressAfterGain(QuestManager.ProgressGain(cleared, root.Id)));
+                _details.text += string.Format("◎攻略度　{0} % → {1} %\n\n", root.Progress, root.ProgressAfterGain(QuestRewards.ProgressGain(cleared, root.Id)));
                 _details.text += "【報酬】\n";
 
-                foreach (Reward reward in QuestManager.Total(cleared))
-                    _details.text += "・" + _quests.RewardName(reward.Kind) + "　x　" + reward.Amount + "\n";
+                foreach (Reward reward in QuestRewards.Total(cleared))
+                    _details.text += "・" + QuestText.RewardName(reward.Kind, _items.Items) + "　x　" + reward.Amount + "\n";
 
                 _quests.PayCleared();
             }

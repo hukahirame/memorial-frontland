@@ -10,7 +10,7 @@ namespace MemorialFloor.Game
     /// プレイヤーの持ち物。枠の並びを持ち、品を入れて出す。持っているだけで効く品（速さの首飾り、攻撃の品）の効き目もここで決める。
     /// 枠の絵は InventoryView が知らせを受けて描く
     /// </summary>
-    public sealed class PlayerInventory : MonoBehaviour, IItemReceiver
+    public sealed class PlayerInventory : MonoBehaviour
     {
         /// <summary>速さの首飾り 1 つで足す歩く速さ。持っているだけで効く</summary>
         private const float NecklaceSpeed = 0.3f;

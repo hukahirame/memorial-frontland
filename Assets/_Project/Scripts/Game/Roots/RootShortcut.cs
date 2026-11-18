@@ -44,20 +44,20 @@ namespace MemorialFloor.Game
             if (fee != _shownFee)
             {
                 Show(_rootId);
-                _middleText.Midtxt_Anim("近道の料金が変わりました");
+                _middleText.Show("近道の料金が変わりました");
                 return;
             }
 
             if (!_purse.Coins.CanAfford(fee))
             {
-                _middleText.Midtxt_Anim("所持金が足りません");
+                _middleText.Show("所持金が足りません");
                 return;
             }
 
             if (!_travel.Shortcut(_rootId, _roots.RootIds())) return;
 
             _purse.Coins.Spend(fee);
-            foreach (CloseManager close in _closes) close.CloseClick();
+            foreach (CloseManager close in _closes) close.Close();
         }
     }
 }

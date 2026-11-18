@@ -10,6 +10,7 @@
         "ThirdParty.JoystickPack",
         "Unity.Addressables",
         "Unity.ResourceManager",
+        "Unity.TextMeshPro",
         "UnityEngine.UI"
     ],
     "includePlatforms": [],

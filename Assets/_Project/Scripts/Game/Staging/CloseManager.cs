@@ -1,25 +1,31 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-public class CloseManager : MonoBehaviour
+namespace MemorialFloor.Game
 {
-    public RectTransform rt;
-    public RectTransform center;
-    [SerializeField] private int deleteLength;
-
-    public void CloseClick()
+    /// <summary>
+    /// 地図と根源の詳細の、開け閉めの呼び先。閉じた画面は見えない所へ退け、開くと決めた所に置く。
+    /// 持ち物や作業台と違い、開くときに音を鳴らさない（鳴らすのは PanelOpener）
+    /// </summary>
+    public sealed class CloseManager : MonoBehaviour
     {
-        rt.position = new Vector3(0, 5000, 0);
-        for(int i = 0; i < transform.parent.childCount; ++i)
+        /// <summary>閉じた画面を置く所。どの画面からも外れる</summary>
+        private static readonly Vector3 Away = new Vector3(0f, 5000f, 0f);
+
+        [Tooltip("開け閉めする画面")]
+        [SerializeField, FormerlySerializedAs("rt")] private RectTransform _panel;
+
+        [Tooltip("開いた画面を置く所")]
+        [SerializeField, FormerlySerializedAs("center")] private RectTransform _center;
+
+        public void Open()
         {
-            if (transform.parent.GetChild(i).name.Length <= deleteLength) Destroy(transform.parent.GetChild(i).gameObject);
+            _panel.position = _center.position;
         }
-    }
 
-    public void OpenClick()
-    {
-        rt.position = center.position;
-        
+        public void Close()
+        {
+            _panel.position = Away;
+        }
     }
 }

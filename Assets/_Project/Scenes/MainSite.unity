@@ -2134,6 +2134,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.37, y: 0.42, z: 1.48}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &579742250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 579742245}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 409ca854890d696479e3bbf8a2e64514, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.CraftBench
 --- !u!1 &587331608
 GameObject:
   m_ObjectHideFlags: 0
@@ -3911,6 +3923,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 26a4328982c48524eae3fc038b1cb729, type: 3}
       insertIndex: -1
       addedObject: {fileID: 579742249}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 26a4328982c48524eae3fc038b1cb729, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 579742250}
   m_SourcePrefab: {fileID: 100100000, guid: 26a4328982c48524eae3fc038b1cb729, type: 3}
 --- !u!1 &949440149
 GameObject:
@@ -7853,8 +7868,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 87544dbdfec3b5b4695f0803d8091fbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  scatter: 1.5
-  enemy: {fileID: 8947018673791946096, guid: f2f2694e2d3903c449b4259ebf508336, type: 3}
+  _scatter: 1.5
+  _enemy: {fileID: 8947018673791946096, guid: f2f2694e2d3903c449b4259ebf508336, type: 3}
 --- !u!4 &2081051240
 Transform:
   m_ObjectHideFlags: 0
@@ -8072,18 +8087,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1462ecf6ae898cf4ab75f9d9f6a81661, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 1
-  power: 20
-  Level: 1
-  drops:
+  _speed: 1
+  _power: 20
+  _drops:
   - Slimejelly
-  chanceDrops:
+  _chanceDrops:
   - ItemId: Slimecore
     Percent: 10
-  dropcapsule: {fileID: 8337573646266240455, guid: a47d32c2e7dbff148a4be736b2377957, type: 3}
-  hp: {fileID: 1474700384103554273}
-  questTarget: 
-  flashShader: {fileID: 0}
+  _dropPrefab: {fileID: 8337573646266240455, guid: a47d32c2e7dbff148a4be736b2377957, type: 3}
+  _hpBar: {fileID: 1474700384103554273}
+  _questTarget: 
+  _flashShader: {fileID: 0}
 --- !u!224 &171747411795911178
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8631,8 +8645,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b80f93077aaaba4e8648562629e593a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sr: {fileID: 4318903946789959911}
-  isGroup: 0
+  _renderer: {fileID: 4318903946789959911}
+  _isGroup: 0
 --- !u!1 &6415053005406267645
 GameObject:
   m_ObjectHideFlags: 0
@@ -8845,8 +8859,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b80f93077aaaba4e8648562629e593a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sr: {fileID: 4318903946789959911}
-  isGroup: 0
+  _renderer: {fileID: 4318903946789959911}
+  _isGroup: 0
 --- !u!224 &7965717634198091120
 RectTransform:
   m_ObjectHideFlags: 0

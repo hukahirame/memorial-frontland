@@ -34,7 +34,7 @@ namespace MemorialFloor.Game
             if (_quests.IsUnderwayIn(_travel.Where.RootId)) return;
             if (!_travel.ShortcutHome(_roots.RootIds())) return;
 
-            foreach (CloseManager close in _closes) close.CloseClick();
+            foreach (CloseManager close in _closes) close.Close();
         }
     }
 }

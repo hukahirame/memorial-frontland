@@ -34,6 +34,7 @@ namespace MemorialFloor.Game
         private PlayerMovement _movement;
         private Rigidbody _rigidbody;
         private SideJab _sideJab;
+        private SoundEffects _sounds;
 
         /// <summary>構えてから振り終わるまで。このあいだは体の向きを変えずに歩く</summary>
         private bool _isAttacking;
@@ -104,6 +105,7 @@ namespace MemorialFloor.Game
             _movement = GetComponent<PlayerMovement>();
             _rigidbody = GetComponent<Rigidbody>();
             _sideJab = GetComponentInChildren<SideJab>();
+            _sounds = GetComponentInChildren<SoundEffects>();
         }
 
         private void OnEnable()
@@ -205,7 +207,7 @@ namespace MemorialFloor.Game
             {
                 _character.Slash();
             }
-            TempAudio.TempAudioPlay(SwingSound);
+            _sounds.Play(SwingSound);
 
             //当たるのは振りの打点のあたりだけ。振りかぶっているあいだに倒れたり移り始めたりしたら出さない
             yield return new WaitForSeconds(AttackTiming.WindupSeconds);
@@ -219,7 +221,7 @@ namespace MemorialFloor.Game
         {
             _health.Dodge();
             _character.Slash();
-            TempAudio.TempAudioPlay(SwingSound, RollPitch);
+            _sounds.Play(SwingSound, RollPitch);
 
             float depth = vertical > 0f ? 1f : -1f;
             //抜ける側へ、体の前から回る

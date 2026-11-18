@@ -17,7 +17,7 @@
 - **セーブ / ロード機構** — `SaveSystem` / `SaveData`。（ストア標準のJSON形式を採用）
 - **クエストシステム** — `QuestManager` / `QuestButton` / `RewardUI`。（クエスト受注〜報酬付与）
 - **インベントリ & クラフト** — `Inventory/` 一式、`Craft/` 一式。（アイテム管理・クラフト）
-- **フィールド生成** — `OutField/FieldCreator` / `RootsManager` / `Seeker`。（フィールド生成・動的変化システム）
+- **フィールド生成** — `RootsManager` / `Seeker`。（フィールド生成・動的変化システム）
 - **敵スポーン & 戦闘** — `Slime` / `RootCore` / `RaidGate` / `Weapon` / `DamageNumber`。（スポーン制御・ダメージ処理）
 - **モバイル操作** — `PlayerInput` / `MoveStickArrows` / `AttackStick`。（仮想ジョイスティック操作）
 

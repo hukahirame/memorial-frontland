@@ -85,12 +85,21 @@ namespace MemorialFloor.Domain
         }
     }
 
+    /// <summary>報酬の種類のうち、品でないもの。ほかの種類は品の ID</summary>
+    public static class RewardKind
+    {
+        public const string Coin = "coin";
+
+        /// <summary>対象の根源の攻略度</summary>
+        public const string Progress = "progress";
+    }
+
     /// <summary>
     /// クエストの報酬1種。種類と量を対で持つ。
     /// </summary>
     public readonly struct Reward
     {
-        /// <summary>coin、progress、またはアイテムID</summary>
+        /// <summary>RewardKind のどれか、またはアイテムID</summary>
         public string Kind { get; }
         public int Amount { get; }
 
@@ -122,10 +131,63 @@ namespace MemorialFloor.Domain
 
             return new[]
             {
-                new Reward("coin", danger / DangerPerCoin * times),
-                new Reward("progress", MainProgress * times),
+                new Reward(RewardKind.Coin, danger / DangerPerCoin * times),
+                new Reward(RewardKind.Progress, MainProgress * times),
             };
         }
+
+        /// <summary>クエストの報酬を種類ごとに足し合わせる。並びは最初に出た順</summary>
+        public static IReadOnlyList<Reward> Total(IEnumerable<Quest> quests)
+        {
+            List<Reward> total = new List<Reward>();
+            foreach (Quest quest in quests)
+            {
+                foreach (Reward reward in quest.Rewards)
+                {
+                    int at = total.FindIndex(found => found.Kind == reward.Kind);
+                    if (at < 0) total.Add(reward);
+                    else total[at] = new Reward(reward.Kind, total[at].Amount + reward.Amount);
+                }
+            }
+
+            return total;
+        }
+
+        /// <summary>クエストの報酬で、その根源の攻略度が伸びる量。ほかの根源のクエストの分は数えない</summary>
+        public static int ProgressGain(IEnumerable<Quest> quests, string rootId)
+        {
+            int gain = 0;
+            foreach (Quest quest in quests)
+            {
+                if (quest.RootId != rootId) continue;
+
+                foreach (Reward reward in quest.Rewards)
+                {
+                    if (reward.Kind == RewardKind.Progress) gain += reward.Amount;
+                }
+            }
+
+            return gain;
+        }
+    }
+
+    /// <summary>クエストのいまの目的</summary>
+    public enum QuestObjective
+    {
+        /// <summary>対象を目標の数だけ倒す。サブと共通</summary>
+        DefeatTargets,
+
+        /// <summary>核を探し出して壊す。調査</summary>
+        BreakCore,
+
+        /// <summary>核を壊し、続けて敵を倒す。核を壊す前の決壊</summary>
+        BreakCoreThenDefeat,
+
+        /// <summary>核のあとの敵を倒す。核を壊したあとの決壊</summary>
+        DefeatAfterCore,
+
+        /// <summary>生きて根源を出る。達成したあとの調査と決壊</summary>
+        LeaveRoot,
     }
 
     /// <summary>
@@ -178,6 +240,32 @@ namespace MemorialFloor.Domain
         public int DefeatedAfterCore
         {
             get { return CoreBroken ? Progress - 1 : 0; }
+        }
+
+        /// <summary>
+        /// いまの目的。調査と決壊は、達成しても根源を出るまで成功にならない（出る前に中で倒れると失敗）ので、達成したあとは出ることが目的になる
+        /// </summary>
+        public QuestObjective Objective
+        {
+            get
+            {
+                if (Kind == QuestKind.Sub || Kind == QuestKind.Common) return QuestObjective.DefeatTargets;
+                if (IsComplete) return QuestObjective.LeaveRoot;
+                if (Kind == QuestKind.Breach && CoreBroken) return QuestObjective.DefeatAfterCore;
+
+                return FirstObjective(Kind);
+            }
+        }
+
+        /// <summary>出たばかりのクエストの目的</summary>
+        public static QuestObjective FirstObjective(QuestKind kind)
+        {
+            switch (kind)
+            {
+                case QuestKind.Main: return QuestObjective.BreakCore;
+                case QuestKind.Breach: return QuestObjective.BreakCoreThenDefeat;
+                default: return QuestObjective.DefeatTargets;
+            }
         }
 
         /// <summary>調査か決壊の目標量。核の 1 に、決壊なら壊したあとに倒す敵の数を足す</summary>

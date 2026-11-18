@@ -76,6 +76,9 @@ namespace MemorialFloor.Game
         private BoxCollider reach;
         private WorldGauge gauge;
 
+        /// <summary>柵が自分で鳴らす音。場所のシーンに置かれるので、常駐シーンの音を指せない</summary>
+        private SoundEffects _sounds;
+
         /// <summary>倒れる側。1 なら柵の厚みの向き（z）の正へ、-1 なら負へ倒れる</summary>
         private float fallSide = 1f;
 
@@ -114,6 +117,7 @@ namespace MemorialFloor.Game
 
         private void Awake()
         {
+            _sounds = GetComponent<SoundEffects>();
             state = new FenceDurability(durability);
 
             rest = shown.localPosition;
@@ -153,7 +157,7 @@ namespace MemorialFloor.Game
             }
 
             fallSide = transform.InverseTransformPoint(from).z < 0f ? 1f : -1f;
-            TempAudio.TempAudioPlay(HitSound, BreakPitch);
+            _sounds.Play(HitSound, BreakPitch);
             StartCoroutine(Fall());
         }
 
@@ -163,7 +167,7 @@ namespace MemorialFloor.Game
             if (broken) return;
 
             broken = true;
-            TempAudio.TempAudioPlay(HitSound, BreakPitch);
+            _sounds.Play(HitSound, BreakPitch);
             StartCoroutine(Burst());
         }
 
@@ -196,7 +200,7 @@ namespace MemorialFloor.Game
 
         private void Jolt()
         {
-            TempAudio.TempAudioPlay(HitSound);
+            _sounds.Play(HitSound);
             if (shaking != null) StopCoroutine(shaking);
             shaking = StartCoroutine(Shake());
         }
@@ -243,7 +247,7 @@ namespace MemorialFloor.Game
         {
             shown.localRotation = upright;
             body.isTrigger = false;
-            TempAudio.TempAudioPlay(HitSound, RisePitch);
+            _sounds.Play(HitSound, RisePitch);
             if (shaking != null) StopCoroutine(shaking);
             shaking = StartCoroutine(Shake());
         }

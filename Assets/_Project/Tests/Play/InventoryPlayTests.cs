@@ -60,7 +60,7 @@ public class InventoryPlayTests
         Press(BoxOf("Slimejelly"));
         Info().Throw();
         Assert.AreEqual(2, Count("Slimejelly"), "捨てても減らない");
-        Dropitem tossed = Drops("Slimejelly").SingleOrDefault();
+        DroppedItem tossed = Drops("Slimejelly").SingleOrDefault();
         Assert.IsNotNull(tossed, "捨てた品が落ちていない");
 
         yield return new WaitForSeconds(LandSeconds);
@@ -71,7 +71,7 @@ public class InventoryPlayTests
 
         //拾わない時間が過ぎても、重なったまま離れないうちは拾わない
         Info().Throw();
-        Dropitem drop = Drops("Slimejelly").SingleOrDefault();
+        DroppedItem drop = Drops("Slimejelly").SingleOrDefault();
         Assert.IsNotNull(drop, "2 つ目の捨てた品が落ちていない");
         yield return Hold(drop, player, DiscardHoldSeconds);
         Assert.AreEqual(1, Count("Slimejelly"), "離れないうちに拾い直した");
@@ -105,6 +105,30 @@ public class InventoryPlayTests
         Assert.AreEqual("Ironsword", GameObject.FindWithTag("Player").GetComponent<PlayerEquipment>().Equipped.ItemId, "捨てたら装備が外れた");
     }
 
+    //作業台は場所のシーンにあり、作る・買うのは常駐シーンの Workshop。隣の場所も読み込んであるので、いま居る場所の作業台に落ちることを見る
+    [UnityTest]
+    public IEnumerator 拠点の作業台で買った品はその作業台の上に落ちる()
+    {
+        yield return Boot();
+        Area here = Travel().Current;
+        Assert.AreEqual(TravelRule.BaseAreaId, here.Id, "拠点から始まらない");
+        CraftBench bench = here.Find<CraftBench>();
+        Assert.IsNotNull(bench, "拠点に作業台が無い");
+
+        ItemDefinition item = UnityEngine.Object.FindAnyObjectByType<ItemBook>().Items.All.First(found => found.Price > 0);
+        Wallet coins = UnityEngine.Object.FindAnyObjectByType<Purse>().Coins;
+        int before = coins.Amount;
+
+        //落とした品はすぐ拾えるので、拾われる前のこのフレームのうちに見る
+        UnityEngine.Object.FindAnyObjectByType<Workshop>().Buy(item);
+
+        Assert.AreEqual(before - item.Price, coins.Amount, "払わない");
+        DroppedItem drop = Drops(item.ItemId).SingleOrDefault();
+        Assert.IsNotNull(drop, "買った品が落ちていない");
+        Assert.AreEqual(bench.gameObject.scene, drop.gameObject.scene, "作業台と別の場所に落ちた");
+        Assert.AreEqual(bench.DropPoint, drop.transform.position, "作業台の上に落ちない");
+    }
+
     /// <summary>捨てた品を拾わない秒（ItemActions）。過ぎたかを見るので、少し足して待つ</summary>
     private const float DiscardHoldSeconds = 3.5f;
 
@@ -124,7 +148,7 @@ public class InventoryPlayTests
     private const int AwaySteps = 3;
 
     //落とし物をプレイヤーに重ねたまま待つ。放られて離れるので、毎段置き直す
-    private static IEnumerator Hold(Dropitem drop, Transform player, float seconds)
+    private static IEnumerator Hold(DroppedItem drop, Transform player, float seconds)
     {
         float end = Time.time + seconds;
         while (Time.time < end && drop != null)
@@ -137,7 +161,7 @@ public class InventoryPlayTests
     }
 
     //落とし物をプレイヤーの真上の高い所へ離す。プレイヤーが離れたのと同じに見える
-    private static IEnumerator Away(Dropitem drop, Transform player)
+    private static IEnumerator Away(DroppedItem drop, Transform player)
     {
         for (int i = 0; i < AwaySteps && drop != null; i++)
         {
@@ -154,9 +178,9 @@ public class InventoryPlayTests
         return rule.CountOf(itemId);
     }
 
-    private static List<Dropitem> Drops(string itemId)
+    private static List<DroppedItem> Drops(string itemId)
     {
-        return UnityEngine.Object.FindObjectsByType<Dropitem>(FindObjectsSortMode.None)
+        return UnityEngine.Object.FindObjectsByType<DroppedItem>(FindObjectsSortMode.None)
             .Where(drop => drop.GetComponent<SpriteRenderer>().sprite.name == itemId)
             .ToList();
     }

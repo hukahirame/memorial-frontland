@@ -17,10 +17,12 @@ namespace MemorialFloor.Game
         [Tooltip("開いた画面を置く所")]
         [SerializeField, FormerlySerializedAs("center")] private RectTransform _center;
 
+        [SerializeField] private SoundEffects _sounds;
+
         public void Open()
         {
             _panel.position = _center.position;
-            TempAudio.TempAudioPlay("Fantasy_Game_Action_Backpack_Open");
+            _sounds.Play("Fantasy_Game_Action_Backpack_Open");
         }
 
         public void Close()

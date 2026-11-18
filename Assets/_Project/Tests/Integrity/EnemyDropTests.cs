@@ -11,7 +11,7 @@ namespace MemorialFloor.Tests.Integrity
 {
     /// <summary>
     /// 敵が落とす品が、拾える品になっているかを見る。落とし物の絵は品の ID で Resources から引き（Slime）、
-    /// 拾うときは絵の名前を品の ID として読む（Dropitem）。綴りが違うと絵が出ず、原簿に無いと積めない。
+    /// 拾うときは絵の名前を品の ID として読む（DroppedItem）。綴りが違うと絵が出ず、原簿に無いと積めない。
     ///
     /// 敵は敵の prefab の置き場だけを見る。場所（Area）と拠点の湧き口が指すのはそこにある物だけ
     /// </summary>

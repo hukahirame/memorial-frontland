@@ -79,10 +79,10 @@ namespace MemorialFloor.Game
             //決壊は核を壊したあとも、敵を倒しきるまで続く。倒した数を目的に添える
             string state = !quest.CoreBroken ? (IsInside(quest) ? "クエスト中" : "受注中")
                          : quest.IsComplete && quest.DefeatedAfterCore > 0 ? "討伐済み" : "破壊済み";
-            string objective = QuestManager.CurrentObjective(quest);
+            string objective = QuestText.Objective(quest);
             if (quest.CoreBroken && !quest.IsComplete) objective += "（" + quest.DefeatedAfterCore + "/" + Quest.BreachDefeats + "）";
 
-            _text.text = "<color=" + StateColor + "><b>" + state + "</b></color>　「" + place + "」" + QuestManager.KindName(quest) + "クエスト\n"
+            _text.text = "<color=" + StateColor + "><b>" + state + "</b></color>　「" + place + "」" + QuestText.KindName(quest) + "クエスト\n"
                        + "<size=80%><color=" + ObjectiveColor + ">" + objective + "</color></size>";
 
             float width = Mathf.Max(MinWidth, _text.GetPreferredValues(_text.text, 10000f, 1000f).x + Padding * 2f);

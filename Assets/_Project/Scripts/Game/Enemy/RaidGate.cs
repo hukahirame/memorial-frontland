@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using MemorialFloor.Domain;
 using UnityEngine;
@@ -57,7 +56,7 @@ namespace MemorialFloor.Game
             _context.Travel.Unloading += Retreat;
 
             int arrived = Release();
-            if (arrived > 0) StartCoroutine(Announce(arrived));
+            if (arrived > 0) _context.Roots.ReportRaidersReleased(arrived);
         }
 
         private void OnDestroy()
@@ -74,14 +73,6 @@ namespace MemorialFloor.Game
 
             //居るあいだに氾濫で攻め込んだ敵は、すぐ出す
             if (_context.Roots.Raid.Kept.Count > 0) Release();
-        }
-
-        /// <summary>暗転が明けてから知らせる。覆われているあいだに出すと見えない</summary>
-        private IEnumerator Announce(int count)
-        {
-            while (_context.Travel.IsTraveling) yield return null;
-
-            _context.MiddleText.Midtxt_Anim("拠点に敵が " + count + " 体入り込んでいます");
         }
 
         /// <summary>控えている敵をすべて出す。出した数を返す</summary>

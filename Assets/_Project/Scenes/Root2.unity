@@ -1975,9 +1975,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53818b88765cde243af1f418a12356f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpawnerCandidate
-  maxHp: 100
-  seekFrom: 5
-  seekDepth: 10
+  _maxHp: 100
+  _seekFrom: 5
+  _seekDepth: 10
 --- !u!1 &230273223
 GameObject:
   m_ObjectHideFlags: 0
@@ -2204,9 +2204,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53818b88765cde243af1f418a12356f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpawnerCandidate
-  maxHp: 100
-  seekFrom: 5
-  seekDepth: 10
+  _maxHp: 100
+  _seekFrom: 5
+  _seekDepth: 10
 --- !u!1001 &249939045
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2349,9 +2349,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53818b88765cde243af1f418a12356f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHp: 100
-  seekFrom: 5
-  seekDepth: 10
+  _maxHp: 100
+  _seekFrom: 5
+  _seekDepth: 10
 --- !u!1 &250110005
 GameObject:
   m_ObjectHideFlags: 0
@@ -2723,9 +2723,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53818b88765cde243af1f418a12356f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHp: 100
-  seekFrom: 5
-  seekDepth: 10
+  _maxHp: 100
+  _seekFrom: 5
+  _seekDepth: 10
 --- !u!136 &272545579
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -6937,9 +6937,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53818b88765cde243af1f418a12356f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHp: 100
-  seekFrom: 5
-  seekDepth: 10
+  _maxHp: 100
+  _seekFrom: 5
+  _seekDepth: 10
 --- !u!1 &626853076
 GameObject:
   m_ObjectHideFlags: 0
@@ -16283,9 +16283,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53818b88765cde243af1f418a12356f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpawnerCandidate
-  maxHp: 100
-  seekFrom: 5
-  seekDepth: 10
+  _maxHp: 100
+  _seekFrom: 5
+  _seekDepth: 10
 --- !u!1 &1288786540
 GameObject:
   m_ObjectHideFlags: 0
@@ -17623,9 +17623,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53818b88765cde243af1f418a12356f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHp: 100
-  seekFrom: 5
-  seekDepth: 10
+  _maxHp: 100
+  _seekFrom: 5
+  _seekDepth: 10
 --- !u!136 &1384843559
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -18449,7 +18449,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1489463874}
-  - component: {fileID: 1489463873}
   m_Layer: 0
   m_Name: OutFieldManager
   m_TagString: Untagged
@@ -18457,18 +18456,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1489463873
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1489463872}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 10ea5064b2e99de4485a354bd6e588e4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1489463874
 Transform:
   m_ObjectHideFlags: 0
@@ -20674,9 +20661,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53818b88765cde243af1f418a12356f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHp: 100
-  seekFrom: 5
-  seekDepth: 10
+  _maxHp: 100
+  _seekFrom: 5
+  _seekDepth: 10
 --- !u!1 &1683836540
 GameObject:
   m_ObjectHideFlags: 0
@@ -24836,9 +24823,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53818b88765cde243af1f418a12356f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxHp: 100
-  seekFrom: 5
-  seekDepth: 10
+  _maxHp: 100
+  _seekFrom: 5
+  _seekDepth: 10
 --- !u!1 &2050391383
 GameObject:
   m_ObjectHideFlags: 0
@@ -25566,10 +25553,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 544e3e9030ab5f446827d4de70036060, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minusrange: {x: -10, y: 0, z: -4}
-  plusrange: {x: 10, y: 0, z: 0}
-  dropcapsule: {fileID: 8337573646266240455, guid: a47d32c2e7dbff148a4be736b2377957, type: 3}
-  branch: {fileID: 21300000, guid: 21764b6692102ea478d1ac8a0ca69aa4, type: 3}
+  _rangeMin: {x: -10, y: 0, z: -4}
+  _rangeMax: {x: 10, y: 0, z: 0}
+  _dropPrefab: {fileID: 8337573646266240455, guid: a47d32c2e7dbff148a4be736b2377957, type: 3}
+  _branch: {fileID: 21300000, guid: 21764b6692102ea478d1ac8a0ca69aa4, type: 3}
 --- !u!1 &2096187416
 GameObject:
   m_ObjectHideFlags: 0

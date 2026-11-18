@@ -6,13 +6,12 @@ namespace MemorialFloor.Game
     /// </summary>
     public sealed class EnemyContext
     {
-        public EnemyContext(AreaTravel travel, RootsManager roots, QuestManager quests, PlayerHealth player, MiddleText middleText)
+        public EnemyContext(AreaTravel travel, RootsManager roots, QuestManager quests, PlayerHealth player)
         {
             Travel = travel;
             Roots = roots;
             Quests = quests;
             Player = player;
-            MiddleText = middleText;
         }
 
         public AreaTravel Travel { get; }
@@ -23,7 +22,5 @@ namespace MemorialFloor.Game
 
         /// <summary>敵が追いかけて当たる相手</summary>
         public PlayerHealth Player { get; }
-
-        public MiddleText MiddleText { get; }
     }
 }

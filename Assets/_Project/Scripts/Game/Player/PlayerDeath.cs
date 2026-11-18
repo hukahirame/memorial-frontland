@@ -29,7 +29,6 @@ namespace MemorialFloor.Game
         [SerializeField, FormerlySerializedAs("travel")] private AreaTravel _travel;
         [SerializeField, FormerlySerializedAs("purse")] private Purse _purse;
         [SerializeField, FormerlySerializedAs("quests")] private QuestManager _quests;
-        [SerializeField] private BigText _bigText;
 
         private PlayerHealth _health;
         private PlayerMovement _movement;
@@ -59,7 +58,6 @@ namespace MemorialFloor.Game
         {
             _character.SetState(CharacterState.DeathB);
             GetComponentInChildren<Wink>().Stop();
-            _bigText.Bigtxt_Anim("体力が0になりました", "失敗");
 
             StartCoroutine(Revive());
         }

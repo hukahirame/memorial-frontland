@@ -331,6 +331,15 @@ Nudge.None.get : bool
 Nudge.X.get : float
 Nudge.Z.get : float
 
+enum OrderResult
+OrderResult.Cancelled = 1
+OrderResult.CannotCancelInside = 5
+OrderResult.CannotOrderInside = 4
+OrderResult.Missing = 2
+OrderResult.Ordered = 0
+OrderResult.OtherOrdered = 6
+OrderResult.Settled = 3
+
 readonly struct Placement
 Placement.ctor()
 Placement.ctor(string, float, float, float, float, int, float, bool)
@@ -367,14 +376,44 @@ const Quest.BreachDefeats : int
 static Quest.CoreAmount(QuestKind) : int
 Quest.CoreBroken.get : bool
 Quest.DefeatedAfterCore.get : int
+static Quest.FirstObjective(QuestKind) : QuestObjective
 Quest.Id.get : string
 Quest.IsComplete.get : bool
 Quest.Kind.get : QuestKind
+Quest.Objective.get : QuestObjective
 Quest.Progress.get : int
 Quest.Rewards.get : IReadOnlyList<Reward>
 Quest.RootId.get : string
 Quest.SetProgress(int) : void
 Quest.Target.get : string
+
+sealed class QuestBook
+QuestBook.ctor()
+QuestBook.Arrive(bool, out IReadOnlyList<Quest>) : Quest
+QuestBook.CancelOrder() : void
+QuestBook.Cleared() : List<Quest>
+const QuestBook.CoreTarget : string
+QuestBook.DefeatIn(string, string, out IReadOnlyList<Quest>) : IReadOnlyList<Quest>
+QuestBook.Fail() : void
+QuestBook.IsUnderwayIn(string) : bool
+QuestBook.IssueAtDawn(IEnumerable<Root>) : bool
+QuestBook.IssueBreach(Root) : bool
+QuestBook.IssueFirst(Root) : void
+QuestBook.IssueMain(Root, QuestKind) : Quest
+QuestBook.Leave(string) : void
+QuestBook.Order(string) : void
+QuestBook.OrderedId.get : string
+QuestBook.PayCleared() : IReadOnlyList<Quest>
+QuestBook.PendingOutcome.get : QuestOutcome
+QuestBook.Plan.get : DayPlan
+QuestBook.Quests.get : QuestRegistry
+QuestBook.ResultQuestId.get : string
+QuestBook.Start(string) : Quest
+const QuestBook.SubAmount : int
+const QuestBook.SubCoins : int
+const QuestBook.SubTarget : string
+QuestBook.TakeOutcome() : QuestOutcome
+QuestBook.ToggleOrder(string, string) : OrderResult
 
 static class QuestId
 static QuestId.Is(string, QuestKind) : bool
@@ -386,6 +425,18 @@ QuestKind.Breach = 1
 QuestKind.Common = 3
 QuestKind.Main = 0
 QuestKind.Sub = 2
+
+enum QuestObjective
+QuestObjective.BreakCore = 1
+QuestObjective.BreakCoreThenDefeat = 2
+QuestObjective.DefeatAfterCore = 3
+QuestObjective.DefeatTargets = 0
+QuestObjective.LeaveRoot = 4
+
+enum QuestOutcome
+QuestOutcome.Failed = 1
+QuestOutcome.None = 0
+QuestOutcome.Succeeded = 2
 
 static class QuestProgress
 static QuestProgress.Advance(int, int) : int
@@ -410,6 +461,8 @@ const QuestRewards.BreachMultiplier : int
 const QuestRewards.DangerPerCoin : int
 static QuestRewards.For(QuestKind, int) : Reward[]
 const QuestRewards.MainProgress : int
+static QuestRewards.ProgressGain(IEnumerable<Quest>, string) : int
+static QuestRewards.Total(IEnumerable<Quest>) : IReadOnlyList<Reward>
 
 readonly struct Raider
 Raider.ctor()
@@ -445,6 +498,10 @@ Reward.ctor()
 Reward.ctor(string, int)
 Reward.Amount.get : int
 Reward.Kind.get : string
+
+static class RewardKind
+const RewardKind.Coin : string
+const RewardKind.Progress : string
 
 static class RollRule
 const RollRule.Distance : float

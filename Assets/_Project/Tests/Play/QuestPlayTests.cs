@@ -47,7 +47,7 @@ public class QuestPlayTests
         BreakSpawner();
 
         Assert.AreEqual(0, Quests().Find(root2).Progress, "通り道の根源の核で、受けた調査が進む");
-        Assert.AreNotEqual("破壊", Shown(UnityEngine.Object.FindAnyObjectByType<BigText>(), "txt2"), "通り道の根源で破壊と出る");
+        Assert.AreNotEqual("破壊", Shown(UnityEngine.Object.FindAnyObjectByType<BigText>(), "_ribbonText"), "通り道の根源で破壊と出る");
     }
 
     [UnityTest]
@@ -174,8 +174,8 @@ public class QuestPlayTests
         yield return WalkTo("Root2");
 
         BigText big = UnityEngine.Object.FindAnyObjectByType<BigText>();
-        Assert.AreEqual("成功", Shown(big, "txt2"), "根源を出ても成功と知らせない");
-        StringAssert.Contains("コイン x 100", Shown(big, "txt1"), "受け取った分を出さない");
+        Assert.AreEqual("成功", Shown(big, "_ribbonText"), "根源を出ても成功と知らせない");
+        StringAssert.Contains("コイン x 100", Shown(big, "_headline"), "受け取った分を出さない");
         Assert.AreEqual(coins + 100, Coins().Amount, "成功と出たのに払わない");
         Assert.IsNull(Quests().Find(main), "受け取ったクエストが残る");
         Assert.AreEqual("", OrderedId(), "受注の枠が空かない");

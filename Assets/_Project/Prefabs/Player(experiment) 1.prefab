@@ -5594,6 +5594,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.PlayerReach
   _allmaity: {fileID: 0}
   _travel: {fileID: 0}
+  _inventory: {fileID: 0}
 --- !u!114 &306288286268907968
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11618,8 +11619,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b80f93077aaaba4e8648562629e593a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sr: {fileID: 0}
-  isGroup: 1
+  _renderer: {fileID: 0}
+  _isGroup: 1
 --- !u!82 &7098100523052896187
 AudioSource:
   m_ObjectHideFlags: 0
@@ -12654,7 +12655,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da5a8169208916149a616a9d8252e942, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  alpha: 0.8
+  _alpha: 0.8
 --- !u!1 &1596417245620204525
 GameObject:
   m_ObjectHideFlags: 0
@@ -13271,7 +13272,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da5a8169208916149a616a9d8252e942, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  alpha: 0.8
+  _alpha: 0.8
 --- !u!1 &1957445252540650664
 GameObject:
   m_ObjectHideFlags: 0
@@ -32248,7 +32249,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d40bbe37b95c2344cb320850571b3772, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  damage_set: {fileID: 5808219987720427036, guid: 01b6118c54bbf2f468ba18a76907dc17, type: 3}
+  _damageNumberPrefab: {fileID: 5808219987720427036, guid: 01b6118c54bbf2f468ba18a76907dc17, type: 3}
+  _inventory: {fileID: 0}
 --- !u!1 &8637833545567211666
 GameObject:
   m_ObjectHideFlags: 0
@@ -32868,6 +32870,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7916355802122710146, guid: 2e1d306594a8e2a49898b79a9c66dbfc, type: 3}
       propertyPath: damage_set
+      value: 
+      objectReference: {fileID: 5808219987720427036, guid: 01b6118c54bbf2f468ba18a76907dc17, type: 3}
+    - target: {fileID: 7916355802122710146, guid: 2e1d306594a8e2a49898b79a9c66dbfc, type: 3}
+      propertyPath: _damageNumberPrefab
       value: 
       objectReference: {fileID: 5808219987720427036, guid: 01b6118c54bbf2f468ba18a76907dc17, type: 3}
     m_RemovedComponents: []

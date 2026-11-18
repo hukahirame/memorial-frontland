@@ -88,7 +88,7 @@ public class Hitches
             yield return watch.Probe("零時の処理と知らせ", () => { roots.PassMidnight(); return ""; });
             yield return watch.Probe("攻撃を振る", () => Swing(player));
             yield return watch.Probe("回避して残像を出す", () => Roll(player));
-            yield return watch.Probe("中くらいの文字を出す", () => { UnityEngine.Object.FindAnyObjectByType<MiddleText>().Midtxt_Anim("計測のための知らせです"); return ""; });
+            yield return watch.Probe("中くらいの文字を出す", () => { UnityEngine.Object.FindAnyObjectByType<MiddleText>().Show("計測のための知らせです"); return ""; });
             yield return watch.Probe("核の候補を叩く（頭上の帯を描き直す）", HitCandidate);
 
             Fence fence = null;

@@ -112,6 +112,89 @@ namespace MemorialFloor.Domain.Tests
             Assert.AreEqual(Amount(main, "coin") * 2, Amount(breach, "coin"));
             Assert.AreEqual(Amount(main, "progress") * 2, Amount(breach, "progress"));
         }
+
+        [Test]
+        public void 足し合わせは種類ごとにまとめ並びは最初に出た順()
+        {
+            Quest[] quests =
+            {
+                new Quest("X0", "Root1", "MainSpawner", 1, new[] { new Reward("coin", 100), new Reward("progress", 15) }),
+                new Quest("S0", "Root1", "Slime", 3, new[] { new Reward("Branch", 2), new Reward("coin", 50) }),
+            };
+
+            Reward[] total = QuestRewards.Total(quests).ToArray();
+
+            CollectionAssert.AreEqual(new[] { "coin", "progress", "Branch" }, total.Select(reward => reward.Kind));
+            CollectionAssert.AreEqual(new[] { 150, 15, 2 }, total.Select(reward => reward.Amount));
+        }
+
+        [Test]
+        public void 攻略度の伸びはその根源のクエストの分だけを数える()
+        {
+            Quest[] quests =
+            {
+                new Quest("X0", "Root1", "MainSpawner", 1, QuestRewards.For(QuestKind.Main, 1000)),
+                new Quest("Y0", "Root1", "MainSpawner", 6, QuestRewards.For(QuestKind.Breach, 1000)),
+                new Quest("X1", "Root2", "MainSpawner", 1, QuestRewards.For(QuestKind.Main, 2000)),
+            };
+
+            Assert.AreEqual(QuestRewards.MainProgress * (1 + QuestRewards.BreachMultiplier), QuestRewards.ProgressGain(quests, "Root1"));
+            Assert.AreEqual(QuestRewards.MainProgress, QuestRewards.ProgressGain(quests, "Root2"));
+            Assert.AreEqual(0, QuestRewards.ProgressGain(quests, "Root3"));
+        }
+    }
+
+    public class QuestObjectiveTests
+    {
+        private static readonly Reward[] NoReward = new Reward[0];
+
+        [Test]
+        public void 調査は核を壊すと生きて根源を出るのが目的になる()
+        {
+            Quest main = new Quest("X0", "Root1", "MainSpawner", Quest.CoreAmount(QuestKind.Main), NoReward);
+            Assert.AreEqual(QuestObjective.BreakCore, main.Objective);
+
+            main.Advance();
+            Assert.AreEqual(QuestObjective.LeaveRoot, main.Objective);
+        }
+
+        [Test]
+        public void 決壊は核を壊すと敵を倒すのが目的になり倒しきると生きて根源を出るのが目的になる()
+        {
+            Quest breach = new Quest("Y0", "Root1", "MainSpawner", Quest.CoreAmount(QuestKind.Breach), NoReward);
+            Assert.AreEqual(QuestObjective.BreakCoreThenDefeat, breach.Objective);
+
+            breach.Advance();
+            Assert.AreEqual(QuestObjective.DefeatAfterCore, breach.Objective);
+
+            for (int i = 1; i < Quest.BreachDefeats; i++) breach.Advance();
+            Assert.AreEqual(QuestObjective.DefeatAfterCore, breach.Objective, "倒しきる前に出るのが目的になる");
+
+            breach.Advance();
+            Assert.AreEqual(QuestObjective.LeaveRoot, breach.Objective);
+        }
+
+        [Test]
+        public void サブと共通は達成しても倒すのが目的のまま()
+        {
+            Quest sub = new Quest("S0", "Root1", "Slime", 1, NoReward);
+            Quest common = new Quest("C0", "Common", "Slime", 1, NoReward);
+            sub.Advance();
+            common.Advance();
+
+            Assert.AreEqual(QuestObjective.DefeatTargets, sub.Objective);
+            Assert.AreEqual(QuestObjective.DefeatTargets, common.Objective);
+        }
+
+        [Test]
+        public void 出たばかりのクエストの目的は今の目的と同じ()
+        {
+            foreach (QuestKind kind in System.Enum.GetValues(typeof(QuestKind)))
+            {
+                Quest quest = new Quest(QuestId.LetterOf(kind) + "0", "Root1", "MainSpawner", Quest.CoreAmount(kind), NoReward);
+                Assert.AreEqual(Quest.FirstObjective(kind), quest.Objective, kind.ToString());
+            }
+        }
     }
 
     public class QuestRegistryTests

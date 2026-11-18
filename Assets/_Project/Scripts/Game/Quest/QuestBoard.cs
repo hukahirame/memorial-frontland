@@ -24,6 +24,7 @@ namespace MemorialFloor.Game
         private static readonly Color OtherOrderedColor = new Color(0.45f, 0.42f, 0.4f);
 
         [SerializeField] private QuestManager _quests;
+        [SerializeField] private ItemBook _items;
         [SerializeField, FormerlySerializedAs("travel")] private AreaTravel _travel;
         [SerializeField] private MiddleText _middleText;
 
@@ -69,7 +70,7 @@ namespace MemorialFloor.Game
         {
             GameObject card = Instantiate(_cardPrefab, at, Quaternion.identity, transform);
             card.name = quest.Id;
-            card.GetComponent<QuestButton>().Bind(quest.Id, _quests, this, _travel.Where, _middleText);
+            card.GetComponent<QuestButton>().Bind(quest.Id, _quests, this, _middleText);
 
             //消した古い枠はこのフレームの終わりまで残り、同じ名前で先に見つかるので、名前で引かない
             Slider slider = card.transform.Find("Slider_IconType_03_basic_WhiteFill").GetComponent<Slider>();
@@ -82,11 +83,9 @@ namespace MemorialFloor.Game
             TextMeshProUGUI status = card.transform.Find("StatusText").GetComponent<TextMeshProUGUI>();
 
             type.text = TypeName(quest.Kind);
-            if (quest.Kind == QuestKind.Main) body.text += QuestManager.MainObjective;
-            else if (quest.Kind == QuestKind.Breach) body.text += QuestManager.BreachObjective;
-            else if (quest.Kind == QuestKind.Sub) body.text += QuestManager.Objective(quest);
+            body.text += QuestText.FirstObjective(quest);
 
-            foreach (Reward paid in quest.Rewards) reward.text += _quests.RewardName(paid.Kind) + " x " + paid.Amount + "\n";
+            foreach (Reward paid in quest.Rewards) reward.text += QuestText.RewardName(paid.Kind, _items.Items) + " x " + paid.Amount + "\n";
 
             if (quest.Kind == QuestKind.Sub || quest.Kind == QuestKind.Common)
             {

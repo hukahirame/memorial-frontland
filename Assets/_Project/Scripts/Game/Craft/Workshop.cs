@@ -5,19 +5,15 @@ using UnityEngine.SceneManagement;
 namespace MemorialFloor.Game
 {
     /// <summary>
-    /// 作業台で作る・買う。できた品は作業台の上に落とす。
+    /// 作業台で作る・買う。できた品は、いま居る場所の作業台の上に落とす。
     /// 倒れている間と場所を移っている間、作業台の無い場所では作らない
     /// </summary>
     public sealed class Workshop : MonoBehaviour
     {
-        private const string BenchTag = "CraftBench";
-
-        /// <summary>できた品を落とす、作業台からの高さ</summary>
-        private const float DropHeight = 0.5f;
-
         [SerializeField] private PlayerInventory _inventory;
         [SerializeField] private Purse _purse;
         [SerializeField] private PlayerMovement _movement;
+        [SerializeField] private AreaTravel _travel;
         [SerializeField] private MiddleText _middleText;
 
         [Tooltip("落とし物の prefab")]
@@ -29,15 +25,15 @@ namespace MemorialFloor.Game
             //移る途中に作ると、品は前の場所と一緒に消えて材料だけ減る
             if (!_movement.CanAct) return;
 
+            //画面は作業台を離れても閉じない。材料を減らしてから探すと材料だけ消える
+            CraftBench bench = Bench();
+            if (bench == null) return;
+
             if (!recipe.CanCraftWith(_inventory.Inventory))
             {
-                Debug.Log("材料が足りません!!");
+                _middleText.Show("材料が足りません");
                 return;
             }
-
-            //画面は作業台を離れても閉じない。材料を減らしてから探すと材料だけ消える
-            GameObject bench = Bench();
-            if (bench == null) return;
 
             foreach (Ingredient ingredient in recipe.Ingredients)
             {
@@ -54,28 +50,28 @@ namespace MemorialFloor.Game
             if (!_movement.CanAct) return;
 
             //払ってから探すと所持金だけ減る
-            GameObject bench = Bench();
+            CraftBench bench = Bench();
             if (bench == null) return;
 
             if (!_purse.Coins.Spend(item.Price))
             {
-                _middleText.Midtxt_Anim("所持金が足りません");
+                _middleText.Show("所持金が足りません");
                 return;
             }
 
             Drop(item.ItemId, bench);
         }
 
-        //作業台は場所のシーンにあり、常駐シーンから参照を張れないので、押したときに引く
-        private static GameObject Bench()
+        /// <summary>いま居る場所の作業台。無ければ null。隣の場所も読み込んであるので、全体からは引かない</summary>
+        private CraftBench Bench()
         {
-            return GameObject.FindWithTag(BenchTag);
+            return _travel.Current != null ? _travel.Current.Find<CraftBench>() : null;
         }
 
-        private void Drop(string itemId, GameObject bench)
+        private void Drop(string itemId, CraftBench bench)
         {
-            GameObject drop = Instantiate(_dropPrefab, bench.transform.position + Vector3.up * DropHeight, Quaternion.identity);
-            SceneManager.MoveGameObjectToScene(drop, bench.scene);
+            GameObject drop = Instantiate(_dropPrefab, bench.DropPoint, Quaternion.identity);
+            SceneManager.MoveGameObjectToScene(drop, bench.gameObject.scene);
             drop.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(itemId);
         }
     }

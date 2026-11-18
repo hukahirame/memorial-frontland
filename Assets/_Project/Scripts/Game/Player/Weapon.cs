@@ -32,6 +32,7 @@ namespace MemorialFloor.Game
         private BoxCollider _box;
         private HitStop _hitStop;
         private MainCamera _mainCamera;
+        private SoundEffects _sounds;
         private PlayerMovement _movement;
         private PlayerAttack _attack;
         private PlayerEquipment _equipment;
@@ -68,6 +69,7 @@ namespace MemorialFloor.Game
             _hitStop = transform.root.GetComponent<HitStop>();
             if (_hitStop == null) _hitStop = transform.root.gameObject.AddComponent<HitStop>();
             _mainCamera = transform.root.GetComponentInChildren<MainCamera>();
+            _sounds = transform.root.GetComponentInChildren<SoundEffects>();
         }
 
         private void BeginStrike(float seconds)
@@ -130,7 +132,7 @@ namespace MemorialFloor.Game
                 if (!Mark(struck, other.gameObject)) return false;
 
                 candidate.Hit(power);
-                TempAudio.TempAudioPlay(ImpactSound);
+                _sounds.Play(ImpactSound);
                 return true;
             }
 
@@ -148,14 +150,14 @@ namespace MemorialFloor.Game
 
             bool wasBroken = core.IsBroken;
             core.Hit(power);
-            TempAudio.TempAudioPlay(ImpactSound);
+            _sounds.Play(ImpactSound);
 
             //壊した一撃は、敵を倒したときと同じだけ止めて揺らす
             if (!wasBroken && core.IsBroken)
             {
                 _hitStop.Stop(HitStop.KillSeconds);
                 if (_mainCamera != null) _mainCamera.Shake(MainCamera.KillShake);
-                TempAudio.TempAudioPlay(ImpactSound, KillPitch);
+                _sounds.Play(ImpactSound, KillPitch);
             }
             return true;
         }
@@ -167,7 +169,7 @@ namespace MemorialFloor.Game
             if (damageable == null || damageable.CurrentHp <= 0) return false; //倒れて弾けている最中の相手には当たらない
             if (!Mark(struck, target)) return false;
 
-            TempAudio.TempAudioPlay(ImpactSound);
+            _sounds.Play(ImpactSound);
 
             Vector3 from = transform.root.position;
             Vector3 to = target.transform.position;
@@ -180,7 +182,7 @@ namespace MemorialFloor.Game
 
             _hitStop.Stop(killed ? HitStop.KillSeconds : HitStop.HitSeconds);
             if (_mainCamera != null) _mainCamera.Shake(killed ? MainCamera.KillShake : MainCamera.HitShake);
-            if (killed) TempAudio.TempAudioPlay(ImpactSound, KillPitch);
+            if (killed) _sounds.Play(ImpactSound, KillPitch);
 
             //耐久が尽きたら素手に戻る
             if (_equipment.Equipped.Wear(1)) _equipment.Unequip();

@@ -89,8 +89,8 @@ public class UiShots
         yield return new WaitForSecondsRealtime(OpenSeconds);
         yield return Shot("06_root_detail");
 
-        GameObject.FindWithTag("QuestManager").transform.Find("CloseButton").GetComponent<CloseManager>().CloseClick();
-        map.Find("CloseButton").GetComponent<CloseManager>().CloseClick();
+        GameObject.FindWithTag("QuestManager").transform.Find("CloseButton").GetComponent<CloseManager>().Close();
+        map.Find("CloseButton").GetComponent<CloseManager>().Close();
 
         //作業台に触れると出るボタンと、それで開く交換画面
         Allmaity allmaity = UnityEngine.Object.FindAnyObjectByType<Allmaity>();
@@ -110,11 +110,11 @@ public class UiShots
         Opener(menu.transform).Close();
         allmaity.Hide("CraftInventory");
 
-        UnityEngine.Object.FindAnyObjectByType<MiddleText>().Midtxt_Anim("新クエストが発生しました");
+        UnityEngine.Object.FindAnyObjectByType<MiddleText>().Show("新クエストが発生しました");
         yield return new WaitForSecondsRealtime(TextSeconds);
         yield return Shot("10_middle_text");
 
-        UnityEngine.Object.FindAnyObjectByType<BigText>().Bigtxt_Anim("体力が0になりました", "失敗");
+        UnityEngine.Object.FindAnyObjectByType<BigText>().Show("体力が0になりました", "失敗");
         yield return new WaitForSecondsRealtime(TextSeconds);
         yield return Shot("11_big_text");
 

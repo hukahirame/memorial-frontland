@@ -18,6 +18,7 @@ namespace MemorialFloor.Game
         [SerializeField, FormerlySerializedAs("rm")] private RectTransform _map;
         [SerializeField, FormerlySerializedAs("center")] private RectTransform _center;
         [SerializeField] private RootMap _rootMap;
+        [SerializeField] private SoundEffects _sounds;
 
         [Tooltip("地図の上に開く根源の詳細を閉じるもの。持ち物へ移るときに閉じる")]
         [SerializeField] private CloseManager _detailClose;
@@ -39,14 +40,14 @@ namespace MemorialFloor.Game
             {
                 StartCoroutine(Run(_map, _inventory, Vector3.right, InventoryAway));
                 _rootMap.Show();
-                TempAudio.TempAudioPlay("Fantasy_Game_Action_Book_Page_Turn_2");
+                _sounds.Play("Fantasy_Game_Action_Book_Page_Turn_2");
             }
             else
             {
                 //根源の詳細は地図の上に開く。開いたまま持ち物へ移ると、詳細だけが持ち物の上に残るので、地図と一緒に閉じる
-                if (_detailClose != null) _detailClose.CloseClick();
+                if (_detailClose != null) _detailClose.Close();
                 StartCoroutine(Run(_inventory, _map, Vector3.left, MapAway));
-                TempAudio.TempAudioPlay("Fantasy_Game_Action_Backpack_Open");
+                _sounds.Play("Fantasy_Game_Action_Backpack_Open");
             }
         }
 

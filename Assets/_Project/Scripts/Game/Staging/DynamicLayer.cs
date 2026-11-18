@@ -1,63 +1,75 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
 
-public class DynamicLayer : MonoBehaviour
+namespace MemorialFloor.Game
 {
-    //静的オブジェには貼らない
-    //子の中で順序があれば、静的指定
-
-    [SerializeField] private SpriteRenderer sr;
-
-    [SerializeField] private bool isGroup; //SRのない親に貼る
-
-    private float recent_z;
-    private int unique_value;
-    private int[] unique_values = new int[30];
-
-    void Start()
+    /// <summary>
+    /// 動く物の描く順を奥行き（z）から決める。z が 1 増えるごとに 100 ずつ奥へ描く。
+    /// 動かない物には付けない。子どうしの順は、付けたときの描く順を足して保つ
+    /// </summary>
+    public sealed class DynamicLayer : MonoBehaviour
     {
-        recent_z = transform.position.z;
+        /// <summary>描く順を見直す間隔の秒数。毎コマでなくてよい</summary>
+        private const float IntervalSeconds = 0.05f;
 
-        if (!isGroup) unique_value = sr.sortingOrder;
-        else
+        /// <summary>z が 1 増えるごとの描く順</summary>
+        private const int OrderPerDepth = -100;
+
+        [Tooltip("描く順を変える絵。まとめて変えるときは使わない")]
+        [SerializeField, FormerlySerializedAs("sr")] private SpriteRenderer _renderer;
+
+        [Tooltip("自分には絵が無く、子の絵をまとめて変える")]
+        [SerializeField, FormerlySerializedAs("isGroup")] private bool _isGroup;
+
+        private float _lastZ;
+
+        /// <summary>付けたときの描く順。奥行きから決めた順に足す</summary>
+        private int _baseOrder;
+
+        /// <summary>まとめて変えるときの、子の絵ごとの付けたときの描く順</summary>
+        private int[] _baseOrders;
+
+        private void Start()
         {
-            var renderers = GetComponentsInChildren<SpriteRenderer>();
-            for(int i = 0; i < renderers.Count(); i++)
-            {
-                unique_values[i] = renderers[i].sortingOrder;
-            }
-        }
-        StartCoroutine(enumerator());
-    }
+            _lastZ = transform.position.z;
 
-    IEnumerator enumerator()
-    {
-        while (true)
-        {
-            LayerProcess();
-            yield return new WaitForSeconds(0.05f); // 20F/s
-        }
-    }
-
-
-    private void  LayerProcess() //フレーム数落としてもいい
-    {
-        if (recent_z != transform.position.z)
-        {
-            recent_z = transform.position.z;
-            int order = Mathf.RoundToInt(recent_z * -100);
-
-            if (!isGroup) sr.sortingOrder = order + unique_value;
+            if (!_isGroup) _baseOrder = _renderer.sortingOrder;
             else
             {
-                var renderers = GetComponentsInChildren<SpriteRenderer>();
-                for (int i = 0; i < renderers.Count(); i++)
-                {
-                    renderers[i].sortingOrder = order + unique_values[i];
-                }
+                SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>();
+                _baseOrders = new int[renderers.Length];
+                for (int i = 0; i < renderers.Length; i++) _baseOrders[i] = renderers[i].sortingOrder;
             }
+
+            StartCoroutine(KeepOrder());
+        }
+
+        private IEnumerator KeepOrder()
+        {
+            while (true)
+            {
+                Reorder();
+                yield return new WaitForSeconds(IntervalSeconds);
+            }
+        }
+
+        private void Reorder()
+        {
+            if (_lastZ == transform.position.z) return;
+
+            _lastZ = transform.position.z;
+            int order = Mathf.RoundToInt(_lastZ * OrderPerDepth);
+
+            if (!_isGroup)
+            {
+                _renderer.sortingOrder = order + _baseOrder;
+                return;
+            }
+
+            //子の絵は出し入れで数が変わる。付けたときより多い分は、付けたときの順を 0 として並べる
+            SpriteRenderer[] renderers = GetComponentsInChildren<SpriteRenderer>();
+            for (int i = 0; i < renderers.Length; i++) renderers[i].sortingOrder = order + (i < _baseOrders.Length ? _baseOrders[i] : 0);
         }
     }
 }

@@ -115,7 +115,7 @@ public class ShortcutPlayTests
     private static void OpenMap()
     {
         Transform map = GameObject.FindWithTag("RootsManager").transform;
-        map.Find("CloseButton").GetComponent<CloseManager>().OpenClick();
+        map.Find("CloseButton").GetComponent<CloseManager>().Open();
         map.GetComponent<RootMap>().Show();
     }
 
