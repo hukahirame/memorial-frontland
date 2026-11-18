@@ -124,8 +124,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 7309460225958669279}
-        m_TargetAssemblyTypeName: RootButton2, Assembly-CSharp
-        m_MethodName: Show_QM
+        m_TargetAssemblyTypeName: MemorialFloor.Game.RootCard, MemorialFloor.Game
+        m_MethodName: Open
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

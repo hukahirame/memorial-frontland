@@ -1,0 +1,53 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Music
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Music
+  m_GUID: c03ac1b7ad2e8dd41a1af96ea4ebec36
+  m_SerializeEntries:
+  - m_GUID: 17be3f8c7148b9a4980f248af2be41b2
+    m_Address: solarisnoame
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 1ce2a769c43c78542bfebd079ca72273
+    m_Address: "\u96E8\u96EB @ \u30D5\u30EA\u30FCBGM DOVA-SYNDROME OFFICIAL YouTube
+      CHANNEL"
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: be41a7a96b104794987defb535096c92
+    m_Address: music.dream
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: f001c395bc95f474f915bfa118785d0a
+    m_Address: dark city
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 05b1319f6aec7e14aa76463ef74b1084, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: f7179b538c1d33b419675f4838c5de80, type: 2}
+    - {fileID: 11400000, guid: 9e63e5c255076464da06908f8e705a7b, type: 2}
+    m_SchemaDisplayOrder:
+    - Music_BundledAssetGroupSchema
+    - Music_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

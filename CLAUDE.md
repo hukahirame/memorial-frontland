@@ -11,7 +11,7 @@
 
 - `.meta` の GUID の書き換え・複製、インポート設定を持つアセットの `.meta` の手書き
 - 破壊的コマンドへの `confirm=true` を自己判断で付けること
-- `Assets/` 直下の third-party への書き込み（Git 管理外＝復旧不能）
+- `Assets/` 直下の third-party への書き込み（Git 管理外＝復旧不能）。例外は git に入れる asmdef だけ（[D-53]）
 
 ## ポインタ
 

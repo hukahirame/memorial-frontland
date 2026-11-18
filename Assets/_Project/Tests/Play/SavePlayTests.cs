@@ -11,7 +11,7 @@ using MemorialFloor.Domain;
 using MemorialFloor.Game;
 
 //保存を読み込んだあとに戻るもの。テストではファイルを読み書きしない（NoSaveDuringTests）ので、
-//読み込んだ中身は SaveSystem.savedata へ直に入れ、着いたときの戻しは SaveSystem.Restore を直に呼ぶ
+//読み込んだ中身は SaveSystem.Data へ直に入れ、着いたときの戻しは SaveSystem.Restore を直に呼ぶ
 public class SavePlayTests
 {
     private const int SettleFrames = 120;
@@ -32,13 +32,13 @@ public class SavePlayTests
         Transform player = GameObject.FindWithTag("Player").transform;
         Vector3 standing = player.position;
         Vector3 saved = standing + new Vector3(1f, 0f, 1f);
-        object data = Loaded("Root1", saved);
+        SaveData data = Loaded("Root1", saved);
 
         //エディタで場所のシーンから始めると、保存した場所と違う場所に着く
         Restore(Travel().Current);
         Assert.AreEqual(standing, player.position, "保存した場所でないのに、保存した立ち位置に立つ");
 
-        Set(data, "entered_scene", Travel().Current.Id);
+        data.entered_scene = Travel().Current.Id;
         Restore(Travel().Current);
         Assert.AreEqual(saved, player.position);
     }
@@ -48,9 +48,9 @@ public class SavePlayTests
     public IEnumerator 保存した敵は保存した根源を読み込んだときだけ戻る()
     {
         yield return Boot();
-        object data = Loaded("Root2", Vector3.zero);
-        List<Vector3> respawns = (List<Vector3>)FieldOf(data, "respawns").GetValue(data);
-        ((List<string>)FieldOf(data, "enemies").GetValue(data)).Add("Slime");
+        SaveData data = Loaded("Root2", Vector3.zero);
+        List<Vector3> respawns = data.respawns;
+        data.enemies.Add("Slime");
         respawns.Add(new Vector3(0f, 1f, 0f));
 
         //拠点に居るあいだは、隣の根源1だけを読み込む
@@ -68,7 +68,7 @@ public class SavePlayTests
 
         //湧いた敵の立つところなら、戻した敵も床の上に出る。保存の位置は場所の原点からの位置
         yield return GoToRoot("Root2");
-        Component wild = SlimesHere().FirstOrDefault();
+        Slime wild = SlimesHere().FirstOrDefault();
         Assert.IsNotNull(wild, "根源2に敵が湧かない");
         Vector3 ground = Travel().Current.ToLocal(wild.transform.position);
 
@@ -77,10 +77,10 @@ public class SavePlayTests
         yield return Arrive();
         Assert.IsFalse(SceneManager.GetSceneByName("Root2").isLoaded, "拠点に居るのに根源2を手放さない");
 
-        object data = Loaded("Root2", Vector3.zero);
-        ((List<string>)FieldOf(data, "enemies").GetValue(data)).Add("Slime");
-        ((List<Vector3>)FieldOf(data, "respawns").GetValue(data)).Add(ground);
-        ((List<int>)FieldOf(data, "enemyHps").GetValue(data)).Add(SavedHp);
+        SaveData data = Loaded("Root2", Vector3.zero);
+        data.enemies.Add("Slime");
+        data.respawns.Add(ground);
+        data.enemyHps.Add(SavedHp);
 
         yield return GoToRoot("Root2");
 
@@ -91,21 +91,22 @@ public class SavePlayTests
     public IEnumerator 拠点で保存すると攻め込んだ敵の位置と体力も書く()
     {
         yield return Boot();
-        var existing = new HashSet<Component>(SlimesHere());
+        var existing = new HashSet<Slime>(SlimesHere());
 
         Raid().Invade(Root.StampedeRaiders);
         yield return null;
         yield return null;
 
-        List<Component> raiders = SlimesHere().Where(slime => !existing.Contains(slime)).ToList();
+        List<Slime> raiders = SlimesHere().Where(slime => !existing.Contains(slime)).ToList();
         Assert.AreEqual(Root.StampedeRaiders, raiders.Count, "攻め込んだ敵が出ない");
         IDamageable hurt = raiders[0].GetComponent<IDamageable>();
         hurt.TakeDamage(Wound);
         int left = hurt.CurrentHp;
 
-        object data = Written();
+        SaveData data = Written();
         Raid().Clear();
-        Assert.IsTrue((bool)data.GetType().GetMethod("LoadWorld").Invoke(data, null), "保存した根源を戻さない");
+        Assert.IsTrue(data.HasWorld, "保存した根源を戻さない");
+        SaveSystem().RestoreWorld(data);
 
         Assert.AreEqual(Root.StampedeRaiders, Raid().Kept.Count, "出ている敵が書かれない");
         Assert.IsTrue(Raid().Kept.All(raider => raider.HasPosition), "出ている敵の位置が書かれない");
@@ -116,11 +117,12 @@ public class SavePlayTests
     public IEnumerator 前の形の保存の拠点へ向かう敵は湧き口のまわりに出る敵として戻る()
     {
         yield return Boot();
-        object data = Written();
-        Set(data, "raiders", Root.StampedeRaiders);
+        SaveData data = Written();
+        data.raiders = Root.StampedeRaiders;
 
         Raid().Clear();
-        Assert.IsTrue((bool)data.GetType().GetMethod("LoadWorld").Invoke(data, null), "保存した根源を戻さない");
+        Assert.IsTrue(data.HasWorld, "保存した根源を戻さない");
+        SaveSystem().RestoreWorld(data);
 
         Assert.AreEqual(Root.StampedeRaiders, Raid().Kept.Count);
         Assert.IsTrue(Raid().Kept.All(raider => !raider.HasPosition), "位置を持たない敵として戻らない");
@@ -140,25 +142,26 @@ public class SavePlayTests
         Quest sub = Quests().All.First(q => q.Kind == QuestKind.Sub && q.RootId == "Root2");
         sub.Advance();
         string ordered = Quests().All.First(q => q.Kind == QuestKind.Main && q.RootId == "Root2").Id;
-        StaticField("QuestManager", "ordered_id").SetValue(null, ordered);
+        UnityEngine.Object.FindAnyObjectByType<QuestManager>().Order(ordered);
         Raid().Invade(2);
         Raid().Keep(new Raider(1f, 2f, 3f, 40));
         Plan().Clear();
         Plan().ShouldIssue("Root1");
         string[] ids = Quests().All.Select(q => q.Id).ToArray();
 
-        object data = Written();
+        SaveData data = Written();
 
         //起動し直したときと同じく、根源は作り直し、ほかは空にする
         Roots().Clear();
-        Component manager = GameObject.FindWithTag("RootsManager").GetComponent(GameType("RootsManager"));
-        GameType("RootsManager").GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(manager, null);
+        RootsManager manager = UnityEngine.Object.FindAnyObjectByType<RootsManager>();
+        typeof(RootsManager).GetMethod("Awake", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(manager, null);
         Quests().Clear();
-        StaticField("QuestManager", "ordered_id").SetValue(null, "");
+        UnityEngine.Object.FindAnyObjectByType<QuestManager>().CancelOrder();
         Raid().Clear();
         Plan().Clear();
 
-        Assert.IsTrue((bool)data.GetType().GetMethod("LoadWorld").Invoke(data, null), "保存した根源を戻さない");
+        Assert.IsTrue(data.HasWorld, "保存した根源を戻さない");
+        SaveSystem().RestoreWorld(data);
 
         Root restored = Roots().Find("Root1");
         Assert.AreEqual(progress, restored.Progress);
@@ -169,7 +172,7 @@ public class SavePlayTests
         Assert.AreEqual(1, Quests().Find(sub.Id).Progress, "進捗が戻らない");
         CollectionAssert.AreEqual(sub.Rewards.Select(r => r.Kind + r.Amount).ToArray(),
                                   Quests().Find(sub.Id).Rewards.Select(r => r.Kind + r.Amount).ToArray(), "報酬が戻らない");
-        Assert.AreEqual(ordered, StaticField("QuestManager", "ordered_id").GetValue(null), "受注が戻らない");
+        Assert.AreEqual(ordered, UnityEngine.Object.FindAnyObjectByType<QuestManager>().OrderedId, "受注が戻らない");
         Assert.AreEqual(3, Raid().Kept.Count, "拠点に攻め込んだ敵が戻らない");
         Raider kept = Raid().Kept.Single(raider => raider.HasPosition);
         Assert.AreEqual(new Vector3(1f, 2f, 3f), new Vector3(kept.X, kept.Y, kept.Z), "攻め込んだ敵の位置が戻らない");
@@ -181,15 +184,16 @@ public class SavePlayTests
     public IEnumerator 保存のあとで足した根源には始めの調査とサブが出る()
     {
         yield return Boot();
-        object data = Written();
+        SaveData data = Written();
 
         //根源3を足す前の保存にする
-        Strip(data, "roots", "id", "Root3");
-        Strip(data, "quests", "rootId", "Root3");
+        data.roots.RemoveAll(record => record.id == "Root3");
+        data.quests.RemoveAll(record => record.rootId == "Root3");
         string[] saved = Quests().All.Where(q => q.RootId != "Root3").Select(q => q.Id).ToArray();
         Quests().Clear();
 
-        Assert.IsTrue((bool)data.GetType().GetMethod("LoadWorld").Invoke(data, null), "保存した根源を戻さない");
+        Assert.IsTrue(data.HasWorld, "保存した根源を戻さない");
+        SaveSystem().RestoreWorld(data);
 
         Assert.IsTrue(Quests().HasMainFor("Root3"), "保存のあとで足した根源に調査が出ない");
         Assert.IsTrue(Quests().All.Any(q => q.Kind == QuestKind.Sub && q.RootId == "Root3"), "保存のあとで足した根源にサブが出ない");
@@ -201,30 +205,31 @@ public class SavePlayTests
     public IEnumerator 根源の無い保存からは何も戻さず始めのクエストを残す()
     {
         yield return Boot();
-        object empty = Activator.CreateInstance(GameType("SaveData"));
+        SaveData empty = new SaveData();
         string[] ids = Quests().All.Select(q => q.Id).ToArray();
 
-        Assert.IsFalse((bool)empty.GetType().GetMethod("LoadWorld").Invoke(empty, null));
+        Assert.IsFalse(empty.HasWorld);
+        SaveSystem().RestoreWorld(empty);
         CollectionAssert.AreEqual(ids, Quests().All.Select(q => q.Id).ToArray(), "空の保存でクエストを消す");
     }
 
-    //遊びの状態は static にあり、常駐シーンを読み直しても残る。タイトルが開くたびに起動した直後へ戻さないと、
-    //設定からタイトルに戻って別の枠や「はじめる」で始めたときに、前の遊びが混ざる
+    //遊びの状態は常駐シーンの部品が持つ。タイトルに戻ると常駐シーンごと捨てられ、始め直すと作り直される。
+    //残ると、設定からタイトルに戻って別の枠や「はじめる」で始めたときに、前の遊びが混ざる
     [UnityTest]
     public IEnumerator 設定からタイトルに戻って始め直すと前の遊びが残らない()
     {
         yield return Boot();
-        DayCycle cycle = (DayCycle)StaticField("Sun2", "Cycle").GetValue(null);
-        Health hp = (Health)StaticField("Player2", "Hp").GetValue(null);
+        DayCycle cycle = UnityEngine.Object.FindAnyObjectByType<Sun>().Cycle;
+        PlayerHealth hp = Health();
         int quests = Quests().All.Count;
 
         //前の遊び
         Roots().All[0].Restore(80, 0);
-        StaticField("QuestManager", "ordered_id").SetValue(null, Quests().All[0].Id);
+        UnityEngine.Object.FindAnyObjectByType<QuestManager>().Order(Quests().All[0].Id);
         Plan().Restore(new[] { "Root1" });
         cycle.SetElapsed(60);
         hp.SetCurrent(1);
-        StaticField("Player2", "speed").SetValue(null, 3f);
+        Movement().Speed = 3f;
 
         SettingsMenu settings = UnityEngine.Object.FindAnyObjectByType<SettingsMenu>();
         Assert.IsNotNull(settings, "常駐シーンに設定が無い");
@@ -238,17 +243,19 @@ public class SavePlayTests
         Assert.AreEqual(1f, Time.timeScale, "タイトルに戻っても止まったまま");
 
         yield return Boot();
+        cycle = UnityEngine.Object.FindAnyObjectByType<Sun>().Cycle;
         Assert.AreEqual(0, Roots().All[0].Progress, "根源の攻略度が前の遊びのまま");
-        Assert.AreEqual("", StaticField("QuestManager", "ordered_id").GetValue(null), "受注が前の遊びのまま");
+        Assert.AreEqual("", UnityEngine.Object.FindAnyObjectByType<QuestManager>().OrderedId, "受注が前の遊びのまま");
         Assert.AreEqual(quests, Quests().All.Count, "前の遊びのクエストが残る");
         Assert.AreEqual(0, Plan().Count, "保留中の調査が前の遊びのまま");
         Assert.Less(cycle.ElapsedSeconds, 60, "時刻が前の遊びのまま");
+        hp = Health();
         Assert.AreEqual(hp.Max, hp.Current, "体力が前の遊びのまま");
-        Assert.AreEqual(1f, (float)StaticField("Player2", "speed").GetValue(null), "速さが前の遊びのまま");
+        Assert.AreEqual(PlayerMovement.BaseSpeed, Movement().Speed, "速さが前の遊びのまま");
     }
 
     [UnityTearDown]
-    public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
+    public IEnumerator 持ち回しオブジェクトを捨てる()
     {
         Time.timeScale = 1f;
 
@@ -257,84 +264,81 @@ public class SavePlayTests
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
 
-        Roots().Clear();
-        Raid().Clear();
-        Plan().Clear();
-        Quests().Clear();
-        StaticField("QuestManager", "ordered_id").SetValue(null, "");
-        StaticField("RewardUI", "rewardUI_show").SetValue(null, 0);
-        StaticField("Player2", "cool").SetValue(null, false);
-        StaticField("Player2", "speed").SetValue(null, 1f);
-
-        Health hp = (Health)StaticField("Player2", "Hp").GetValue(null);
-        if (hp.IsReady) hp.SetCurrent(hp.Max);
-
         yield return null;
     }
 
-    //読み込んだ保存。体力・所持金・経過秒・持ち物はいまのまま入れ、場所と立ち位置だけ変える
-    private static object Loaded(string areaId, Vector3 respawn)
+    private static PlayerHealth Health()
     {
-        Component save = SaveSystem();
-        object data = FieldOf(save, "savedata").GetValue(save);
-        Component inventory = GameObject.FindWithTag("PlayerInventory").GetComponent(GameType("PlayerInventory"));
-        IReadOnlyList<ItemSlot> slots = (IReadOnlyList<ItemSlot>)GameType("PlayerInventory").GetProperty("Slots").GetValue(inventory);
+        return GameObject.FindWithTag("Player").GetComponent<PlayerHealth>();
+    }
 
-        Set(data, "playerhp", ((Health)StaticField("Player2", "Hp").GetValue(null)).Current);
-        Set(data, "coin", ((Wallet)StaticField("GameManager", "Coins").GetValue(null)).Amount);
-        Set(data, "daytime", ((DayCycle)StaticField("Sun2", "Cycle").GetValue(null)).ElapsedSeconds);
-        Set(data, "slots", new List<ItemSlot>(slots));
-        Set(data, "entered_scene", areaId);
-        Set(data, "respawn", respawn);
+    private static PlayerMovement Movement()
+    {
+        return GameObject.FindWithTag("Player").GetComponent<PlayerMovement>();
+    }
+
+    //読み込んだ保存。体力・所持金・経過秒・持ち物はいまのまま入れ、場所と立ち位置だけ変える
+    private static SaveData Loaded(string areaId, Vector3 respawn)
+    {
+        SaveSystem save = SaveSystem();
+        SaveData data = save.Data;
+        PlayerInventory inventory = GameObject.FindWithTag("PlayerInventory").GetComponent<PlayerInventory>();
+        IReadOnlyList<ItemSlot> slots = inventory.Slots;
+
+        data.playerhp = Health().Current;
+        data.coin = UnityEngine.Object.FindAnyObjectByType<Purse>().Coins.Amount;
+        data.daytime = UnityEngine.Object.FindAnyObjectByType<Sun>().Cycle.ElapsedSeconds;
+        data.slots = new List<ItemSlot>(slots);
+        data.entered_scene = areaId;
+        data.respawn = respawn;
 
         return data;
     }
 
     //いまの根源とクエストを写し、ファイルと同じく JSON にして読み直したもの。JsonUtility で落ちる欄があればここで分かる
-    private static object Written()
+    private static SaveData Written()
     {
-        Component save = SaveSystem();
-        object data = FieldOf(save, "savedata").GetValue(save);
-        data.GetType().GetMethod("SyncWorld").Invoke(data, null);
+        SaveSystem save = SaveSystem();
+        SaveData data = save.Data;
+        save.CaptureWorld(data);
 
-        return JsonUtility.FromJson(JsonUtility.ToJson(data), data.GetType());
+        return JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(data));
     }
 
     private static RootRegistry Roots()
     {
-        return (RootRegistry)StaticField("RootsManager", "Roots").GetValue(null);
+        return UnityEngine.Object.FindAnyObjectByType<RootsManager>().Roots;
     }
 
     //いま居る場所で動いている敵
-    private static List<Component> SlimesHere()
+    private static List<Slime> SlimesHere()
     {
         Scene here = SceneManager.GetActiveScene();
 
-        return UnityEngine.Object.FindObjectsByType(GameType("Slime"), FindObjectsSortMode.None)
-            .Cast<Component>()
+        return UnityEngine.Object.FindObjectsByType<Slime>(FindObjectsSortMode.None)
             .Where(slime => slime.gameObject.scene == here)
             .ToList();
     }
 
     private static QuestRegistry Quests()
     {
-        return (QuestRegistry)StaticField("QuestManager", "Quests").GetValue(null);
+        return UnityEngine.Object.FindAnyObjectByType<QuestManager>().Quests;
     }
 
     private static BaseRaid Raid()
     {
-        return (BaseRaid)StaticField("RootsManager", "Raid").GetValue(null);
+        return UnityEngine.Object.FindAnyObjectByType<RootsManager>().Raid;
     }
 
     private static DayPlan Plan()
     {
-        return (DayPlan)StaticField("Sun2", "Plan").GetValue(null);
+        return UnityEngine.Object.FindAnyObjectByType<QuestManager>().Plan;
     }
 
     private static void Restore(Area arrived)
     {
-        Component save = SaveSystem();
-        MethodInfo restore = save.GetType().GetMethod("Restore", BindingFlags.Instance | BindingFlags.NonPublic);
+        SaveSystem save = SaveSystem();
+        MethodInfo restore = typeof(SaveSystem).GetMethod("Restore", BindingFlags.Instance | BindingFlags.NonPublic);
         Assert.IsNotNull(restore, "SaveSystem.Restore が見つからない");
 
         restore.Invoke(save, new object[] { arrived });
@@ -358,12 +362,12 @@ public class SavePlayTests
         Assert.AreEqual(rootId, Travel().Current.Id);
     }
 
-    private static Component SaveSystem()
+    private static SaveSystem SaveSystem()
     {
         GameObject manager = GameObject.Find("GameManager");
         Assert.IsNotNull(manager, "GameManager が無い");
 
-        return manager.GetComponent(GameType("SaveSystem"));
+        return manager.GetComponent<SaveSystem>();
     }
 
     private static AreaTravel Travel()
@@ -396,49 +400,5 @@ public class SavePlayTests
         Assert.IsFalse(travel.IsTraveling, "移動が終わらない");
 
         for (int i = 0; i < SettleFrames; i++) yield return null;
-    }
-
-    private static FieldInfo FieldOf(object target, string fieldName)
-    {
-        FieldInfo field = target.GetType().GetField(fieldName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-        Assert.IsNotNull(field, target.GetType().Name + "." + fieldName + " が見つからない");
-
-        return field;
-    }
-
-    private static void Set(object target, string fieldName, object value)
-    {
-        FieldOf(target, fieldName).SetValue(target, value);
-    }
-
-    //保存の一覧から、欄 key が value の項目を抜く。項目の型は Assembly-CSharp にあるので名前で引く
-    private static void Strip(object data, string listName, string key, string value)
-    {
-        IList list = (IList)FieldOf(data, listName).GetValue(data);
-        for (int i = list.Count - 1; i >= 0; i--)
-        {
-            if ((string)FieldOf(list[i], key).GetValue(list[i]) == value) list.RemoveAt(i);
-        }
-    }
-
-    //Assembly-CSharp は asmdef から参照できないため名前で引く
-    private static Type GameType(string typeName)
-    {
-        Type type = AppDomain.CurrentDomain.GetAssemblies()
-            .Select(a => a.GetType(typeName))
-            .FirstOrDefault(t => t != null);
-        Assert.IsNotNull(type, typeName + " 型が見つからない");
-
-        return type;
-    }
-
-    private static FieldInfo StaticField(string typeName, string fieldName)
-    {
-        FieldInfo field = GameType(typeName).GetField(fieldName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.IsNotNull(field, typeName + "." + fieldName + " が見つからない");
-
-        return field;
     }
 }

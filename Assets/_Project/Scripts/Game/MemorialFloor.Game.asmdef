@@ -6,13 +6,19 @@
         "Unity.TextMeshPro",
         "UnityEngine.UI",
         "Unity.ProBuilder",
-        "Unity.Postprocessing.Runtime"
+        "Unity.Postprocessing.Runtime",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "ThirdParty.JoystickPack",
+        "ThirdParty.HeroEditor"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "HeroEditor.Common.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],

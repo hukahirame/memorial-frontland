@@ -11,7 +11,7 @@ using MemorialFloor.Domain;
 using MemorialFloor.Game;
 
 //木の柵を持ち物から立てることと、場所を移っても保存して読み直しても、同じ所に同じ向きと耐久で残ること。
-//枠を押す代わりに Inventbutton.Show_Info を、使い道のボタンの代わりに Info_set.Install を直に呼ぶ
+//枠を押す代わりに InventoryBox.Select を、使い道のボタンの代わりに ItemInfo.Use を直に呼ぶ
 public class FencePlayTests
 {
     private const int SettleFrames = 120;
@@ -88,13 +88,12 @@ public class FencePlayTests
         yield return null;
         Wear(Single(), 123);
 
-        Type type = GameType("SaveData");
-        object saved = Activator.CreateInstance(type);
-        type.GetMethod("SyncDynamic").Invoke(saved, new object[] { UnityEngine.Object.FindAnyObjectByType<PlacedObjects>() });
-        object loaded = JsonUtility.FromJson(JsonUtility.ToJson(saved), type);
+        SaveData saved = new SaveData();
+        saved.RecordPlacements(UnityEngine.Object.FindAnyObjectByType<PlacedObjects>());
+        SaveData loaded = JsonUtility.FromJson<SaveData>(JsonUtility.ToJson(saved));
 
         PlacementLedger ledger = new PlacementLedger();
-        type.GetMethod("LoadPlacements").Invoke(loaded, new object[] { ledger });
+        loaded.LoadPlacements(ledger);
 
         Placement fence = ledger.In(TravelRule.BaseAreaId).Single(placement => placement.ItemId == "Fence");
         Assert.AreEqual(0f, Mathf.DeltaAngle(fence.Yaw, 90f), AngleTolerance, "保存から戻すと柵の向きが変わる");
@@ -104,12 +103,11 @@ public class FencePlayTests
     [Test]
     public void 向きを持たない古い保存の柵は向き0で戻る()
     {
-        Type type = GameType("SaveData");
-        object old = JsonUtility.FromJson(
-            "{\"saveObjects\":[\"Fence\"],\"saveObjectsScene\":[\"MainSite\"],\"saveObjectsPos\":[{\"x\":1.0,\"y\":0.0,\"z\":-2.0}]}", type);
+        SaveData old = JsonUtility.FromJson<SaveData>(
+            "{\"saveObjects\":[\"Fence\"],\"saveObjectsScene\":[\"MainSite\"],\"saveObjectsPos\":[{\"x\":1.0,\"y\":0.0,\"z\":-2.0}]}");
 
         PlacementLedger ledger = new PlacementLedger();
-        type.GetMethod("LoadPlacements").Invoke(old, new object[] { ledger });
+        old.LoadPlacements(ledger);
 
         Assert.AreEqual(1, ledger.In("MainSite").Count);
         Assert.AreEqual(0f, ledger.In("MainSite")[0].Yaw);
@@ -117,7 +115,7 @@ public class FencePlayTests
     }
 
     [UnityTearDown]
-    public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
+    public IEnumerator 持ち回しオブジェクトを捨てる()
     {
         Time.timeScale = 1f;
 
@@ -125,19 +123,6 @@ public class FencePlayTests
         {
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
-
-        ((RootRegistry)StaticField("RootsManager", "Roots").GetValue(null)).Clear();
-        ((BaseRaid)StaticField("RootsManager", "Raid").GetValue(null)).Clear();
-        ((QuestRegistry)StaticField("QuestManager", "Quests").GetValue(null)).Clear();
-        StaticField("QuestManager", "ordered_id").SetValue(null, "");
-        StaticField("RewardUI", "rewardUI_show").SetValue(null, 0);
-
-        //倒れたまま終えると、起き上がる前にプレイヤーごと捨てられ、次のテストで動けない
-        StaticField("Player2", "cool").SetValue(null, false);
-        StaticField("Player2", "speed").SetValue(null, 1f);
-
-        Health hp = (Health)StaticField("Player2", "Hp").GetValue(null);
-        if (hp.IsReady) hp.SetCurrent(hp.Max);
 
         yield return null;
     }
@@ -171,31 +156,31 @@ public class FencePlayTests
     /// <summary>攻撃の向きを決める。攻撃の選び分けが向きとして見る部品を裏返す</summary>
     private static void FaceBody(Component player, float facing)
     {
-        Component body = player.GetComponentInChildren(GameType("SideJab"));
+        SideJab body = player.GetComponentInChildren<SideJab>();
         Assert.IsNotNull(body, "SideJab が無い");
 
         body.transform.localScale = new Vector3(facing, 1f, 1f);
     }
 
-    private static Component Player()
+    private static PlayerMovement Player()
     {
         GameObject player = GameObject.FindWithTag("Player");
         Assert.IsNotNull(player, "プレイヤーが居ない");
 
-        return player.GetComponent(GameType("Player2"));
+        return player.GetComponent<PlayerMovement>();
     }
 
-    private static Component Inventory()
+    private static PlayerInventory Inventory()
     {
         GameObject owner = GameObject.FindWithTag("PlayerInventory");
         Assert.IsNotNull(owner, "持ち物が無い");
 
-        return owner.GetComponent(GameType("PlayerInventory"));
+        return owner.GetComponent<PlayerInventory>();
     }
 
     private static IReadOnlyList<ItemSlot> Slots()
     {
-        return (IReadOnlyList<ItemSlot>)GameType("PlayerInventory").GetProperty("Slots").GetValue(Inventory());
+        return Inventory().Slots;
     }
 
     private static int Count(string itemId)
@@ -205,30 +190,28 @@ public class FencePlayTests
 
     private static int Load(string itemId)
     {
-        return (int)Call(Inventory(), "LoadInventory", itemId, 0);
+        return Inventory().LoadInventory(itemId, 0);
     }
 
-    private static Component Box(string itemId)
+    private static InventoryBox Box(string itemId)
     {
         int index = Slots().ToList().FindIndex(slot => slot.ItemId == itemId);
         Assert.GreaterOrEqual(index, 0, itemId + " が持ち物に無い");
 
-        //スロットの箱。持ち物の直下に、箱より前の物が CHILDPLUS 個並ぶ
-        Component inventory = Inventory();
-        int offset = (int)Field(inventory, "CHILDPLUS").GetValue(inventory);
-
-        return inventory.transform.GetChild(offset + index).GetComponent(GameType("Inventbutton"));
+        //スロットの箱。InventoryView が並べた順
+        InventoryView view = Inventory().GetComponent<InventoryView>();
+        return ((System.Collections.Generic.List<InventoryBox>)Field(view, "_boxes").GetValue(view))[index];
     }
 
-    private static void Press(Component box)
+    private static void Press(InventoryBox box)
     {
-        Call(box, "Show_Info");
+        box.Select();
     }
 
     private static void Use()
     {
-        Component info = Inventory().transform.Find("Info_set").GetComponent(GameType("Info_set"));
-        Call(info, "Install");
+        ItemInfo info = Inventory().transform.Find("Info_set").GetComponent<ItemInfo>();
+        info.Use();
     }
 
     private static AreaTravel Travel()
@@ -245,7 +228,7 @@ public class FencePlayTests
         yield return SceneManager.LoadSceneAsync(AreaTravel.CoreScene, LoadSceneMode.Single);
         yield return Arrive();
 
-        Component player = Player();
+        PlayerMovement player = Player();
         player.GetComponent<Rigidbody>().position = OpenSpot;
         player.transform.position = OpenSpot;
         yield return new WaitForFixedUpdate();
@@ -270,40 +253,11 @@ public class FencePlayTests
         for (int i = 0; i < SettleFrames; i++) yield return null;
     }
 
-    private static object Call(Component target, string methodName, params object[] args)
-    {
-        MethodInfo method = target.GetType().GetMethod(methodName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-        Assert.IsNotNull(method, target.GetType().Name + "." + methodName + " が見つからない");
-
-        return method.Invoke(target, args);
-    }
-
     private static FieldInfo Field(Component target, string fieldName)
     {
         FieldInfo field = target.GetType().GetField(fieldName,
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         Assert.IsNotNull(field, target.GetType().Name + "." + fieldName + " が見つからない");
-
-        return field;
-    }
-
-    //Assembly-CSharp は asmdef から参照できないため名前で引く
-    private static Type GameType(string typeName)
-    {
-        Type type = AppDomain.CurrentDomain.GetAssemblies()
-            .Select(a => a.GetType(typeName))
-            .FirstOrDefault(t => t != null);
-        Assert.IsNotNull(type, typeName + " 型が見つからない");
-
-        return type;
-    }
-
-    private static FieldInfo StaticField(string typeName, string fieldName)
-    {
-        FieldInfo field = GameType(typeName).GetField(fieldName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.IsNotNull(field, typeName + "." + fieldName + " が見つからない");
 
         return field;
     }

@@ -27,7 +27,7 @@ namespace MemorialFloor.Domain
     /// </summary>
     public static class FenceRule
     {
-        /// <summary>格子の 1 マス。柵の prefab（`Resources/Fence_obj.prefab`）の当たりの長さと絵の大きさは、これに合わせる</summary>
+        /// <summary>格子の 1 マス。柵の prefab（`Prefabs/Placed/Fence_obj.prefab`）の当たりの長さと絵の大きさは、これに合わせる</summary>
         public const float Cell = 0.75f;
 
         /// <summary>柵 1 枚の長さ。真ん中の格子の点から両側へ 1 マスずつ伸びる</summary>

@@ -5,14 +5,20 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "MemorialFloor.Domain",
-        "MemorialFloor.Game"
+        "MemorialFloor.Game",
+        "ThirdParty.HeroEditor",
+        "ThirdParty.JoystickPack",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "nunit.framework.dll"
+        "nunit.framework.dll",
+        "HeroEditor.Common.dll"
     ],
     "autoReferenced": false,
     "defineConstraints": [

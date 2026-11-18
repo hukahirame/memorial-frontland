@@ -10,6 +10,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using MemorialFloor.Domain;
 using MemorialFloor.Game;
+using Assets.HeroEditor.Common.Scripts.CharacterScripts;
 #if UNITY_EDITOR
 using UnityEditor.Media;
 #endif
@@ -126,7 +127,7 @@ public class TitleMovie
     }
 
     [UnityTearDown]
-    public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
+    public IEnumerator 持ち回しオブジェクトを捨てる()
     {
         Time.timeScale = 1f;
         Time.captureFramerate = 0;
@@ -136,27 +137,20 @@ public class TitleMovie
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
 
-        ((RootRegistry)StaticField("RootsManager", "Roots").GetValue(null)).Clear();
-        ((BaseRaid)StaticField("RootsManager", "Raid").GetValue(null)).Clear();
-        ((QuestRegistry)StaticField("QuestManager", "Quests").GetValue(null)).Clear();
-        StaticField("QuestManager", "ordered_id").SetValue(null, "");
-        StaticField("RewardUI", "rewardUI_show").SetValue(null, 0);
-        StaticField("OF_Spawner", "spawnable").SetValue(null, false);
         yield return null;
     }
 
     //敵を消して湧かないようにし、一日の巡りを止め（明るさが 1 秒ごとに段で変わる）、画面の UI と札・ゲージ・落ち葉を隠し、被写界深度を切る
     private static void Calm()
     {
-        foreach (Component spawner in Each("OF_Spawner"))
+        foreach (RootCore spawner in UnityEngine.Object.FindObjectsByType<RootCore>(FindObjectsSortMode.None))
         {
-            ((MonoBehaviour)spawner).StopAllCoroutines();
-            ((Behaviour)spawner).enabled = false;
+            spawner.StopAllCoroutines();
+            spawner.enabled = false;
         }
-        StaticField("OF_Spawner", "spawnable").SetValue(null, false);
 
         foreach (GameObject enemy in GameObject.FindGameObjectsWithTag("Enemy")) UnityEngine.Object.Destroy(enemy);
-        foreach (Component sun in Each("Sun2")) ((MonoBehaviour)sun).StopAllCoroutines();
+        foreach (Sun sun in UnityEngine.Object.FindObjectsByType<Sun>(FindObjectsSortMode.None)) sun.StopAllCoroutines();
         foreach (Canvas canvas in UnityEngine.Object.FindObjectsByType<Canvas>(FindObjectsSortMode.None)) canvas.enabled = false;
 
         //カメラの子の落ち葉と雨（TriForge）も止める。撮る位置ではカメラのすぐ前を大きな黒い葉が横切り、主人公を隠す
@@ -210,13 +204,12 @@ public class TitleMovie
         hero.transform.rotation = Quaternion.Euler(0f, eye.transform.eulerAngles.y, 0f);
 
         //立ったまま、剣を立てて構える（前のタイトルの絵の構え）。プレイヤーの Update が歩きの姿勢に書き換えないよう、先に止める
-        Component player = hero.GetComponent(GameType("Player2"));
-        ((Behaviour)player).enabled = false;
-        object character = player.GetType().GetField("character").GetValue(player);
-        MethodInfo setState = character.GetType().GetMethod("SetState");
-        setState.Invoke(character, new[] { Enum.Parse(setState.GetParameters()[0].ParameterType, "Idle") });
+        PlayerAttack attack = hero.GetComponent<PlayerAttack>();
+        hero.GetComponent<PlayerMovement>().enabled = false;
+        attack.enabled = false;
+        hero.GetComponentInChildren<Character>(true).SetState(CharacterState.Idle);
 
-        var weapon = (Transform)player.GetType().GetField("weapon", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(player);
+        var weapon = (Transform)typeof(PlayerAttack).GetField("_weapon", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(attack);
         weapon.gameObject.AddComponent<HoldSword>();
         return eye;
     }
@@ -290,27 +283,5 @@ public class TitleMovie
         Assert.IsNotNull(travel.Current, "場所に着かない");
         Assert.IsFalse(travel.IsTraveling, "移動が終わらない");
         for (int i = 0; i < 60; i++) yield return null;
-    }
-
-    private static IEnumerable<Component> Each(string typeName)
-    {
-        return UnityEngine.Object.FindObjectsByType(GameType(typeName), FindObjectsSortMode.None).Cast<Component>();
-    }
-
-    //Assembly-CSharp は asmdef から参照できない（参照は一方向）ため名前で引く
-    private static Type GameType(string typeName)
-    {
-        Type type = AppDomain.CurrentDomain.GetAssemblies()
-            .Select(a => a.GetType(typeName))
-            .FirstOrDefault(t => t != null);
-        Assert.IsNotNull(type, typeName + " 型が見つからない");
-        return type;
-    }
-
-    private static FieldInfo StaticField(string typeName, string fieldName)
-    {
-        FieldInfo field = GameType(typeName).GetField(fieldName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.IsNotNull(field, typeName + "." + fieldName + " が見つからない");
-        return field;
     }
 }

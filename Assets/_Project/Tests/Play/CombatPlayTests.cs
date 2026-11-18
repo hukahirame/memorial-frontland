@@ -5,7 +5,9 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.Events;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using MemorialFloor.Domain;
@@ -33,7 +35,7 @@ public class CombatPlayTests
     public IEnumerator 攻撃スティックを倒して離すと目の前の敵に突きが届いて当たる()
     {
         yield return Boot();
-        Component player = Player();
+        PlayerAttack player = Player();
         Face(player, 1f);
 
         GameObject slime = SpawnSlime(player, Vector3.right * FarDistance, "Slime");
@@ -45,13 +47,16 @@ public class CombatPlayTests
         int before = enemy.CurrentHp;
 
         ReleaseAttackStick(0.9f, 0f);
+        yield return null;
+        //離した瞬間の向きを取り逃すと、倒していないときの斬りになる
+        Assert.AreEqual(AttackMove.Thrust, player.Doing, "倒した向きの突きが出ない");
         yield return new WaitForSeconds(AttackTiming.ThrustSeconds + Slack);
 
         Assert.Less(enemy.CurrentHp, before, "突きが届かない");
     }
 
     [UnityTearDown]
-    public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
+    public IEnumerator 持ち回しオブジェクトを捨てる()
     {
         Time.timeScale = 1f;
 
@@ -60,62 +65,61 @@ public class CombatPlayTests
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
 
-        ((RootRegistry)StaticField("RootsManager", "Roots").GetValue(null)).Clear();
-        ((BaseRaid)StaticField("RootsManager", "Raid").GetValue(null)).Clear();
-        ((QuestRegistry)StaticField("QuestManager", "Quests").GetValue(null)).Clear();
-        StaticField("QuestManager", "ordered_id").SetValue(null, "");
-        StaticField("RewardUI", "rewardUI_show").SetValue(null, 0);
-
-        //倒れたまま終えると、起き上がる前にプレイヤーごと捨てられ、次のテストで動けない
-        StaticField("Player2", "cool").SetValue(null, false);
-
-        Health hp = PlayerHp();
-        if (hp.IsReady) hp.SetCurrent(hp.Max);
-
         yield return null;
     }
 
-    private static Component Player()
+    private static PlayerAttack Player()
     {
         GameObject player = GameObject.FindWithTag("Player");
         Assert.IsNotNull(player, "プレイヤーが居ない");
 
-        Component component = player.GetComponent(GameType("Player2"));
-        Assert.IsNotNull(component, "プレイヤーに Player2 が無い");
+        PlayerAttack component = player.GetComponent<PlayerAttack>();
+        Assert.IsNotNull(component, "プレイヤーに PlayerAttack が無い");
 
         return component;
-    }
-
-    private static Health PlayerHp()
-    {
-        return (Health)StaticField("Player2", "Hp").GetValue(null);
     }
 
     /// <summary>向きを決める。攻撃の選び分けが向きとして見る部品を裏返す</summary>
     private static void Face(Component player, float facing)
     {
-        Component body = player.GetComponentInChildren(GameType("SideJab"));
+        SideJab body = player.GetComponentInChildren<SideJab>();
         Assert.IsNotNull(body, "SideJab が無い");
 
         body.transform.localScale = new Vector3(facing, 1f, 1f);
     }
 
-    //攻撃スティックを倒して離す。指を離したときの入口をそのまま通す
+    //攻撃スティックを倒して離す。指で押したときと離したときの入口をそのまま通す
     private static void ReleaseAttackStick(float horizontal, float vertical)
     {
-        Type joystick = GameType("Joystick");
-        Component stick = UnityEngine.Object.FindObjectsByType(joystick, FindObjectsSortMode.None)
-            .Cast<Component>()
+        Joystick stick = UnityEngine.Object.FindObjectsByType<Joystick>(FindObjectsSortMode.None)
             .FirstOrDefault(found => found.name.IndexOf("Attack") != -1);
         Assert.IsNotNull(stick, "攻撃スティックが無い");
 
-        joystick.GetField("input", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(stick, new Vector2(horizontal, vertical));
-        joystick.GetMethod("OnPointerUp").Invoke(stick, new object[] { null });
+        RectTransform background = (RectTransform)typeof(Joystick)
+            .GetField("background", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(stick);
+        PointerEventData finger = new PointerEventData(EventSystem.current)
+        {
+            position = StickPoint(stick, background, new Vector2(horizontal, vertical))
+        };
+
+        ExecuteEvents.Execute(stick.gameObject, finger, ExecuteEvents.pointerDownHandler);
+        ExecuteEvents.Execute(stick.gameObject, finger, ExecuteEvents.pointerUpHandler);
+    }
+
+    //スティックを direction だけ倒す指の、画面の上の位置。スティックは指と中心の差を半径で割って倒し具合にする
+    private static Vector2 StickPoint(Component stick, RectTransform background, Vector2 direction)
+    {
+        Canvas canvas = stick.GetComponentInParent<Canvas>();
+        Camera cam = canvas.renderMode == RenderMode.ScreenSpaceCamera ? canvas.worldCamera : null;
+        Vector2 center = RectTransformUtility.WorldToScreenPoint(cam, background.position);
+        Vector2 radius = background.sizeDelta / 2;
+
+        return center + Vector2.Scale(direction, radius) * canvas.scaleFactor;
     }
 
     private static GameObject SpawnSlime(Component player, Vector3 offset, string kind)
     {
-        GameObject prefab = Resources.Load<GameObject>(kind);
+        GameObject prefab = Addressables.LoadAssetAsync<GameObject>(kind).WaitForCompletion();
         Assert.IsNotNull(prefab, kind + " の prefab が無い");
 
         return UnityEngine.Object.Instantiate(prefab, player.transform.position + offset, Quaternion.identity);
@@ -126,9 +130,9 @@ public class CombatPlayTests
     {
         yield return null;
 
-        MonoBehaviour self = (MonoBehaviour)slime.GetComponent(GameType("Slime"));
+        Slime self = slime.GetComponent<Slime>();
         self.CancelInvoke();
-        GameType("Slime").GetField("speed").SetValue(self, 0f);
+        typeof(Slime).GetField("_speed", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(self, 0f);
 
         yield return new WaitForSeconds(1f);
     }
@@ -168,25 +172,5 @@ public class CombatPlayTests
         Assert.IsFalse(travel.IsTraveling, "移動が終わらない");
 
         for (int i = 0; i < SettleFrames; i++) yield return null;
-    }
-
-    //Assembly-CSharp は asmdef から参照できないため名前で引く
-    private static Type GameType(string typeName)
-    {
-        var type = AppDomain.CurrentDomain.GetAssemblies()
-            .Select(a => a.GetType(typeName))
-            .FirstOrDefault(t => t != null);
-        Assert.IsNotNull(type, typeName + " 型が見つからない");
-
-        return type;
-    }
-
-    private static FieldInfo StaticField(string typeName, string fieldName)
-    {
-        var field = GameType(typeName).GetField(fieldName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.IsNotNull(field, typeName + "." + fieldName + " が見つからない");
-
-        return field;
     }
 }

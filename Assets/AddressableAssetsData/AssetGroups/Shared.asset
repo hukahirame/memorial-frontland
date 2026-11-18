@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Shared
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Shared
+  m_GUID: 53f030f0e2feab64b9d7f4b833a85210
+  m_SerializeEntries:
+  - m_GUID: 3f29ddc1813ea4745baa1230f1c11782
+    m_Address: branche_obj
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Placeable
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: abce92677a8ab424895460c5639e5b06
+    m_Address: Fence_obj
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Placeable
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: d1bf24a7c4306174baefc1bb6528c67e
+    m_Address: Torch_obj
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Placeable
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: f2f2694e2d3903c449b4259ebf508336
+    m_Address: Slime
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 05b1319f6aec7e14aa76463ef74b1084, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: b889de18c7fb4604185ed6a2f5e6def8, type: 2}
+    - {fileID: 11400000, guid: 3346f87faab1cf648829d92bb9cd0b9a, type: 2}
+    m_SchemaDisplayOrder:
+    - Default Local Group_ContentUpdateGroupSchema
+    - Default Local Group_BundledAssetGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

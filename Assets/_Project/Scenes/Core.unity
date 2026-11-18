@@ -625,8 +625,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 52908748}
-        m_TargetAssemblyTypeName: Inventbutton, Assembly-CSharp
-        m_MethodName: Show_Info
+        m_TargetAssemblyTypeName: MemorialFloor.Game.InventoryBox, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -687,6 +687,10 @@ GameObject:
   - component: {fileID: 64990618}
   - component: {fileID: 64990619}
   - component: {fileID: 64990620}
+  - component: {fileID: 64990621}
+  - component: {fileID: 64990622}
+  - component: {fileID: 64990624}
+  - component: {fileID: 64990623}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -706,12 +710,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 111f77218feb80144b7722954a740242, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemdata: {fileID: 4900000, guid: 4ff1e1b851a72cf4ab2996d946d14c85, type: 3}
-  maincanvas: {fileID: 1605191444}
-  travel: {fileID: 783813819}
-  saveSystem: {fileID: 64990619}
-  settings: {fileID: 2089192406}
-  startingCoins: 1000
+  _travel: {fileID: 783813819}
+  _save: {fileID: 64990619}
+  _quests: {fileID: 64990623}
+  _settings: {fileID: 2089192406}
 --- !u!4 &64990617
 Transform:
   m_ObjectHideFlags: 0
@@ -836,33 +838,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: decf94718b22ea14f926c933449d2890, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  travel: {fileID: 783813819}
-  placed: {fileID: 783813820}
-  savedata:
-    playerhp: 0
-    saveName: 
-    entered_scene: 
-    daytime: 0
-    coin: 0
-    respawn: {x: 0, y: 0, z: 0}
-    slots: []
-    equipped: 
-    enemies: []
-    respawns: []
-    enemyHps: 
-    saveObjects: []
-    saveObjectsScene: []
-    saveObjectsPos: []
-    saveObjectsYaw: []
-    saveObjectsDurability: 
-    saveObjectsAge: []
-    saveObjectsFallen: 
-    roots: []
-    quests: []
-    ordered_id: 
-    raiders: 0
-    baseRaiders: []
-    plannedRoots: []
+  _travel: {fileID: 783813819}
+  _placed: {fileID: 783813820}
+  _health: {fileID: 2480583501242932788}
+  _inventory: {fileID: 761480763}
+  _equipment: {fileID: 715764640}
+  _purse: {fileID: 64990621}
+  _sun: {fileID: 1261175517}
+  _roots: {fileID: 64990624}
+  _quests: {fileID: 64990623}
 --- !u!114 &64990620
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -876,6 +860,66 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.Music
   source: {fileID: 64990618}
+--- !u!114 &64990621
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64990615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd7b8e5f121279e4998e9e742f64c904, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.Purse
+  _startingCoins: 1000
+--- !u!114 &64990622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64990615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eb5c63df1e229f643b0afa2a3f403308, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.ItemBook
+  _itemData: {fileID: 4900000, guid: 4ff1e1b851a72cf4ab2996d946d14c85, type: 3}
+--- !u!114 &64990623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64990615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a4a385b71d5b734dbd689916c6ac14d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.QuestManager
+  _travel: {fileID: 783813819}
+  _roots: {fileID: 64990624}
+  _sun: {fileID: 1261175517}
+  _items: {fileID: 64990622}
+  _purse: {fileID: 64990621}
+  _inventory: {fileID: 761480763}
+  _bigText: {fileID: 2071711539}
+  _middleText: {fileID: 128913432}
+--- !u!114 &64990624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 64990615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 156f2549a2163854eafdbacf40c9aaf1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.RootsManager
+  _sun: {fileID: 1261175517}
+  _middleText: {fileID: 128913432}
 --- !u!1 &82685811
 GameObject:
   m_ObjectHideFlags: 0
@@ -1394,6 +1438,14 @@ PrefabInstance:
     - target: {fileID: 2619935644510089134, guid: a42ad682d5781924abb8acfe467ceba7, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4100584167819112571, guid: a42ad682d5781924abb8acfe467ceba7, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: Order
+      objectReference: {fileID: 0}
+    - target: {fileID: 4100584167819112571, guid: a42ad682d5781924abb8acfe467ceba7, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: MemorialFloor.Game.QuestButton, MemorialFloor.Game
       objectReference: {fileID: 0}
     - target: {fileID: 4784568349627970191, guid: a42ad682d5781924abb8acfe467ceba7, type: 3}
       propertyPath: m_Text
@@ -2402,8 +2454,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 261317410}
-        m_TargetAssemblyTypeName: CloseInventory, Assembly-CSharp
-        m_MethodName: CloseClick
+        m_TargetAssemblyTypeName: MemorialFloor.Game.PanelOpener, MemorialFloor.Game
+        m_MethodName: Close
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2463,8 +2515,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c2c0a71456ab7b42b4f34c6ce74b54c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rt: {fileID: 761480757}
-  center: {fileID: 2039307014}
+  _panel: {fileID: 761480757}
+  _center: {fileID: 2039307014}
 --- !u!1 &281596928
 GameObject:
   m_ObjectHideFlags: 0
@@ -2627,7 +2679,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 596303c153b32ea43bb96150ec4ed42d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  craft: {fileID: 728042285}
+  _menu: {fileID: 728042285}
 --- !u!114 &295648997
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2673,8 +2725,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 295648996}
-        m_TargetAssemblyTypeName: CraftButton, Assembly-CSharp
-        m_MethodName: CraftPrepare1
+        m_TargetAssemblyTypeName: MemorialFloor.Game.CraftButton, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -2934,8 +2986,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 318904423}
-        m_TargetAssemblyTypeName: Inventbutton, Assembly-CSharp
-        m_MethodName: Show_Info
+        m_TargetAssemblyTypeName: MemorialFloor.Game.InventoryBox, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3144,8 +3196,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 361261327}
-        m_TargetAssemblyTypeName: CraftButton, Assembly-CSharp
-        m_MethodName: CraftPrepare1
+        m_TargetAssemblyTypeName: MemorialFloor.Game.CraftButton, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3205,7 +3257,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 596303c153b32ea43bb96150ec4ed42d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  craft: {fileID: 728042285}
+  _menu: {fileID: 728042285}
 --- !u!1 &364505806
 GameObject:
   m_ObjectHideFlags: 0
@@ -4466,8 +4518,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 518956856}
-        m_TargetAssemblyTypeName: Inventbutton, Assembly-CSharp
-        m_MethodName: Show_Info
+        m_TargetAssemblyTypeName: MemorialFloor.Game.InventoryBox, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -5447,8 +5499,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 652509332}
-        m_TargetAssemblyTypeName: Inventbutton, Assembly-CSharp
-        m_MethodName: Show_Info
+        m_TargetAssemblyTypeName: MemorialFloor.Game.InventoryBox, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -5508,6 +5560,7 @@ GameObject:
   - component: {fileID: 654698122}
   - component: {fileID: 654698121}
   - component: {fileID: 654698120}
+  - component: {fileID: 654698123}
   m_Layer: 5
   m_Name: QuestManager
   m_TagString: QuestManager
@@ -5556,9 +5609,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d304a731f6ad9ba40a910cc48a66205b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  progress: {fileID: 845230793}
-  questUI: {fileID: 2303938701830645367, guid: a42ad682d5781924abb8acfe467ceba7, type: 3}
-  travel: {fileID: 783813819}
+  _quests: {fileID: 64990623}
+  _travel: {fileID: 783813819}
+  _middleText: {fileID: 128913432}
+  _cardPrefab: {fileID: 2303938701830645367, guid: a42ad682d5781924abb8acfe467ceba7, type: 3}
+  _slots: {fileID: 218470893}
 --- !u!114 &654698121
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5597,6 +5652,28 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 654698118}
   m_CullTransparentMesh: 1
+--- !u!114 &654698123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 654698118}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 14c38abe7d6ceab458808a1a94eb186d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.RootDetail
+  _roots: {fileID: 64990624}
+  _board: {fileID: 654698120}
+  _shortcut: {fileID: 1517704535}
+  _center: {fileID: 2039307014}
+  _name: {fileID: 475408683}
+  _danger: {fileID: 298040184}
+  _progress: {fileID: 845230793}
+  _suppressStage: {fileID: 1242139532}
+  _revealStage: {fileID: 611255849}
+  _accumulation: {fileID: 2176893}
 --- !u!1 &659868015
 GameObject:
   m_ObjectHideFlags: 0
@@ -5649,10 +5726,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d8ef8b14f202524381c97cace4bbe22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pi: {fileID: 761480757}
-  rm: {fileID: 1118225126}
-  center: {fileID: 2039307014}
-  is_pi: 0
+  _inventory: {fileID: 761480757}
+  _map: {fileID: 1118225126}
+  _center: {fileID: 2039307014}
+  _rootMap: {fileID: 716853137}
+  _detailClose: {fileID: 809039348}
+  _fromInventory: 0
+  _other: {fileID: 0}
 --- !u!114 &659868018
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5698,8 +5778,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 659868017}
-        m_TargetAssemblyTypeName: ExchangeButton, Assembly-CSharp
-        m_MethodName: Exchange_UI
+        m_TargetAssemblyTypeName: MemorialFloor.Game.ExchangeButton, MemorialFloor.Game
+        m_MethodName: Exchange
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -5929,6 +6009,14 @@ PrefabInstance:
     - target: {fileID: 2619935644510089134, guid: a42ad682d5781924abb8acfe467ceba7, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4100584167819112571, guid: a42ad682d5781924abb8acfe467ceba7, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: Order
+      objectReference: {fileID: 0}
+    - target: {fileID: 4100584167819112571, guid: a42ad682d5781924abb8acfe467ceba7, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: MemorialFloor.Game.QuestButton, MemorialFloor.Game
       objectReference: {fileID: 0}
     - target: {fileID: 4784568349627970191, guid: a42ad682d5781924abb8acfe467ceba7, type: 3}
       propertyPath: m_Text
@@ -6482,6 +6570,17 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 704319318}
   m_CullTransparentMesh: 0
+--- !u!114 &715764640 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 306288286268907968, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
+  m_PrefabInstance: {fileID: 2480583501242932784}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1769172246968549934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c50fad22fd36cb4484ca86475f79231, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.PlayerEquipment
 --- !u!1 &716853135
 GameObject:
   m_ObjectHideFlags: 0
@@ -6537,8 +6636,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e35977ee7d911f14391b32b1c05dc069, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rootset: {fileID: 2271551489349192215, guid: 3268e4fec25e5704382532b8ee3b0f3f, type: 3}
-  home: {fileID: 1746866534}
+  _roots: {fileID: 64990624}
+  _detail: {fileID: 654698123}
+  _cardPrefab: {fileID: 2271551489349192215, guid: 3268e4fec25e5704382532b8ee3b0f3f, type: 3}
+  _home: {fileID: 1746866534}
 --- !u!114 &716853138
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6792,6 +6893,7 @@ GameObject:
   - component: {fileID: 728042287}
   - component: {fileID: 728042286}
   - component: {fileID: 728042285}
+  - component: {fileID: 728042289}
   m_Layer: 0
   m_Name: CraftInventory
   m_TagString: CraftDateBase
@@ -6844,35 +6946,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f1a590e3730c1645a58c9c3b7ef5fca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pi: {fileID: 761480763}
-  recipeDefinitions:
+  _inventory: {fileID: 761480763}
+  _items: {fileID: 64990622}
+  _workshop: {fileID: 728042289}
+  _recipeDefinitions:
   - {fileID: 11400000, guid: f17c9ccc209df94439500a6067b7eb8f, type: 2}
   - {fileID: 11400000, guid: de08add90a7f24a4cb297373fda41435, type: 2}
   - {fileID: 11400000, guid: a12f0e74e3379854fbded76d1b775aeb, type: 2}
   - {fileID: 11400000, guid: ee9b86c448a146147afc515951477811, type: 2}
   - {fileID: 11400000, guid: 41fab51a45bfcf340bdcf16377192e8a, type: 2}
-  set: {fileID: 1884500544}
-  material1: {fileID: 112028891}
-  demand1: {fileID: 1847906382}
-  Image1: {fileID: 1453769850}
-  supply1: {fileID: 598449381}
-  material2: {fileID: 1838422722}
-  demand2: {fileID: 737695549}
-  Image2: {fileID: 1646352387}
-  supply2: {fileID: 761310553}
-  material3: {fileID: 424933811}
-  demand3: {fileID: 1602841984}
-  Image3: {fileID: 213467768}
-  supply3: {fileID: 2075772029}
-  material4: {fileID: 830649026}
-  demand4: {fileID: 1448152609}
-  Image4: {fileID: 1296133055}
-  supply4: {fileID: 503231031}
-  matset: {fileID: 689247948}
-  makeButton: {fileID: 1410342777}
-  buyButton: {fileID: 987877679}
-  buyLabel: {fileID: 896209017}
-  dropcapsule: {fileID: 8337573646266240455, guid: a47d32c2e7dbff148a4be736b2377957, type: 3}
+  _card: {fileID: 1884500549}
+  _material1: {fileID: 112028891}
+  _demand1: {fileID: 1847906382}
+  _icon1: {fileID: 1453769850}
+  _supply1: {fileID: 598449381}
+  _material2: {fileID: 1838422722}
+  _demand2: {fileID: 737695549}
+  _icon2: {fileID: 1646352387}
+  _supply2: {fileID: 761310553}
+  _material3: {fileID: 424933811}
+  _demand3: {fileID: 1602841984}
+  _icon3: {fileID: 213467768}
+  _supply3: {fileID: 2075772029}
+  _material4: {fileID: 830649026}
+  _demand4: {fileID: 1448152609}
+  _icon4: {fileID: 1296133055}
+  _supply4: {fileID: 503231031}
+  _materialWidgets: {fileID: 689247948}
+  _makeButton: {fileID: 1410342777}
+  _buyButton: {fileID: 987877679}
+  _buyLabel: {fileID: 896209017}
 --- !u!114 &728042286
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6970,6 +7073,23 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!114 &728042289
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 728042283}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66ba77f78ec1e2a4abb2c17299a2014e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.Workshop
+  _inventory: {fileID: 761480763}
+  _purse: {fileID: 64990621}
+  _movement: {fileID: 2480583501242932789}
+  _middleText: {fileID: 128913432}
+  _dropPrefab: {fileID: 8337573646266240455, guid: a47d32c2e7dbff148a4be736b2377957, type: 3}
 --- !u!1 &733012120
 GameObject:
   m_ObjectHideFlags: 0
@@ -7097,10 +7217,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d8ef8b14f202524381c97cace4bbe22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pi: {fileID: 761480757}
-  rm: {fileID: 654698119}
-  center: {fileID: 2039307014}
-  is_pi: 0
+  _inventory: {fileID: 761480757}
+  _map: {fileID: 654698119}
+  _center: {fileID: 2039307014}
+  _rootMap: {fileID: 716853137}
+  _detailClose: {fileID: 809039348}
+  _fromInventory: 0
+  _other: {fileID: 0}
 --- !u!114 &735275384
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7146,8 +7269,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 735275383}
-        m_TargetAssemblyTypeName: ExchangeButton, Assembly-CSharp
-        m_MethodName: Exchange_UI
+        m_TargetAssemblyTypeName: MemorialFloor.Game.ExchangeButton, MemorialFloor.Game
+        m_MethodName: Exchange
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -7754,34 +7877,6 @@ PrefabInstance:
       propertyPath: m_TargetGraphic
       value: 
       objectReference: {fileID: 758725304}
-    - target: {fileID: 4848689226219891789, guid: 62dd86e60d4ad47e8a9a4b0e1d38ee1a, type: 3}
-      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4848689226219891789, guid: 62dd86e60d4ad47e8a9a4b0e1d38ee1a, type: 3}
-      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4848689226219891789, guid: 62dd86e60d4ad47e8a9a4b0e1d38ee1a, type: 3}
-      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Target
-      value: 
-      objectReference: {fileID: 1576346944}
-    - target: {fileID: 4848689226219891789, guid: 62dd86e60d4ad47e8a9a4b0e1d38ee1a, type: 3}
-      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 4848689226219891789, guid: 62dd86e60d4ad47e8a9a4b0e1d38ee1a, type: 3}
-      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: ValueChange
-      objectReference: {fileID: 0}
-    - target: {fileID: 4848689226219891789, guid: 62dd86e60d4ad47e8a9a4b0e1d38ee1a, type: 3}
-      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: PlayerHp, Assembly-CSharp
-      objectReference: {fileID: 0}
-    - target: {fileID: 4848689226219891789, guid: 62dd86e60d4ad47e8a9a4b0e1d38ee1a, type: 3}
-      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
-      value: UnityEngine.Object, UnityEngine
-      objectReference: {fileID: 0}
     - target: {fileID: 4848689226219891790, guid: 62dd86e60d4ad47e8a9a4b0e1d38ee1a, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -7981,6 +8076,7 @@ GameObject:
   - component: {fileID: 761480760}
   - component: {fileID: 761480759}
   - component: {fileID: 761480763}
+  - component: {fileID: 761480764}
   m_Layer: 0
   m_Name: Inventory
   m_TagString: PlayerInventory
@@ -8072,11 +8168,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 968d6f13cd9b796449a41efb4083f97c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  slotCount: 15
-  slots: []
-  wi_button: {fileID: 0}
-  buttonsprite: {fileID: 21300000, guid: 40aae105d73069443be14f832e959679, type: 3}
-  slotBack: {fileID: 21300000, guid: 4a15aad8540d849e7a699a11e3f0913d, type: 3}
+  _slotCount: 15
+  _movement: {fileID: 2480583501242932789}
+  _items: {fileID: 64990622}
+  _equipment: {fileID: 715764640}
+  _slots: []
+--- !u!114 &761480764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 761480756}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af5fbb953e9b2d4498b086def3ec329a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.InventoryView
+  _inventory: {fileID: 761480763}
+  _equipment: {fileID: 715764640}
+  _items: {fileID: 64990622}
+  _info: {fileID: 2459109517703736527}
+  _emptySprite: {fileID: 21300000, guid: 40aae105d73069443be14f832e959679, type: 3}
+  _slotBack: {fileID: 21300000, guid: 4a15aad8540d849e7a699a11e3f0913d, type: 3}
 --- !u!1 &771384102
 GameObject:
   m_ObjectHideFlags: 0
@@ -8308,14 +8422,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cd027e8bd54cb4b429f333cb9beee072, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneStarter
-  travel: {fileID: 783813819}
-  player: {fileID: 2480583501242932787}
-  hpView: {fileID: 1576346943}
-  jumpButton: {fileID: 1430129986}
-  music: {fileID: 64990620}
-  questManager: {fileID: 654698120}
-  rewardUI: {fileID: 1118225129}
-  rewardPoint: {fileID: 2039307014}
+  _travel: {fileID: 783813819}
+  _music: {fileID: 64990620}
+  _quests: {fileID: 64990623}
+  _roots: {fileID: 64990624}
+  _rewardUI: {fileID: 1118225129}
+  _save: {fileID: 64990619}
+  _player: {fileID: 2480583501242932788}
+  _middleText: {fileID: 128913432}
+  _rewardPoint: {fileID: 2039307014}
 --- !u!1 &794987821
 GameObject:
   m_ObjectHideFlags: 0
@@ -8536,11 +8651,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e8ba986cf35d76e4abee249cdc433e4e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  joystick: {fileID: 809019751}
-  up: {fileID: 48323634}
-  down: {fileID: 2106648985}
-  left: {fileID: 1726510471}
-  right: {fileID: 664829784}
+  _stick: {fileID: 809019751}
+  _attack: {fileID: 2480583501242932790}
+  _up: {fileID: 48323634}
+  _down: {fileID: 2106648985}
+  _left: {fileID: 1726510471}
+  _right: {fileID: 664829784}
 --- !u!1 &809039342
 GameObject:
   m_ObjectHideFlags: 0
@@ -8866,8 +8982,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 825453507}
-        m_TargetAssemblyTypeName: Inventbutton, Assembly-CSharp
-        m_MethodName: Show_Info
+        m_TargetAssemblyTypeName: MemorialFloor.Game.InventoryBox, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -9409,8 +9525,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 883336340}
-        m_TargetAssemblyTypeName: Inventbutton, Assembly-CSharp
-        m_MethodName: Show_Info
+        m_TargetAssemblyTypeName: MemorialFloor.Game.InventoryBox, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -9777,10 +9893,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d8ef8b14f202524381c97cace4bbe22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pi: {fileID: 761480757}
-  rm: {fileID: 716853136}
-  center: {fileID: 2039307014}
-  is_pi: 1
+  _inventory: {fileID: 761480757}
+  _map: {fileID: 716853136}
+  _center: {fileID: 2039307014}
+  _rootMap: {fileID: 716853137}
+  _detailClose: {fileID: 809039348}
+  _fromInventory: 1
+  _other: {fileID: 1168129108}
 --- !u!114 &921397657
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9826,8 +9945,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 921397656}
-        m_TargetAssemblyTypeName: ExchangeButton, Assembly-CSharp
-        m_MethodName: Exchange_UI
+        m_TargetAssemblyTypeName: MemorialFloor.Game.ExchangeButton, MemorialFloor.Game
+        m_MethodName: Exchange
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -10441,8 +10560,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 980968413}
-        m_TargetAssemblyTypeName: Inventbutton, Assembly-CSharp
-        m_MethodName: Show_Info
+        m_TargetAssemblyTypeName: MemorialFloor.Game.InventoryBox, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -10612,8 +10731,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 728042285}
-        m_TargetAssemblyTypeName: Craft, Assembly-CSharp
-        m_MethodName: BuyStart
+        m_TargetAssemblyTypeName: MemorialFloor.Game.CraftMenu, MemorialFloor.Game
+        m_MethodName: Buy
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -11790,7 +11909,6 @@ GameObject:
   - component: {fileID: 1085124505}
   - component: {fileID: 1085124504}
   - component: {fileID: 1085124503}
-  - component: {fileID: 1085124506}
   - component: {fileID: 7316024485012583842}
   m_Layer: 5
   m_Name: MapButton
@@ -11874,9 +11992,9 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-      - m_Target: {fileID: 1085124506}
-        m_TargetAssemblyTypeName: MapButton, Assembly-CSharp
-        m_MethodName: MapClick
+      - m_Target: {fileID: 716853137}
+        m_TargetAssemblyTypeName: MemorialFloor.Game.RootMap, MemorialFloor.Game
+        m_MethodName: Show
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -11924,18 +12042,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1085124501}
   m_CullTransparentMesh: 0
---- !u!114 &1085124506
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1085124501}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 10e6de4a28466b8489e45183e2493672, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1091071873
 GameObject:
   m_ObjectHideFlags: 0
@@ -12242,9 +12348,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dd222f8b8f64ca24499fe48426365179, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  toptxt: {fileID: 950821989}
-  sidetxt: {fileID: 1104518018}
-  resulttxt: {fileID: 640212143}
+  _quests: {fileID: 64990623}
+  _roots: {fileID: 64990624}
+  _title: {fileID: 950821989}
+  _details: {fileID: 1104518018}
+  _result: {fileID: 640212143}
 --- !u!1 &1119631093
 GameObject:
   m_ObjectHideFlags: 0
@@ -12332,6 +12440,7 @@ GameObject:
   - component: {fileID: 1141349707}
   - component: {fileID: 1141349706}
   - component: {fileID: 1141349705}
+  - component: {fileID: 1141349708}
   m_Layer: 5
   m_Name: CoinText
   m_TagString: Untagged
@@ -12478,6 +12587,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1141349703}
   m_CullTransparentMesh: 0
+--- !u!114 &1141349708
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1141349703}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7cb1b4ff1422614b90423f501c64a24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.CoinLabel
+  _purse: {fileID: 64990621}
+  _label: {fileID: 1141349706}
 --- !u!1 &1163261456
 GameObject:
   m_ObjectHideFlags: 0
@@ -12600,8 +12723,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1163261461}
-        m_TargetAssemblyTypeName: CraftButton, Assembly-CSharp
-        m_MethodName: CraftPrepare1
+        m_TargetAssemblyTypeName: MemorialFloor.Game.CraftButton, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -12623,7 +12746,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 596303c153b32ea43bb96150ec4ed42d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CraftButton
-  craft: {fileID: 728042285}
+  _menu: {fileID: 728042285}
 --- !u!1 &1168129106
 GameObject:
   m_ObjectHideFlags: 0
@@ -12676,10 +12799,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d8ef8b14f202524381c97cace4bbe22, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pi: {fileID: 761480757}
-  rm: {fileID: 716853136}
-  center: {fileID: 2039307014}
-  is_pi: 0
+  _inventory: {fileID: 761480757}
+  _map: {fileID: 716853136}
+  _center: {fileID: 2039307014}
+  _rootMap: {fileID: 716853137}
+  _detailClose: {fileID: 809039348}
+  _fromInventory: 0
+  _other: {fileID: 921397656}
 --- !u!114 &1168129109
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12725,8 +12851,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1168129108}
-        m_TargetAssemblyTypeName: ExchangeButton, Assembly-CSharp
-        m_MethodName: Exchange_UI
+        m_TargetAssemblyTypeName: MemorialFloor.Game.ExchangeButton, MemorialFloor.Game
+        m_MethodName: Exchange
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -13362,7 +13488,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 46df1174e79c66646951cf29e2b95d7f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Sun2
-  aroundtime: 120
+  _dayLength: 120
 --- !u!4 &1261175518
 Transform:
   m_ObjectHideFlags: 0
@@ -14102,7 +14228,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 1567382536}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Player2, Assembly-CSharp
           m_MethodName: AttackDown
           m_Mode: 1
@@ -14118,7 +14244,7 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 1567382536}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Player2, Assembly-CSharp
           m_MethodName: AttackUp
           m_Mode: 1
@@ -14309,7 +14435,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 596303c153b32ea43bb96150ec4ed42d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  craft: {fileID: 728042285}
+  _menu: {fileID: 728042285}
 --- !u!114 &1347357872
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -14355,8 +14481,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1347357871}
-        m_TargetAssemblyTypeName: CraftButton, Assembly-CSharp
-        m_MethodName: CraftPrepare1
+        m_TargetAssemblyTypeName: MemorialFloor.Game.CraftButton, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -14498,6 +14624,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7916355802122710146, guid: 2e1d306594a8e2a49898b79a9c66dbfc, type: 3}
       propertyPath: damage_set
+      value: 
+      objectReference: {fileID: 5808219987720427036, guid: 01b6118c54bbf2f468ba18a76907dc17, type: 3}
+    - target: {fileID: 7916355802122710146, guid: 2e1d306594a8e2a49898b79a9c66dbfc, type: 3}
+      propertyPath: _damageNumberPrefab
       value: 
       objectReference: {fileID: 5808219987720427036, guid: 01b6118c54bbf2f468ba18a76907dc17, type: 3}
     m_RemovedComponents:
@@ -15877,8 +16007,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1395251405}
-        m_TargetAssemblyTypeName: Inventbutton, Assembly-CSharp
-        m_MethodName: Show_Info
+        m_TargetAssemblyTypeName: MemorialFloor.Game.InventoryBox, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -16010,8 +16140,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 728042285}
-        m_TargetAssemblyTypeName: Craft, Assembly-CSharp
-        m_MethodName: CraftStart
+        m_TargetAssemblyTypeName: MemorialFloor.Game.CraftMenu, MemorialFloor.Game
+        m_MethodName: Make
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -16320,9 +16450,9 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1567382536}
-        m_TargetAssemblyTypeName: Player2, Assembly-CSharp
-        m_MethodName: Jump
+      - m_Target: {fileID: 2480583501242932787}
+        m_TargetAssemblyTypeName: MemorialFloor.Game.PlayerInput, MemorialFloor.Game
+        m_MethodName: PressJump
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -16416,7 +16546,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 596303c153b32ea43bb96150ec4ed42d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CraftButton
-  craft: {fileID: 728042285}
+  _menu: {fileID: 728042285}
 --- !u!1 &1436117482
 GameObject:
   m_ObjectHideFlags: 0
@@ -16604,8 +16734,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1440393477}
-        m_TargetAssemblyTypeName: Inventbutton, Assembly-CSharp
-        m_MethodName: Show_Info
+        m_TargetAssemblyTypeName: MemorialFloor.Game.InventoryBox, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -16858,8 +16988,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c2c0a71456ab7b42b4f34c6ce74b54c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rt: {fileID: 1118225126}
-  center: {fileID: 2039307014}
+  _panel: {fileID: 1118225126}
+  _center: {fileID: 2039307014}
 --- !u!114 &1453908390
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16905,8 +17035,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1453908389}
-        m_TargetAssemblyTypeName: CloseInventory, Assembly-CSharp
-        m_MethodName: CloseClick
+        m_TargetAssemblyTypeName: MemorialFloor.Game.PanelOpener, MemorialFloor.Game
+        m_MethodName: Close
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -17315,10 +17445,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8594b0787c9aa954284f68f57ecc3e24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  up: {fileID: 976802417}
-  down: {fileID: 733012120}
-  left: {fileID: 1523999500}
-  right: {fileID: 1629980322}
+  _input: {fileID: 2480583501242932787}
+  _up: {fileID: 976802417}
+  _down: {fileID: 733012120}
+  _left: {fileID: 1523999500}
+  _right: {fileID: 1629980322}
 --- !u!114 &1474935789
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17453,10 +17584,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e5572c2a2d0c4a43af507792a0940b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sr: {fileID: 1476818024}
-  open: {fileID: 21300000, guid: 58af479d266c9364c861ea3025a8b051, type: 3}
-  close: {fileID: 21300000, guid: 41861214015255f4786d608a137a7ced, type: 3}
-  deatheyes: {fileID: 0}
+  _eyes: {fileID: 1476818024}
+  _open: {fileID: 21300000, guid: 58af479d266c9364c861ea3025a8b051, type: 3}
+  _closed: {fileID: 21300000, guid: 41861214015255f4786d608a137a7ced, type: 3}
 --- !u!1 &1477506391
 GameObject:
   m_ObjectHideFlags: 0
@@ -18013,7 +18143,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1517704535}
-        m_TargetAssemblyTypeName: RootShortcut, Assembly-CSharp
+        m_TargetAssemblyTypeName: MemorialFloor.Game.RootShortcut, MemorialFloor.Game
         m_MethodName: Go
         m_Mode: 1
         m_Arguments:
@@ -18036,9 +18166,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8df9e09ea3969549a5ea20472c2fabd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RootShortcut
-  travel: {fileID: 783813819}
-  label: {fileID: 673009923}
-  closes:
+  _travel: {fileID: 783813819}
+  _roots: {fileID: 64990624}
+  _purse: {fileID: 64990621}
+  _movement: {fileID: 2480583501242932789}
+  _middleText: {fileID: 128913432}
+  _label: {fileID: 673009923}
+  _closes:
   - {fileID: 809039348}
   - {fileID: 1951422792}
 --- !u!1 &1523999500
@@ -18399,7 +18533,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1567382534}
   - component: {fileID: 1567382535}
-  - component: {fileID: 1567382536}
   - component: {fileID: 1567382537}
   - component: {fileID: 1567382538}
   m_Layer: 0
@@ -18439,29 +18572,6 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1567382532}
   m_Enabled: 1
---- !u!114 &1567382536
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1567382532}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9879fe53dece7e44b8ce5dc9ee89340, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  joystick: {fileID: 1473679946}
-  joystick_atk: {fileID: 0}
-  on_ground: 0
-  character: {fileID: 0}
-  animator: {fileID: 0}
-  body: {fileID: 0}
-  weapon: {fileID: 1494838017}
-  jumpbutton: {fileID: 1430129986}
-  footstep: {fileID: 1567382538}
-  allmaity: {fileID: 269028100635708222}
-  travel: {fileID: 0}
 --- !u!54 &1567382537
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -18614,10 +18724,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6dc29926aaedaee4894dc507f51f654e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  txt: {fileID: 509465877}
-  slider: {fileID: 1576346943}
-  regenSeconds: 1
-  regenAmount: 2
+  _health: {fileID: 2480583501242932788}
+  _slider: {fileID: 1576346943}
+  _label: {fileID: 509465877}
 --- !u!1 &1599695838
 GameObject:
   m_ObjectHideFlags: 0
@@ -20892,8 +21001,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 261317410}
-        m_TargetAssemblyTypeName: CloseInventory, Assembly-CSharp
-        m_MethodName: OpenClick
+        m_TargetAssemblyTypeName: MemorialFloor.Game.PanelOpener, MemorialFloor.Game
+        m_MethodName: Open
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -21311,7 +21420,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1746866534}
-        m_TargetAssemblyTypeName: HomeShortcut, Assembly-CSharp
+        m_TargetAssemblyTypeName: MemorialFloor.Game.HomeShortcut, MemorialFloor.Game
         m_MethodName: Go
         m_Mode: 1
         m_Arguments:
@@ -21334,10 +21443,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be332c4655a5a6748a9c56618138ed8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HomeShortcut
-  travel: {fileID: 783813819}
-  button: {fileID: 1746866533}
-  label: {fileID: 2066378663}
-  closes:
+  _travel: {fileID: 783813819}
+  _roots: {fileID: 64990624}
+  _quests: {fileID: 64990623}
+  _movement: {fileID: 2480583501242932789}
+  _button: {fileID: 1746866533}
+  _label: {fileID: 2066378663}
+  _closes:
   - {fileID: 1951422792}
   - {fileID: 809039348}
 --- !u!1001 &1759941253
@@ -21672,8 +21784,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06824b43990f27a40851d96802afafbc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuestTracker
-  travel: {fileID: 783813819}
-  text: {fileID: 1510149221}
+  _quests: {fileID: 64990623}
+  _roots: {fileID: 64990624}
+  _travel: {fileID: 783813819}
+  _text: {fileID: 1510149221}
 --- !u!1 &1817041374
 GameObject:
   m_ObjectHideFlags: 0
@@ -22151,10 +22265,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb1cbcabe332902439d0e645d22ec550, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainImage: {fileID: 1643840791}
-  nametxt: {fileID: 544698884}
-  txt: {fileID: 1375648173}
-  button: {fileID: 1410342778}
+  _image: {fileID: 1643840791}
+  _nameLabel: {fileID: 544698884}
+  _description: {fileID: 1375648173}
 --- !u!1 &1893495369
 GameObject:
   m_ObjectHideFlags: 0
@@ -22635,8 +22748,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1934695191}
-        m_TargetAssemblyTypeName: Inventbutton, Assembly-CSharp
-        m_MethodName: Show_Info
+        m_TargetAssemblyTypeName: MemorialFloor.Game.InventoryBox, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -24037,8 +24150,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2019493709}
-        m_TargetAssemblyTypeName: CraftButton, Assembly-CSharp
-        m_MethodName: CraftPrepare1
+        m_TargetAssemblyTypeName: MemorialFloor.Game.CraftButton, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -24060,7 +24173,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 596303c153b32ea43bb96150ec4ed42d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CraftButton
-  craft: {fileID: 728042285}
+  _menu: {fileID: 728042285}
 --- !u!1 &2025966544
 GameObject:
   m_ObjectHideFlags: 0
@@ -24972,8 +25085,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2113140163}
-        m_TargetAssemblyTypeName: CloseInventory, Assembly-CSharp
-        m_MethodName: CloseClick
+        m_TargetAssemblyTypeName: MemorialFloor.Game.PanelOpener, MemorialFloor.Game
+        m_MethodName: Close
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -25033,8 +25146,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c2c0a71456ab7b42b4f34c6ce74b54c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rt: {fileID: 728042284}
-  center: {fileID: 2039307014}
+  _panel: {fileID: 728042284}
+  _center: {fileID: 2039307014}
 --- !u!1 &2118838869
 GameObject:
   m_ObjectHideFlags: 0
@@ -25351,8 +25464,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1434915595}
-        m_TargetAssemblyTypeName: CraftButton, Assembly-CSharp
-        m_MethodName: CraftPrepare1
+        m_TargetAssemblyTypeName: MemorialFloor.Game.CraftButton, MemorialFloor.Game
+        m_MethodName: Select
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -25548,7 +25661,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a5976b50586cab4c8c63ccbde59e18f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rect: {fileID: 2039307014}
+  _center: {fileID: 2039307014}
 --- !u!224 &279047228801021063
 RectTransform:
   m_ObjectHideFlags: 0
@@ -25670,8 +25783,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 269028100635708222}
-        m_TargetAssemblyTypeName: Allmaity, Assembly-CSharp
-        m_MethodName: Allmaity_Play
+        m_TargetAssemblyTypeName: MemorialFloor.Game.Allmaity, MemorialFloor.Game
+        m_MethodName: Press
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -25712,6 +25825,7 @@ GameObject:
   - component: {fileID: 279047228801021063}
   - component: {fileID: 1993879690189093280}
   - component: {fileID: 2459109517703736527}
+  - component: {fileID: 2459109517703736528}
   m_Layer: 0
   m_Name: Info_set
   m_TagString: Untagged
@@ -25789,7 +25903,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2eae5c2628b637e49b1c105283150e34, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  travel: {fileID: 783813819}
+  _travel: {fileID: 783813819}
+  _purse: {fileID: 64990621}
+  _quests: {fileID: 64990623}
+  _bigText: {fileID: 2071711539}
 --- !u!222 &1993879690189093280
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -25851,8 +25968,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 269028100635708222}
-        m_TargetAssemblyTypeName: Allmaity, Assembly-CSharp
-        m_MethodName: Allmaity_Play
+        m_TargetAssemblyTypeName: MemorialFloor.Game.Allmaity, MemorialFloor.Game
+        m_MethodName: Press
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -26089,16 +26206,33 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 70ec373ecc9489044817fec1cd537852, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainImage: {fileID: 796883978}
-  nametxt: {fileID: 428802090524263158}
-  txt: {fileID: 1557035481607286115}
-  button: {fileID: 3625592555023020911}
-  buttonsprite: {fileID: 21300000, guid: 40aae105d73069443be14f832e959679, type: 3}
-  placed: {fileID: 783813820}
-  weapon1Id: Ironsword
-  weapon1: {fileID: 21300000, guid: 764dbfa4c66047e6bc2c958286c9543d, type: 3}
-  weapon2Id: Legendsword
-  weapon2: {fileID: 21300000, guid: 7bcbe1243b3142c18c74b8865254e871, type: 3}
+  _image: {fileID: 796883978}
+  _nameLabel: {fileID: 428802090524263158}
+  _description: {fileID: 1557035481607286115}
+  _useButton: {fileID: 3625592555023020911}
+  _emptySprite: {fileID: 21300000, guid: 40aae105d73069443be14f832e959679, type: 3}
+  _items: {fileID: 64990622}
+  _inventory: {fileID: 761480763}
+  _actions: {fileID: 2459109517703736528}
+--- !u!114 &2459109517703736528
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1550168347269791440}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a26e4358743471041a7cc85e1ffc80dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.ItemActions
+  _inventory: {fileID: 761480763}
+  _movement: {fileID: 2480583501242932789}
+  _health: {fileID: 2480583501242932788}
+  _equipment: {fileID: 715764640}
+  _placed: {fileID: 783813820}
+  _travel: {fileID: 783813819}
+  _middleText: {fileID: 128913432}
 --- !u!1001 &2480583501242932784
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -26107,6 +26241,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 306288286268907968, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
+      propertyPath: _hand
+      value: 
+      objectReference: {fileID: 515364081}
     - target: {fileID: 400765466121135909, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
       propertyPath: m_Name
       value: Player(experiment)
@@ -26119,6 +26257,14 @@ PrefabInstance:
       propertyPath: PrimaryMeleeWeaponRenderer
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 1760509795024648518, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
+      propertyPath: _travel
+      value: 
+      objectReference: {fileID: 783813819}
+    - target: {fileID: 1760509795024648518, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
+      propertyPath: _allmaity
+      value: 
+      objectReference: {fileID: 269028100635708222}
     - target: {fileID: 2331352771295291533, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
       propertyPath: m_Mesh
       value: 
@@ -26129,7 +26275,7 @@ PrefabInstance:
       objectReference: {fileID: 450164484}
     - target: {fileID: 3722265479379124146, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
       propertyPath: m_VersionIndex
-      value: 1256
+      value: 1280
       objectReference: {fileID: 0}
     - target: {fileID: 5092928017906965706, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
       propertyPath: m_LocalPosition.x
@@ -26171,28 +26317,16 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 6724208982236260623, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
-      propertyPath: speed
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6724208982236260623, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
-      propertyPath: travel
+    - target: {fileID: 5195439398062509320, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
+      propertyPath: _travel
       value: 
       objectReference: {fileID: 783813819}
-    - target: {fileID: 6724208982236260623, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
-      propertyPath: allmaity
-      value: 
-      objectReference: {fileID: 269028100635708222}
-    - target: {fileID: 6724208982236260623, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
-      propertyPath: joystick
+    - target: {fileID: 7182866836903439500, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
+      propertyPath: _moveStick
       value: 
       objectReference: {fileID: 1473679946}
-    - target: {fileID: 6724208982236260623, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
-      propertyPath: jumpbutton
-      value: 
-      objectReference: {fileID: 1430129986}
-    - target: {fileID: 6724208982236260623, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
-      propertyPath: joystick_atk
+    - target: {fileID: 7182866836903439500, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
+      propertyPath: _attackStick
       value: 
       objectReference: {fileID: 809019751}
     - target: {fileID: 7706867134913463479, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
@@ -26215,6 +26349,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+    - target: {fileID: 8319373651629126627, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
+      propertyPath: _inventory
+      value: 
+      objectReference: {fileID: 761480763}
     - target: {fileID: 8397399632517293355, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
       propertyPath: m_Size.y
       value: 0.8
@@ -26227,6 +26365,14 @@ PrefabInstance:
       propertyPath: m_Mesh
       value: 
       objectReference: {fileID: 450164484}
+    - target: {fileID: 8996195293974492275, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
+      propertyPath: _travel
+      value: 
+      objectReference: {fileID: 783813819}
+    - target: {fileID: 8996195293974492275, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
+      propertyPath: _jumpButton
+      value: 
+      objectReference: {fileID: 1430129986}
     m_RemovedComponents:
     - {fileID: 7706867134913463479, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
     m_RemovedGameObjects: []
@@ -26254,15 +26400,48 @@ Transform:
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &2480583501242932787 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6724208982236260623, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
+  m_CorrespondingSourceObject: {fileID: 7182866836903439500, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
   m_PrefabInstance: {fileID: 2480583501242932784}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1769172246968549934}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9879fe53dece7e44b8ce5dc9ee89340, type: 3}
+  m_Script: {fileID: 11500000, guid: dc4e7e7ee7f62e64b8fce2805d5569d7, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.PlayerInput
+--- !u!114 &2480583501242932788 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5195439398062509320, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
+  m_PrefabInstance: {fileID: 2480583501242932784}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1769172246968549934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ae19615149622047b7517d83468abe8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.PlayerHealth
+--- !u!114 &2480583501242932789 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8996195293974492275, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
+  m_PrefabInstance: {fileID: 2480583501242932784}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1769172246968549934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d126b395cfef7b4f9937c3b8f9f02fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.PlayerMovement
+--- !u!114 &2480583501242932790 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1394027459375145601, guid: 51356cb64844a164590835d6fb5f6fe9, type: 3}
+  m_PrefabInstance: {fileID: 2480583501242932784}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1769172246968549934}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6eb429802ba903458c4004c0bfa14f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.PlayerAttack
 --- !u!114 &3260490312473200696
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26390,8 +26569,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 2459109517703736527}
-        m_TargetAssemblyTypeName: Info_set, Assembly-CSharp
-        m_MethodName: Install
+        m_TargetAssemblyTypeName: MemorialFloor.Game.ItemInfo, MemorialFloor.Game
+        m_MethodName: Use
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -26673,8 +26852,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 269028100635708222}
-        m_TargetAssemblyTypeName: Allmaity, Assembly-CSharp
-        m_MethodName: Allmaity_Play
+        m_TargetAssemblyTypeName: MemorialFloor.Game.Allmaity, MemorialFloor.Game
+        m_MethodName: Press
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

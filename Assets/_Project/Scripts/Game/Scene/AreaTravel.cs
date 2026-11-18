@@ -3,13 +3,16 @@ using System.Collections;
 using System.Collections.Generic;
 using MemorialFloor.Domain;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
 
 namespace MemorialFloor.Game
 {
     /// <summary>
     /// 場所の移動の入口。場所のシーンの読み込みと「今いる場所」の書き換えはここだけで行う。
-    /// 常駐シーンに1つだけ置き、場所のシーンを Additive で足し引きする。
+    /// 常駐シーンに1つだけ置き、場所のシーンを Additive で足し引きする。場所のシーンは Addressables で、場所の Id を名前にして読む。
     /// 場所は 1 つの世界に並んでいて（[D-42]）、今いる場所と隣の場所を読み込んでおく。隣へは歩いて境目を越えれば移る。
     /// 近道・倒れたとき・始めたときと、隣がまだ読み込めていない出口では、画面を覆って移る
     /// </summary>
@@ -41,14 +44,15 @@ namespace MemorialFloor.Game
 
         private bool _wasKinematic;
 
-        /// <summary>覆いを開ける前に読み終えておく物</summary>
-        private readonly List<AsyncOperation> _holding = new List<AsyncOperation>();
+        /// <summary>覆いを開ける前に済ませておくこと。どれも true を返すまで開けない</summary>
+        private readonly List<Func<bool>> _holding = new List<Func<bool>>();
 
         /// <summary>読み込んである場所。場所の Id で引く</summary>
         private readonly Dictionary<string, Area> _present = new Dictionary<string, Area>();
 
         /// <summary>読み込んでいる途中の場所</summary>
-        private readonly Dictionary<string, AsyncOperation> _streaming = new Dictionary<string, AsyncOperation>();
+        private readonly Dictionary<string, AsyncOperationHandle<SceneInstance>> _streaming =
+            new Dictionary<string, AsyncOperationHandle<SceneInstance>>();
 
         public Whereabouts Where { get; } = new Whereabouts();
 
@@ -177,10 +181,10 @@ namespace MemorialFloor.Game
             return Current;
         }
 
-        /// <summary>覆いを開ける前に読み終えておきたい物。Entered の中で渡すと、読み終えるまで覆ったままにする</summary>
-        public void HoldVeilFor(AsyncOperation loading)
+        /// <summary>覆いを開ける前に済ませておきたいこと。Entered の中で渡すと、done が true を返すまで覆ったままにする</summary>
+        public void HoldVeilUntil(Func<bool> done)
         {
-            if (loading != null && !loading.isDone) _holding.Add(loading);
+            if (done != null && !done()) _holding.Add(done);
         }
 
         /// <summary>始める。既にどこかに居れば何もしない</summary>
@@ -193,7 +197,7 @@ namespace MemorialFloor.Game
 
         /// <summary>
         /// その出口の向こうの場所が読み込んであり、歩いて境目を越えられるか。
-        /// 越えられるなら出口に入っても覆って移らない（Player2）
+        /// 越えられるなら出口に入っても覆って移らない（PlayerReach）
         /// </summary>
         public bool CanWalk(ExitKind exit, IReadOnlyList<string> rootIds)
         {
@@ -255,15 +259,12 @@ namespace MemorialFloor.Game
         {
             //覆っているあいだに裏で読み込み、覆い終わってから切り替える。隣として読み込み中なら、それを待つ
             string areaId = route.AreaId;
-            AsyncOperation loading = null;
-            if (!_present.ContainsKey(areaId))
+            bool held = !_present.ContainsKey(areaId) && !_streaming.ContainsKey(areaId);
+            AsyncOperationHandle<SceneInstance> loading = default;
+            if (held)
             {
-                if (!_streaming.TryGetValue(areaId, out loading))
-                {
-                    loading = Load(areaId);
-                    loading.allowSceneActivation = false;
-                    _arriving = areaId;
-                }
+                loading = Load(areaId, false);
+                _arriving = areaId;
             }
 
             IsTraveling = true;
@@ -274,11 +275,14 @@ namespace MemorialFloor.Game
             Area leaving = Current;
             if (leaving != null) Leaving?.Invoke(leaving);
 
-            if (loading != null)
+            if (held)
             {
-                loading.allowSceneActivation = true;
-                while (!loading.isDone || !_present.ContainsKey(areaId)) yield return null;
+                while (!loading.IsDone) yield return null;
+                if (loading.Status == AsyncOperationStatus.Succeeded) yield return loading.Result.ActivateAsync();
+                Arrive(areaId, loading);
             }
+
+            while (!_present.ContainsKey(areaId)) yield return null;
 
             Area arrived = _present[areaId];
             Settle(arrived);
@@ -317,7 +321,7 @@ namespace MemorialFloor.Game
 
         private IEnumerator Reveal()
         {
-            while (_holding.Exists(loading => !loading.isDone)) yield return null;
+            while (_holding.Exists(done => !done())) yield return null;
             _holding.Clear();
 
             if (veil != null) yield return veil.Open();
@@ -333,7 +337,7 @@ namespace MemorialFloor.Game
 
             foreach (string areaId in Wanted())
             {
-                if (!_present.ContainsKey(areaId) && !_streaming.ContainsKey(areaId)) Load(areaId);
+                if (!_present.ContainsKey(areaId) && !_streaming.ContainsKey(areaId)) Load(areaId, true);
             }
         }
 
@@ -380,29 +384,34 @@ namespace MemorialFloor.Game
             return unloading;
         }
 
-        /// <summary>場所のシーンを足して読み込み始める。読み込み終えたら、読み込んである場所に入れて知らせる</summary>
-        private AsyncOperation Load(string areaId)
+        /// <summary>
+        /// 場所のシーンを足して読み込み始める。activate なら読み終えたところで有効にし、読み込んである場所に入れて知らせる。
+        /// activate でなければ、有効にして Arrive を呼ぶのは呼ぶ側。
+        /// 手放すのは SceneManager でよい。Addressables がシーンの手放しに気づき、読んだ束も手放す
+        /// </summary>
+        private AsyncOperationHandle<SceneInstance> Load(string areaId, bool activate)
         {
-            AsyncOperation loading = SceneManager.LoadSceneAsync(areaId, LoadSceneMode.Additive);
-            if (loading == null) throw new InvalidOperationException(areaId + " を読み込めない。Build Settings に入っているか");
-
+            AsyncOperationHandle<SceneInstance> loading = Addressables.LoadSceneAsync(areaId, LoadSceneMode.Additive, activate);
             _streaming[areaId] = loading;
-            loading.completed += _ => Arrive(areaId);
+            if (activate) loading.Completed += done => Arrive(areaId, done);
+
             return loading;
         }
 
-        private void Arrive(string areaId)
+        private void Arrive(string areaId, AsyncOperationHandle<SceneInstance> loading)
         {
             _streaming.Remove(areaId);
+            if (loading.Status != AsyncOperationStatus.Succeeded)
+                throw new InvalidOperationException(areaId + " を読み込めない。Addressables の場所の組に入っているか");
 
             //読み込みの途中でタイトルへ戻ると、常駐シーンが消えたあとに場所だけが読み終わる。残さず手放す
             if (this == null)
             {
-                SceneManager.UnloadSceneAsync(areaId);
+                SceneManager.UnloadSceneAsync(loading.Result.Scene);
                 return;
             }
 
-            Area area = Area.In(SceneManager.GetSceneByName(areaId));
+            Area area = Area.In(loading.Result.Scene);
             if (area == null) throw new InvalidOperationException(areaId + " のルートに Area が無い");
 
             _present[areaId] = area;

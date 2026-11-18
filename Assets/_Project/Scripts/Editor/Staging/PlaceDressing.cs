@@ -704,7 +704,7 @@ namespace MemorialFloor.Editor
         /// <summary>核の候補か。印（タグ）か部品のどちらかで見分ける。部品の型は Assembly-CSharp にあり、このアセンブリから参照しないので名前で引く</summary>
         private static bool Candidate(Transform part)
         {
-            return part.CompareTag("SpawnerCandidate") || part.GetComponent("SpawnerCandidate") != null;
+            return part.CompareTag("SpawnerCandidate") || part.GetComponent<SpawnerCandidate>() != null;
         }
 
         /// <summary>まとめて描くと崩れる素材か。カメラを向く板の木や風で揺れる草木は、シェーダーが DisableBatching を宣言している</summary>

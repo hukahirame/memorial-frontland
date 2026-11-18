@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MemorialFloor.Domain;
+using MemorialFloor.Game;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -12,11 +13,11 @@ namespace MemorialFloor.Tests.Integrity
     /// 敵が落とす品が、拾える品になっているかを見る。落とし物の絵は品の ID で Resources から引き（Slime）、
     /// 拾うときは絵の名前を品の ID として読む（Dropitem）。綴りが違うと絵が出ず、原簿に無いと積めない。
     ///
-    /// 敵は Resources の prefab だけを見る。湧かせる側が引くのはそこにある物だけ
+    /// 敵は敵の prefab の置き場だけを見る。場所（Area）と拠点の湧き口が指すのはそこにある物だけ
     /// </summary>
     public class EnemyDropTests
     {
-        private const string Enemies = "Assets/_Project/Resources";
+        private const string Enemies = "Assets/_Project/Prefabs/Enemies";
 
         private const string CatalogPath = "Assets/_Project/Resources/ItemData.csv";
 
@@ -46,7 +47,7 @@ namespace MemorialFloor.Tests.Integrity
         [Test]
         public void ソーダスライムはスライムゼリーの代わりに専用のゼリーを落としスライムコアはスライムより出やすい()
         {
-            List<string> always = Strings(Fields(Enemy("SodaSlime")).FindProperty("drops"));
+            List<string> always = Strings(Fields(Enemy("SodaSlime")).FindProperty("_drops"));
             CollectionAssert.Contains(always, "SodaSlimejelly");
             CollectionAssert.DoesNotContain(always, "Slimejelly");
 
@@ -57,15 +58,15 @@ namespace MemorialFloor.Tests.Integrity
         private static IEnumerable<string> DropsOf(GameObject enemy)
         {
             SerializedObject fields = Fields(enemy);
-            IEnumerable<string> chances = Elements(fields.FindProperty("chanceDrops"))
+            IEnumerable<string> chances = Elements(fields.FindProperty("_chanceDrops"))
                 .Select(chance => chance.FindPropertyRelative("ItemId").stringValue);
 
-            return Strings(fields.FindProperty("drops")).Concat(chances).Where(itemId => itemId.Length > 0);
+            return Strings(fields.FindProperty("_drops")).Concat(chances).Where(itemId => itemId.Length > 0);
         }
 
         private static int CorePercent(GameObject enemy)
         {
-            return Elements(Fields(enemy).FindProperty("chanceDrops"))
+            return Elements(Fields(enemy).FindProperty("_chanceDrops"))
                 .Where(chance => chance.FindPropertyRelative("ItemId").stringValue == "Slimecore")
                 .Sum(chance => chance.FindPropertyRelative("Percent").intValue);
         }
@@ -75,7 +76,7 @@ namespace MemorialFloor.Tests.Integrity
             foreach (string guid in AssetDatabase.FindAssets("t:Prefab", new[] { Enemies }))
             {
                 GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(guid));
-                if (prefab != null && prefab.GetComponent(SlimeType()) != null) yield return prefab;
+                if (prefab != null && prefab.GetComponent<Slime>() != null) yield return prefab;
             }
         }
 
@@ -89,7 +90,7 @@ namespace MemorialFloor.Tests.Integrity
 
         private static SerializedObject Fields(GameObject enemy)
         {
-            Component slime = enemy.GetComponent(SlimeType());
+            Component slime = enemy.GetComponent<Slime>();
             Assert.IsNotNull(slime, enemy.name + " に Slime が無い");
 
             return new SerializedObject(slime);
@@ -105,15 +106,6 @@ namespace MemorialFloor.Tests.Integrity
             Assert.IsNotNull(list, "Slime の落とす品の欄が無い");
 
             for (int i = 0; i < list.arraySize; i++) yield return list.GetArrayElementAtIndex(i);
-        }
-
-        /// <summary>古いスクリプトの型。asmdef の無いアセンブリにあり、ここからは名前でしか引けない</summary>
-        private static Type SlimeType()
-        {
-            Type type = Type.GetType("Slime, Assembly-CSharp");
-            Assert.IsNotNull(type, "Slime が Assembly-CSharp に無い");
-
-            return type;
         }
     }
 }

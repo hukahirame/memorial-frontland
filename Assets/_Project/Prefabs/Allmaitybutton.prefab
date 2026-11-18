@@ -202,8 +202,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 5442161010036925205}
-        m_TargetAssemblyTypeName: Allmaity, Assembly-CSharp
-        m_MethodName: Allmaity_Play
+        m_TargetAssemblyTypeName: MemorialFloor.Game.Allmaity, MemorialFloor.Game
+        m_MethodName: Press
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -225,5 +225,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a5976b50586cab4c8c63ccbde59e18f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rect: {fileID: 0}
-  allmaitybutton: {fileID: 0}
+  _center: {fileID: 0}

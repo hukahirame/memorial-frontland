@@ -10,7 +10,7 @@ using UnityEngine.TestTools;
 using MemorialFloor.Domain;
 using MemorialFloor.Game;
 
-//読み込んだ持ち物が、枠の絵と首飾りの効き目にも出ること。枠を押す代わりに Inventbutton.Show_Info を直に呼ぶ
+//読み込んだ持ち物が、枠の絵と首飾りの効き目にも出ること。枠を押す代わりに InventoryBox.Select を直に呼ぶ
 public class InventoryPlayTests
 {
     private const int SettleFrames = 120;
@@ -32,7 +32,7 @@ public class InventoryPlayTests
             new ItemSlot { ItemId = "Speedneckless", Stock = 1, MaxStock = 1 },
         };
 
-        Call(Inventory(), "ReplaceSlots", saved);
+        Inventory().ReplaceSlots(saved);
 
         Assert.AreEqual(speed + 0.3f, Speed(), Tolerance, "読み込んだ首飾りで速くならない");
         Assert.AreEqual("Slimejelly", BoxSprite(0));
@@ -42,23 +42,23 @@ public class InventoryPlayTests
 
         //起動時の鉄の剣が入っていた枠。描き直さないと、押したときに持っていない剣が出る
         Press(BoxAt(1));
-        Component info = Info();
-        Assert.AreEqual("Speedneckless", ((ItemDefinition)Field(info, "current").GetValue(info)).ItemId);
+        ItemInfo info = Info();
+        Assert.AreEqual("Speedneckless", ((ItemDefinition)Field(info, "_current").GetValue(info)).ItemId);
     }
 
     [UnityTest]
     public IEnumerator 捨てた品は向いている側へ落ち一度離れて戻るまで拾わない()
     {
         yield return Boot();
-        for (int i = 0; i < 3; i++) Assert.AreEqual(1, (int)Call(Inventory(), "LoadInventory", "Slimejelly", 0));
+        for (int i = 0; i < 3; i++) Assert.AreEqual(1, Inventory().LoadInventory("Slimejelly", 0));
 
         Transform player = GameObject.FindWithTag("Player").transform;
-        float side = (float)GameType("Player2").GetProperty("Side").GetValue(player.GetComponent(GameType("Player2")));
+        float side = player.GetComponent<PlayerMovement>().Side;
         Vector3 from = player.position;
 
         //放ったまま待つ。体に押し出されず、向いている側へ落ちる
         Press(BoxOf("Slimejelly"));
-        Call(Info(), "Throw");
+        Info().Throw();
         Assert.AreEqual(2, Count("Slimejelly"), "捨てても減らない");
         Dropitem tossed = Drops("Slimejelly").SingleOrDefault();
         Assert.IsNotNull(tossed, "捨てた品が落ちていない");
@@ -70,7 +70,7 @@ public class InventoryPlayTests
         yield return null;
 
         //拾わない時間が過ぎても、重なったまま離れないうちは拾わない
-        Call(Info(), "Throw");
+        Info().Throw();
         Dropitem drop = Drops("Slimejelly").SingleOrDefault();
         Assert.IsNotNull(drop, "2 つ目の捨てた品が落ちていない");
         yield return Hold(drop, player, DiscardHoldSeconds);
@@ -89,23 +89,23 @@ public class InventoryPlayTests
         Assert.AreEqual(1, Count("Ironsword"), "始まりの鉄の剣が 1 本でない");
 
         Press(BoxOf("Ironsword"));
-        Call(Info(), "Throw");
+        Info().Throw();
         yield return null;
 
         Assert.AreEqual(1, Count("Ironsword"), "装備している最後の剣を捨てた");
         Assert.IsEmpty(Drops("Ironsword"), "捨てていない剣が落ちている");
 
         //2 本あれば捨てられ、装備は残る
-        Assert.AreEqual(1, (int)Call(Inventory(), "LoadInventory", "Ironsword", 0));
-        Call(Info(), "Throw");
+        Assert.AreEqual(1, Inventory().LoadInventory("Ironsword", 0));
+        Info().Throw();
         yield return null;
 
         Assert.AreEqual(1, Count("Ironsword"), "2 本あるのに捨てられない");
         Assert.AreEqual(1, Drops("Ironsword").Count, "捨てた剣が落ちていない");
-        Assert.AreEqual("Ironsword", ((Equipment)StaticField("Weapon", "Equipped").GetValue(null)).ItemId, "捨てたら装備が外れた");
+        Assert.AreEqual("Ironsword", GameObject.FindWithTag("Player").GetComponent<PlayerEquipment>().Equipped.ItemId, "捨てたら装備が外れた");
     }
 
-    /// <summary>捨てた品を拾わない秒（Info_set）。過ぎたかを見るので、少し足して待つ</summary>
+    /// <summary>捨てた品を拾わない秒（ItemActions）。過ぎたかを見るので、少し足して待つ</summary>
     private const float DiscardHoldSeconds = 3.5f;
 
     /// <summary>放った品が落ちきるまでの待ち</summary>
@@ -148,8 +148,8 @@ public class InventoryPlayTests
 
     private static int Count(string itemId)
     {
-        Component inventory = Inventory();
-        MemorialFloor.Domain.Inventory rule = (MemorialFloor.Domain.Inventory)GameType("PlayerInventory").GetProperty("Inventory").GetValue(inventory);
+        PlayerInventory inventory = Inventory();
+        MemorialFloor.Domain.Inventory rule = inventory.Inventory;
 
         return rule.CountOf(itemId);
     }
@@ -161,10 +161,10 @@ public class InventoryPlayTests
             .ToList();
     }
 
-    private static Component BoxOf(string itemId)
+    private static InventoryBox BoxOf(string itemId)
     {
-        Component inventory = Inventory();
-        IReadOnlyList<ItemSlot> slots = (IReadOnlyList<ItemSlot>)GameType("PlayerInventory").GetProperty("Slots").GetValue(inventory);
+        PlayerInventory inventory = Inventory();
+        IReadOnlyList<ItemSlot> slots = inventory.Slots;
         int index = slots.ToList().FindIndex(slot => slot.ItemId == itemId);
         Assert.GreaterOrEqual(index, 0, itemId + " が持ち物に無い");
 
@@ -172,7 +172,7 @@ public class InventoryPlayTests
     }
 
     [UnityTearDown]
-    public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
+    public IEnumerator 持ち回しオブジェクトを捨てる()
     {
         Time.timeScale = 1f;
 
@@ -181,37 +181,22 @@ public class InventoryPlayTests
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
 
-        ((RootRegistry)StaticField("RootsManager", "Roots").GetValue(null)).Clear();
-        ((BaseRaid)StaticField("RootsManager", "Raid").GetValue(null)).Clear();
-        ((QuestRegistry)StaticField("QuestManager", "Quests").GetValue(null)).Clear();
-        StaticField("QuestManager", "ordered_id").SetValue(null, "");
-        StaticField("RewardUI", "rewardUI_show").SetValue(null, 0);
-
-        //倒れたまま終えると、起き上がる前にプレイヤーごと捨てられ、次のテストで動けない
-        StaticField("Player2", "cool").SetValue(null, false);
-        StaticField("Player2", "speed").SetValue(null, 1f);
-
-        Health hp = Hp();
-        if (hp.IsReady) hp.SetCurrent(hp.Max);
-
         yield return null;
     }
 
-    private static Component Inventory()
+    private static PlayerInventory Inventory()
     {
         GameObject owner = GameObject.FindWithTag("PlayerInventory");
         Assert.IsNotNull(owner, "持ち物が無い");
 
-        return owner.GetComponent(GameType("PlayerInventory"));
+        return owner.GetComponent<PlayerInventory>();
     }
 
-    //スロットの箱。持ち物の直下に、箱より前の物が CHILDPLUS 個並ぶ
-    private static Component BoxAt(int index)
+    //スロットの箱。InventoryView が並べた順
+    private static InventoryBox BoxAt(int index)
     {
-        Component inventory = Inventory();
-        int offset = (int)Field(inventory, "CHILDPLUS").GetValue(inventory);
-
-        return inventory.transform.GetChild(offset + index).GetComponent(GameType("Inventbutton"));
+        InventoryView view = Inventory().GetComponent<InventoryView>();
+        return ((System.Collections.Generic.List<InventoryBox>)Field(view, "_boxes").GetValue(view))[index];
     }
 
     //UnityEngine.UI は asmdef から参照していないので、Image と Text は名前で引く
@@ -227,24 +212,19 @@ public class InventoryPlayTests
         return (string)text.GetType().GetProperty("text").GetValue(text);
     }
 
-    private static void Press(Component box)
+    private static void Press(InventoryBox box)
     {
-        Call(box, "Show_Info");
+        box.Select();
     }
 
-    private static Component Info()
+    private static ItemInfo Info()
     {
-        return Inventory().transform.Find("Info_set").GetComponent(GameType("Info_set"));
-    }
-
-    private static Health Hp()
-    {
-        return (Health)StaticField("Player2", "Hp").GetValue(null);
+        return Inventory().transform.Find("Info_set").GetComponent<ItemInfo>();
     }
 
     private static float Speed()
     {
-        return (float)StaticField("Player2", "speed").GetValue(null);
+        return GameObject.FindWithTag("Player").GetComponent<PlayerMovement>().Speed;
     }
 
     private static AreaTravel Travel()
@@ -279,40 +259,11 @@ public class InventoryPlayTests
         for (int i = 0; i < SettleFrames; i++) yield return null;
     }
 
-    private static object Call(Component target, string methodName, params object[] args)
-    {
-        MethodInfo method = target.GetType().GetMethod(methodName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-        Assert.IsNotNull(method, target.GetType().Name + "." + methodName + " が見つからない");
-
-        return method.Invoke(target, args);
-    }
-
     private static FieldInfo Field(Component target, string fieldName)
     {
         FieldInfo field = target.GetType().GetField(fieldName,
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         Assert.IsNotNull(field, target.GetType().Name + "." + fieldName + " が見つからない");
-
-        return field;
-    }
-
-    //Assembly-CSharp は asmdef から参照できないため名前で引く
-    private static Type GameType(string typeName)
-    {
-        Type type = AppDomain.CurrentDomain.GetAssemblies()
-            .Select(a => a.GetType(typeName))
-            .FirstOrDefault(t => t != null);
-        Assert.IsNotNull(type, typeName + " 型が見つからない");
-
-        return type;
-    }
-
-    private static FieldInfo StaticField(string typeName, string fieldName)
-    {
-        FieldInfo field = GameType(typeName).GetField(fieldName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.IsNotNull(field, typeName + "." + fieldName + " が見つからない");
 
         return field;
     }

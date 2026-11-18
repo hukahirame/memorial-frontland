@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using MemorialFloor.Domain;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
 
 namespace MemorialFloor.Game
@@ -8,13 +10,25 @@ namespace MemorialFloor.Game
     /// <summary>
     /// 場所に置いた物。置くときはここを通す。場所のシーンを手放すときに控えへ書き、読み込んだときに置き直す。
     /// 置いた物は場所のシーンに入れ、場所と一緒に消える。
+    /// 置ける物の prefab は、始めに Addressables でまとめて読んでおく。読み終える前に読み込まれた場所は、読み終えてから置き直す
     /// </summary>
     public sealed class PlacedObjects : MonoBehaviour
     {
-        /// <summary>置いた物の prefab は Resources に「アイテム ID + この接尾辞」の名前で置く</summary>
+        /// <summary>置いた物の prefab の名前は「アイテム ID + この接尾辞」</summary>
         public const string PrefabSuffix = "_obj";
 
+        /// <summary>置ける物の prefab に付ける Addressables のラベル</summary>
+        public const string Label = "Placeable";
+
         [SerializeField] private AreaTravel travel;
+
+        private AsyncOperationHandle<IList<GameObject>> _loading;
+
+        /// <summary>置ける物の prefab。prefab の名前で引く</summary>
+        private readonly Dictionary<string, GameObject> _prefabs = new Dictionary<string, GameObject>();
+
+        /// <summary>prefab を読み終える前に読み込まれ、まだ置き直していない場所</summary>
+        private readonly List<Area> _waiting = new List<Area>();
 
         /// <summary>読み込んである場所ごとの、置いてある物とそのアイテム ID。置いた物が無い場所も入れる</summary>
         private readonly Dictionary<string, List<KeyValuePair<string, GameObject>>> _placed =
@@ -29,18 +43,25 @@ namespace MemorialFloor.Game
         {
             travel.Unloading += Record;
             travel.Loaded += Restore;
+
+            //最初の場所の覆いは、置き直し終えるまで開けない
+            _loading = Addressables.LoadAssetsAsync<GameObject>(Label, prefab => _prefabs[prefab.name] = prefab);
+            _loading.Completed += _ => RestoreWaiting();
+            travel.HoldVeilUntil(() => _loading.IsDone);
         }
 
         private void OnDestroy()
         {
             travel.Unloading -= Record;
             travel.Loaded -= Restore;
+
+            if (_loading.IsValid()) Addressables.Release(_loading);
         }
 
-        /// <summary>置いた物の prefab。置けない品なら null</summary>
-        public static GameObject Prefab(string itemId)
+        /// <summary>置いた物の prefab。置けない品と、まだ読み終えていないときは null</summary>
+        public GameObject Prefab(string itemId)
         {
-            return Resources.Load<GameObject>(itemId + PrefabSuffix);
+            return _prefabs.TryGetValue(itemId + PrefabSuffix, out GameObject prefab) ? prefab : null;
         }
 
         /// <summary>
@@ -81,25 +102,40 @@ namespace MemorialFloor.Game
         /// <summary>読み込んである場所に置いてある物を控えへ書く。保存の前に呼ぶ</summary>
         public void Flush()
         {
+            //まだ置き直していない場所の控えは、そのまま残す
             foreach (KeyValuePair<string, List<KeyValuePair<string, GameObject>>> area in _placed)
             {
+                if (_waiting.Contains(_areas[area.Key])) continue;
+
                 Ledger.Record(area.Key, Remaining(area.Value, _areas[area.Key]));
             }
         }
 
         private void Record(Area area)
         {
-            Ledger.Record(area.Id, Remaining(In(area.Id), area));
+            if (!_waiting.Remove(area)) Ledger.Record(area.Id, Remaining(In(area.Id), area));
             _placed.Remove(area.Id);
             _areas.Remove(area.Id);
         }
 
-        //柵は控えた耐久に、離れていたあいだに戻るぶんを足して戻す。倒れていたかも戻す。控えていなければ満タンで立つ
         private void Restore(Area area)
         {
             In(area.Id);
             _areas[area.Id] = area;
 
+            if (_loading.IsDone) Respawn(area);
+            else _waiting.Add(area);
+        }
+
+        private void RestoreWaiting()
+        {
+            foreach (Area area in _waiting) Respawn(area);
+            _waiting.Clear();
+        }
+
+        //柵は控えた耐久に、離れていたあいだに戻るぶんを足して戻す。倒れていたかも戻す。控えていなければ満タンで立つ
+        private void Respawn(Area area)
+        {
             foreach (Placement placement in Ledger.In(area.Id))
             {
                 Vector3 position = area.ToWorld(new Vector3(placement.X, placement.Y, placement.Z));

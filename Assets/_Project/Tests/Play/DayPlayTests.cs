@@ -33,7 +33,7 @@ public class DayPlayTests
         for (int i = 0; i < SettleFrames; i++) yield return null;
 
         //前のテストの時刻が残っていると、数えているあいだに零時を跨ぐ
-        DayCycle cycle = (DayCycle)StaticField("Sun2", "Cycle").GetValue(null);
+        DayCycle cycle = UnityEngine.Object.FindAnyObjectByType<Sun>().Cycle;
         cycle.SetElapsed(0);
         yield return new WaitForSecondsRealtime(CountSeconds);
 
@@ -54,15 +54,12 @@ public class DayPlayTests
     }
 
     [UnityTearDown]
-    public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
+    public IEnumerator 持ち回しオブジェクトを捨てる()
     {
         foreach (GameObject go in UnityEngine.Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None))
         {
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
-
-        //遊びの状態は static にあり、テストのあいだでドメインを読み直さないので残る。タイトルを開くときと同じ戻し方をする
-        GameType("GameSession").GetMethod("Reset", BindingFlags.Public | BindingFlags.Static).Invoke(null, null);
 
         yield return null;
     }
@@ -84,25 +81,5 @@ public class DayPlayTests
         Assert.IsFalse(travel.IsTraveling, "移動が終わらない");
 
         for (int i = 0; i < SettleFrames; i++) yield return null;
-    }
-
-    //Assembly-CSharp は asmdef から参照できないため名前で引く
-    private static Type GameType(string typeName)
-    {
-        Type type = AppDomain.CurrentDomain.GetAssemblies()
-            .Select(a => a.GetType(typeName))
-            .FirstOrDefault(t => t != null);
-        Assert.IsNotNull(type, typeName + " 型が見つからない");
-
-        return type;
-    }
-
-    private static FieldInfo StaticField(string typeName, string fieldName)
-    {
-        FieldInfo field = GameType(typeName).GetField(fieldName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.IsNotNull(field, typeName + "." + fieldName + " が見つからない");
-
-        return field;
     }
 }

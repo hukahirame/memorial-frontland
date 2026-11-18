@@ -10,7 +10,10 @@ using NUnit.Framework;
 using Unity.Profiling;
 using Unity.Profiling.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.Profiling;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using MemorialFloor.Domain;
@@ -67,13 +70,13 @@ public class AreaCosts
         text.AppendLine();
 
         //倒れると暗転して拠点へ戻り、測る場面が変わる。半分を切ったら満たす
-        Health hp = (Health)StaticField("Player2", "Hp").GetValue(null);
+        PlayerHealth hp = GameObject.FindWithTag("Player").GetComponent<PlayerHealth>();
 
         using (var meter = new Meter())
         {
             meter.EveryFrame = () =>
             {
-                if (hp.IsReady && hp.Current < hp.Max / 2) hp.SetCurrent(hp.Max);
+                if (hp.Current < hp.Max / 2) hp.SetCurrent(hp.Max);
             };
 
             yield return LoadBeside(meter, text);
@@ -102,14 +105,13 @@ public class AreaCosts
                 var clock = Stopwatch.StartNew();
                 int from = meter.Count;
 
-                AsyncOperation loading = SceneManager.LoadSceneAsync(id, LoadSceneMode.Additive);
-                Assert.IsNotNull(loading, id + " を読めない");
-                loading.allowSceneActivation = false;
-                while (loading.progress < 0.9f) { yield return null; meter.Sample(); }
+                AsyncOperationHandle<SceneInstance> reading = Addressables.LoadSceneAsync(id, LoadSceneMode.Additive, false);
+                while (!reading.IsDone) { yield return null; meter.Sample(); }
+                Assert.AreEqual(AsyncOperationStatus.Succeeded, reading.Status, id + " を読めない");
                 double readMs = clock.Elapsed.TotalMilliseconds;
                 int read = meter.Count;
 
-                loading.allowSceneActivation = true;
+                AsyncOperation loading = reading.Result.ActivateAsync();
                 while (!loading.isDone) { yield return null; meter.Sample(); }
                 double wakeMs = clock.Elapsed.TotalMilliseconds - readMs;
                 int woke = meter.Count;
@@ -342,15 +344,12 @@ public class AreaCosts
     }
 
     [UnityTearDown]
-    public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
+    public IEnumerator 持ち回しオブジェクトを捨てる()
     {
         foreach (GameObject go in UnityEngine.Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None))
         {
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
-
-        //遊びの状態は static にあり、テストのあいだでドメインを読み直さないので残る。タイトルを開くときと同じ戻し方をする
-        GameType("GameSession").GetMethod("Reset", BindingFlags.Public | BindingFlags.Static).Invoke(null, null);
 
         yield return null;
     }
@@ -380,25 +379,5 @@ public class AreaCosts
         Assert.IsNotNull(travel, "常駐シーンに AreaTravel が無い");
 
         return travel;
-    }
-
-    //Assembly-CSharp は asmdef から参照できないため名前で引く
-    private static Type GameType(string typeName)
-    {
-        Type type = AppDomain.CurrentDomain.GetAssemblies()
-            .Select(a => a.GetType(typeName))
-            .FirstOrDefault(t => t != null);
-        Assert.IsNotNull(type, typeName + " 型が見つからない");
-
-        return type;
-    }
-
-    private static FieldInfo StaticField(string typeName, string fieldName)
-    {
-        FieldInfo field = GameType(typeName).GetField(fieldName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.IsNotNull(field, typeName + "." + fieldName + " が見つからない");
-
-        return field;
     }
 }

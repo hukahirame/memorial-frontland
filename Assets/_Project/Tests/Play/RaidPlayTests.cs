@@ -77,11 +77,11 @@ public class RaidPlayTests
         yield return null;
         yield return null;
 
-        List<Component> raiders = RaidersHere();
+        List<Slime> raiders = RaidersHere();
         Assert.AreEqual(Root.StampedeRaiders, raiders.Count, "出かける前に出ていない");
 
         //湧き口から離れたところへ移しておく。湧き口のまわりに湧き直しても、同じところに見えないように
-        Component moved = raiders[0];
+        Slime moved = raiders[0];
         Vector3 center = CenterHere();
         Vector3 spot = new Vector3(center.x, moved.transform.position.y, center.z);
         moved.transform.position = spot;
@@ -101,7 +101,7 @@ public class RaidPlayTests
 
         raiders = RaidersHere();
         Assert.AreEqual(Root.StampedeRaiders, raiders.Count, "控えた数だけ湧かない");
-        Component back = raiders.OrderBy(raider => Apart(raider.transform.position, spot)).First();
+        Slime back = raiders.OrderBy(raider => Apart(raider.transform.position, spot)).First();
         Assert.Less(Apart(back.transform.position, spot), Drift, "控えた位置に戻らない");
         Assert.AreEqual(left, back.GetComponent<IDamageable>().CurrentHp, "減った体力で戻らない");
 
@@ -140,22 +140,12 @@ public class RaidPlayTests
     }
 
     [UnityTearDown]
-    public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
+    public IEnumerator 持ち回しオブジェクトを捨てる()
     {
         foreach (var go in UnityEngine.Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None))
         {
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
-
-        Roots().Clear();
-        Raid().Clear();
-        ((QuestRegistry)StaticField("QuestManager", "Quests").GetValue(null)).Clear();
-        StaticField("QuestManager", "ordered_id").SetValue(null, "");
-        StaticField("RewardUI", "rewardUI_show").SetValue(null, 0);
-
-        //倒れる試験が減らした体力を、次のテストへ持ち越さない
-        Health hp = (Health)StaticField("Player2", "Hp").GetValue(null);
-        if (hp.IsReady) hp.SetCurrent(hp.Max);
 
         yield return null;
     }
@@ -169,11 +159,10 @@ public class RaidPlayTests
         root.Restore(root.Progress, Root.StampedeAccumulation - 1);
     }
 
-    private static Component SpawnerHere()
+    private static RootCore SpawnerHere()
     {
         Scene here = SceneManager.GetActiveScene();
-        Component spawner = UnityEngine.Object.FindObjectsByType(GameType("OF_Spawner"), FindObjectsSortMode.None)
-            .Cast<Component>()
+        RootCore spawner = UnityEngine.Object.FindObjectsByType<RootCore>(FindObjectsSortMode.None)
             .FirstOrDefault(found => found.gameObject.scene == here);
         Assert.IsNotNull(spawner, "湧き口が無い");
 
@@ -182,20 +171,18 @@ public class RaidPlayTests
 
     private static void Dayover()
     {
-        Type type = GameType("RootsManager");
-        UnityEngine.Object manager = UnityEngine.Object.FindAnyObjectByType(type);
+        RootsManager manager = UnityEngine.Object.FindAnyObjectByType<RootsManager>();
         Assert.IsNotNull(manager, "RootsManager が無い");
 
-        type.GetMethod("Dayover").Invoke(manager, null);
+        manager.PassMidnight();
     }
 
     //いま居る場所で動いているスライム。場外へ落ちたものは非アクティブになり数えない
-    private static List<Component> SlimeObjectsHere()
+    private static List<Slime> SlimeObjectsHere()
     {
         Scene here = SceneManager.GetActiveScene();
 
-        return UnityEngine.Object.FindObjectsByType(GameType("Slime"), FindObjectsSortMode.None)
-            .Cast<Component>()
+        return UnityEngine.Object.FindObjectsByType<Slime>(FindObjectsSortMode.None)
             .Where(slime => slime.gameObject.scene == here)
             .ToList();
     }
@@ -206,29 +193,29 @@ public class RaidPlayTests
     }
 
     //攻め込んだ敵。湧き口から行き先を渡されたスライム
-    private static List<Component> RaidersHere()
+    private static List<Slime> RaidersHere()
     {
-        FieldInfo hasGoal = GameType("Slime").GetField("hasGoal", BindingFlags.NonPublic | BindingFlags.Instance);
-        Assert.IsNotNull(hasGoal, "Slime.hasGoal が見つからない");
+        FieldInfo hasGoal = typeof(Slime).GetField("_hasGoal", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.IsNotNull(hasGoal, "Slime._hasGoal が見つからない");
 
         return SlimeObjectsHere().Where(slime => (bool)hasGoal.GetValue(slime)).ToList();
     }
 
-    private static Component GateHere()
+    private static RaidGate GateHere()
     {
-        var gate = (Component)UnityEngine.Object.FindAnyObjectByType(GameType("MS_Spawner"));
+        RaidGate gate = UnityEngine.Object.FindAnyObjectByType<RaidGate>();
         Assert.IsNotNull(gate, "拠点の湧き口が無い");
 
         return gate;
     }
 
     //湧き口の側に居る。中心のまわりに湧いたものは、湧き口より中心の方が近い
-    private static void AssertNearGate(List<Component> raiders)
+    private static void AssertNearGate(List<Slime> raiders)
     {
         Vector3 gate = GateHere().transform.position;
         Vector3 center = CenterHere();
 
-        foreach (Component raider in raiders)
+        foreach (Slime raider in raiders)
         {
             Assert.Less(Apart(raider.transform.position, gate), Apart(raider.transform.position, center), "湧き口より中心の近くに湧いた");
         }
@@ -252,12 +239,12 @@ public class RaidPlayTests
 
     private static RootRegistry Roots()
     {
-        return (RootRegistry)StaticField("RootsManager", "Roots").GetValue(null);
+        return UnityEngine.Object.FindAnyObjectByType<RootsManager>().Roots;
     }
 
     private static BaseRaid Raid()
     {
-        return (BaseRaid)StaticField("RootsManager", "Raid").GetValue(null);
+        return UnityEngine.Object.FindAnyObjectByType<RootsManager>().Raid;
     }
 
     private static AreaTravel Travel()
@@ -301,25 +288,5 @@ public class RaidPlayTests
         Assert.IsFalse(travel.IsTraveling, "移動が終わらない");
 
         for (int i = 0; i < SettleFrames; i++) yield return null;
-    }
-
-    //Assembly-CSharp は asmdef から参照できないため名前で引く
-    private static Type GameType(string typeName)
-    {
-        var type = AppDomain.CurrentDomain.GetAssemblies()
-            .Select(a => a.GetType(typeName))
-            .FirstOrDefault(t => t != null);
-        Assert.IsNotNull(type, typeName + " 型が見つからない");
-
-        return type;
-    }
-
-    private static FieldInfo StaticField(string typeName, string fieldName)
-    {
-        var field = GameType(typeName).GetField(fieldName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.IsNotNull(field, typeName + "." + fieldName + " が見つからない");
-
-        return field;
     }
 }

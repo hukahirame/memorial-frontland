@@ -67,7 +67,7 @@ public class ShortcutPlayTests
     {
         yield return Boot();
         Quest main = Quests().All.First(q => q.Kind == QuestKind.Main && q.RootId == "Root1");
-        StaticField("QuestManager", "ordered_id").SetValue(null, main.Id);
+        UnityEngine.Object.FindAnyObjectByType<QuestManager>().Order(main.Id);
 
         yield return WalkTo("Root1");
         OpenMap();
@@ -87,7 +87,7 @@ public class ShortcutPlayTests
     }
 
     [UnityTearDown]
-    public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
+    public IEnumerator 持ち回しオブジェクトを捨てる()
     {
         Time.timeScale = 1f;
 
@@ -96,30 +96,19 @@ public class ShortcutPlayTests
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
 
-        Roots().Clear();
-        ((BaseRaid)StaticField("RootsManager", "Raid").GetValue(null)).Clear();
-        ((QuestRegistry)StaticField("QuestManager", "Quests").GetValue(null)).Clear();
-        StaticField("QuestManager", "ordered_id").SetValue(null, "");
-        StaticField("RewardUI", "rewardUI_show").SetValue(null, 0);
-        StaticField("RewardUI", "rewardUI_id").SetValue(null, "");
-        StaticField("Player2", "cool").SetValue(null, false);
-
-        Health hp = (Health)StaticField("Player2", "Hp").GetValue(null);
-        if (hp.IsReady) hp.SetCurrent(hp.Max);
-
         yield return null;
     }
 
     //地図に根源のボタンを並べ直し、その根源の詳細を開く。並べ直したボタンは Start を待ってから押せる
     private static IEnumerator ShowDetail(string rootId)
     {
-        Component map = GameObject.FindWithTag("RootsManager").GetComponent(GameType("RootsManager"));
-        GameType("RootsManager").GetMethod("RootUIShow").Invoke(map, null);
+        RootMap map = GameObject.FindWithTag("RootsManager").GetComponent<RootMap>();
+        map.Show();
         yield return null;
 
         Transform button = map.transform.Find(rootId);
         Assert.IsNotNull(button, rootId + " のボタンが地図に無い");
-        GameType("RootUI").GetMethod("Show_QM").Invoke(button.GetComponent(GameType("RootUI")), null);
+        button.GetComponent<RootCard>().Open();
     }
 
     //地図のボタンと同じく、地図を画面へ出してから根源のボタンを並べ直す
@@ -127,12 +116,12 @@ public class ShortcutPlayTests
     {
         Transform map = GameObject.FindWithTag("RootsManager").transform;
         map.Find("CloseButton").GetComponent<CloseManager>().OpenClick();
-        GameType("RootsManager").GetMethod("RootUIShow").Invoke(map.GetComponent(GameType("RootsManager")), null);
+        map.GetComponent<RootMap>().Show();
     }
 
-    private static Component Home()
+    private static HomeShortcut Home()
     {
-        Component home = GameObject.FindWithTag("RootsManager").GetComponentInChildren(GameType("HomeShortcut"), true);
+        HomeShortcut home = GameObject.FindWithTag("RootsManager").GetComponentInChildren<HomeShortcut>(true);
         Assert.IsNotNull(home, "地図に拠点へ戻るボタンが無い");
 
         return home;
@@ -140,18 +129,18 @@ public class ShortcutPlayTests
 
     private static void GoHome()
     {
-        GameType("HomeShortcut").GetMethod("Go").Invoke(Home(), null);
+        Home().Go();
     }
 
     private static string HomeLabel()
     {
-        Component label = (Component)GameType("HomeShortcut").GetField("label", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Home());
+        Component label = (Component)typeof(HomeShortcut).GetField("_label", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Home());
         return (string)label.GetType().GetProperty("text").GetValue(label);
     }
 
     private static bool HomeInteractable()
     {
-        Component button = (Component)GameType("HomeShortcut").GetField("button", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Home());
+        Component button = (Component)typeof(HomeShortcut).GetField("_button", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Home());
         return (bool)button.GetType().GetProperty("interactable").GetValue(button);
     }
 
@@ -173,12 +162,12 @@ public class ShortcutPlayTests
 
     private static QuestRegistry Quests()
     {
-        return (QuestRegistry)StaticField("QuestManager", "Quests").GetValue(null);
+        return UnityEngine.Object.FindAnyObjectByType<QuestManager>().Quests;
     }
 
-    private static Component Shortcut()
+    private static RootShortcut Shortcut()
     {
-        Component shortcut = GameObject.FindWithTag("QuestManager").GetComponentInChildren(GameType("RootShortcut"), true);
+        RootShortcut shortcut = GameObject.FindWithTag("QuestManager").GetComponentInChildren<RootShortcut>(true);
         Assert.IsNotNull(shortcut, "根源の詳細に近道のボタンが無い");
 
         return shortcut;
@@ -186,7 +175,7 @@ public class ShortcutPlayTests
 
     private static void Go()
     {
-        GameType("RootShortcut").GetMethod("Go").Invoke(Shortcut(), null);
+        Shortcut().Go();
     }
 
     private static string TextOf(GameObject holder)
@@ -202,7 +191,7 @@ public class ShortcutPlayTests
 
     private static RootRegistry Roots()
     {
-        return (RootRegistry)StaticField("RootsManager", "Roots").GetValue(null);
+        return UnityEngine.Object.FindAnyObjectByType<RootsManager>().Roots;
     }
 
     private static string[] RootIds()
@@ -212,7 +201,7 @@ public class ShortcutPlayTests
 
     private static Wallet Coins()
     {
-        return (Wallet)StaticField("GameManager", "Coins").GetValue(null);
+        return UnityEngine.Object.FindAnyObjectByType<Purse>().Coins;
     }
 
     private static AreaTravel Travel()
@@ -245,25 +234,5 @@ public class ShortcutPlayTests
         Assert.IsFalse(travel.IsTraveling, "移動が終わらない");
 
         for (int i = 0; i < SettleFrames; i++) yield return null;
-    }
-
-    //Assembly-CSharp は asmdef から参照できないため名前で引く
-    private static Type GameType(string typeName)
-    {
-        var type = AppDomain.CurrentDomain.GetAssemblies()
-            .Select(a => a.GetType(typeName))
-            .FirstOrDefault(t => t != null);
-        Assert.IsNotNull(type, typeName + " 型が見つからない");
-
-        return type;
-    }
-
-    private static FieldInfo StaticField(string typeName, string fieldName)
-    {
-        var field = GameType(typeName).GetField(fieldName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.IsNotNull(field, typeName + "." + fieldName + " が見つからない");
-
-        return field;
     }
 }

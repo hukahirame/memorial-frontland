@@ -1,9 +1,13 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using MemorialFloor.Domain;
@@ -11,7 +15,7 @@ using MemorialFloor.Game;
 
 //曲は裏で読む。場所に着いたときは、覆いが開くまでに着いた場所の曲が鳴り始めている。
 //境目を歩いて越えたときは、前の曲を鳴らしたまま次の曲へ重ねて移り、同じ曲なら流し続ける。
-//曲は Git 管理外（Assets/Resources）なので、無い環境では確かめられないとして止める
+//曲は Git 管理外（Assets/Music）なので、無い環境では確かめられないとして止める
 public class BgmPlayTests
 {
     private const float TravelSeconds = 10f;
@@ -49,7 +53,7 @@ public class BgmPlayTests
     {
         yield return Boot();
         Require(RootBgm);
-        Assert.IsTrue(Bgm().IsPlaying, "拠点の曲が鳴っていない（拠点の曲が Assets/Resources に無いかもしれない）");
+        Assert.IsTrue(Bgm().IsPlaying, "拠点の曲が鳴っていない（拠点の曲が Assets/Music に無いかもしれない）");
 
         yield return WalkAcross(ExitKind.ToNext);
         Assert.AreEqual("Root1", Travel().Where.AreaId, "歩いて根源1 へ移らない");
@@ -97,11 +101,11 @@ public class BgmPlayTests
         yield return Arrive();
 
         //隣の根源も読み込んであるので、今いる根源の核を探す
-        Component spawner = UnityEngine.Object.FindObjectsByType(GameType("OF_Spawner"), FindObjectsSortMode.None)
-            .Cast<Component>()
+        RootCore spawner = UnityEngine.Object.FindObjectsByType<RootCore>(FindObjectsSortMode.None)
             .FirstOrDefault(found => found.gameObject.scene == SceneManager.GetActiveScene());
         Assert.IsNotNull(spawner, "根源に核が無い");
-        Assert.IsTrue((bool)GameType("OF_Spawner").GetMethod("SpawnerBreak").Invoke(spawner, new object[] { 10000 }), "核が壊れない");
+        spawner.Hit(10000);
+        Assert.IsTrue(spawner.IsBroken, "核が壊れない");
 
         Music music = Bgm();
         float giveUp = Time.realtimeSinceStartup + SwitchSeconds;
@@ -114,15 +118,12 @@ public class BgmPlayTests
     }
 
     [UnityTearDown]
-    public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
+    public IEnumerator 持ち回しオブジェクトを捨てる()
     {
         foreach (GameObject go in UnityEngine.Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None))
         {
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
-
-        //遊びの状態は static にあり、テストのあいだでドメインを読み直さないので残る。タイトルを開くときと同じ戻し方をする
-        GameType("GameSession").GetMethod("Reset", BindingFlags.Public | BindingFlags.Static).Invoke(null, null);
 
         yield return null;
     }
@@ -130,7 +131,11 @@ public class BgmPlayTests
     /// <summary>曲が無い環境では、鳴るかを確かめられない</summary>
     private static void Require(string clip)
     {
-        if (Resources.Load<AudioClip>(clip) == null) Assert.Inconclusive(clip + " が Assets/Resources に無い");
+        AsyncOperationHandle<IList<IResourceLocation>> found = Addressables.LoadResourceLocationsAsync(clip, typeof(AudioClip));
+        int count = found.WaitForCompletion().Count;
+        Addressables.Release(found);
+
+        if (count == 0) Assert.Inconclusive(clip + " が Assets/Music に無い");
     }
 
     private static Music Bgm()
@@ -166,13 +171,7 @@ public class BgmPlayTests
     //場所は拠点のあとに、根源を作った順で一列に並ぶ
     private static string[] RootIds()
     {
-        FieldInfo field = GameType("RootsManager").GetField("Roots", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.IsNotNull(field, "RootsManager.Roots が無い");
-
-        var roots = field.GetValue(null) as RootRegistry;
-        Assert.IsNotNull(roots, "RootsManager.Roots が RootRegistry ではない");
-
-        return roots.All.Select(root => root.Id).ToArray();
+        return UnityEngine.Object.FindAnyObjectByType<RootsManager>().Roots.All.Select(root => root.Id).ToArray();
     }
 
     private static IEnumerator Boot()
@@ -205,16 +204,5 @@ public class BgmPlayTests
         Assert.IsNotNull(travel, "常駐シーンに AreaTravel が無い");
 
         return travel;
-    }
-
-    //Assembly-CSharp は asmdef から参照できないため名前で引く
-    private static Type GameType(string typeName)
-    {
-        Type type = AppDomain.CurrentDomain.GetAssemblies()
-            .Select(a => a.GetType(typeName))
-            .FirstOrDefault(t => t != null);
-        Assert.IsNotNull(type, typeName + " 型が見つからない");
-
-        return type;
     }
 }

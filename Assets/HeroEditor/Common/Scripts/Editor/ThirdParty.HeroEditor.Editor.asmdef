@@ -1,0 +1,19 @@
+{
+    "name": "ThirdParty.HeroEditor.Editor",
+    "rootNamespace": "",
+    "references": [
+        "ThirdParty.HeroEditor",
+        "UnityEngine.UI"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

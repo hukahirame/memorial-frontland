@@ -27,7 +27,7 @@ namespace MemorialFloor.Game
         [Tooltip("場の範囲。XL, XS, ZL, ZS の順。場所の原点からの位置")]
         [SerializeField] private Vector4 exposition;
 
-        [Tooltip("根源の核から湧く敵。空なら緑のスライム（Resources の Slime）")]
+        [Tooltip("根源の核から湧く敵。根源では空にしない")]
         [SerializeField] private GameObject enemy;
 
         [Tooltip("プレイヤーがこれより高く上がったら場の外とみなし、連れ戻す。2 階建ての場所では、上の階に立てる高さにする")]
@@ -89,7 +89,7 @@ namespace MemorialFloor.Game
             return world.x <= bounds.x && world.x >= bounds.y && world.z <= bounds.z && world.z >= bounds.w;
         }
 
-        /// <summary>根源の核から湧く敵の prefab。決めていない場所は null</summary>
+        /// <summary>根源の核から湧く敵の prefab。根源でない場所は null</summary>
         public GameObject Enemy
         {
             get { return enemy; }
@@ -134,6 +134,15 @@ namespace MemorialFloor.Game
             }
 
             return null;
+        }
+
+        /// <summary>この場所のシーンにある T すべて。止めてある物も探す</summary>
+        public List<T> FindAll<T>() where T : Component
+        {
+            List<T> found = new List<T>();
+            foreach (GameObject root in Scene.GetRootGameObjects()) found.AddRange(root.GetComponentsInChildren<T>(true));
+
+            return found;
         }
 
         /// <summary>シーンのルートに置かれた場所。無ければ null</summary>

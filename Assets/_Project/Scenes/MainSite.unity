@@ -7854,6 +7854,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scatter: 1.5
+  enemy: {fileID: 8947018673791946096, guid: f2f2694e2d3903c449b4259ebf508336, type: 3}
 --- !u!4 &2081051240
 Transform:
   m_ObjectHideFlags: 0
@@ -8082,6 +8083,7 @@ MonoBehaviour:
   dropcapsule: {fileID: 8337573646266240455, guid: a47d32c2e7dbff148a4be736b2377957, type: 3}
   hp: {fileID: 1474700384103554273}
   questTarget: 
+  flashShader: {fileID: 0}
 --- !u!224 &171747411795911178
 RectTransform:
   m_ObjectHideFlags: 0

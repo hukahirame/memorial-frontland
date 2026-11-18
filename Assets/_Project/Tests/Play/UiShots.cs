@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using MemorialFloor.Domain;
@@ -54,12 +55,12 @@ public class UiShots
         yield return Shot("01_base");
 
         //攻撃の案内。構えているあいだは構え歩きが赤く、離すと出る攻撃が金色に、振っているあいだはその攻撃が赤くなる
-        Component player = GameObject.FindWithTag("Player").GetComponent(GameType("Player2"));
-        Call(player, "AttackDown");
+        PlayerAttack player = GameObject.FindWithTag("Player").GetComponent<PlayerAttack>();
+        player.Press();
         yield return Frames(2);
         yield return Shot("01a_attack_aim");
 
-        ((MonoBehaviour)player).StartCoroutine((IEnumerator)Call(player, "Attack"));
+        player.Release(Vector2.zero);
         yield return Frames(2);
         yield return Shot("01b_attack_swing");
         yield return new WaitForSeconds(AttackTiming.SwingSeconds + 0.1f);
@@ -69,22 +70,22 @@ public class UiShots
         Supply("Branch", 5);
         Supply("Slimecore", 2);
         Supply("Torch", 1, 100);
-        Call(Opener(Inventory().transform), "OpenClick");
+        Opener(Inventory().transform).Open();
         yield return new WaitForSecondsRealtime(OpenSeconds);
         yield return Shot("02_inventory");
 
-        Call(BoxOf("Slimejelly"), "Show_Info");
+        BoxOf("Slimejelly").Select();
         yield return Frames(2);
         yield return Shot("03_item_info");
 
-        Call(Exchange(true), "Exchange_UI");
+        Exchange(true).Exchange();
         yield return new WaitForSecondsRealtime(SlideSeconds);
         yield return Shot("04_exchange");
         yield return new WaitForSecondsRealtime(SlideEndSeconds);
         yield return Shot("05_map");
 
         Transform map = GameObject.FindWithTag("RootsManager").transform;
-        Call(map.Find("Root1").GetComponent(GameType("RootUI")), "Show_QM");
+        map.Find("Root1").GetComponent<RootCard>().Open();
         yield return new WaitForSecondsRealtime(OpenSeconds);
         yield return Shot("06_root_detail");
 
@@ -92,22 +93,22 @@ public class UiShots
         map.Find("CloseButton").GetComponent<CloseManager>().CloseClick();
 
         //作業台に触れると出るボタンと、それで開く交換画面
-        Component allmaity = (Component)UnityEngine.Object.FindAnyObjectByType(GameType("Allmaity"));
-        Call(allmaity, "Prepare_Button", "CraftInventory");
+        Allmaity allmaity = UnityEngine.Object.FindAnyObjectByType<Allmaity>();
+        allmaity.ShowOpener("CraftInventory", "作業台を使う");
         yield return Frames(2);
         yield return Shot("07_bench_button");
 
-        Call(allmaity, "Allmaity_Play", allmaity.transform.Find("CraftInventory").GetSiblingIndex());
+        allmaity.Press(allmaity.transform.Find("CraftInventory").GetSiblingIndex());
         yield return new WaitForSecondsRealtime(OpenSeconds);
         yield return Shot("08_craft");
 
-        Component craft = (Component)UnityEngine.Object.FindAnyObjectByType(GameType("Craft"));
-        Call(craft.transform.Find("Torch").GetComponent(GameType("CraftButton")), "CraftPrepare1");
+        CraftMenu menu = UnityEngine.Object.FindAnyObjectByType<CraftMenu>();
+        menu.transform.Find("Torch").GetComponent<CraftButton>().Select();
         yield return Frames(2);
         yield return Shot("09_craft_selected");
 
-        Call(Opener(craft.transform), "CloseClick");
-        Call(allmaity, "Trash_Button", "CraftInventory");
+        Opener(menu.transform).Close();
+        allmaity.Hide("CraftInventory");
 
         UnityEngine.Object.FindAnyObjectByType<MiddleText>().Midtxt_Anim("新クエストが発生しました");
         yield return new WaitForSecondsRealtime(TextSeconds);
@@ -132,7 +133,7 @@ public class UiShots
 
         yield return SceneManager.LoadSceneAsync("Title", LoadSceneMode.Single);
         yield return new WaitForSecondsRealtime(TitleSeconds);
-        Component title = (Component)UnityEngine.Object.FindAnyObjectByType(GameType("Title"));
+        Title title = UnityEngine.Object.FindAnyObjectByType<Title>();
 
         Call(title, "ShowPicker");
         yield return Frames(2);
@@ -152,7 +153,7 @@ public class UiShots
 
         yield return Boot();
         Transform player = GameObject.FindWithTag("Player").transform;
-        UnityEngine.Object.Instantiate(Resources.Load<GameObject>("Slime"), player.position + Vector3.right * 1.5f, Quaternion.identity);
+        UnityEngine.Object.Instantiate(Addressables.LoadAssetAsync<GameObject>("Slime").WaitForCompletion(), player.position + Vector3.right * 1.5f, Quaternion.identity);
 
         yield return new WaitForSecondsRealtime(AlertMark.PopSeconds + 0.1f);
         yield return Shot("14_alert");
@@ -179,8 +180,8 @@ public class UiShots
         Directory.CreateDirectory(Folder);
         yield return Boot();
 
-        Component player = GameObject.FindWithTag("Player").GetComponent(GameType("Player2"));
-        ((MonoBehaviour)player).StartCoroutine((IEnumerator)Call(player, "Roll", 1f, 1f));
+        PlayerAttack player = GameObject.FindWithTag("Player").GetComponent<PlayerAttack>();
+        player.StartCoroutine((IEnumerator)Call(player, "Roll", 1f, 1f));
 
         yield return new WaitForSeconds(0.45f);
         yield return Shot("17_roll_middle");
@@ -198,11 +199,11 @@ public class UiShots
         yield return Boot();
 
         Vector3 open = new Vector3(-6f, 0.65f, -4f);
-        Component player = GameObject.FindWithTag("Player").GetComponent(GameType("Player2"));
+        GameObject player = GameObject.FindWithTag("Player");
         player.GetComponent<Rigidbody>().position = open;
         player.transform.position = open;
 
-        GameObject prefab = Resources.Load<GameObject>("Fence_obj");
+        GameObject prefab = Addressables.LoadAssetAsync<GameObject>("Fence_obj").WaitForCompletion();
         Fence fence = UnityEngine.Object.Instantiate(prefab, new Vector3(-5.25f, 0f, -3.75f), Quaternion.Euler(0f, 90f, 0f)).GetComponent<Fence>();
         yield return new WaitForSeconds(1f);
         yield return Shot("19_fence_full");
@@ -235,7 +236,7 @@ public class UiShots
     }
 
     [UnityTearDown]
-    public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
+    public IEnumerator 持ち回しオブジェクトを捨てる()
     {
         Time.timeScale = 1f;
 
@@ -243,17 +244,6 @@ public class UiShots
         {
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
-
-        ((RootRegistry)StaticField("RootsManager", "Roots").GetValue(null)).Clear();
-        ((BaseRaid)StaticField("RootsManager", "Raid").GetValue(null)).Clear();
-        ((QuestRegistry)StaticField("QuestManager", "Quests").GetValue(null)).Clear();
-        StaticField("QuestManager", "ordered_id").SetValue(null, "");
-        StaticField("RewardUI", "rewardUI_show").SetValue(null, 0);
-        StaticField("RewardUI", "rewardUI_id").SetValue(null, "");
-        StaticField("Player2", "cool").SetValue(null, false);
-
-        Health hp = (Health)StaticField("Player2", "Hp").GetValue(null);
-        if (hp.IsReady) hp.SetCurrent(hp.Max);
 
         yield return null;
     }
@@ -272,49 +262,48 @@ public class UiShots
         for (int i = 0; i < count; i++) yield return null;
     }
 
-    private static Component Inventory()
+    private static PlayerInventory Inventory()
     {
         GameObject owner = GameObject.FindWithTag("PlayerInventory");
         Assert.IsNotNull(owner, "持ち物が無い");
 
-        return owner.GetComponent(GameType("PlayerInventory"));
+        return owner.GetComponent<PlayerInventory>();
     }
 
     private static void Supply(string itemId, int count, int durability = 0)
     {
         for (int i = 0; i < count; i++)
         {
-            Assert.AreEqual(1, (int)Call(Inventory(), "LoadInventory", itemId, durability), itemId + " が持ち物に入らない");
+            Assert.AreEqual(1, Inventory().LoadInventory(itemId, durability), itemId + " が持ち物に入らない");
         }
     }
 
-    //スロットの箱。持ち物の直下に、箱より前の物が CHILDPLUS 個並ぶ
-    private static Component BoxOf(string itemId)
+    //スロットの箱。InventoryView が並べた順
+    private static InventoryBox BoxOf(string itemId)
     {
-        Component inventory = Inventory();
-        IReadOnlyList<ItemSlot> slots = (IReadOnlyList<ItemSlot>)GameType("PlayerInventory").GetProperty("Slots").GetValue(inventory);
+        PlayerInventory inventory = Inventory();
+        IReadOnlyList<ItemSlot> slots = inventory.Slots;
         int index = slots.ToList().FindIndex(slot => slot.ItemId == itemId);
         Assert.GreaterOrEqual(index, 0, itemId + " が持ち物に無い");
 
-        int offset = (int)Field(inventory, "CHILDPLUS").GetValue(inventory);
-        return inventory.transform.GetChild(offset + index).GetComponent(GameType("Inventbutton"));
+        InventoryView view = inventory.GetComponent<InventoryView>();
+        return ((System.Collections.Generic.List<InventoryBox>)Field(view, "_boxes").GetValue(view))[index];
     }
 
     //画面の閉じるボタン。開く呼び先も持っている
-    private static Component Opener(Transform panel)
+    private static PanelOpener Opener(Transform panel)
     {
         Transform close = panel.Find("CloseButton");
         Assert.IsNotNull(close, panel.name + " に閉じるボタンが無い");
 
-        return close.GetComponent(GameType("CloseInventory"));
+        return close.GetComponent<PanelOpener>();
     }
 
     //持ち物の側の「交換」は地図へ、地図の側の「交換」は持ち物へ入れ替える
-    private static Component Exchange(bool fromInventory)
+    private static ExchangeButton Exchange(bool fromInventory)
     {
-        Component found = UnityEngine.Object.FindObjectsByType(GameType("ExchangeButton"), FindObjectsSortMode.None)
-            .Cast<Component>()
-            .FirstOrDefault(button => (bool)Field(button, "is_pi").GetValue(button) == fromInventory);
+        ExchangeButton found = UnityEngine.Object.FindObjectsByType<ExchangeButton>(FindObjectsSortMode.None)
+            .FirstOrDefault(button => (bool)Field(button, "_fromInventory").GetValue(button) == fromInventory);
         Assert.IsNotNull(found, "交換ボタンが無い");
 
         return found;
@@ -366,26 +355,6 @@ public class UiShots
         FieldInfo field = target.GetType().GetField(fieldName,
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
         Assert.IsNotNull(field, target.GetType().Name + "." + fieldName + " が見つからない");
-
-        return field;
-    }
-
-    //Assembly-CSharp は asmdef から参照できないため名前で引く
-    private static Type GameType(string typeName)
-    {
-        Type type = AppDomain.CurrentDomain.GetAssemblies()
-            .Select(a => a.GetType(typeName))
-            .FirstOrDefault(t => t != null);
-        Assert.IsNotNull(type, typeName + " 型が見つからない");
-
-        return type;
-    }
-
-    private static FieldInfo StaticField(string typeName, string fieldName)
-    {
-        FieldInfo field = GameType(typeName).GetField(fieldName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.IsNotNull(field, typeName + "." + fieldName + " が見つからない");
 
         return field;
     }

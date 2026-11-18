@@ -1,0 +1,587 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Duplicate Asset Isolation
+  m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
+  m_GroupName: Duplicate Asset Isolation
+  m_GUID: 3a442068c6a7d464cb659ccc5bb165d6
+  m_SerializeEntries:
+  - m_GUID: 01cf1645794643a4789f526d563e3143
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Stone_Pile_Base_LowRes_phong1_MetallicSmoothness.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 02357be70b2ab1248963f7d9dbc1b4ee
+    m_Address: Assets/_Project/Art/FloodedMall/MallWaterNormal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 0436eed84e0120e4ba84b4afb6edb3c4
+    m_Address: Assets/Dark_Fantasy/Assets/Materials_Grp/Materials/Pillar_Broken_Mat.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 0666ed421e3d1f146a986f726e7354c1
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Materials/M_FFE_Grassset01.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 0cb2fd655cd97984ebcd7c226127931a
+    m_Address: Assets/Dark_Fantasy/Assets/Prefabs_Grp/BASIC/Pillar/Pillar_Flower_Mid_05.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 0de31c8bf644ff645bd69a567b7a9c51
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Altar_LowRes_phong1_MetallicSmoothness.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 0ec7f03d689614a43ae2aeba2db954c0
+    m_Address: Assets/Sunny Land Forest Assets/Artwork/Environment/background.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 10fce826c1d99734fb72064ca1a183e3
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/T_FFE_Largeplants.tga
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 116896514a98a9747ae03ef587919eaf
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/T_FFE_Tent_Illum.tga
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 17853591e4a8e61458dbe55750ac406c
+    m_Address: Assets/Dark_Fantasy/Assets/Models/Statues/Statue_01A_Lod0.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 19090826e661cf048a072a4e051b6fc3
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Meshes/Ground Foliage/MSH_FFE_Smallbush2.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 223b7c4a612942f4191531e2c996ddbd
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Materials/M_FFE_Dirt02.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 228ac8a60995404489008e2cea4ec741
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Slabs_LowRes_phong1_MetallicSmoothness.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 22ac382d42854354e9f876d7e69597b4
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Meshes/Ground Foliage/MSH_FFE_Largebush1.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 2839714f67b5684449d3988e64ea9ce7
+    m_Address: Assets/Dark_Fantasy/Assets/Materials_Grp/Effects/Fire_B.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 298823c3500f9ce48a623188ed17617c
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/T_FFE_Tree_Branches.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 2d8f062ca5868734a94cbf98d2fa5389
+    m_Address: Assets/Dark_Fantasy/Assets/Prefabs_Grp/Prefabs/Particles/Torch_Particle_Fire_N.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 32b07a84ac35f544b8ce8b324e2104cc
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Slabs_LowRes_phong1_Normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 379ce9ca2f2492440a25f6330b965ae9
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Slabs_LowRes_phong1_AlbedoTransparency.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 396ed494699590a41b2569480c55a0ec
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Torch_LowRes_phong1_MetallicSmoothness.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 39b7cc4fa2e7d6f42b58643bdf8aca95
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/Utility/T_Water_2_N.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 3ebf940de200d0946bcd96c41b54100a
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/Utility/T_WaterFoam2.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 42a18d9073075964983d4434926bb355
+    m_Address: Assets/2D Fantasy sprite bundle/Forest sprite pack/Prefabs/Tree.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 4352d8b667568fc40bd90fddfee27d56
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Torch_LowRes_phong1_AlbedoTransparency.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 437fcbf1eee883f4b8b194c794fa1a2b
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/Utility/T_water_N.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 493f61b9753fc7f4da007ed30877ba43
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Pillar_Broken_LowRes_Color_012B1_MetallicSmoothness.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 4dfccd9e0b22dee4396082d3e2d036a8
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Rock_02_LowRes_phong1_MetallicSmoothness.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 5680482aba2efea4abf9ba54f60881d8
+    m_Address: Assets/Dark_Fantasy/Assets/Materials_Grp/Materials/Statue_D_Mat.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 56aaad44b365d1d4fa125a69768b6e3c
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Meshes/MSH_FFE_Bush_2.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 58af157e9db61b64cba4b7802059a92b
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Meshes/Billboards/MSH_FFE_Spruce_A1_Billboard.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 5d540f7e45a54f94da098d398aad0c61
+    m_Address: Assets/Dark_Fantasy/Assets/Materials_Grp/Materials/Torch_01_Mat.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 605e185f8fe07c4408b179b5700e6bcd
+    m_Address: Assets/Dark_Fantasy/Assets/Models/Lights/Torch_02_Lod0.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 667a076996909f7489c7f3099fc19afc
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Particles/Fire_New_01B.psd
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 7046e8fa0bded2248b7c12ea75dd4b85
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Meshes/Billboards/MSH_FFE_Birch_1_Billboard.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 7195cf34bbfee1645acd4aadfb73ebc3
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Shaders/Water.shader
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 7a3eae1491912c94cae052d5b1fea9ec
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Statue_D_LowRes_Rebuild_Color_021_AlbedoTransparency.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 7b282004adef672428434e874a35c163
+    m_Address: Assets/Dark_Fantasy/Assets/Prefabs_Grp/Prefabs/Lights/LOD_Torch_02_Grp.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 7c8b03cf9750fac40ae4dccd5f179da0
+    m_Address: Assets/Dark_Fantasy/Assets/Prefabs_Grp/BASIC/Particles/Torch_Particle_Fire.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 7cc1900109f5b5c49873aafb2a2cd0cd
+    m_Address: Assets/Dark_Fantasy/Assets/Models/Rock/Break_Stone_03Z.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 7e856860d9fa2e34db27fed6f5e6f67b
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Statue_D_LowRes_Rebuild_Color_021_Normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 7f2d9c9f8951f9745a51ccf279881b83
+    m_Address: Assets/Dark_Fantasy/Assets/Prefabs_Grp/BASIC/Furnitures/Altar.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 80bd302c49789674ab821f69d270e5d3
+    m_Address: Assets/_Project/Art/Places/TerrainBlock.shader
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 8132ffd5113818049a1b7ec588afbab3
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/Utility/T_WindMask.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 84356560aa489334fad76a074bf8ef1f
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/Terrain/T_FFE_Rock01.tga
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 84efe0cfb81a69646a76b2a05f400e40
+    m_Address: Assets/Dark_Fantasy/Assets/Materials_Grp/Materials/Altar_Mat.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 88233654ecc8f394cb1063e719d022c3
+    m_Address: Assets/Dark_Fantasy/Assets/Materials_Grp/Materials/Stone_Pile_Base_Mat.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 890b5a0961c29d94aa5cc0b9462d5a9c
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/T_FFE_Grassset01.tga
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 8b32a778d93b2344d9f6feeeea22c44c
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Materials/M_FFE_Largeplants.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 907b728c30592fa4a9c783327af9daee
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Torch_LowRes_phong1_Normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 926656fb8c7277b4283aa44095a5acd3
+    m_Address: Assets/Dark_Fantasy/Assets/Materials_Grp/Materials/Slabs_Mat.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 94d373ac6fb6ea746aaa347465053a14
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Meshes/Ground Foliage/MSH_FFE_Flowers_White.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 97ede4124bb954c46a65a876df4cfad2
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Shaders/TreeWind2.shader
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 99026999fb7b6e44bb4189e7bb4a8c6e
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Stone_Pile_Base_LowRes_phong1_AlbedoTransparency.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 9aaac21cdb897524aa7a0b98f5a96706
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Materials/M_FFE_Tent.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 9ae18914b65ff6946a49ae859241bd12
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Materials/M_FFE_Tree_Summer_Billboard.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 9bf14a17d37b6384c91759e0e2e156ce
+    m_Address: Assets/Dark_Fantasy/Assets/Prefabs_Grp/BASIC/Lights/Torch_02_Lod0.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 9c8f5dbb26df5ff4e84b1f7a75848da0
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Shaders/FFTreeBillboard.shader
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: 9d3537fa5ad3aba43a679885a32bff4d
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Altar_LowRes_phong1_AlbedoTransparency.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: a6b1a324bf60357468f145b20de69f4e
+    m_Address: Assets/Dark_Fantasy/Assets/Models/Rock/Break_Stone_04Z.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: a761d0913b87cce4eba0696541053886
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Rocks_LowRes_phong1_AlbedoTransparency.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: adfa08b09d3c1374d9b6a0733043eead
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Rocks_LowRes_phong1_Normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: ae69a5652b8d5be46a5cea7e6780ac6f
+    m_Address: Assets/Dark_Fantasy/Assets/Models/Furnitures/Altar.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: af89a672ff260a24da15f30e458db6f2
+    m_Address: Assets/Dark_Fantasy/Assets/Models/Rock/Break_Stone_02Z.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: b0ac727ab6e5c5d42826db4679d03d58
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/Terrain/T_FFE_Grass01_B.tga
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: b72df840009e93b40b4f04243ca9bf45
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Materials/M_FFE_Water.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: b8616e2ccd8725849afa37ad8eae7bad
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/T_FFE_Tent.tga
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: b8fe64ae05ddae7458d106cb45a064b7
+    m_Address: Assets/_Project/Art/Places/SeamRoot1Root2.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: ba2071c76ac26a4418d60604624cb7bf
+    m_Address: Assets/Dark_Fantasy/Assets/Materials_Grp/Materials/Rock_01_Mat.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: bcc5c7288a4c9dd4fb14035345dff767
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/Terrain/T_FFE_Rock02.tga
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: be918c72317e5be408bd528825d2b637
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/T_FFE_Waterfall.tga
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: c7a2e146f96a8524da9d5b3e70081bbf
+    m_Address: Assets/Dark_Fantasy/Assets/Models/Pillar/Pillar_Flower_Mid_05.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: cbdba805c2528864283dddcdc9d1572e
+    m_Address: Assets/_Project/Art/Places/SeamMainSiteRoot1.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: ce9c4e3a38398b44681cbdc6a21aa0c2
+    m_Address: Assets/Dark_Fantasy/Assets/Prefabs_Grp/BASIC/Statues/Statue_01A_Lod0.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: d5514ca94cb25ad47bf48a1c9240f06b
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Pillar_Broken_LowRes_Color_012B1_Normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: d826448c67ac24a828938a397a088786
+    m_Address: Assets/Sunny Land Forest Assets/Artwork/Environment/middleground.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: d9197a03104cd06429019ea4151aef53
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/T_FFE_Trees_Summer_Billboard_BC.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: dabde817cc386974685fafce419cd1ff
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Rocks_LowRes_phong1_MetallicSmoothness.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: dc2127cc43be01f4d889c2438e91092b
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/Terrain/T_FFE_Dirt2.tga
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: dd4ff20f47c87b74a84debae4024f34d
+    m_Address: Assets/Dark_Fantasy/Assets/Materials_Grp/Materials/Rock_02_Mat.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: de3544e2fab97324fb89a70b3994028f
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Meshes/Ground Foliage/MSH_FFE_Grass01.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: dea4fb18ddba6a74188b2744a3b32f97
+    m_Address: Assets/2D Fantasy sprite bundle/Forest sprite pack/Sprites/new tree
+      leafs ellow.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: e2717559c22dcbe43855f667a25da65f
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Rock_02_LowRes_phong1_AlbedoTransparency.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: e2e41b45b2f050f46bc27b220aae79ce
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Rock_02_LowRes_phong1_Normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: e5c0a7f4ba2640b42bf8f7c77b173f8f
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Materials/M_FFE_Waterfall.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: e6d1010a918c4764587dc11cf9f9c52b
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Stone_Pile_Base_LowRes_phong1_Normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: e9a3a2bb4868ade4dacefdb5d0cb80ae
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/T_FFE_Trees_Billboard_N.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: ef0bcf4ab4771b3459b06479ed80dea4
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Altar_LowRes_phong1_Normal.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: f21297196c1930444bded861582ea085
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Textures/Terrain/T_FFE_Grass02.tga
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: f5800f239653f624b8a0e973400142a7
+    m_Address: Assets/Dark_Fantasy/Assets/Models/Rock/Floor_Rock_Pile_03A_Lod0.fbx
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: f5977c186104b294ca55e06e5ed7ef8d
+    m_Address: Assets/TriForge Assets/Fantasy Forest Environment/Materials/M_FFE_Bush.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: fa31193b14a9f1944b68db629f6c5c47
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Statue_D_LowRes_Rebuild_Color_021_MetallicSmoothness.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: fbaa36dd7c5c23743aceb021e8d06d91
+    m_Address: Assets/Dark_Fantasy/Assets/Textures_Grp/Textures/Pillar_Broken_LowRes_Color_012B1_AlbedoTransparency.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  - m_GUID: fd890b86fc134654f992fc95cd780485
+    m_Address: Assets/2D Fantasy sprite bundle/Forest sprite pack/Sprites/new trees.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+    m_FolderGuid: 
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 05b1319f6aec7e14aa76463ef74b1084, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 2871f7107ce1c344fb3164481f09e63a, type: 2}
+    - {fileID: 11400000, guid: 32f8bac4a3fa8bf43b857ec5b875fcee, type: 2}
+    m_SchemaDisplayOrder:
+    - Duplicate Asset Isolation_BundledAssetGroupSchema
+    - Duplicate Asset Isolation_ContentUpdateGroupSchema
+  m_IncludeInBuild: 1
+  m_IncludeInBuildMigrated: 1

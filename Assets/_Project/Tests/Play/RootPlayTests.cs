@@ -44,13 +44,13 @@ public class RootPlayTests
     public IEnumerator Root3ではエスカレーターを歩いて上の階へ上がれる()
     {
         yield return GoToRoot("Root3");
-        MonoBehaviour spawner = Spawner();
+        RootCore spawner = Spawner();
         spawner.StopAllCoroutines();
         yield return Defeat();
 
         //エスカレーターの原点は下端の縁の真ん中で、前（forward）へ上る。上の踊り場から右（right）の上の階へ降りる
         Transform escalator = InHere("MallEscalator");
-        Component player = Player();
+        PlayerMovement player = Player();
         Rigidbody body = player.GetComponent<Rigidbody>();
         Vector3 start = escalator.position - escalator.forward + Vector3.up * 0.65f;
         body.linearVelocity = Vector3.zero;
@@ -71,7 +71,7 @@ public class RootPlayTests
     }
 
     [UnityTearDown]
-    public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
+    public IEnumerator 持ち回しオブジェクトを捨てる()
     {
         Time.timeScale = 1f;
 
@@ -80,26 +80,14 @@ public class RootPlayTests
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
 
-        ((RootRegistry)StaticField("RootsManager", "Roots").GetValue(null)).Clear();
-        ((BaseRaid)StaticField("RootsManager", "Raid").GetValue(null)).Clear();
-        ((QuestRegistry)StaticField("QuestManager", "Quests").GetValue(null)).Clear();
-        StaticField("QuestManager", "ordered_id").SetValue(null, "");
-        StaticField("RewardUI", "rewardUI_show").SetValue(null, 0);
-        StaticField("Player2", "cool").SetValue(null, false);
-        StaticField("Player2", "speed").SetValue(null, 1f);
-
-        Health hp = (Health)StaticField("Player2", "Hp").GetValue(null);
-        if (hp.IsReady) hp.SetCurrent(hp.Max);
-
         yield return null;
     }
 
     /// <summary>いま居る根源の湧き口。隣の根源も読み込んであるので、今いる場所のシーンの中から探す</summary>
-    private static MonoBehaviour Spawner()
+    private static RootCore Spawner()
     {
         Scene here = Travel().Current.Scene;
-        MonoBehaviour spawner = UnityEngine.Object.FindObjectsByType(GameType("OF_Spawner"), FindObjectsSortMode.None)
-            .Cast<MonoBehaviour>()
+        RootCore spawner = UnityEngine.Object.FindObjectsByType<RootCore>(FindObjectsSortMode.None)
             .FirstOrDefault(found => found.gameObject.scene == here);
         Assert.IsNotNull(spawner, "根源に湧き口が無い");
 
@@ -107,12 +95,11 @@ public class RootPlayTests
     }
 
     /// <summary>いま居る根源の敵。場外へ落ちて消えたものは数えない</summary>
-    private static List<Component> Slimes()
+    private static List<Slime> Slimes()
     {
         Scene here = Travel().Current.Scene;
 
-        return UnityEngine.Object.FindObjectsByType(GameType("Slime"), FindObjectsSortMode.None)
-            .Cast<Component>()
+        return UnityEngine.Object.FindObjectsByType<Slime>(FindObjectsSortMode.None)
             .Where(slime => slime.gameObject.scene == here)
             .ToList();
     }
@@ -120,7 +107,7 @@ public class RootPlayTests
     /// <summary>居る敵をすべて消し、消えるまで待つ</summary>
     private static IEnumerator Defeat()
     {
-        foreach (Component slime in Slimes()) UnityEngine.Object.Destroy(slime.gameObject);
+        foreach (Slime slime in Slimes()) UnityEngine.Object.Destroy(slime.gameObject);
         yield return null;
     }
 
@@ -131,20 +118,20 @@ public class RootPlayTests
     private static IEnumerator SpawnsOnCoreFloor(float toward, float floor)
     {
         yield return Boot();
-        RootRegistry roots = (RootRegistry)StaticField("RootsManager", "Roots").GetValue(null);
+        RootRegistry roots = UnityEngine.Object.FindAnyObjectByType<RootsManager>().Roots;
         roots.Find("Root3").PlaceSpawnPoint(12f, toward, 6f);
 
         Travel().Go(Route.To("Root3", Arrival.FromPrevious));
         yield return Arrive();
 
-        MonoBehaviour spawner = Spawner();
+        RootCore spawner = Spawner();
         spawner.StopAllCoroutines();
         yield return Defeat();
 
         //核の像は土台を床に載せてあり、像の真ん中は床より上にある
         Assert.That(spawner.transform.position.y, Is.InRange(floor, floor + 3f), "核が狙った階の候補に置かれない: " + spawner.transform.position);
 
-        float range = (float)Field(spawner, "spawnrange").GetValue(spawner);
+        float range = (float)typeof(RootCore).GetField("_range", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(spawner);
         int spawned = 0;
 
         for (int i = 0; i < 20; i++)
@@ -152,7 +139,7 @@ public class RootPlayTests
             Call(spawner, "Spawn", range * 2f);
 
             //ほかの階（4 離れる）・吹き抜けの底・像や柱の上には湧かない。崩れた縁の欠けた所は床より 0.4 ほど低いので、1 まで許す
-            foreach (Component slime in Slimes())
+            foreach (Slime slime in Slimes())
             {
                 Assert.AreEqual(floor + 0.6f, slime.transform.position.y, 1f, "核と同じ階の通路でない所に湧く: " + slime.transform.position);
                 spawned++;
@@ -167,9 +154,10 @@ public class RootPlayTests
     /// <summary>移動のスティックを toward へ倒したまま、done になるまで歩かせる。歩き終えたらスティックを戻す</summary>
     private static IEnumerator WalkUntil(Vector3 toward, Func<bool> done)
     {
-        Component player = Player();
-        Component stick = (Component)Field(player, "joystick").GetValue(player);
-        FieldInfo input = GameType("Joystick").GetField("input", BindingFlags.Instance | BindingFlags.NonPublic);
+        PlayerMovement player = Player();
+        PlayerInput playerInput = player.GetComponent<PlayerInput>();
+        Joystick stick = (Joystick)Field(playerInput, "_moveStick").GetValue(playerInput);
+        FieldInfo input = typeof(Joystick).GetField("input", BindingFlags.Instance | BindingFlags.NonPublic);
         input.SetValue(stick, new Vector2(toward.x, toward.z));
 
         float giveUp = Time.time + WalkSeconds;
@@ -179,13 +167,13 @@ public class RootPlayTests
         Assert.IsTrue(done(), "歩いても着かない: " + player.transform.position);
     }
 
-    private static Component Player()
+    private static PlayerMovement Player()
     {
         GameObject player = GameObject.FindWithTag("Player");
         Assert.IsNotNull(player, "プレイヤーが居ない");
 
-        Component component = player.GetComponent(GameType("Player2"));
-        Assert.IsNotNull(component, "プレイヤーに Player2 が無い");
+        PlayerMovement component = player.GetComponent<PlayerMovement>();
+        Assert.IsNotNull(component, "プレイヤーに PlayerMovement が無い");
 
         return component;
     }
@@ -256,26 +244,6 @@ public class RootPlayTests
         FieldInfo field = target.GetType().GetField(fieldName,
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         Assert.IsNotNull(field, target.GetType().Name + "." + fieldName + " が見つからない");
-
-        return field;
-    }
-
-    //Assembly-CSharp は asmdef から参照できないため名前で引く
-    private static Type GameType(string typeName)
-    {
-        Type type = AppDomain.CurrentDomain.GetAssemblies()
-            .Select(a => a.GetType(typeName))
-            .FirstOrDefault(t => t != null);
-        Assert.IsNotNull(type, typeName + " 型が見つからない");
-
-        return type;
-    }
-
-    private static FieldInfo StaticField(string typeName, string fieldName)
-    {
-        FieldInfo field = GameType(typeName).GetField(fieldName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.IsNotNull(field, typeName + "." + fieldName + " が見つからない");
 
         return field;
     }

@@ -5,7 +5,7 @@ namespace MemorialFloor.Domain.Tests
 {
     public class DayClockTests
     {
-        // 1日120秒 = 1時間あたり実5秒。Sun2 の既定値
+        // 1日120秒 = 1時間あたり実5秒。Sun の既定値
         private const float Around = 120f;
 
         [Test]

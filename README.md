@@ -18,8 +18,8 @@
 - **クエストシステム** — `QuestManager` / `QuestButton` / `RewardUI`。（クエスト受注〜報酬付与）
 - **インベントリ & クラフト** — `Inventory/` 一式、`Craft/` 一式。（アイテム管理・クラフト）
 - **フィールド生成** — `OutField/FieldCreator` / `RootsManager` / `Seeker`。（フィールド生成・動的変化システム）
-- **敵スポーン & 戦闘** — `Slime` / `MS_Spawner` / `Weapon` / `DamageSet`。（スポーン制御・ダメージ処理）
-- **モバイル操作** — `JoystickEffect` / `JoystickEffect_ATK`。（仮想ジョイスティック操作）
+- **敵スポーン & 戦闘** — `Slime` / `RootCore` / `RaidGate` / `Weapon` / `DamageNumber`。（スポーン制御・ダメージ処理）
+- **モバイル操作** — `PlayerInput` / `MoveStickArrows` / `AttackStick`。（仮想ジョイスティック操作）
 
 ---
 
@@ -53,7 +53,7 @@
 本リポジトリは、**コードとプロジェクト構成の閲覧を目的**として公開しています。
 
 - ライセンスの都合上、サードパーティの Unity Asset Store アセット（キャラクター素材・背景・フォント等）は含まれていません。そのため、clone しても動作しません。
-- 自作のスクリプト（`Assets/_Project/`、`Assets/LegacyScripts/`）とプロジェクト設定（`ProjectSettings/`、`Packages/`）のみを収録しています。
+- 自作のスクリプト（`Assets/_Project/`）とプロジェクト設定（`ProjectSettings/`、`Packages/`）のみを収録しています。
 - 本リポジトリのコードは [LICENSE](LICENSE) の条件下にあります（閲覧のみ可・全権留保。複製・改変・再配布・組み込みには事前の許諾が必要です）。
 - 実際のプレイは上記の WebGL 体験版からご確認ください。
 
@@ -63,22 +63,12 @@
 
 ```
 Assets/
-  _Project/           移行済みのコードと資産
+  _Project/           自作のコードと資産
     Scripts/Domain/   Unity に依存しないゲームロジック
-    Scripts/Game/     Unity に依存する実装
+    Scripts/Game/     Unity に依存する実装（関心事ごとのフォルダ：Craft・Day・Enemy・Inventory・Player・Quest・Roots・Save・Scene など）
     Data/             ScriptableObject（クラフトのレシピ等）
     Scenes/           シーン
     Tests/Domain/     Domain 層のテスト
-  LegacyScripts/      未整理のスクリプト（順次 _Project へ移す）
-    Craft/            クラフトシステム
-    Day/              日の進行
-    Enemy/            敵とスポーン
-    Inventory/        インベントリシステム
-    Player/           プレイヤー
-    Quest/            クエストシステム
-    Roots/            根源
-    Save/             セーブ / ロード
-    Scene/            シーン遷移
 tests/                dotnet からも回す Domain テスト
 docs/                 設計判断・コーディング規約
 ProjectSettings/      Unity プロジェクト設定

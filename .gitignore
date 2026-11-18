@@ -21,6 +21,41 @@
 !/[Aa]ssets/StreamingAssets/
 !/[Aa]ssets/StreamingAssets.meta
 
+# --- Addressables の設定と組。Addressables は Assets 直下のこのフォルダを決め打ちで使う ---
+!/[Aa]ssets/AddressableAssetsData/
+!/[Aa]ssets/AddressableAssetsData.meta
+
+# --- 買った素材に付けた asmdef（[D-53]）。素材は公開できないので入れず、asmdef と、そこまでのフォルダの .meta だけを入れる ---
+!/[Aa]ssets/HeroEditor/
+!/[Aa]ssets/HeroEditor.meta
+/[Aa]ssets/HeroEditor/*
+!/[Aa]ssets/HeroEditor/ThirdParty.HeroEditor.asmdef
+!/[Aa]ssets/HeroEditor/ThirdParty.HeroEditor.asmdef.meta
+!/[Aa]ssets/HeroEditor/Common/
+!/[Aa]ssets/HeroEditor/Common.meta
+/[Aa]ssets/HeroEditor/Common/*
+!/[Aa]ssets/HeroEditor/Common/Scripts/
+!/[Aa]ssets/HeroEditor/Common/Scripts.meta
+/[Aa]ssets/HeroEditor/Common/Scripts/*
+!/[Aa]ssets/HeroEditor/Common/Scripts/Editor/
+!/[Aa]ssets/HeroEditor/Common/Scripts/Editor.meta
+/[Aa]ssets/HeroEditor/Common/Scripts/Editor/*
+!/[Aa]ssets/HeroEditor/Common/Scripts/Editor/ThirdParty.HeroEditor.Editor.asmdef
+!/[Aa]ssets/HeroEditor/Common/Scripts/Editor/ThirdParty.HeroEditor.Editor.asmdef.meta
+!/[Aa]ssets/Joystick Pack/
+!/[Aa]ssets/Joystick Pack.meta
+/[Aa]ssets/Joystick Pack/*
+!/[Aa]ssets/Joystick Pack/ThirdParty.JoystickPack.asmdef
+!/[Aa]ssets/Joystick Pack/ThirdParty.JoystickPack.asmdef.meta
+!/[Aa]ssets/Joystick Pack/Scripts/
+!/[Aa]ssets/Joystick Pack/Scripts.meta
+/[Aa]ssets/Joystick Pack/Scripts/*
+!/[Aa]ssets/Joystick Pack/Scripts/Editor/
+!/[Aa]ssets/Joystick Pack/Scripts/Editor.meta
+/[Aa]ssets/Joystick Pack/Scripts/Editor/*
+!/[Aa]ssets/Joystick Pack/Scripts/Editor/ThirdParty.JoystickPack.Editor.asmdef
+!/[Aa]ssets/Joystick Pack/Scripts/Editor/ThirdParty.JoystickPack.Editor.asmdef.meta
+
 # --- 他に許可を足すときの雛形（ディレクトリと .meta を対で） ---
 # !/[Aa]ssets/[Ee]ditor/
 # !/[Aa]ssets/[Ee]ditor.meta

@@ -10,6 +10,7 @@ using NUnit.Framework;
 using Unity.Profiling;
 using Unity.Profiling.LowLevel.Unsafe;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
 using MemorialFloor.Domain;
@@ -57,22 +58,21 @@ public class Hitches
         Travel().Go(Route.To("Root1", Arrival.FromPrevious));
         yield return Arrive();
 
-        Component player = GameObject.FindWithTag("Player").GetComponent(GameType("Player2"));
+        PlayerAttack player = GameObject.FindWithTag("Player").GetComponent<PlayerAttack>();
         //隣の根源も読み込んであるので、今いる根源の湧き口を探す
-        Component spawner = UnityEngine.Object.FindObjectsByType(GameType("OF_Spawner"), FindObjectsSortMode.None)
-            .Cast<Component>()
+        RootCore spawner = UnityEngine.Object.FindObjectsByType<RootCore>(FindObjectsSortMode.None)
             .FirstOrDefault(found => found.gameObject.scene == SceneManager.GetActiveScene());
-        Component roots = GameObject.FindWithTag("RootsManager").GetComponent(GameType("RootsManager"));
-        Component save = GameObject.Find("GameManager").GetComponent(GameType("SaveSystem"));
+        RootsManager roots = UnityEngine.Object.FindAnyObjectByType<RootsManager>();
+        SaveSystem save = GameObject.Find("GameManager").GetComponent<SaveSystem>();
         Assert.IsNotNull(spawner, "根源に湧き口が無い");
 
         //倒れると暗転して拠点へ戻り、計る場面が変わる。半分を切ったら満たす
-        Health hp = (Health)StaticField("Player2", "Hp").GetValue(null);
+        PlayerHealth hp = player.GetComponent<PlayerHealth>();
 
         var watch = new Watch();
         watch.EveryFrame = () =>
         {
-            if (hp.IsReady && hp.Current < hp.Max / 2) hp.SetCurrent(hp.Max);
+            if (hp.Current < hp.Max / 2) hp.SetCurrent(hp.Max);
         };
 
         try
@@ -85,7 +85,7 @@ public class Hitches
             yield return watch.Probe("敵が 5 体いっせいに湧く", () => Spawn(spawner, 5));
             yield return watch.Probe("全員に「！」を出す", Alert);
             yield return watch.Probe("敵を 1 体倒す", Kill);
-            yield return watch.Probe("零時の処理と知らせ", () => { Call(roots, "Dayover"); return ""; });
+            yield return watch.Probe("零時の処理と知らせ", () => { roots.PassMidnight(); return ""; });
             yield return watch.Probe("攻撃を振る", () => Swing(player));
             yield return watch.Probe("回避して残像を出す", () => Roll(player));
             yield return watch.Probe("中くらいの文字を出す", () => { UnityEngine.Object.FindAnyObjectByType<MiddleText>().Midtxt_Anim("計測のための知らせです"); return ""; });
@@ -252,17 +252,14 @@ public class Hitches
 
     //SaveSystem.Save と同じ手順。保存の枠に書くと遊んでいる保存を上書きするので、書く先だけ変える。
     //渡すのは、ファイルに書く仕事を書き込みの列に積むまで。書くのは裏なので、ここでは待たない
-    private static string SaveLikeAutosave(Component save)
+    private static string SaveLikeAutosave(SaveSystem save)
     {
-        object data = Field(save, "savedata").GetValue(save);
-        AreaTravel travel = (AreaTravel)Field(save, "travel").GetValue(save);
-        object placed = Field(save, "placed").GetValue(save);
-        MethodInfo sync = data.GetType().GetMethod("SyncStatic");
-        MethodInfo write = GameType("SaveSystem").GetMethod("Write", BindingFlags.NonPublic | BindingFlags.Static);
+        SaveData data = save.Data;
+        MethodInfo write = typeof(SaveSystem).GetMethod("Write", BindingFlags.NonPublic | BindingFlags.Instance);
         Assert.IsNotNull(write, "SaveSystem.Write が見つからない");
 
         var clock = Stopwatch.StartNew();
-        sync.Invoke(data, new object[] { travel.Where, placed });
+        save.Capture(data);
         double copy = clock.Elapsed.TotalMilliseconds;
 
         clock.Restart();
@@ -270,7 +267,7 @@ public class Hitches
         double serialize = clock.Elapsed.TotalMilliseconds;
 
         clock.Restart();
-        write.Invoke(null, new object[] { Path.Combine(Application.persistentDataPath, ProbeFile), json });
+        write.Invoke(save, new object[] { Path.Combine(Application.persistentDataPath, ProbeFile), json });
         double hand = clock.Elapsed.TotalMilliseconds;
 
         return $"写す {copy:F2} ms、JSON {serialize:F2} ms（{json.Length} 字）、渡す {hand:F2} ms";
@@ -279,9 +276,10 @@ public class Hitches
     /// <summary>裏で書いている保存を書き終えるまで待ち、書けたかを返す。書いたファイルは消す</summary>
     private static bool FinishProbeWrites()
     {
-        MethodInfo finish = GameType("SaveSystem").GetMethod("FinishWriting", BindingFlags.NonPublic | BindingFlags.Static);
+        MethodInfo finish = typeof(SaveSystem).GetMethod("FinishWriting", BindingFlags.NonPublic | BindingFlags.Instance);
         Assert.IsNotNull(finish, "SaveSystem.FinishWriting が見つからない");
-        finish.Invoke(null, null);
+        SaveSystem save = UnityEngine.Object.FindAnyObjectByType<SaveSystem>();
+        if (save != null) finish.Invoke(save, null);
 
         string probe = Path.Combine(Application.persistentDataPath, ProbeFile);
         bool written = File.Exists(probe);
@@ -290,9 +288,9 @@ public class Hitches
         return written;
     }
 
-    private static string Spawn(Component spawner, int count)
+    private static string Spawn(RootCore spawner, int count)
     {
-        float range = (float)Field(spawner, "spawnrange").GetValue(spawner);
+        float range = (float)Field(spawner, "_range").GetValue(spawner);
         for (int i = 0; i < count; i++) Call(spawner, "Spawn", range);
 
         return "敵 " + GameObject.FindGameObjectsWithTag("Enemy").Length + " 体";
@@ -301,7 +299,7 @@ public class Hitches
     private static string Alert()
     {
         int count = 0;
-        foreach (Component slime in Slimes())
+        foreach (Slime slime in Slimes())
         {
             AlertMark.Show(slime.transform.Find("Canvas"));
             count++;
@@ -312,48 +310,45 @@ public class Hitches
 
     private static string Kill()
     {
-        PropertyInfo hp = GameType("Slime").GetProperty("CurrentHp");
-        Component target = Slimes().FirstOrDefault(slime => (int)hp.GetValue(slime) > 0);
+        Slime target = Slimes().FirstOrDefault(slime => slime.CurrentHp > 0);
         if (target == null) return "倒す敵がいない";
 
-        Call(target, "TakeHit", 9999, Vector3.zero);
+        target.TakeHit(9999, Vector3.zero);
         return "";
     }
 
-    private static string Swing(Component player)
+    private static string Swing(PlayerAttack player)
     {
-        Call(player, "AttackDown");
-        Call(player, "AttackUp");
-        ((MonoBehaviour)player).StartCoroutine((IEnumerator)Call(player, "Attack"));
+        player.Press();
+        player.Release(Vector2.zero);
         return "";
     }
 
-    private static string Roll(Component player)
+    private static string Roll(PlayerAttack player)
     {
-        ((MonoBehaviour)player).StartCoroutine((IEnumerator)Call(player, "Roll", 1f, 1f));
+        player.StartCoroutine((IEnumerator)Call(player, "Roll", 1f, 1f));
         return "";
     }
 
     private static string HitCandidate()
     {
-        Component candidate = UnityEngine.Object.FindObjectsByType(GameType("SpawnerCandidate"), FindObjectsSortMode.None)
-            .Cast<Component>()
+        SpawnerCandidate candidate = UnityEngine.Object.FindObjectsByType<SpawnerCandidate>(FindObjectsSortMode.None)
             .FirstOrDefault(found => found.gameObject.activeInHierarchy);
         if (candidate == null) return "核の候補がない";
 
-        Call(candidate, "Candidate", 1);
+        candidate.Hit(1);
         return "";
     }
 
     private static Fence PlaceFence(Transform player)
     {
-        GameObject prefab = Resources.Load<GameObject>("Fence_obj");
+        GameObject prefab = Addressables.LoadAssetAsync<GameObject>("Fence_obj").WaitForCompletion();
         return UnityEngine.Object.Instantiate(prefab, player.position + Vector3.right * 3f, Quaternion.identity).GetComponent<Fence>();
     }
 
-    private static IEnumerable<Component> Slimes()
+    private static IEnumerable<Slime> Slimes()
     {
-        return UnityEngine.Object.FindObjectsByType(GameType("Slime"), FindObjectsSortMode.None).Cast<Component>();
+        return UnityEngine.Object.FindObjectsByType<Slime>(FindObjectsSortMode.None);
     }
 
     /// <summary>コマごとの長さと、重いコマで時間を食った処理を集める。値は前のコマのもので、次のコマの初めに読む</summary>
@@ -626,7 +621,7 @@ public class Hitches
     }
 
     [UnityTearDown]
-    public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
+    public IEnumerator 持ち回しオブジェクトを捨てる()
     {
         Time.timeScale = 1f;
 
@@ -634,17 +629,6 @@ public class Hitches
         {
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
-
-        ((RootRegistry)StaticField("RootsManager", "Roots").GetValue(null)).Clear();
-        ((BaseRaid)StaticField("RootsManager", "Raid").GetValue(null)).Clear();
-        ((QuestRegistry)StaticField("QuestManager", "Quests").GetValue(null)).Clear();
-        StaticField("QuestManager", "ordered_id").SetValue(null, "");
-        StaticField("RewardUI", "rewardUI_show").SetValue(null, 0);
-        StaticField("RewardUI", "rewardUI_id").SetValue(null, "");
-        StaticField("Player2", "cool").SetValue(null, false);
-
-        Health hp = (Health)StaticField("Player2", "Hp").GetValue(null);
-        if (hp.IsReady) hp.SetCurrent(hp.Max);
 
         FinishProbeWrites();
 
@@ -691,26 +675,6 @@ public class Hitches
         FieldInfo field = target.GetType().GetField(fieldName,
             BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
         Assert.IsNotNull(field, target.GetType().Name + "." + fieldName + " が見つからない");
-
-        return field;
-    }
-
-    //Assembly-CSharp は asmdef から参照できないため名前で引く
-    private static Type GameType(string typeName)
-    {
-        Type type = AppDomain.CurrentDomain.GetAssemblies()
-            .Select(a => a.GetType(typeName))
-            .FirstOrDefault(t => t != null);
-        Assert.IsNotNull(type, typeName + " 型が見つからない");
-
-        return type;
-    }
-
-    private static FieldInfo StaticField(string typeName, string fieldName)
-    {
-        FieldInfo field = GameType(typeName).GetField(fieldName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.IsNotNull(field, typeName + "." + fieldName + " が見つからない");
 
         return field;
     }

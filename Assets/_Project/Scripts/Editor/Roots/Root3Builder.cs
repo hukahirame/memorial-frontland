@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using MemorialFloor.Domain;
 using MemorialFloor.Game;
 using UnityEditor;
+using UnityEditor.AddressableAssets;
+using UnityEditor.AddressableAssets.Settings;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -20,10 +22,13 @@ namespace MemorialFloor.Editor
 
         private const string Root2Path = "Assets/_Project/Scenes/Root2.unity";
 
-        private const string SlimePath = "Assets/_Project/Resources/Slime.prefab";
+        private const string SlimePath = "Assets/_Project/Prefabs/Enemies/Slime.prefab";
 
         /// <summary>根源3に湧く敵。Slime の Variant にし、絵・動き・名札を水色の物に、強さと落とす品を替える</summary>
-        private const string SodaSlimePath = "Assets/_Project/Resources/SodaSlime.prefab";
+        private const string SodaSlimePath = "Assets/_Project/Prefabs/Enemies/SodaSlime.prefab";
+
+        /// <summary>場所のシーンを入れる Addressables の組。場所は Id を住所にして読む（AreaTravel）</summary>
+        private const string PlacesGroup = "Places";
 
         private const string SodaSprite = "Assets/_Project/Art/EnemyA/Enemyα-1-1.png";
 
@@ -103,7 +108,7 @@ namespace MemorialFloor.Editor
             GameObject enemy = SodaSlime();
             FloodedMallBuilder.BuildPlace(ScenePath, Offset, (scene, mall) => Play(mall, enemy));
             WireRoot2();
-            AddToBuild();
+            AddToPlaces();
             WorldLayout.LayOut("Root3");
 
             foreach (string path in PlaceLooks.Shoot(ScenePath))
@@ -134,8 +139,8 @@ namespace MemorialFloor.Editor
                 moves.runtimeAnimatorController = Load<RuntimeAnimatorController>(SodaController);
                 PrefabUtility.RecordPrefabInstancePropertyModifications(moves);
 
-                SerializedObject kind = new SerializedObject(slime.GetComponent(Legacy("Slime")));
-                kind.FindProperty("questTarget").stringValue = "Slime";
+                SerializedObject kind = new SerializedObject(slime.GetComponent<Slime>());
+                kind.FindProperty("_questTarget").stringValue = "Slime";
                 SodaDrops(kind);
                 Strengthen(kind);
                 kind.ApplyModifiedPropertiesWithoutUndo();
@@ -164,11 +169,11 @@ namespace MemorialFloor.Editor
         /// <summary>スライムゼリーの代わりにソーダスライムゼリーを必ず落とし、スライムコアはスライムより出やすくする</summary>
         private static void SodaDrops(SerializedObject kind)
         {
-            SerializedProperty always = kind.FindProperty("drops");
+            SerializedProperty always = kind.FindProperty("_drops");
             always.arraySize = 1;
             always.GetArrayElementAtIndex(0).stringValue = SodaJelly;
 
-            SerializedProperty chances = kind.FindProperty("chanceDrops");
+            SerializedProperty chances = kind.FindProperty("_chanceDrops");
             chances.arraySize = 1;
             SerializedProperty core = chances.GetArrayElementAtIndex(0);
             core.FindPropertyRelative("ItemId").stringValue = "Slimecore";
@@ -178,11 +183,11 @@ namespace MemorialFloor.Editor
         /// <summary>速さ・攻撃・体力をスライムの SodaStrength 倍にする。体力の上限と初期値は頭の上の Slider が持つ（Slime）</summary>
         private static void Strengthen(SerializedObject kind)
         {
-            kind.FindProperty("speed").floatValue *= SodaStrength;
-            kind.FindProperty("power").floatValue *= SodaStrength;
+            kind.FindProperty("_speed").floatValue *= SodaStrength;
+            kind.FindProperty("_power").floatValue *= SodaStrength;
 
             // Slider の型はこのアセンブリから参照していないので、値は SerializedObject で触る
-            SerializedObject bar = new SerializedObject(kind.FindProperty("hp").objectReferenceValue);
+            SerializedObject bar = new SerializedObject(kind.FindProperty("_hpBar").objectReferenceValue);
             float max = Mathf.Round(bar.FindProperty("m_MaxValue").floatValue * SodaStrength);
             bar.FindProperty("m_MaxValue").floatValue = max;
             bar.FindProperty("m_Value").floatValue = max;
@@ -217,7 +222,7 @@ namespace MemorialFloor.Editor
             // 名前で引かれ、核の子になって、湧く地面を探す（OF_Spawner、Seeker）
             GameObject seeker = new GameObject("Seeker");
             seeker.transform.position = SeekerAt;
-            seeker.AddComponent(Legacy("Seeker"));
+            seeker.AddComponent<Seeker>();
             BoxCollider idle = seeker.AddComponent<BoxCollider>();
             idle.size = new Vector3(1f, 0.1f, 1f);
             idle.enabled = false;
@@ -233,7 +238,7 @@ namespace MemorialFloor.Editor
             Sun(mall);
         }
 
-        /// <summary>出口の当たり。触れると、kind の向きの隣の場所へ移る（Player2、Exit）</summary>
+        /// <summary>出口の当たり。触れると、kind の向きの隣の場所へ移る（PlayerReach、Exit）</summary>
         private static void Door(GameObject exit, Vector3 size, Vector3 center, ExitKind kind)
         {
             BoxCollider door = exit.AddComponent<BoxCollider>();
@@ -294,9 +299,9 @@ namespace MemorialFloor.Editor
             candidate.layer = FloodedMallBuilder.SeekThrough;
 
             // 核になったら、候補の立つ階の床に湧かせる
-            SerializedObject seek = new SerializedObject(candidate.AddComponent(Legacy("SpawnerCandidate")));
-            seek.FindProperty("seekFrom").floatValue = at.y + SeekRise;
-            seek.FindProperty("seekDepth").floatValue = SeekDepth;
+            SerializedObject seek = new SerializedObject(candidate.AddComponent<SpawnerCandidate>());
+            seek.FindProperty("_seekFrom").floatValue = at.y + SeekRise;
+            seek.FindProperty("_seekDepth").floatValue = SeekDepth;
             seek.ApplyModifiedPropertiesWithoutUndo();
 
             Renderer[] shown = candidate.GetComponentsInChildren<Renderer>();
@@ -316,7 +321,7 @@ namespace MemorialFloor.Editor
         }
 
         /// <summary>
-        /// 日の光を一日の巡りにつなぐ。巡りは常駐シーンの Sun2 が進め、強さは場所の光の Daylight が受け取るので、無いと根源3に居るあいだ夜が来ない。
+        /// 日の光を一日の巡りにつなぐ。巡りは常駐シーンの Sun が進め、強さは場所の光の Daylight が受け取るので、無いと根源3に居るあいだ夜が来ない。
         /// 日差しの筋も日の光の強さに合わせ、組んだときの強さで素材どおりの濃さにする
         /// </summary>
         private static void Sun(Transform mall)
@@ -398,17 +403,18 @@ namespace MemorialFloor.Editor
             }
         }
 
-        /// <summary>Build Settings に入れる。場所は名前で読み込むので、入っていないと移ったときに例外になる</summary>
-        private static void AddToBuild()
+        /// <summary>
+        /// 場所の組（Addressables）に、シーンの名前を住所にして入れる。入っていないと移ったときに例外になる。
+        /// Build Settings には入れない。入れると書き出しに二重に入る
+        /// </summary>
+        private static void AddToPlaces()
         {
-            List<EditorBuildSettingsScene> scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-            if (!scenes.Exists(scene => scene.path == ScenePath))
-            {
-                scenes.Add(new EditorBuildSettingsScene(ScenePath, true));
-                EditorBuildSettings.scenes = scenes.ToArray();
-            }
+            AddressableAssetSettings settings = AddressableAssetSettingsDefaultObject.Settings;
+            AddressableAssetGroup places = settings.FindGroup(PlacesGroup);
+            if (places == null) throw new InvalidOperationException("Addressables に組 " + PlacesGroup + " が無い");
 
-            // 一覧はプロジェクトを保存するまでファイルに書かれない
+            AddressableAssetEntry entry = settings.CreateOrMoveEntry(AssetDatabase.AssetPathToGUID(ScenePath), places);
+            entry.SetAddress(System.IO.Path.GetFileNameWithoutExtension(ScenePath));
             AssetDatabase.SaveAssets();
         }
 
@@ -429,15 +435,6 @@ namespace MemorialFloor.Editor
             }
 
             return null;
-        }
-
-        /// <summary>古いスクリプトの型。古いスクリプトは asmdef の無いアセンブリにあり、ここからは型を名前でしか引けない</summary>
-        private static Type Legacy(string name)
-        {
-            Type type = Type.GetType(name + ", Assembly-CSharp");
-            if (type == null) throw new InvalidOperationException(name + " が Assembly-CSharp に無い");
-
-            return type;
         }
 
         private static T Load<T>(string path) where T : UnityEngine.Object

@@ -159,11 +159,8 @@ public class SceneSmokeTests
         Assert.AreEqual(TravelRule.BaseAreaId, SceneManager.GetActiveScene().name);
     }
 
-    //Play を押し直した直後の状態に戻す。
-    //PlayMode テストはテスト間でドメインを再読み込みしないため、
-    //オブジェクトを消すだけでは static が前のテストの結果を持ち越す
     [UnityTearDown]
-    public IEnumerator 持ち回しオブジェクトと静的状態を捨てる()
+    public IEnumerator 持ち回しオブジェクトを捨てる()
     {
         //LoadScene(Single) は DontDestroyOnLoad を消さない。ゲームは使わないが、外部の部品が作ることがある
         foreach (var go in UnityEngine.Object.FindObjectsByType<GameObject>(FindObjectsSortMode.None))
@@ -171,30 +168,13 @@ public class SceneSmokeTests
             if (go.scene.name == "DontDestroyOnLoad") UnityEngine.Object.Destroy(go);
         }
 
-        //根源は Domain 側。RootsManager だけ Assembly-CSharp なので名前で引く
-        var roots = StaticField("RootsManager", "Roots").GetValue(null) as RootRegistry;
-        Assert.IsNotNull(roots, "RootsManager.Roots が RootRegistry ではない");
-        roots.Clear();
-
-        //クエストも同じ。QuestManager.Start が毎回足すので、消さないと溜まる
-        var quests = StaticField("QuestManager", "Quests").GetValue(null) as QuestRegistry;
-        Assert.IsNotNull(quests, "QuestManager.Quests が QuestRegistry ではない");
-        quests.Clear();
-        SetStatic("QuestManager", "ordered_id", "");
-
-        //倒れると立つ。次のテストで拠点に着いたとき報酬 UI が出てしまう
-        SetStatic("RewardUI", "rewardUI_show", 0);
-
         yield return null;
     }
 
     //場所は拠点のあとに、根源を作った順で一列に並ぶ
     private static string[] RootIds()
     {
-        var roots = StaticField("RootsManager", "Roots").GetValue(null) as RootRegistry;
-        Assert.IsNotNull(roots, "RootsManager.Roots が RootRegistry ではない");
-
-        return roots.All.Select(root => root.Id).ToArray();
+        return UnityEngine.Object.FindAnyObjectByType<RootsManager>().Roots.All.Select(root => root.Id).ToArray();
     }
 
     private static AreaTravel Travel()
@@ -281,32 +261,6 @@ public class SceneSmokeTests
     private static float FlatDistance(Vector3 a, Vector3 b)
     {
         return new Vector2(a.x - b.x, a.z - b.z).magnitude;
-    }
-
-    //Assembly-CSharp は asmdef から参照できない（参照は一方向）ため名前で引く。
-    //改名するとコンパイルではなくここで落ちる
-    private static Type GameType(string typeName)
-    {
-        var type = AppDomain.CurrentDomain.GetAssemblies()
-            .Select(a => a.GetType(typeName))
-            .FirstOrDefault(t => t != null);
-        Assert.IsNotNull(type, typeName + " 型が見つからない");
-
-        return type;
-    }
-
-    private static FieldInfo StaticField(string typeName, string fieldName)
-    {
-        var field = GameType(typeName).GetField(fieldName,
-            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.IsNotNull(field, typeName + "." + fieldName + " が見つからない");
-
-        return field;
-    }
-
-    private static void SetStatic(string typeName, string fieldName, object value)
-    {
-        StaticField(typeName, fieldName).SetValue(null, value);
     }
 
 }

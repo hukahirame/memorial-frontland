@@ -5157,10 +5157,15 @@ GameObject:
   - component: {fileID: 5092928017906965706}
   - component: {fileID: 6329567958158941576}
   - component: {fileID: 1037088907475966477}
-  - component: {fileID: 6724208982236260623}
   - component: {fileID: 3980460192160412030}
   - component: {fileID: 1539511784068188435}
   - component: {fileID: 483469129939628134}
+  - component: {fileID: 7182866836903439500}
+  - component: {fileID: 5195439398062509320}
+  - component: {fileID: 8996195293974492275}
+  - component: {fileID: 1394027459375145601}
+  - component: {fileID: 1760509795024648518}
+  - component: {fileID: 306288286268907968}
   m_Layer: 0
   m_Name: Player(experiment) 1
   m_TagString: Player
@@ -5366,30 +5371,6 @@ MonoBehaviour:
   Firearm: {fileID: 1363645426400558479}
   LayerManager: {fileID: 0}
   ShowHelmet: 1
---- !u!114 &6724208982236260623
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 400765466121135909}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9879fe53dece7e44b8ce5dc9ee89340, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  joystick: {fileID: 0}
-  joystick_atk: {fileID: 0}
-  on_ground: 0
-  expos: {x: 0, y: 0, z: 0, w: 0}
-  character: {fileID: 1037088907475966477}
-  animator: {fileID: 6416783717960335875}
-  body: {fileID: 6546430410081708363}
-  weapon: {fileID: 2092636751447875539}
-  jumpbutton: {fileID: 0}
-  footstep: {fileID: 1539511784068188435}
-  allmaity: {fileID: 0}
-  travel: {fileID: 0}
 --- !u!54 &3980460192160412030
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -5536,6 +5517,101 @@ MonoBehaviour:
   FixedArm: 0
   AngleToTarget: 0
   AngleToArm: 0
+--- !u!114 &7182866836903439500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 400765466121135909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc4e7e7ee7f62e64b8fce2805d5569d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.PlayerInput
+  _moveStick: {fileID: 0}
+  _attackStick: {fileID: 0}
+--- !u!114 &5195439398062509320
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 400765466121135909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ae19615149622047b7517d83468abe8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.PlayerHealth
+  _max: 200
+  _regenSeconds: 1
+  _regenAmount: 2
+  _travel: {fileID: 0}
+--- !u!114 &8996195293974492275
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 400765466121135909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d126b395cfef7b4f9937c3b8f9f02fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.PlayerMovement
+  _character: {fileID: 1037088907475966477}
+  _body: {fileID: 6546430410081708363}
+  _jumpButton: {fileID: 0}
+  _footstep: {fileID: 1539511784068188435}
+  _travel: {fileID: 0}
+--- !u!114 &1394027459375145601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 400765466121135909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a6eb429802ba903458c4004c0bfa14f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.PlayerAttack
+  _character: {fileID: 1037088907475966477}
+  _animator: {fileID: 6416783717960335875}
+  _body: {fileID: 6546430410081708363}
+  _weapon: {fileID: 2092636751447875539}
+--- !u!114 &1760509795024648518
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 400765466121135909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18d644b16ff97f643aced3ba12626ef1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.PlayerReach
+  _allmaity: {fileID: 0}
+  _travel: {fileID: 0}
+--- !u!114 &306288286268907968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 400765466121135909}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c50fad22fd36cb4484ca86475f79231, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.PlayerEquipment
+  _hand: {fileID: 0}
+  _handSprites:
+  - ItemId: Ironsword
+    Sprite: {fileID: 21300000, guid: 764dbfa4c66047e6bc2c958286c9543d, type: 3}
+  - ItemId: Legendsword
+    Sprite: {fileID: 21300000, guid: 7bcbe1243b3142c18c74b8865254e871, type: 3}
 --- !u!1 &423485849987304829
 GameObject:
   m_ObjectHideFlags: 0
@@ -12899,10 +12975,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e5572c2a2d0c4a43af507792a0940b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sr: {fileID: 8061318958832525775}
-  open: {fileID: 21300000, guid: 58af479d266c9364c861ea3025a8b051, type: 3}
-  close: {fileID: 21300000, guid: 41861214015255f4786d608a137a7ced, type: 3}
-  deatheyes: {fileID: 0}
+  _eyes: {fileID: 8061318958832525775}
+  _open: {fileID: 21300000, guid: 58af479d266c9364c861ea3025a8b051, type: 3}
+  _closed: {fileID: 21300000, guid: 41861214015255f4786d608a137a7ced, type: 3}
 --- !u!1 &1815701235252790178
 GameObject:
   m_ObjectHideFlags: 0
@@ -24792,10 +24867,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e5572c2a2d0c4a43af507792a0940b3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  sr: {fileID: 1833946591016672570}
-  open: {fileID: 21300000, guid: 58af479d266c9364c861ea3025a8b051, type: 3}
-  close: {fileID: 21300000, guid: 41861214015255f4786d608a137a7ced, type: 3}
-  deatheyes: {fileID: 0}
+  _eyes: {fileID: 1833946591016672570}
+  _open: {fileID: 21300000, guid: 58af479d266c9364c861ea3025a8b051, type: 3}
+  _closed: {fileID: 21300000, guid: 41861214015255f4786d608a137a7ced, type: 3}
 --- !u!1 &7205328076476546806
 GameObject:
   m_ObjectHideFlags: 0

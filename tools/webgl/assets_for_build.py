@@ -1,7 +1,7 @@
 """WebGL の書き出しに要る物だけを、写した先の Assets に置く。
 
-自作の物（_Project・LegacyScripts・WebGLTemplates）は丸ごと写す。素材集（Assets 直下のほかの物）からは、
-書き出しに入るシーン・Resources・ProjectSettings から GUID の参照をたどって届くファイルと、コードとシェーダーだけを写す。
+自作の物（_Project・LegacyScripts・WebGLTemplates・AddressableAssetsData）は丸ごと写す。素材集（Assets 直下のほかの物）からは、
+書き出しに入るシーン・Addressables の組に入れた物・Resources・ProjectSettings から GUID の参照をたどって届くファイルと、コードとシェーダーだけを写す。
 コードとシェーダーは GUID ではなく名前やコンパイルでつながるので、素材集のものも全部写す。
 3D モデルに埋め込まれた素材は、絵を読み込みのときに名前で探すのでたどれない。いまは使っていない（--report で数える）。
 
@@ -23,7 +23,13 @@ LEFT_OUT = {
 }
 
 # 丸ごと写す自作の物
-OURS = ("_Project", "LegacyScripts", "WebGLTemplates")
+OURS = ("_Project", "LegacyScripts", "WebGLTemplates", "AddressableAssetsData")
+
+# Addressables の組。入れた物は書き出しに入るシーンと同じく、たどり始める物にする
+ADDRESSABLE_GROUPS = "Assets/AddressableAssetsData/AssetGroups"
+
+# 組の中の 1 件。組の .asset は資産を m_GUID で指し、ほかの YAML の「guid: 」の形と違う
+ADDRESSABLE_ENTRY = re.compile(rb"m_GUID: ([0-9a-f]{32})")
 
 # 参照ではなく名前やコンパイルでつながる物。素材集のものも全部写す
 CODE = (".cs", ".asmdef", ".asmref", ".dll", ".jslib", ".jspre", ".rsp", ".shader", ".cginc", ".hlsl",
@@ -99,6 +105,11 @@ def reachable(root, owner):
     roots = set()
     with open(os.path.join(root, "ProjectSettings", "EditorBuildSettings.asset"), "rb") as f:
         roots.update(match.decode().strip() for match in re.findall(rb"enabled: 1\s+path: (\S[^\r\n]*)", f.read()))
+
+    for path in files_under(root, ADDRESSABLE_GROUPS):
+        if path.endswith(".asset"):
+            data = _read(root, path) or b""
+            roots.update(owner[g.decode()] for g in ADDRESSABLE_ENTRY.findall(data) if g.decode() in owner)
 
     for name in os.listdir(os.path.join(root, "ProjectSettings")):
         if name.endswith(".asset"):

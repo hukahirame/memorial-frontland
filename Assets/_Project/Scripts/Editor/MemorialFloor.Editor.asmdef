@@ -4,7 +4,9 @@
     "references": [
         "MemorialFloor.Domain",
         "MemorialFloor.Game",
-        "Unity.Postprocessing.Runtime"
+        "Unity.Postprocessing.Runtime",
+        "Unity.Addressables",
+        "Unity.Addressables.Editor"
     ],
     "includePlatforms": [
         "Editor"

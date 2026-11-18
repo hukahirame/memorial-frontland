@@ -11335,7 +11335,7 @@ MonoBehaviour:
   home: {fileID: 0}
   origin: {x: 33.5, y: 0, z: 0}
   exposition: {x: 23.5, y: -20.5, z: 0.6, w: -11}
-  enemy: {fileID: 0}
+  enemy: {fileID: 8947018673791946096, guid: f2f2694e2d3903c449b4259ebf508336, type: 3}
   ceiling: 4
 --- !u!1 &690505917
 GameObject:
