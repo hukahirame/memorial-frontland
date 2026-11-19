@@ -143,7 +143,7 @@ public class FencePlayTests
     /// <summary>柵の残りの耐久を left にする</summary>
     private static void Wear(Fence fence, int left)
     {
-        FenceDurability state = (FenceDurability)typeof(Fence).GetField("state", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(fence);
+        FenceDurability state = (FenceDurability)typeof(Fence).GetField("_state", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(fence);
         state.Strike(state.Current - left, Time.time);
     }
 

@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
+using UnityEngine.Serialization;
 
 namespace MemorialFloor.Game
 {
@@ -45,24 +46,24 @@ namespace MemorialFloor.Game
         private const float SpreadFrom = 0.3f;
 
         [Tooltip("背景の絵。ゆっくり寄せては戻す")]
-        [SerializeField] private RectTransform picture;
+        [SerializeField, FormerlySerializedAs("picture")] private RectTransform _picture;
 
         [Tooltip("光の粒を漂わせる範囲。画面いっぱいに広げておく")]
-        [SerializeField] private RectTransform motes;
+        [SerializeField, FormerlySerializedAs("motes")] private RectTransform _motes;
 
         [Tooltip("光の粒の絵。ぼけた丸")]
-        [SerializeField] private Sprite mote;
+        [SerializeField, FormerlySerializedAs("mote")] private Sprite _mote;
 
-        [SerializeField] private Color moteColor = new Color(1f, 0.95f, 0.8f, 0.75f);
+        [SerializeField, FormerlySerializedAs("moteColor")] private Color _moteColor = new Color(1f, 0.95f, 0.8f, 0.75f);
 
-        private Mote[] flying;
+        private Mote[] _flying;
 
-        private RawImage movie;
-        private VideoPlayer player;
-        private RenderTexture screen;
+        private RawImage _movie;
+        private VideoPlayer _player;
+        private RenderTexture _screen;
 
         /// <summary>動画が流れ始めた時刻。始まる前は負</summary>
-        private float movieStartedAt = -1f;
+        private float _movieStartedAt = -1f;
 
         private sealed class Mote
         {
@@ -76,18 +77,18 @@ namespace MemorialFloor.Game
 
         private void Start()
         {
-            flying = new Mote[MoteCount];
+            _flying = new Mote[MoteCount];
             for (int i = 0; i < MoteCount; i++)
             {
                 GameObject dot = new GameObject("Mote", typeof(RectTransform), typeof(Image));
-                dot.transform.SetParent(motes, false);
+                dot.transform.SetParent(_motes, false);
 
                 Image image = dot.GetComponent<Image>();
-                image.sprite = mote;
+                image.sprite = _mote;
                 image.raycastTarget = false;
 
-                flying[i] = new Mote { Rect = (RectTransform)dot.transform, Image = image };
-                Respawn(flying[i], Random.value);
+                _flying[i] = new Mote { Rect = (RectTransform)dot.transform, Image = image };
+                Respawn(_flying[i], Random.value);
             }
 
             PlayMovie();
@@ -95,21 +96,21 @@ namespace MemorialFloor.Game
 
         private void OnDestroy()
         {
-            if (screen != null) screen.Release();
+            if (_screen != null) _screen.Release();
         }
 
         private void Update()
         {
             float k = (1f - Mathf.Cos(Time.unscaledTime / ZoomSeconds * 2f * Mathf.PI)) / 2f;
-            picture.localScale = Vector3.one * Mathf.Lerp(1f, MaxZoom, k);
+            _picture.localScale = Vector3.one * Mathf.Lerp(1f, MaxZoom, k);
 
-            if (movieStartedAt >= 0f)
+            if (_movieStartedAt >= 0f)
             {
-                movie.color = new Color(1f, 1f, 1f, Mathf.Clamp01((Time.unscaledTime - movieStartedAt) / MovieFadeSeconds));
+                _movie.color = new Color(1f, 1f, 1f, Mathf.Clamp01((Time.unscaledTime - _movieStartedAt) / MovieFadeSeconds));
             }
 
-            Rect area = motes.rect;
-            foreach (Mote dot in flying)
+            Rect area = _motes.rect;
+            foreach (Mote dot in _flying)
             {
                 Vector2 at = dot.Rect.anchoredPosition;
                 at.y += dot.Rise * Time.unscaledDeltaTime;
@@ -119,7 +120,7 @@ namespace MemorialFloor.Game
                 //下から現れ、上に近づくほど消える
                 float climbed = Mathf.InverseLerp(area.yMin, area.yMax, at.y);
                 float alpha = Mathf.Clamp01(climbed / 0.15f) * Mathf.Clamp01((1f - climbed) / 0.35f);
-                Color color = moteColor;
+                Color color = _moteColor;
                 color.a *= alpha;
                 dot.Image.color = color;
 
@@ -138,39 +139,39 @@ namespace MemorialFloor.Game
             if (!url.Contains("://") && !File.Exists(url)) return;
 
             var holder = new GameObject("Movie", typeof(RectTransform), typeof(RawImage));
-            holder.layer = picture.gameObject.layer;
+            holder.layer = _picture.gameObject.layer;
 
             var rect = (RectTransform)holder.transform;
-            rect.SetParent(picture, false);
+            rect.SetParent(_picture, false);
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
             rect.offsetMin = Vector2.zero;
             rect.offsetMax = Vector2.zero;
 
-            screen = new RenderTexture(MovieWidth, MovieHeight, 0);
-            movie = holder.GetComponent<RawImage>();
-            movie.texture = screen;
-            movie.raycastTarget = false;
-            movie.color = new Color(1f, 1f, 1f, 0f);
+            _screen = new RenderTexture(MovieWidth, MovieHeight, 0);
+            _movie = holder.GetComponent<RawImage>();
+            _movie.texture = _screen;
+            _movie.raycastTarget = false;
+            _movie.color = new Color(1f, 1f, 1f, 0f);
 
-            player = gameObject.AddComponent<VideoPlayer>();
-            player.playOnAwake = false;
-            player.isLooping = true;
-            player.skipOnDrop = true;
-            player.audioOutputMode = VideoAudioOutputMode.None;
-            player.renderMode = VideoRenderMode.RenderTexture;
-            player.targetTexture = screen;
-            player.source = VideoSource.Url;
-            player.url = url;
-            player.prepareCompleted += prepared => prepared.Play();
-            player.started += _ => movieStartedAt = Time.unscaledTime;
-            player.Prepare();
+            _player = gameObject.AddComponent<VideoPlayer>();
+            _player.playOnAwake = false;
+            _player.isLooping = true;
+            _player.skipOnDrop = true;
+            _player.audioOutputMode = VideoAudioOutputMode.None;
+            _player.renderMode = VideoRenderMode.RenderTexture;
+            _player.targetTexture = _screen;
+            _player.source = VideoSource.Url;
+            _player.url = url;
+            _player.prepareCompleted += prepared => prepared.Play();
+            _player.started += _ => _movieStartedAt = Time.unscaledTime;
+            _player.Prepare();
         }
 
         /// <summary>粒を下に戻す。height は戻す高さ（範囲の高さに対する比）。始めは高さをばらして、一斉に昇らないようにする</summary>
         private void Respawn(Mote dot, float height)
         {
-            Rect area = motes.rect;
+            Rect area = _motes.rect;
             float size = Random.Range(SizeMin, SizeMax);
 
             dot.Rect.anchorMin = dot.Rect.anchorMax = new Vector2(0.5f, 0.5f);

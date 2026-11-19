@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.Serialization;
 
 namespace MemorialFloor.Game
 {
@@ -16,7 +17,7 @@ namespace MemorialFloor.Game
         public const float CrossSeconds = 1.5f;
 
         [Tooltip("曲を鳴らす。重ねて移るための 2 つめは、これを写して作る")]
-        [SerializeField] private AudioSource source;
+        [SerializeField, FormerlySerializedAs("source")] private AudioSource _source;
 
         /// <summary>今の曲を鳴らしている側</summary>
         private AudioSource _current;
@@ -77,9 +78,9 @@ namespace MemorialFloor.Game
 
         private void Awake()
         {
-            _volume = source.volume;
-            _current = source;
-            _previous = Twin(source);
+            _volume = _source.volume;
+            _current = _source;
+            _previous = Twin(_source);
             Apply();
         }
 

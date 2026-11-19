@@ -28,9 +28,9 @@
 | 🟩 `OutField` | **4** | **5** |
 | 🟩 `Staging` | **4** | **8** |
 | 🟩 `Inventory` | **5** | **4** |
-| 🟩 `Craft` | **6** | **0** |
+| 🟩 `Craft` | **7** | **0** |
 | 🟩 `Roots` | **9** | **4** |
-| 🟩 `Scene` | **10** | **8** |
+| 🟩 `Scene` | **10** | **9** |
 | 🟩 `Player` | **11** | **7** |
 | 🟩 `Quest` | **11** | **5** |
 | 🟩 `Enemy` | **12** | **4** |
@@ -127,6 +127,7 @@
 ↑ 🟦 `Inventory` **6** — Inventory **3**, ItemDefinition **3**  
 ↑ 🟩 `Inventory` **3** — PlayerInventory **2**, ItemBook **1**  
 ↑ 🟩 `Player` **1** — PlayerMovement **1**  
+↑ 🟩 `Scene` **1** — AreaTravel **1**  
 ↑ 🟩 `Staging` **1** — MiddleText **1**  
 ↑ 🟩 `Wallet` **1** — Purse **1**  
 
@@ -137,7 +138,7 @@
 ↓ 🟩 `Quest` **1** — Sun **1**  
 ↓ 🟩 `Roots` **1** — Sun **1**  
 ↓ 🟩 `Save` **1** — Sun **1**  
-↓ 🟩 `Staging` **12** — Sun **11**, Daylight **1**  
+↓ 🟩 `Staging` **15** — Sun **12**, Daylight **3**  
 
 ### 🟩Enemy 👾 
 
@@ -274,6 +275,7 @@
 ↑ 🟩 `Save` **17** — SaveSlots **11**, SaveSystem **4**, SaveData **2**  
 ↑ 🟩 `Staging` **8** — PressFeedback **4**, Music **2**, KeyHint **1**, UiStage **1**  
 
+↓ 🟩 `Craft` **1** — AreaTravel **1**  
 ↓ 🟩 `Enemy` **8** — Area **6**, AreaTravel **2**  
 ↓ 🟩 `Inventory` **2** — AreaTravel **1**, PlacedObjects **1**  
 ↓ 🟩 `OutField` **2** — Area **2**  
@@ -286,7 +288,7 @@
 ### 🟩Staging 🎥 
 
 ↑ 🟦 `Player` **24** — AttackMove **24**  
-↑ 🟩 `Day` **12** — Sun **11**, Daylight **1**  
+↑ 🟩 `Day` **15** — Sun **12**, Daylight **3**  
 ↑ 🟩 `OutField` **1** — Exposition **1**  
 ↑ 🟩 `Scene` **11** — Area **10**, AreaTravel **1**  
 

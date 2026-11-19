@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace MemorialFloor.Game
 {
@@ -13,12 +14,12 @@ namespace MemorialFloor.Game
         private const float MaxStepSeconds = 1f / 30f;
 
         [Tooltip("覆うのと開けるのに、それぞれかける秒数")]
-        [SerializeField] private float fadeSeconds = 0.3f;
+        [SerializeField, FormerlySerializedAs("fadeSeconds")] private float _fadeSeconds = 0.3f;
 
-        [SerializeField] private CanvasGroup cover;
+        [SerializeField, FormerlySerializedAs("cover")] private CanvasGroup _cover;
 
         [Tooltip("覆うあいだ音量を下げる。空なら画面だけ")]
-        [SerializeField] private Music music;
+        [SerializeField, FormerlySerializedAs("music")] private Music _music;
 
         private void Awake()
         {
@@ -38,12 +39,12 @@ namespace MemorialFloor.Game
         //止めた時間の中でも進むよう実時間で数える
         private IEnumerator Fade(float target)
         {
-            float from = cover.alpha;
+            float from = _cover.alpha;
             if (Mathf.Approximately(from, target)) yield break;
 
-            for (float t = 0f; t < fadeSeconds; t += Mathf.Min(Time.unscaledDeltaTime, MaxStepSeconds))
+            for (float t = 0f; t < _fadeSeconds; t += Mathf.Min(Time.unscaledDeltaTime, MaxStepSeconds))
             {
-                Apply(Mathf.Lerp(from, target, t / fadeSeconds));
+                Apply(Mathf.Lerp(from, target, t / _fadeSeconds));
                 yield return null;
             }
 
@@ -52,8 +53,8 @@ namespace MemorialFloor.Game
 
         private void Apply(float alpha)
         {
-            cover.alpha = alpha;
-            if (music != null) music.Veil = alpha;
+            _cover.alpha = alpha;
+            if (_music != null) _music.Veil = alpha;
         }
     }
 }

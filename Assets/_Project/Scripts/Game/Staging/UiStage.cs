@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 
 namespace MemorialFloor.Game
 {
@@ -33,7 +34,7 @@ namespace MemorialFloor.Game
         private const float RescanSeconds = 0.5f;
 
         [Tooltip("開いているあいだ後ろを暗くする画面。どれか 1 つでも開いていれば暗くする")]
-        [SerializeField] private RectTransform[] panels = new RectTransform[0];
+        [SerializeField, FormerlySerializedAs("panels")] private RectTransform[] _panels = new RectTransform[0];
 
         private Image _dimmer;
         private float _dim;
@@ -50,7 +51,7 @@ namespace MemorialFloor.Game
         {
             _dimmer = CreateDimmer();
 
-            int count = panels.Length;
+            int count = _panels.Length;
             _lastPositions = new Vector3[count];
             _shown = new bool[count];
             _appearing = new bool[count];
@@ -60,9 +61,9 @@ namespace MemorialFloor.Game
 
             for (int i = 0; i < count; i++)
             {
-                _lastPositions[i] = panels[i].position;
-                _shown[i] = IsShown(panels[i]);
-                _groups[i] = panels[i].TryGetComponent(out CanvasGroup group) ? group : panels[i].gameObject.AddComponent<CanvasGroup>();
+                _lastPositions[i] = _panels[i].position;
+                _shown[i] = IsShown(_panels[i]);
+                _groups[i] = _panels[i].TryGetComponent(out CanvasGroup group) ? group : _panels[i].gameObject.AddComponent<CanvasGroup>();
             }
 
             PressFeedback.AttachAll(transform);
@@ -73,9 +74,9 @@ namespace MemorialFloor.Game
             float now = Time.unscaledTime;
             bool anyShown = false;
 
-            for (int i = 0; i < panels.Length; i++)
+            for (int i = 0; i < _panels.Length; i++)
             {
-                RectTransform panel = panels[i];
+                RectTransform panel = _panels[i];
                 bool shown = IsShown(panel);
 
                 if (shown && !_shown[i] && (panel.position - _lastPositions[i]).magnitude > Screen.width * JumpRatio)
@@ -96,9 +97,9 @@ namespace MemorialFloor.Game
             //地図の根源のボタンのように、開くたびに作り直されるものにも付ける
             if (anyShown && now >= _rescanAt)
             {
-                for (int i = 0; i < panels.Length; i++)
+                for (int i = 0; i < _panels.Length; i++)
                 {
-                    if (_shown[i]) PressFeedback.AttachAll(panels[i]);
+                    if (_shown[i]) PressFeedback.AttachAll(_panels[i]);
                 }
                 _rescanAt = now + RescanSeconds;
             }
@@ -113,7 +114,7 @@ namespace MemorialFloor.Game
         {
             float eased = 1f - Mathf.Pow(1f - Mathf.Clamp01(progress), 3f);
             _groups[i].alpha = eased;
-            panels[i].localScale = _baseScales[i] * Mathf.Lerp(AppearScale, 1f, eased);
+            _panels[i].localScale = _baseScales[i] * Mathf.Lerp(AppearScale, 1f, eased);
 
             if (progress >= 1f) _appearing[i] = false;
         }
@@ -151,7 +152,7 @@ namespace MemorialFloor.Game
         private int BackmostPanelIndex()
         {
             int index = transform.childCount - 1;
-            foreach (RectTransform panel in panels)
+            foreach (RectTransform panel in _panels)
             {
                 if (panel.parent == transform) index = Mathf.Min(index, panel.GetSiblingIndex());
             }

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using MemorialFloor.Domain;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace MemorialFloor.Game
 {
@@ -58,84 +59,84 @@ namespace MemorialFloor.Game
         private static readonly int ColorId = Shader.PropertyToID("_Color");
 
         [Tooltip("耐久。ぶつかった敵の攻撃力のぶん減る")]
-        [SerializeField] private int durability = 200;
+        [SerializeField, FormerlySerializedAs("durability")] private int _durability = 200;
 
         [Tooltip("見える部分。揺らし、倒し、色を変える。根元が原点")]
-        [SerializeField] private Transform shown;
+        [SerializeField, FormerlySerializedAs("shown")] private Transform _shown;
 
         [Tooltip("当たり。立てる所を探すときも、この大きさを柵の大きさとする")]
-        [SerializeField] private BoxCollider body;
+        [SerializeField, FormerlySerializedAs("body")] private BoxCollider _body;
 
-        private FenceDurability state;
-        private Vector3 rest;
-        private Quaternion upright;
-        private Renderer[] parts;
-        private MaterialPropertyBlock block;
-        private Coroutine shaking;
+        private FenceDurability _state;
+        private Vector3 _rest;
+        private Quaternion _upright;
+        private Renderer[] _parts;
+        private MaterialPropertyBlock _block;
+        private Coroutine _shaking;
 
-        private BoxCollider reach;
-        private WorldGauge gauge;
+        private BoxCollider _reach;
+        private WorldGauge _gauge;
 
         /// <summary>柵が自分で鳴らす音。場所のシーンに置かれるので、常駐シーンの音を指せない</summary>
         private SoundEffects _sounds;
 
         /// <summary>倒れる側。1 なら柵の厚みの向き（z）の正へ、-1 なら負へ倒れる</summary>
-        private float fallSide = 1f;
+        private float _fallSide = 1f;
 
         /// <summary>壊されて消えかけている</summary>
-        private bool broken;
+        private bool _broken;
 
         /// <summary>当たりの大きさ。x が長さ、y が高さ、z が厚み</summary>
         public Vector3 Size
         {
-            get { return body.size; }
+            get { return _body.size; }
         }
 
         /// <summary>当たりの真ん中。立てた所（足元）から見た位置</summary>
         public Vector3 Center
         {
-            get { return body.center; }
+            get { return _body.center; }
         }
 
         /// <summary>残りの耐久</summary>
         public int Durability
         {
-            get { return state.Current; }
+            get { return _state.Current; }
         }
 
         /// <summary>敵に削りきられて倒れている。このあいだは通れて、削られもしない</summary>
         public bool IsFallen
         {
-            get { return state.IsFallen && !broken; }
+            get { return _state.IsFallen && !_broken; }
         }
 
         /// <summary>壊すボタンを出す範囲の当たり。素通りする当たりで、プレイヤーの体が入るとボタンが出る</summary>
         public Collider Reach
         {
-            get { return reach; }
+            get { return _reach; }
         }
 
         private void Awake()
         {
             _sounds = GetComponent<SoundEffects>();
-            state = new FenceDurability(durability);
+            _state = new FenceDurability(_durability);
 
-            rest = shown.localPosition;
-            upright = shown.localRotation;
-            parts = shown.GetComponentsInChildren<Renderer>();
-            block = new MaterialPropertyBlock();
+            _rest = _shown.localPosition;
+            _upright = _shown.localRotation;
+            _parts = _shown.GetComponentsInChildren<Renderer>();
+            _block = new MaterialPropertyBlock();
 
-            reach = MakeReach();
-            gauge = WorldGauge.Put(transform, StandingFill, GaugeSize);
+            _reach = MakeReach();
+            _gauge = WorldGauge.Put(transform, StandingFill, GaugeSize);
         }
 
         private void Update()
         {
-            if (broken) return;
+            if (_broken) return;
 
-            float before = state.Ratio;
-            bool rose = state.Repair(Time.time, Time.deltaTime);
-            if (state.Ratio == before) return;
+            float before = _state.Ratio;
+            bool rose = _state.Repair(Time.time, Time.deltaTime);
+            if (_state.Ratio == before) return;
 
             Wear();
             ShowDurability();
@@ -145,9 +146,9 @@ namespace MemorialFloor.Game
         /// <summary>from に居る敵がぶつかった。耐久が尽きたら、敵と反対の側へ倒れて通れるようになる。倒れているあいだは何もしない</summary>
         public void Ram(int amount, Vector3 from)
         {
-            if (state.IsFallen || broken) return;
+            if (_state.IsFallen || _broken) return;
 
-            bool fell = state.Strike(amount, Time.time);
+            bool fell = _state.Strike(amount, Time.time);
             Wear();
             ShowDurability();
             if (!fell)
@@ -156,7 +157,7 @@ namespace MemorialFloor.Game
                 return;
             }
 
-            fallSide = transform.InverseTransformPoint(from).z < 0f ? 1f : -1f;
+            _fallSide = transform.InverseTransformPoint(from).z < 0f ? 1f : -1f;
             _sounds.Play(HitSound, BreakPitch);
             StartCoroutine(Fall());
         }
@@ -164,9 +165,9 @@ namespace MemorialFloor.Game
         /// <summary>プレイヤーが壊した。すぐ通れるようにし、膨らんでから縮んで消える。何も戻らない</summary>
         public void Demolish()
         {
-            if (broken) return;
+            if (_broken) return;
 
-            broken = true;
+            _broken = true;
             _sounds.Play(HitSound, BreakPitch);
             StartCoroutine(Burst());
         }
@@ -174,35 +175,35 @@ namespace MemorialFloor.Game
         /// <summary>控えから戻す。置き直した直後に呼ぶ。awaySeconds は控えてから経った秒数で、離れていたあいだのぶんも戻す</summary>
         public void Restore(int current, bool fallen, float awaySeconds)
         {
-            state.Restore(current, fallen, awaySeconds);
+            _state.Restore(current, fallen, awaySeconds);
             Wear();
             ShowDurability();
 
-            body.isTrigger = state.IsFallen;
-            if (state.IsFallen) Lean();
+            _body.isTrigger = _state.IsFallen;
+            if (_state.IsFallen) Lean();
         }
 
         /// <summary>削れたぶん暗くする。素材は共有なので、物ごとの上書きで変える</summary>
         private void Wear()
         {
-            float shade = Mathf.Lerp(1f, WornShade, 1f - state.Ratio);
+            float shade = Mathf.Lerp(1f, WornShade, 1f - _state.Ratio);
 
-            foreach (Renderer part in parts)
+            foreach (Renderer part in _parts)
             {
                 Color color = part.sharedMaterial.color * shade;
                 color.a = part.sharedMaterial.color.a;
 
-                part.GetPropertyBlock(block);
-                block.SetColor(ColorId, color);
-                part.SetPropertyBlock(block);
+                part.GetPropertyBlock(_block);
+                _block.SetColor(ColorId, color);
+                part.SetPropertyBlock(_block);
             }
         }
 
         private void Jolt()
         {
             _sounds.Play(HitSound);
-            if (shaking != null) StopCoroutine(shaking);
-            shaking = StartCoroutine(Shake());
+            if (_shaking != null) StopCoroutine(_shaking);
+            _shaking = StartCoroutine(Shake());
         }
 
         private IEnumerator Shake()
@@ -210,26 +211,26 @@ namespace MemorialFloor.Game
             for (float t = 0f; t < ShakeSeconds; t += Time.deltaTime)
             {
                 float fade = 1f - t / ShakeSeconds;
-                shown.localPosition = rest + Vector3.forward * (Mathf.Sin(t * 80f) * ShakeWidth * fade);
+                _shown.localPosition = _rest + Vector3.forward * (Mathf.Sin(t * 80f) * ShakeWidth * fade);
                 yield return null;
             }
 
-            shown.localPosition = rest;
-            shaking = null;
+            _shown.localPosition = _rest;
+            _shaking = null;
         }
 
         /// <summary>倒れたらすぐ通れるようにし、根元を軸に倒す。倒れた柵の当たりは、立てる所を探すときにだけ使う</summary>
         private IEnumerator Fall()
         {
-            body.isTrigger = true;
-            if (shaking != null) StopCoroutine(shaking);
-            shaking = null;
-            shown.localPosition = rest;
+            _body.isTrigger = true;
+            if (_shaking != null) StopCoroutine(_shaking);
+            _shaking = null;
+            _shown.localPosition = _rest;
 
             for (float t = 0f; t < FallSeconds; t += Time.deltaTime)
             {
                 float k = t / FallSeconds;
-                shown.localRotation = Quaternion.AngleAxis(fallSide * FallAngle * k * k, Vector3.right) * upright;
+                _shown.localRotation = Quaternion.AngleAxis(_fallSide * FallAngle * k * k, Vector3.right) * _upright;
                 yield return null;
             }
 
@@ -239,29 +240,29 @@ namespace MemorialFloor.Game
         //倒れているあいだは、起き上がるまで寝かせたままにする
         private void Lean()
         {
-            shown.localRotation = Quaternion.AngleAxis(fallSide * FallAngle, Vector3.right) * upright;
+            _shown.localRotation = Quaternion.AngleAxis(_fallSide * FallAngle, Vector3.right) * _upright;
         }
 
         //起き上がる耐久を超えるまで戻って起き上がった。また通さなくなる。重なっていた敵やプレイヤーは当たりが押し出す
         private void Rise()
         {
-            shown.localRotation = upright;
-            body.isTrigger = false;
+            _shown.localRotation = _upright;
+            _body.isTrigger = false;
             _sounds.Play(HitSound, RisePitch);
-            if (shaking != null) StopCoroutine(shaking);
-            shaking = StartCoroutine(Shake());
+            if (_shaking != null) StopCoroutine(_shaking);
+            _shaking = StartCoroutine(Shake());
         }
 
         /// <summary>膨らんでから縮んで消える。当たりは先に消し、すぐ通れるようにする</summary>
         private IEnumerator Burst()
         {
-            body.enabled = false;
-            reach.enabled = false;
-            if (shaking != null) StopCoroutine(shaking);
-            shown.localPosition = rest;
-            gauge.gameObject.SetActive(false);
+            _body.enabled = false;
+            _reach.enabled = false;
+            if (_shaking != null) StopCoroutine(_shaking);
+            _shown.localPosition = _rest;
+            _gauge.gameObject.SetActive(false);
 
-            Vector3 size = shown.localScale;
+            Vector3 size = _shown.localScale;
             for (float t = 0f; t < BurstSeconds; t += Time.deltaTime)
             {
                 float k = t / BurstSeconds;
@@ -269,7 +270,7 @@ namespace MemorialFloor.Game
                     ? Mathf.Lerp(1f, BurstSwell, k / 0.3f)
                     : Mathf.Lerp(BurstSwell, 0f, (k - 0.3f) / 0.7f);
 
-                shown.localScale = size * scale;
+                _shown.localScale = size * scale;
                 yield return null;
             }
 
@@ -285,14 +286,14 @@ namespace MemorialFloor.Game
 
             var box = zone.AddComponent<BoxCollider>();
             box.isTrigger = true;
-            box.center = body.center;
-            box.size = body.size + new Vector3(ReachMargin * 2f, 0f, ReachMargin * 2f);
+            box.center = _body.center;
+            box.size = _body.size + new Vector3(ReachMargin * 2f, 0f, ReachMargin * 2f);
             return box;
         }
 
         private void ShowDurability()
         {
-            gauge.Show(state.Ratio, state.IsFallen ? FallenFill : StandingFill);
+            _gauge.Show(_state.Ratio, _state.IsFallen ? FallenFill : StandingFill);
         }
     }
 }

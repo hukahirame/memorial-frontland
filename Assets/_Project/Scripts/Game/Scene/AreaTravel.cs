@@ -7,6 +7,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 namespace MemorialFloor.Game
 {
@@ -28,13 +29,13 @@ namespace MemorialFloor.Game
         public const float CrossMargin = 0.5f;
 
         [Tooltip("移動させるもの。プレイヤー")]
-        [SerializeField] private Transform traveler;
+        [SerializeField, FormerlySerializedAs("traveler")] private Transform _traveler;
 
         [Tooltip("移動のあいだ物理を止める。着いた場所の床や壁と重なって弾かれないように")]
-        [SerializeField] private Rigidbody travelerBody;
+        [SerializeField, FormerlySerializedAs("travelerBody")] private Rigidbody _travelerBody;
 
         [Tooltip("移るあいだ画面を覆う。空なら覆わずに切り替える")]
-        [SerializeField] private ScreenVeil veil;
+        [SerializeField, FormerlySerializedAs("veil")] private ScreenVeil _veil;
 
         /// <summary>再生を場所のシーンから始めたとき、着いたことを Start で知らせる</summary>
         private bool _arrivedBeforeCore;
@@ -59,7 +60,7 @@ namespace MemorialFloor.Game
         /// <summary>移動させるもの。プレイヤー</summary>
         public Transform Traveler
         {
-            get { return traveler; }
+            get { return _traveler; }
         }
 
         /// <summary>
@@ -144,7 +145,7 @@ namespace MemorialFloor.Game
         {
             if (IsTraveling || Current == null) return;
 
-            Vector3 at = traveler.position;
+            Vector3 at = _traveler.position;
             if (OutsideBy(Current, at) <= CrossMargin) return;
 
             foreach (Area area in _present.Values)
@@ -270,7 +271,7 @@ namespace MemorialFloor.Game
             IsTraveling = true;
             Freeze();
 
-            if (veil != null) yield return veil.Close();
+            if (_veil != null) yield return _veil.Close();
 
             Area leaving = Current;
             if (leaving != null) Leaving?.Invoke(leaving);
@@ -311,7 +312,7 @@ namespace MemorialFloor.Game
             IsTraveling = true;
             Freeze();
 
-            if (veil != null) yield return veil.Close();
+            if (_veil != null) yield return _veil.Close();
 
             Place(Current.PointFor(arrival));
             Unfreeze();
@@ -324,7 +325,7 @@ namespace MemorialFloor.Game
             while (_holding.Exists(done => !done())) yield return null;
             _holding.Clear();
 
-            if (veil != null) yield return veil.Open();
+            if (_veil != null) yield return _veil.Open();
 
             IsTraveling = false;
         }
@@ -447,25 +448,25 @@ namespace MemorialFloor.Game
 
         private void Place(Vector3 position)
         {
-            traveler.position = position;
-            if (travelerBody != null) travelerBody.position = position;
+            _traveler.position = position;
+            if (_travelerBody != null) _travelerBody.position = position;
         }
 
         private void Freeze()
         {
-            if (travelerBody == null) return;
+            if (_travelerBody == null) return;
 
-            _wasKinematic = travelerBody.isKinematic;
-            if (!_wasKinematic) travelerBody.linearVelocity = Vector3.zero;
-            travelerBody.isKinematic = true;
+            _wasKinematic = _travelerBody.isKinematic;
+            if (!_wasKinematic) _travelerBody.linearVelocity = Vector3.zero;
+            _travelerBody.isKinematic = true;
         }
 
         private void Unfreeze()
         {
-            if (travelerBody == null) return;
+            if (_travelerBody == null) return;
 
-            travelerBody.isKinematic = _wasKinematic;
-            if (!_wasKinematic) travelerBody.linearVelocity = Vector3.zero;
+            _travelerBody.isKinematic = _wasKinematic;
+            if (!_wasKinematic) _travelerBody.linearVelocity = Vector3.zero;
         }
 
         /// <summary>

@@ -34,6 +34,7 @@
     <Compile Include="DependencyList.cs" />
     <Compile Include="DependencyListTests.cs" />
     <Compile Include="ConcernFolderTests.cs" />
+    <Compile Include="ConventionTests.cs" />
     <Compile Include="PublicApiTests.cs" />
   </ItemGroup>
 

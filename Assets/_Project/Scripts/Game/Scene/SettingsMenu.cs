@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 
 namespace MemorialFloor.Game
 {
@@ -35,22 +36,22 @@ namespace MemorialFloor.Game
         /// <summary>ほかの画面（地図・持ち物）より手前、移るときの暗転（100）より奥に描く</summary>
         private const int SortingOrder = 50;
 
-        [SerializeField] private AreaTravel travel;
+        [SerializeField, FormerlySerializedAs("travel")] private AreaTravel _travel;
 
         [Tooltip("歯車の絵")]
-        [SerializeField] private Sprite gear;
+        [SerializeField, FormerlySerializedAs("gear")] private Sprite _gear;
 
         [Tooltip("この真下に歯車のボタンを置く。持ち物のボタン")]
-        [SerializeField] private RectTransform below;
+        [SerializeField, FormerlySerializedAs("below")] private RectTransform _below;
 
         [Tooltip("窓の地を写す元。根源の詳細の窓")]
-        [SerializeField] private Image windowModel;
+        [SerializeField, FormerlySerializedAs("windowModel")] private Image _windowModel;
 
         [Tooltip("閉じるボタンを写す元。根源の詳細の ×")]
-        [SerializeField] private Button closeModel;
+        [SerializeField, FormerlySerializedAs("closeModel")] private Button _closeModel;
 
         [Tooltip("字のボタンを写す元。近道のボタン")]
-        [SerializeField] private Button buttonModel;
+        [SerializeField, FormerlySerializedAs("buttonModel")] private Button _buttonModel;
 
         private GameObject _panel;
 
@@ -98,7 +99,7 @@ namespace MemorialFloor.Game
         /// <summary>歯車のボタンと Esc から。移っている途中は開かない</summary>
         public void Open()
         {
-            if (_open || _panel == null || travel.IsTraveling) return;
+            if (_open || _panel == null || _travel.IsTraveling) return;
 
             _open = true;
             _panel.SetActive(true);
@@ -123,20 +124,20 @@ namespace MemorialFloor.Game
         /// <summary>持ち物のボタンの真下。持ち物のボタンから測るので、持ち物のボタンを動かしてもついていく</summary>
         private RectTransform BuildGear()
         {
-            RectTransform rect = NewRect("SettingsButton", below.parent);
-            rect.anchorMin = below.anchorMin;
-            rect.anchorMax = below.anchorMax;
+            RectTransform rect = NewRect("SettingsButton", _below.parent);
+            rect.anchorMin = _below.anchorMin;
+            rect.anchorMax = _below.anchorMax;
             rect.sizeDelta = new Vector2(GearSize, GearSize);
 
-            float centerX = below.anchoredPosition.x + below.sizeDelta.x * (0.5f - below.pivot.x);
-            float bottom = below.anchoredPosition.y - below.sizeDelta.y * below.pivot.y;
+            float centerX = _below.anchoredPosition.x + _below.sizeDelta.x * (0.5f - _below.pivot.x);
+            float bottom = _below.anchoredPosition.y - _below.sizeDelta.y * _below.pivot.y;
             rect.anchoredPosition = new Vector2(centerX, bottom - GearSize / 2f);
 
             //持ち物のボタンのすぐ後ろに並べ、ほかの画面を開いたときに同じように暗くなる
-            rect.SetSiblingIndex(below.GetSiblingIndex() + 1);
+            rect.SetSiblingIndex(_below.GetSiblingIndex() + 1);
 
             Image image = rect.gameObject.AddComponent<Image>();
-            image.sprite = gear;
+            image.sprite = _gear;
             image.preserveAspect = true;
 
             Button button = rect.gameObject.AddComponent<Button>();
@@ -148,7 +149,7 @@ namespace MemorialFloor.Game
         /// <summary>後ろを暗くして覆い、真ん中に窓を出す。覆いは、後ろのボタンやスティックへの指も受け止める</summary>
         private GameObject BuildPanel()
         {
-            RectTransform root = NewRect("SettingsPanel", below.parent);
+            RectTransform root = NewRect("SettingsPanel", _below.parent);
 
             //隠したまま組み立てる。写した部品に元から付いていた振る舞いが、外す前に動き出さないように
             root.gameObject.SetActive(false);
@@ -169,12 +170,12 @@ namespace MemorialFloor.Game
             RectTransform window = NewRect("Window", root);
             window.sizeDelta = WindowSize;
             Image ground = window.gameObject.AddComponent<Image>();
-            ground.sprite = windowModel.sprite;
-            ground.type = windowModel.type;
-            ground.pixelsPerUnitMultiplier = windowModel.pixelsPerUnitMultiplier;
-            ground.color = windowModel.color;
+            ground.sprite = _windowModel.sprite;
+            ground.type = _windowModel.type;
+            ground.pixelsPerUnitMultiplier = _windowModel.pixelsPerUnitMultiplier;
+            ground.color = _windowModel.color;
 
-            Text sample = buttonModel.GetComponentInChildren<Text>(true);
+            Text sample = _buttonModel.GetComponentInChildren<Text>(true);
             Text heading = NewRect("Heading", window).gameObject.AddComponent<Text>();
             heading.text = "設定";
             heading.font = sample.font;
@@ -186,11 +187,11 @@ namespace MemorialFloor.Game
             heading.raycastTarget = false;
             ((RectTransform)heading.transform).anchoredPosition = new Vector2(0f, WindowSize.y / 2f - HeadingDepth);
 
-            Button toTitle = Copy(buttonModel, window, RequestTitle);
+            Button toTitle = Copy(_buttonModel, window, RequestTitle);
             toTitle.GetComponentInChildren<Text>(true).text = "タイトルに戻る";
             ((RectTransform)toTitle.transform).anchoredPosition = new Vector2(0f, -WindowSize.y / 8f);
 
-            Button close = Copy(closeModel, window, Close);
+            Button close = Copy(_closeModel, window, Close);
             var closeRect = (RectTransform)close.transform;
             closeRect.anchorMin = Vector2.one;
             closeRect.anchorMax = Vector2.one;
@@ -236,7 +237,7 @@ namespace MemorialFloor.Game
         private RectTransform NewRect(string name, Transform parent)
         {
             var made = new GameObject(name, typeof(RectTransform));
-            made.layer = below.gameObject.layer;
+            made.layer = _below.gameObject.layer;
 
             var rect = (RectTransform)made.transform;
             rect.SetParent(parent, false);

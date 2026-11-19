@@ -1,51 +1,35 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace MemorialFloor.Game
 {
     /// <summary>
     /// 場所の日の光。場所のシーンの、向きのある光に付ける。
-    /// 強さは常駐シーンの一日の巡りが決め、読み込んである場所の光へ同じ値を配る
+    /// 強さは常駐シーンの一日の巡り（Sun）が決める。場所のシーンからは常駐シーンへ参照を張れないので、読み込んだときに Atmosphere がつなぐ
     /// </summary>
     [RequireComponent(typeof(Light))]
     public sealed class Daylight : MonoBehaviour
     {
-        private static readonly List<Daylight> Shown = new List<Daylight>();
+        private Sun _clock;
 
-        /// <summary>最後に配った強さ。まだ配っていなければ null で、光は置いたときの強さのまま</summary>
-        private static float? _intensity;
-
-        private Light _sun;
-
-        //前の再生で配った強さを持ち越さない。ドメインを読み直さない設定でも戻るように
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ForgetOnPlay()
+        /// <summary>一日の巡りにつなぐ。つないだときも、いまの強さにする</summary>
+        public void Bind(Sun clock)
         {
-            Shown.Clear();
-            _intensity = null;
+            if (_clock != null) _clock.LightChanged -= Show;
+
+            _clock = clock;
+            _clock.LightChanged += Show;
+            Show(_clock.LightIntensity);
         }
 
-        /// <summary>読み込んである場所の日の光を、すべてこの強さにする。あとから読み込んだ場所にも、着いたときに同じ強さを付ける</summary>
-        public static void Show(float intensity)
+        private void OnDestroy()
         {
-            _intensity = intensity;
-            foreach (Daylight daylight in Shown) daylight._sun.intensity = intensity;
+            if (_clock != null) _clock.LightChanged -= Show;
         }
 
-        private void Awake()
+        //読み込んだ直後は物が止まっていて Awake がまだのことがあるので、光は使うときに引く
+        private void Show(float intensity)
         {
-            _sun = GetComponent<Light>();
-        }
-
-        private void OnEnable()
-        {
-            Shown.Add(this);
-            if (_intensity.HasValue) _sun.intensity = _intensity.Value;
-        }
-
-        private void OnDisable()
-        {
-            Shown.Remove(this);
+            GetComponent<Light>().intensity = intensity;
         }
     }
 }

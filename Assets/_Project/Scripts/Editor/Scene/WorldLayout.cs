@@ -132,7 +132,7 @@ namespace MemorialFloor.Editor
 
             try
             {
-                return new SerializedObject(AreaOf(scene)).FindProperty("exposition").vector4Value;
+                return new SerializedObject(AreaOf(scene)).FindProperty("_exposition").vector4Value;
             }
             finally
             {
@@ -149,7 +149,7 @@ namespace MemorialFloor.Editor
             foreach (GameObject root in scene.GetRootGameObjects()) root.transform.position += delta;
 
             SerializedObject place = new SerializedObject(area);
-            place.FindProperty("origin").vector3Value = origin;
+            place.FindProperty("_origin").vector3Value = origin;
             place.ApplyModifiedPropertiesWithoutUndo();
         }
 

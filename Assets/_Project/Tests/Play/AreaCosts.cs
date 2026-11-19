@@ -226,17 +226,17 @@ public class AreaCosts
     /// <summary>メモリの量。エディタではエディタ自身の分も入る</summary>
     private readonly struct Memory
     {
-        private readonly long allocated;
-        private readonly long reserved;
-        private readonly long managed;
-        private readonly long graphics;
+        private readonly long _allocated;
+        private readonly long _reserved;
+        private readonly long _managed;
+        private readonly long _graphics;
 
         private Memory(long allocated, long reserved, long managed, long graphics)
         {
-            this.allocated = allocated;
-            this.reserved = reserved;
-            this.managed = managed;
-            this.graphics = graphics;
+            this._allocated = allocated;
+            this._reserved = reserved;
+            this._managed = managed;
+            this._graphics = graphics;
         }
 
         public static Memory Now()
@@ -247,8 +247,8 @@ public class AreaCosts
 
         public string Minus(Memory baseline)
         {
-            return $"確保 {Mb(allocated - baseline.allocated)} / 予約 {Mb(reserved - baseline.reserved)} / " +
-                   $"C# {Mb(managed - baseline.managed)} / 描画 {Mb(graphics - baseline.graphics)}";
+            return $"確保 {Mb(_allocated - baseline._allocated)} / 予約 {Mb(_reserved - baseline._reserved)} / " +
+                   $"C# {Mb(_managed - baseline._managed)} / 描画 {Mb(_graphics - baseline._graphics)}";
         }
 
         private static string Mb(long bytes)
@@ -278,9 +278,9 @@ public class AreaCosts
 
         public Action EveryFrame;
 
-        private ProfilerRecorder mainThread = ProfilerRecorder.StartNew(ProfilerCategory.Internal, "Main Thread");
-        private readonly List<(string Name, ProfilerRecorder Recorder)> markers = new List<(string Name, ProfilerRecorder Recorder)>();
-        private readonly List<Frame> frames = new List<Frame>();
+        private ProfilerRecorder _mainThread = ProfilerRecorder.StartNew(ProfilerCategory.Internal, "Main Thread");
+        private readonly List<(string Name, ProfilerRecorder Recorder)> _markers = new List<(string Name, ProfilerRecorder Recorder)>();
+        private readonly List<Frame> _frames = new List<Frame>();
 
         public Meter()
         {
@@ -297,13 +297,13 @@ public class AreaCosts
                 string name = description.Name;
                 if (!LoopStep.IsMatch(name) && !Keywords.Any(keyword => name.Contains(keyword))) continue;
 
-                markers.Add((name, new ProfilerRecorder(handle, 1, MainOnly)));
+                _markers.Add((name, new ProfilerRecorder(handle, 1, MainOnly)));
             }
         }
 
         public int Count
         {
-            get { return frames.Count; }
+            get { return _frames.Count; }
         }
 
         /// <summary>終わったコマを控える。毎コマ、yield return null の直後に呼ぶ</summary>
@@ -312,23 +312,23 @@ public class AreaCosts
             EveryFrame?.Invoke();
 
             double dt = Time.unscaledDeltaTime * 1000.0;
-            double ms = mainThread.Valid && mainThread.LastValue > 0 ? mainThread.LastValue / 1e6 : dt;
+            double ms = _mainThread.Valid && _mainThread.LastValue > 0 ? _mainThread.LastValue / 1e6 : dt;
 
             var found = new List<(string Name, double Ms)>();
-            foreach ((string name, ProfilerRecorder recorder) in markers)
+            foreach ((string name, ProfilerRecorder recorder) in _markers)
             {
                 double spent = recorder.LastValue / 1e6;
                 if (spent >= MarkerFloorMs) found.Add((name, spent));
             }
 
-            frames.Add(new Frame { Ms = ms, Dt = dt, Top = found.OrderByDescending(marker => marker.Ms).Take(TopMarkers).ToList() });
+            _frames.Add(new Frame { Ms = ms, Dt = dt, Top = found.OrderByDescending(marker => marker.Ms).Take(TopMarkers).ToList() });
         }
 
         public string Describe(int from, int to)
         {
             if (to <= from) return "コマ無し";
 
-            List<Frame> span = frames.GetRange(from, to - from);
+            List<Frame> span = _frames.GetRange(from, to - from);
             Frame worst = span.OrderByDescending(frame => frame.Ms).First();
             string top = worst.Top.Count == 0 ? "" : " — " + string.Join("、", worst.Top.Select(marker => $"{marker.Name} {marker.Ms:F1}"));
 
@@ -338,8 +338,8 @@ public class AreaCosts
 
         public void Dispose()
         {
-            mainThread.Dispose();
-            foreach ((string _, ProfilerRecorder recorder) in markers) recorder.Dispose();
+            _mainThread.Dispose();
+            foreach ((string _, ProfilerRecorder recorder) in _markers) recorder.Dispose();
         }
     }
 

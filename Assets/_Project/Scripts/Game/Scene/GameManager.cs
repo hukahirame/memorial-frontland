@@ -39,7 +39,7 @@ namespace MemorialFloor.Game
         /// </summary>
         private void ToTitle()
         {
-            _save.TrySave();
+            _save.SaveIfReady();
             Time.timeScale = 1f;
             SceneManager.LoadScene(AreaTravel.TitleScene);
         }

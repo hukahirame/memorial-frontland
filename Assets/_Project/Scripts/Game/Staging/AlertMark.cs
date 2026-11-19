@@ -35,9 +35,9 @@ namespace MemorialFloor.Game
 
         private static readonly Color Edge = new Color(0.25f, 0.1f, 0f);
 
-        private RectTransform rect;
-        private Text text;
-        private float age;
+        private RectTransform _rect;
+        private Text _text;
+        private float _age;
 
         /// <summary>canvas は敵の頭上の表示の Canvas。無ければ出さない。書体は中の文字（名札）から借りる</summary>
         public static void Show(Transform canvas)
@@ -65,34 +65,34 @@ namespace MemorialFloor.Game
             outline.effectDistance = new Vector2(12f, -12f);
 
             AlertMark alert = mark.AddComponent<AlertMark>();
-            alert.text = text;
-            alert.rect = (RectTransform)mark.transform;
-            alert.rect.anchoredPosition = new Vector2(0f, Height);
-            alert.rect.localScale = Vector3.zero;
+            alert._text = text;
+            alert._rect = (RectTransform)mark.transform;
+            alert._rect.anchoredPosition = new Vector2(0f, Height);
+            alert._rect.localScale = Vector3.zero;
         }
 
         private void Update()
         {
-            age += Time.deltaTime;
+            _age += Time.deltaTime;
 
             float swell = PopSeconds * 0.6f;
-            float scale = age < swell ? Mathf.Lerp(0f, PopScale, age / swell)
-                : age < PopSeconds ? Mathf.Lerp(PopScale, 1f, (age - swell) / (PopSeconds - swell))
+            float scale = _age < swell ? Mathf.Lerp(0f, PopScale, _age / swell)
+                : _age < PopSeconds ? Mathf.Lerp(PopScale, 1f, (_age - swell) / (PopSeconds - swell))
                 : 1f;
-            rect.localScale = Vector3.one * scale;
+            _rect.localScale = Vector3.one * scale;
 
             float life = PopSeconds + HoldSeconds + FadeSeconds;
-            rect.anchoredPosition = new Vector2(0f, Height + Rise * Mathf.Clamp01(age / life));
+            _rect.anchoredPosition = new Vector2(0f, Height + Rise * Mathf.Clamp01(_age / life));
 
             float fadeFrom = PopSeconds + HoldSeconds;
-            if (age > fadeFrom)
+            if (_age > fadeFrom)
             {
                 Color color = Fill;
-                color.a = 1f - Mathf.Clamp01((age - fadeFrom) / FadeSeconds);
-                text.color = color;
+                color.a = 1f - Mathf.Clamp01((_age - fadeFrom) / FadeSeconds);
+                _text.color = color;
             }
 
-            if (age >= life) Destroy(gameObject);
+            if (_age >= life) Destroy(gameObject);
         }
     }
 }

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 namespace MemorialFloor.Game
 {
@@ -20,7 +21,7 @@ namespace MemorialFloor.Game
         /// <summary>置ける物の prefab に付ける Addressables のラベル</summary>
         public const string Label = "Placeable";
 
-        [SerializeField] private AreaTravel travel;
+        [SerializeField, FormerlySerializedAs("travel")] private AreaTravel _travel;
 
         private AsyncOperationHandle<IList<GameObject>> _loading;
 
@@ -41,19 +42,19 @@ namespace MemorialFloor.Game
 
         private void Awake()
         {
-            travel.Unloading += Record;
-            travel.Loaded += Restore;
+            _travel.Unloading += Record;
+            _travel.Loaded += Restore;
 
             //最初の場所の覆いは、置き直し終えるまで開けない
             _loading = Addressables.LoadAssetsAsync<GameObject>(Label, prefab => _prefabs[prefab.name] = prefab);
             _loading.Completed += _ => RestoreWaiting();
-            travel.HoldVeilUntil(() => _loading.IsDone);
+            _travel.HoldVeilUntil(() => _loading.IsDone);
         }
 
         private void OnDestroy()
         {
-            travel.Unloading -= Record;
-            travel.Loaded -= Restore;
+            _travel.Unloading -= Record;
+            _travel.Loaded -= Restore;
 
             if (_loading.IsValid()) Addressables.Release(_loading);
         }
@@ -69,7 +70,7 @@ namespace MemorialFloor.Game
         /// </summary>
         public bool Place(string itemId, Vector3 position, float yaw = 0f)
         {
-            Area area = travel.Current;
+            Area area = _travel.Current;
             if (area == null || !_placed.ContainsKey(area.Id)) return false;
 
             return Spawn(area, itemId, position, yaw) != null;

@@ -391,21 +391,21 @@ public class Hitches
 
         public Action EveryFrame;
 
-        private ProfilerRecorder mainThread = ProfilerRecorder.StartNew(ProfilerCategory.Internal, "Main Thread");
-        private ProfilerRecorder allocated = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Allocated In Frame");
-        private ProfilerRecorder playerLoop;
-        private readonly List<(string Name, ProfilerRecorder Recorder)> markers = new List<(string Name, ProfilerRecorder Recorder)>();
-        private readonly List<(string Name, ProfilerRecorder Recorder, List<long> Values)> counters = new List<(string Name, ProfilerRecorder Recorder, List<long> Values)>();
+        private ProfilerRecorder _mainThread = ProfilerRecorder.StartNew(ProfilerCategory.Internal, "Main Thread");
+        private ProfilerRecorder _allocated = ProfilerRecorder.StartNew(ProfilerCategory.Memory, "GC Allocated In Frame");
+        private ProfilerRecorder _playerLoop;
+        private readonly List<(string Name, ProfilerRecorder Recorder)> _markers = new List<(string Name, ProfilerRecorder Recorder)>();
+        private readonly List<(string Name, ProfilerRecorder Recorder, List<long> Values)> _counters = new List<(string Name, ProfilerRecorder Recorder, List<long> Values)>();
 
         /// <summary>処理ごとの、全コマを通した合計（ミリ秒）。ふだんのコマが何に時間を使っているかを見る</summary>
-        private double[] totals;
-        private readonly List<Sample> samples = new List<Sample>();
-        private readonly List<ProbeResult> probes = new List<ProbeResult>();
-        private readonly List<(float At, string Text)> logs = new List<(float At, string Text)>();
-        private readonly List<(int Index, string Text)> marks = new List<(int Index, string Text)>();
-        private readonly float startedAt = Time.realtimeSinceStartup;
-        private readonly int collectionsAtStart = GC.CollectionCount(0);
-        private double threshold = double.MaxValue;
+        private double[] _totals;
+        private readonly List<Sample> _samples = new List<Sample>();
+        private readonly List<ProbeResult> _probes = new List<ProbeResult>();
+        private readonly List<(float At, string Text)> _logs = new List<(float At, string Text)>();
+        private readonly List<(int Index, string Text)> _marks = new List<(int Index, string Text)>();
+        private readonly float _startedAt = Time.realtimeSinceStartup;
+        private readonly int _collectionsAtStart = GC.CollectionCount(0);
+        private double _threshold = double.MaxValue;
 
         public Watch()
         {
@@ -421,22 +421,22 @@ public class Hitches
 
                 if (RenderCounters.Contains(name) && description.UnitType != ProfilerMarkerDataUnit.TimeNanoseconds)
                 {
-                    counters.Add((name, new ProfilerRecorder(handle, 1, ProfilerRecorderOptions.Default | ProfilerRecorderOptions.StartImmediately), new List<long>()));
+                    _counters.Add((name, new ProfilerRecorder(handle, 1, ProfilerRecorderOptions.Default | ProfilerRecorderOptions.StartImmediately), new List<long>()));
                     continue;
                 }
                 if (description.UnitType != ProfilerMarkerDataUnit.TimeNanoseconds) continue;
 
                 if (name == "PlayerLoop")
                 {
-                    playerLoop = new ProfilerRecorder(handle, 1, MainOnly);
+                    _playerLoop = new ProfilerRecorder(handle, 1, MainOnly);
                     continue;
                 }
                 if (!LoopStep.IsMatch(name) && !Keywords.Any(keyword => name.Contains(keyword))) continue;
 
-                markers.Add((name, new ProfilerRecorder(handle, 1, MainOnly)));
+                _markers.Add((name, new ProfilerRecorder(handle, 1, MainOnly)));
             }
 
-            totals = new double[markers.Count];
+            _totals = new double[_markers.Count];
             Application.logMessageReceived += OnLog;
         }
 
@@ -465,22 +465,22 @@ public class Hitches
             }
             result.CallMs = clock.Elapsed.TotalMilliseconds;
 
-            result.From = samples.Count;
+            result.From = _samples.Count;
             yield return Run(WindowSeconds, true);
-            result.To = samples.Count;
-            probes.Add(result);
+            result.To = _samples.Count;
+            _probes.Add(result);
 
             yield return Run(GapSeconds, false);
         }
 
         public void SetThreshold()
         {
-            threshold = Math.Max(SpikeFloorMs, Percentile(s => s.Ms, 0.5) * 2.5);
+            _threshold = Math.Max(SpikeFloorMs, Percentile(s => s.Ms, 0.5) * 2.5);
         }
 
         public void Mark(string text)
         {
-            marks.Add((samples.Count, text));
+            _marks.Add((_samples.Count, text));
         }
 
         private void Record(bool detail)
@@ -488,26 +488,26 @@ public class Hitches
             EveryFrame?.Invoke();
 
             double dt = Time.unscaledDeltaTime * 1000.0;
-            double ms = mainThread.Valid && mainThread.LastValue > 0 ? mainThread.LastValue / 1e6 : dt;
+            double ms = _mainThread.Valid && _mainThread.LastValue > 0 ? _mainThread.LastValue / 1e6 : dt;
             var sample = new Sample
             {
-                At = Time.realtimeSinceStartup - startedAt,
+                At = Time.realtimeSinceStartup - _startedAt,
                 Ms = ms,
                 Dt = dt,
-                PlayerMs = playerLoop.Valid ? playerLoop.LastValue / 1e6 : 0.0,
-                Alloc = allocated.Valid ? allocated.LastValue : 0L,
+                PlayerMs = _playerLoop.Valid ? _playerLoop.LastValue / 1e6 : 0.0,
+                Alloc = _allocated.Valid ? _allocated.LastValue : 0L,
             };
-            if (detail || ms > threshold || dt > threshold) sample.Top = Breakdown();
-            samples.Add(sample);
+            if (detail || ms > _threshold || dt > _threshold) sample.Top = Breakdown();
+            _samples.Add(sample);
 
-            for (int i = 0; i < markers.Count; i++) totals[i] += markers[i].Recorder.LastValue / 1e6;
-            foreach ((string _, ProfilerRecorder recorder, List<long> values) in counters) values.Add(recorder.LastValue);
+            for (int i = 0; i < _markers.Count; i++) _totals[i] += _markers[i].Recorder.LastValue / 1e6;
+            foreach ((string _, ProfilerRecorder recorder, List<long> values) in _counters) values.Add(recorder.LastValue);
         }
 
         private List<(string Name, double Ms)> Breakdown()
         {
             var found = new List<(string Name, double Ms)>();
-            foreach ((string name, ProfilerRecorder recorder) in markers)
+            foreach ((string name, ProfilerRecorder recorder) in _markers)
             {
                 double ms = recorder.LastValue / 1e6;
                 if (ms >= MarkerFloorMs) found.Add((name, ms));
@@ -520,22 +520,22 @@ public class Hitches
         {
             string text = condition.Replace("\n", " ");
             if (text.Length > 40) text = text.Substring(0, 40);
-            logs.Add((Time.realtimeSinceStartup - startedAt, text));
+            _logs.Add((Time.realtimeSinceStartup - _startedAt, text));
         }
 
         public string Describe()
         {
             var text = new StringBuilder();
-            float seconds = samples.Count > 0 ? samples[samples.Count - 1].At : 0f;
-            text.AppendLine($"計測: {(Application.isEditor ? "Editor" : Application.platform.ToString())} / {Screen.width}x{Screen.height} / vSync {QualitySettings.vSyncCount} / targetFrameRate {Application.targetFrameRate} / {seconds:F0} 秒 / {samples.Count} コマ / 記録した処理 {markers.Count} 種 / Main Thread {(mainThread.Valid ? "あり" : "なし")} / PlayerLoop {(playerLoop.Valid ? "あり" : "なし")}");
+            float seconds = _samples.Count > 0 ? _samples[_samples.Count - 1].At : 0f;
+            text.AppendLine($"計測: {(Application.isEditor ? "Editor" : Application.platform.ToString())} / {Screen.width}x{Screen.height} / vSync {QualitySettings.vSyncCount} / targetFrameRate {Application.targetFrameRate} / {seconds:F0} 秒 / {_samples.Count} コマ / 記録した処理 {_markers.Count} 種 / Main Thread {(_mainThread.Valid ? "あり" : "なし")} / PlayerLoop {(_playerLoop.Valid ? "あり" : "なし")}");
             text.AppendLine($"メインスレッド: 中央値 {Percentile(s => s.Ms, 0.5):F1} ms / 95% {Percentile(s => s.Ms, 0.95):F1} / 99% {Percentile(s => s.Ms, 0.99):F1} / 最大 {Percentile(s => s.Ms, 1.0):F1}");
             text.AppendLine($"うち PlayerLoop: 中央値 {Percentile(s => s.PlayerMs, 0.5):F1} ms / 95% {Percentile(s => s.PlayerMs, 0.95):F1} / 99% {Percentile(s => s.PlayerMs, 0.99):F1} / 最大 {Percentile(s => s.PlayerMs, 1.0):F1}");
             text.AppendLine($"PlayerLoop の外（Editor と待ち）: 中央値 {Percentile(s => s.Ms - s.PlayerMs, 0.5):F1} ms / 95% {Percentile(s => s.Ms - s.PlayerMs, 0.95):F1} / 最大 {Percentile(s => s.Ms - s.PlayerMs, 1.0):F1}");
             text.AppendLine($"コマの間隔: 中央値 {Percentile(s => s.Dt, 0.5):F1} ms / 95% {Percentile(s => s.Dt, 0.95):F1} / 99% {Percentile(s => s.Dt, 0.99):F1} / 最大 {Percentile(s => s.Dt, 1.0):F1}");
-            text.AppendLine($"重いとみなす線: {threshold:F1} ms。メインスレッドが超えたコマ {samples.Count(s => s.Ms > threshold)}、33 ms 超 {samples.Count(s => s.Ms > 33)}、50 ms 超 {samples.Count(s => s.Ms > 50)}、100 ms 超 {samples.Count(s => s.Ms > 100)}");
-            long allocated = samples.Sum(s => s.Alloc);
-            text.AppendLine($"GC: 確保は 1 コマ平均 {allocated / Math.Max(1, samples.Count) / 1024.0:F1} KB、合計 {allocated / 1048576.0:F1} MB。回収 {GC.CollectionCount(0) - collectionsAtStart} 回");
-            foreach ((string name, ProfilerRecorder _, List<long> values) in counters)
+            text.AppendLine($"重いとみなす線: {_threshold:F1} ms。メインスレッドが超えたコマ {_samples.Count(s => s.Ms > _threshold)}、33 ms 超 {_samples.Count(s => s.Ms > 33)}、50 ms 超 {_samples.Count(s => s.Ms > 50)}、100 ms 超 {_samples.Count(s => s.Ms > 100)}");
+            long allocated = _samples.Sum(s => s.Alloc);
+            text.AppendLine($"GC: 確保は 1 コマ平均 {allocated / Math.Max(1, _samples.Count) / 1024.0:F1} KB、合計 {allocated / 1048576.0:F1} MB。回収 {GC.CollectionCount(0) - _collectionsAtStart} 回");
+            foreach ((string name, ProfilerRecorder _, List<long> values) in _counters)
             {
                 if (values.Count == 0) continue;
                 List<long> sorted = values.OrderBy(v => v).ToList();
@@ -544,15 +544,15 @@ public class Hitches
             text.AppendLine();
 
             text.AppendLine("[ふだんのコマ] 1 コマあたりの平均（ミリ秒）。入れ子の処理は親にも含まれる");
-            int frames = Math.Max(1, samples.Count);
-            foreach (int i in Enumerable.Range(0, markers.Count).OrderByDescending(k => totals[k]).Take(16))
+            int frames = Math.Max(1, _samples.Count);
+            foreach (int i in Enumerable.Range(0, _markers.Count).OrderByDescending(k => _totals[k]).Take(16))
             {
-                text.AppendLine($"{markers[i].Name} {totals[i] / frames:F2}");
+                text.AppendLine($"{_markers[i].Name} {_totals[i] / frames:F2}");
             }
             text.AppendLine();
 
             text.AppendLine("[起こしたこと] 呼び出しの長さ / 窓の中でいちばん重いコマ / そのコマで時間を食った処理");
-            foreach (ProbeResult probe in probes)
+            foreach (ProbeResult probe in _probes)
             {
                 string note = string.IsNullOrEmpty(probe.Note) ? "" : " / " + probe.Note;
                 text.AppendLine($"{probe.Label}: 呼び出し {probe.CallMs:F1} ms / {Line(Worst(probe.From, probe.To))}{note}");
@@ -560,13 +560,13 @@ public class Hitches
             text.AppendLine();
 
             //起こしたことの後始末が窓の外へはみ出すので、何も起こさずに流したあいだの重いコマだけを並べる
-            int idleFrom = marks.Count > 0 ? marks[marks.Count - 1].Index : samples.Count;
-            if (idleFrom < samples.Count) text.AppendLine($"[何も起こさずに流したあいだの重いコマ] +{samples[idleFrom].At:F1}s から");
+            int idleFrom = _marks.Count > 0 ? _marks[_marks.Count - 1].Index : _samples.Count;
+            if (idleFrom < _samples.Count) text.AppendLine($"[何も起こさずに流したあいだの重いコマ] +{_samples[idleFrom].At:F1}s から");
             int lines = 0;
-            for (int i = idleFrom; i < samples.Count && lines < MaxSpikeLines; i++)
+            for (int i = idleFrom; i < _samples.Count && lines < MaxSpikeLines; i++)
             {
-                Sample sample = samples[i];
-                if (sample.Ms <= threshold && sample.Dt <= threshold) continue;
+                Sample sample = _samples[i];
+                if (sample.Ms <= _threshold && sample.Dt <= _threshold) continue;
 
                 text.AppendLine($"+{sample.At:F1}s {Line(sample)}{LogsNear(sample)}");
                 lines++;
@@ -578,9 +578,9 @@ public class Hitches
         private Sample Worst(int from, int to)
         {
             Sample worst = null;
-            for (int i = from; i < to && i < samples.Count; i++)
+            for (int i = from; i < to && i < _samples.Count; i++)
             {
-                if (worst == null || samples[i].Ms > worst.Ms) worst = samples[i];
+                if (worst == null || _samples[i].Ms > worst.Ms) worst = _samples[i];
             }
 
             return worst;
@@ -597,26 +597,26 @@ public class Hitches
         private string LogsNear(Sample sample)
         {
             float from = sample.At - (float)(sample.Dt / 1000.0) - 0.01f;
-            string[] near = logs.Where(log => log.At >= from && log.At <= sample.At).Select(log => log.Text).ToArray();
+            string[] near = _logs.Where(log => log.At >= from && log.At <= sample.At).Select(log => log.Text).ToArray();
             return near.Length == 0 ? "" : " / ログ: " + string.Join("｜", near);
         }
 
         private double Percentile(Func<Sample, double> value, double q)
         {
-            if (samples.Count == 0) return 0.0;
+            if (_samples.Count == 0) return 0.0;
 
-            List<double> sorted = samples.Select(value).OrderBy(v => v).ToList();
+            List<double> sorted = _samples.Select(value).OrderBy(v => v).ToList();
             return sorted[(int)Math.Round(q * (sorted.Count - 1))];
         }
 
         public void Dispose()
         {
             Application.logMessageReceived -= OnLog;
-            mainThread.Dispose();
-            allocated.Dispose();
-            if (playerLoop.Valid) playerLoop.Dispose();
-            foreach ((string _, ProfilerRecorder recorder) in markers) recorder.Dispose();
-            foreach ((string _, ProfilerRecorder recorder, List<long> _) in counters) recorder.Dispose();
+            _mainThread.Dispose();
+            _allocated.Dispose();
+            if (_playerLoop.Valid) _playerLoop.Dispose();
+            foreach ((string _, ProfilerRecorder recorder) in _markers) recorder.Dispose();
+            foreach ((string _, ProfilerRecorder recorder, List<long> _) in _counters) recorder.Dispose();
         }
     }
 

@@ -2,20 +2,22 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 namespace MemorialFloor.Game
 {
     /// <summary>
     /// 読み込んである場所の光と空気を、プレイヤーの位置で混ぜて画面に効かせる。常駐シーンに 1 つだけ置く。
     /// 場所の境目に近づくと、隣の場所の空・霧・環境光・日の光・後処理へ少しずつ寄せる。
-    /// 日の光は常駐の 1 本だけを点け、場所のシーンの日の光は消す。強さは一日の巡りが Daylight で配る
+    /// 日の光は常駐の 1 本だけを点け、場所のシーンの日の光は消す。強さは一日の巡り（Sun）が決め、読み込んだ場所の日の光（Daylight）と常駐の 1 本をそれにつなぐ
     /// </summary>
     public sealed class Atmosphere : MonoBehaviour
     {
         /// <summary>場の範囲からこれだけ離れると、その場所の光と空気は効かなくなる。境目の両側でこの幅ずつ混ざる</summary>
         public const float BlendDistance = 5f;
 
-        [SerializeField] private AreaTravel travel;
+        [SerializeField, FormerlySerializedAs("travel")] private AreaTravel _travel;
+        [SerializeField] private Sun _clock;
 
         private readonly List<PlaceAir> _airs = new List<PlaceAir>();
 
@@ -33,20 +35,23 @@ namespace MemorialFloor.Game
 
         private void Awake()
         {
-            travel.Loaded += Capture;
-            travel.Unloading += Forget;
+            _travel.Loaded += Capture;
+            _travel.Unloading += Forget;
         }
 
         private void OnDestroy()
         {
-            travel.Loaded -= Capture;
-            travel.Unloading -= Forget;
+            _travel.Loaded -= Capture;
+            _travel.Unloading -= Forget;
             if (_sky != null) Destroy(_sky);
         }
 
         private void Capture(Area area)
         {
             if (_airs.Exists(air => air.Area == area)) return;
+
+            //点けない場所の日の光も、強さは巡りに合わせる。日差しの筋などが日の光の強さを見る
+            foreach (Daylight daylight in area.FindAll<Daylight>()) daylight.Bind(_clock);
 
             PlaceAir captured = PlaceAir.Capture(area);
             if (captured.Sun != null)
@@ -82,8 +87,7 @@ namespace MemorialFloor.Game
             sun.cullingMask = model.cullingMask;
             sun.bounceIntensity = model.bounceIntensity;
 
-            // 強さは一日の巡りが配る
-            holder.AddComponent<Daylight>();
+            holder.AddComponent<Daylight>().Bind(_clock);
 
             return sun;
         }
@@ -110,7 +114,7 @@ namespace MemorialFloor.Game
         private void Weigh()
         {
             _weights.Clear();
-            Vector3 at = travel.Traveler.position;
+            Vector3 at = _travel.Traveler.position;
             float total = 0f;
 
             foreach (PlaceAir air in _airs)
@@ -125,7 +129,7 @@ namespace MemorialFloor.Game
             {
                 for (int i = 0; i < _airs.Count; i++)
                 {
-                    float weight = _airs[i].Area == travel.Current || (travel.Current == null && i == 0) ? 1f : 0f;
+                    float weight = _airs[i].Area == _travel.Current || (_travel.Current == null && i == 0) ? 1f : 0f;
                     _weights[i] = weight;
                     total += weight;
                 }

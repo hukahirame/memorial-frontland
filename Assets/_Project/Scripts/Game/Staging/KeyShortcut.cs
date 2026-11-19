@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.Serialization;
 
 namespace MemorialFloor.Game
 {
@@ -13,24 +14,24 @@ namespace MemorialFloor.Game
     public sealed class KeyShortcut : MonoBehaviour
     {
         [Tooltip("押すキー")]
-        [SerializeField] private KeyCode key = KeyCode.None;
+        [SerializeField, FormerlySerializedAs("key")] private KeyCode _key = KeyCode.None;
 
         [Tooltip("キーで押すボタン。指で押せる最初の 1 つを押す。どれにも右下にキーを書く")]
-        [SerializeField] private Button[] buttons = new Button[0];
+        [SerializeField, FormerlySerializedAs("buttons")] private Button[] _buttons = new Button[0];
 
         [Tooltip("このボタンで開く画面の閉じるボタン。画面が開いているあいだは、キーでこちらを押す")]
-        [SerializeField] private Button close;
+        [SerializeField, FormerlySerializedAs("close")] private Button _close;
 
         private readonly List<RaycastResult> _hits = new List<RaycastResult>();
 
         private void Start()
         {
-            foreach (Button button in buttons) KeyHint.Put((RectTransform)button.transform, key.ToString());
+            foreach (Button button in _buttons) KeyHint.Put((RectTransform)button.transform, _key.ToString());
         }
 
         private void Update()
         {
-            if (!Input.GetKeyDown(key)) return;
+            if (!Input.GetKeyDown(_key)) return;
 
             Button target = Pick();
             if (target != null) target.onClick.Invoke();
@@ -38,9 +39,9 @@ namespace MemorialFloor.Game
 
         private Button Pick()
         {
-            if (close != null && IsReachable(close)) return close;
+            if (_close != null && IsReachable(_close)) return _close;
 
-            foreach (Button button in buttons)
+            foreach (Button button in _buttons)
             {
                 if (IsReachable(button)) return button;
             }

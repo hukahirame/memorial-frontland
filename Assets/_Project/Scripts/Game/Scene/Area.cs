@@ -2,6 +2,7 @@
 using MemorialFloor.Domain;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Serialization;
 
 namespace MemorialFloor.Game
 {
@@ -10,28 +11,28 @@ namespace MemorialFloor.Game
     /// </summary>
     public sealed class Area : MonoBehaviour
     {
-        [SerializeField] private AreaKind kind;
+        [SerializeField, FormerlySerializedAs("kind")] private AreaKind _kind;
 
         [Tooltip("出口を通ってきたときに立つ地点。空ならこの GameObject の位置")]
-        [SerializeField] private Transform entrance;
+        [SerializeField, FormerlySerializedAs("entrance")] private Transform _entrance;
 
         [Tooltip("奥の出口を通ってきたときに立つ地点。出口が 1 つの場所は空のままでよく、どちらから来ても入口に立つ")]
-        [SerializeField] private Transform farEntrance;
+        [SerializeField, FormerlySerializedAs("farEntrance")] private Transform _farEntrance;
 
         [Tooltip("始めたときと倒れたあとに立つ地点。空なら入口")]
-        [SerializeField] private Transform home;
+        [SerializeField, FormerlySerializedAs("home")] private Transform _home;
 
         [Tooltip("場所を世界のどこに置いたか。場所の物はこれだけずらして置いてある。場所を並べる道具（Tools/World）が書く")]
-        [SerializeField] private Vector3 origin;
+        [SerializeField, FormerlySerializedAs("origin")] private Vector3 _origin;
 
         [Tooltip("場の範囲。XL, XS, ZL, ZS の順。場所の原点からの位置")]
-        [SerializeField] private Vector4 exposition;
+        [SerializeField, FormerlySerializedAs("exposition")] private Vector4 _exposition;
 
         [Tooltip("根源の核から湧く敵。根源では空にしない")]
-        [SerializeField] private GameObject enemy;
+        [SerializeField, FormerlySerializedAs("enemy")] private GameObject _enemy;
 
         [Tooltip("プレイヤーがこれより高く上がったら場の外とみなし、連れ戻す。2 階建ての場所では、上の階に立てる高さにする")]
-        [SerializeField] private float ceiling = FieldBounds.EscapeHeight;
+        [SerializeField, FormerlySerializedAs("ceiling")] private float _ceiling = FieldBounds.EscapeHeight;
 
         /// <summary>常駐シーンが来るまで止めているルート。止める前から非アクティブだったものは入れない</summary>
         private readonly List<GameObject> _held = new List<GameObject>();
@@ -43,43 +44,43 @@ namespace MemorialFloor.Game
 
         public AreaKind Kind
         {
-            get { return kind; }
+            get { return _kind; }
         }
 
         /// <summary>この場所にある根源の Id。根源でない場所なら null</summary>
         public string RootId
         {
-            get { return TravelRule.RootOfArea(Id, kind); }
+            get { return TravelRule.RootOfArea(Id, _kind); }
         }
 
         /// <summary>場所を世界のどこに置いたか。保存する座標は、ここからの位置で持つ</summary>
         public Vector3 Origin
         {
-            get { return origin; }
+            get { return _origin; }
         }
 
         /// <summary>場の範囲。世界の座標で、XL, XS, ZL, ZS の順</summary>
         public Vector4 Exposition
         {
-            get { return new Vector4(exposition.x + origin.x, exposition.y + origin.x, exposition.z + origin.z, exposition.w + origin.z); }
+            get { return new Vector4(_exposition.x + _origin.x, _exposition.y + _origin.x, _exposition.z + _origin.z, _exposition.w + _origin.z); }
         }
 
         /// <summary>プレイヤーを場の外とみなす高さ。世界の座標</summary>
         public float Ceiling
         {
-            get { return ceiling + origin.y; }
+            get { return _ceiling + _origin.y; }
         }
 
         /// <summary>世界の座標を、この場所の原点からの位置にする。保存に書くときに使う</summary>
         public Vector3 ToLocal(Vector3 world)
         {
-            return world - origin;
+            return world - _origin;
         }
 
         /// <summary>この場所の原点からの位置を、世界の座標にする。保存から戻すときに使う</summary>
         public Vector3 ToWorld(Vector3 local)
         {
-            return local + origin;
+            return local + _origin;
         }
 
         /// <summary>世界の座標の点が、場の範囲（横と奥行き）の中にあるか</summary>
@@ -92,7 +93,7 @@ namespace MemorialFloor.Game
         /// <summary>根源の核から湧く敵の prefab。根源でない場所は null</summary>
         public GameObject Enemy
         {
-            get { return enemy; }
+            get { return _enemy; }
         }
 
         public Scene Scene
@@ -103,9 +104,9 @@ namespace MemorialFloor.Game
         /// <summary>着いたときに立つ位置</summary>
         public Vector3 PointFor(Arrival arrival)
         {
-            Transform point = entrance;
-            if (arrival == Arrival.Home && home != null) point = home;
-            if (arrival == Arrival.FromNext && farEntrance != null) point = farEntrance;
+            Transform point = _entrance;
+            if (arrival == Arrival.Home && _home != null) point = _home;
+            if (arrival == Arrival.FromNext && _farEntrance != null) point = _farEntrance;
 
             return (point != null ? point : transform).position;
         }

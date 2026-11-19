@@ -859,7 +859,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7001f09d3ad43464b89c89d44dff904a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.Music
-  source: {fileID: 64990618}
+  _source: {fileID: 64990618}
 --- !u!114 &64990621
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7971,9 +7971,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 213cc69d4d671af4e8dc3c02cdd326a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.AreaTravel
-  traveler: {fileID: 2480583501242932786}
-  travelerBody: {fileID: 2480583501242932785}
-  veil: {fileID: 1343940975}
+  _traveler: {fileID: 2480583501242932786}
+  _travelerBody: {fileID: 2480583501242932785}
+  _veil: {fileID: 1343940975}
 --- !u!114 &783813820
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7986,7 +7986,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d63569443cced4f41bc15ef925375ebb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.PlacedObjects
-  travel: {fileID: 783813819}
+  _travel: {fileID: 783813819}
 --- !u!114 &783813821
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12831,7 +12831,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f548f0b999a51a24cb0954d302b92eec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.Atmosphere
-  travel: {fileID: 783813819}
+  _travel: {fileID: 783813819}
+  _clock: {fileID: 1261175517}
 --- !u!1 &1265129021
 GameObject:
   m_ObjectHideFlags: 0
@@ -13696,9 +13697,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5fbca746d206284ea942a97e1773984, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.ScreenVeil
-  fadeSeconds: 0.3
-  cover: {fileID: 1343940972}
-  music: {fileID: 64990620}
+  _fadeSeconds: 0.3
+  _cover: {fileID: 1343940972}
+  _music: {fileID: 64990620}
 --- !u!1 &1347357869
 GameObject:
   m_ObjectHideFlags: 0
@@ -16382,7 +16383,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9855ce727d3b3147a155cdbe5a59817, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.UiStage
-  panels:
+  _panels:
   - {fileID: 761480757}
   - {fileID: 728042284}
   - {fileID: 716853136}
@@ -20801,12 +20802,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b87228db24e35e04f89864933b1b8da5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.SettingsMenu
-  travel: {fileID: 783813819}
-  gear: {fileID: 21300000, guid: 34a59f8ac82124c3b9b6d2ac6b58bbe0, type: 3}
-  below: {fileID: 1712590781}
-  windowModel: {fileID: 654698121}
-  closeModel: {fileID: 809039345}
-  buttonModel: {fileID: 1517704534}
+  _travel: {fileID: 783813819}
+  _gear: {fileID: 21300000, guid: 34a59f8ac82124c3b9b6d2ac6b58bbe0, type: 3}
+  _below: {fileID: 1712590781}
+  _windowModel: {fileID: 654698121}
+  _closeModel: {fileID: 809039345}
+  _buttonModel: {fileID: 1517704534}
 --- !u!1 &2100440464
 GameObject:
   m_ObjectHideFlags: 0
@@ -22914,10 +22915,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90dabbc16b005454e8a549ffac2a40c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.KeyShortcut
-  key: 101
-  buttons:
+  _key: 101
+  _buttons:
   - {fileID: 1712590782}
-  close: {fileID: 261317407}
+  _close: {fileID: 261317407}
 --- !u!114 &7316024485012583842
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22930,10 +22931,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90dabbc16b005454e8a549ffac2a40c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.KeyShortcut
-  key: 114
-  buttons:
+  _key: 114
+  _buttons:
   - {fileID: 1085124503}
-  close: {fileID: 1951422789}
+  _close: {fileID: 1951422789}
 --- !u!114 &7316024485012583843
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22946,12 +22947,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90dabbc16b005454e8a549ffac2a40c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: MemorialFloor.Game::MemorialFloor.Game.KeyShortcut
-  key: 113
-  buttons:
+  _key: 113
+  _buttons:
   - {fileID: 4905651943364110288}
   - {fileID: 2164121089485271276}
   - {fileID: 1022659712833394053}
-  close: {fileID: 2113140160}
+  _close: {fileID: 2113140160}
 --- !u!1 &7388539227999499562
 GameObject:
   m_ObjectHideFlags: 0

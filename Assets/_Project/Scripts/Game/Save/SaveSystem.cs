@@ -120,13 +120,13 @@ namespace MemorialFloor.Game
         {
             if (!paused) return;
 
-            TrySave();
+            SaveIfReady();
             FinishWriting();
         }
 
         private void OnApplicationQuit()
         {
-            TrySave();
+            SaveIfReady();
             FinishWriting();
         }
 
@@ -135,7 +135,7 @@ namespace MemorialFloor.Game
             while (true)
             {
                 yield return new WaitForSecondsRealtime(AutosaveSeconds);
-                TrySave();
+                SaveIfReady();
             }
         }
 
@@ -176,7 +176,7 @@ namespace MemorialFloor.Game
         /// 書いてよいときだけ書く。戻し終える前に書くと、保存を始めの状態で上書きする。
         /// 移っている最中と倒れているあいだは、場所と体力が定まらない。設定からタイトルに戻るときも呼ぶ
         /// </summary>
-        public void TrySave()
+        public void SaveIfReady()
         {
             if (!_isEnabled || !_isOpened || _restorePending) return;
             if (_travel.Current == null || _travel.IsTraveling) return;

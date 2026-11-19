@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace MemorialFloor.Game
 {
@@ -12,10 +13,10 @@ namespace MemorialFloor.Game
         private static readonly int TintColor = Shader.PropertyToID("_TintColor");
 
         [Tooltip("筋の濃さを決める日の光")]
-        [SerializeField] private Light sun;
+        [SerializeField, FormerlySerializedAs("sun")] private Light _sun;
 
         [Tooltip("筋が素材どおりの濃さになる日の光の強さ。これより強くても濃くしない")]
-        [SerializeField] private float fullAt = 1f;
+        [SerializeField, FormerlySerializedAs("fullAt")] private float _fullAt = 1f;
 
         private Renderer[] _beams;
         private MaterialPropertyBlock _block;
@@ -29,7 +30,7 @@ namespace MemorialFloor.Game
 
         private void LateUpdate()
         {
-            float strength = Mathf.Clamp01(sun.intensity / fullAt);
+            float strength = Mathf.Clamp01(_sun.intensity / _fullAt);
             if (strength == _strength) return;
 
             _strength = strength;

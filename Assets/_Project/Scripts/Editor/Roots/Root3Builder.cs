@@ -202,12 +202,12 @@ namespace MemorialFloor.Editor
             area.transform.position = Arrival;
 
             SerializedObject place = new SerializedObject(area.AddComponent<Area>());
-            place.FindProperty("kind").enumValueIndex = (int)AreaKind.Root;
-            place.FindProperty("exposition").vector4Value = Exposition;
-            place.FindProperty("enemy").objectReferenceValue = enemy;
+            place.FindProperty("_kind").enumValueIndex = (int)AreaKind.Root;
+            place.FindProperty("_exposition").vector4Value = Exposition;
+            place.FindProperty("_enemy").objectReferenceValue = enemy;
 
             // 上の階に立っても連れ戻さない。上の階の床から、ほかの場所と同じだけ上がったら連れ戻す
-            place.FindProperty("ceiling").floatValue = Upper + FieldBounds.EscapeHeight;
+            place.FindProperty("_ceiling").floatValue = Upper + FieldBounds.EscapeHeight;
             place.ApplyModifiedPropertiesWithoutUndo();
 
             // 名前は変えない。核を壊したとき、敵を出す目印としてこの名前で引かれる（OF_Spawner）
@@ -247,7 +247,7 @@ namespace MemorialFloor.Editor
             door.center = center;
 
             SerializedObject way = new SerializedObject(exit.AddComponent<Exit>());
-            way.FindProperty("kind").enumValueIndex = (int)kind;
+            way.FindProperty("_kind").enumValueIndex = (int)kind;
             way.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -340,8 +340,8 @@ namespace MemorialFloor.Editor
             if (beams == null) throw new InvalidOperationException("モールに日差しの筋が無い");
 
             SerializedObject dimmer = new SerializedObject(beams.gameObject.AddComponent<ShaftDimmer>());
-            dimmer.FindProperty("sun").objectReferenceValue = sun;
-            dimmer.FindProperty("fullAt").floatValue = sun.intensity;
+            dimmer.FindProperty("_sun").objectReferenceValue = sun;
+            dimmer.FindProperty("_fullAt").floatValue = sun.intensity;
             dimmer.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -372,7 +372,7 @@ namespace MemorialFloor.Editor
                 }
 
                 SerializedObject place = new SerializedObject(area);
-                place.FindProperty("farEntrance").objectReferenceValue = far;
+                place.FindProperty("_farEntrance").objectReferenceValue = far;
                 place.ApplyModifiedPropertiesWithoutUndo();
 
                 if (RootNamed(scene, "ST_Root3") == null)
