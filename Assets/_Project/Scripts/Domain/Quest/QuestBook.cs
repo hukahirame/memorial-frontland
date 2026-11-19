@@ -105,7 +105,7 @@ namespace MemorialFloor.Domain
                     issued = true;
                 }
 
-                if (Quests.HasMainFor(root.Id) || !Plan.ShouldIssue(root.Id)) continue;
+                if (Quests.HasMainFor(root.Id) || !Plan.Advance(root.Id)) continue;
 
                 IssueMain(root, QuestKind.Main);
                 issued = true;

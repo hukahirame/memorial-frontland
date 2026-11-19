@@ -132,10 +132,10 @@ namespace MemorialFloor.Domain.Tests
         {
             DayPlan plan = new DayPlan();
 
-            Assert.IsFalse(plan.ShouldIssue("Root1"), "1回目で発行してはいけない");
+            Assert.IsFalse(plan.Advance("Root1"), "1回目で発行してはいけない");
             Assert.AreEqual(1, plan.Count);
 
-            Assert.IsTrue(plan.ShouldIssue("Root1"), "2回目で発行する");
+            Assert.IsTrue(plan.Advance("Root1"), "2回目で発行する");
             Assert.AreEqual(0, plan.Count, "発行したら予約は消える");
         }
 
@@ -143,10 +143,10 @@ namespace MemorialFloor.Domain.Tests
         public void 発行したあとはまた保留から始まる()
         {
             DayPlan plan = new DayPlan();
-            plan.ShouldIssue("Root1");
-            plan.ShouldIssue("Root1");
+            plan.Advance("Root1");
+            plan.Advance("Root1");
 
-            Assert.IsFalse(plan.ShouldIssue("Root1"));
+            Assert.IsFalse(plan.Advance("Root1"));
         }
 
         [Test]
@@ -154,11 +154,11 @@ namespace MemorialFloor.Domain.Tests
         {
             DayPlan plan = new DayPlan();
 
-            Assert.IsFalse(plan.ShouldIssue("Root1"));
-            Assert.IsFalse(plan.ShouldIssue("Root2"));
+            Assert.IsFalse(plan.Advance("Root1"));
+            Assert.IsFalse(plan.Advance("Root2"));
             Assert.AreEqual(2, plan.Count);
 
-            Assert.IsTrue(plan.ShouldIssue("Root1"));
+            Assert.IsTrue(plan.Advance("Root1"));
             Assert.AreEqual(1, plan.Count);
             Assert.AreEqual("Root2", plan.Pending[0]);
         }
@@ -168,8 +168,8 @@ namespace MemorialFloor.Domain.Tests
         {
             DayPlan plan = new DayPlan();
 
-            Assert.IsFalse(plan.ShouldIssue(""));
-            Assert.IsFalse(plan.ShouldIssue(null));
+            Assert.IsFalse(plan.Advance(""));
+            Assert.IsFalse(plan.Advance(null));
             Assert.AreEqual(0, plan.Count, "予約もしない");
         }
 
@@ -177,12 +177,12 @@ namespace MemorialFloor.Domain.Tests
         public void 保存から戻すと保留が入り直し空と重複は捨てる()
         {
             DayPlan plan = new DayPlan();
-            plan.ShouldIssue("Root9");
+            plan.Advance("Root9");
 
             plan.Restore(new[] { "Root2", "", null, "Root2", "Root1" });
 
             CollectionAssert.AreEqual(new[] { "Root2", "Root1" }, plan.Pending, "前の保留が残るか、空と重複が入る");
-            Assert.IsTrue(plan.ShouldIssue("Root1"), "戻した保留が次の夜明けに発行されない");
+            Assert.IsTrue(plan.Advance("Root1"), "戻した保留が次の夜明けに発行されない");
 
             plan.Restore(null);
             Assert.AreEqual(0, plan.Count);
@@ -192,8 +192,8 @@ namespace MemorialFloor.Domain.Tests
         public void 捨てると空になる()
         {
             DayPlan plan = new DayPlan();
-            plan.ShouldIssue("Root1");
-            plan.ShouldIssue("Root2");
+            plan.Advance("Root1");
+            plan.Advance("Root2");
 
             plan.Clear();
             Assert.AreEqual(0, plan.Count);

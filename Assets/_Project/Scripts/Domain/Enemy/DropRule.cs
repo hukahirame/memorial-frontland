@@ -1,19 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace MemorialFloor.Domain
 {
-    /// <summary>
-    /// 割合で落ちる取得物1つぶん。
-    /// Unity の Inspector が読むため、public フィールドで持つ（[D-7] の例外）。
-    /// </summary>
-    [Serializable]
-    public sealed class DropChance
-    {
-        public string ItemId = string.Empty;
-        public int Percent;
-    }
-
     /// <summary>倒したときに何が落ちるかの決め方</summary>
     public static class DropRule
     {

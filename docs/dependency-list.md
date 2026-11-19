@@ -56,7 +56,7 @@
 ↑ 🟦 `Roots` **4** — Root **4**  
 
 ↓ 🟦 `Roots` **4** — IRandom **4**  
-↓ 🟩 `Enemy` **30** — EnemyAim **10**, AimRule **4**, SpawnRule **4**, ActionRule **3**, DropChance **3**, EnemyAction **3**, DropRule **1**, FallRule **1**, IRandom **1**  
+↓ 🟩 `Enemy` **29** — EnemyAim **10**, AimRule **4**, SpawnRule **4**, ActionRule **3**, EnemyAction **3**, DropChance **2**, DropRule **1**, FallRule **1**, IRandom **1**  
 
 ### 🟦Inventory 🎒 
 
@@ -142,7 +142,7 @@
 
 ### 🟩Enemy 👾 
 
-↑ 🟦 `Enemy` **30** — EnemyAim **10**, AimRule **4**, SpawnRule **4**, ActionRule **3**, DropChance **3**, EnemyAction **3**, DropRule **1**, FallRule **1**, IRandom **1**  
+↑ 🟦 `Enemy` **29** — EnemyAim **10**, AimRule **4**, SpawnRule **4**, ActionRule **3**, EnemyAction **3**, DropChance **2**, DropRule **1**, FallRule **1**, IRandom **1**  
 ↑ 🟦 `OutField` **3** — FieldBounds **3**  
 ↑ 🟦 `Player` **8** — Health **6**, Heading **2**  
 ↑ 🟦 `Quest` **1** — QuestBook **1**  

@@ -8,7 +8,7 @@ namespace MemorialFloor.Domain.Tests
     {
         private static DropChance Drop(string itemId, int percent)
         {
-            return new DropChance { ItemId = itemId, Percent = percent };
+            return new DropChance(itemId, percent);
         }
 
         [Test]

@@ -146,7 +146,7 @@ public class SavePlayTests
         Raid().Invade(2);
         Raid().Keep(new Raider(1f, 2f, 3f, 40));
         Plan().Clear();
-        Plan().ShouldIssue("Root1");
+        Plan().Advance("Root1");
         string[] ids = Quests().All.Select(q => q.Id).ToArray();
 
         SaveData data = Written();

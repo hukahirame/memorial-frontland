@@ -176,8 +176,8 @@ namespace MemorialFloor.Editor
             SerializedProperty chances = kind.FindProperty("_chanceDrops");
             chances.arraySize = 1;
             SerializedProperty core = chances.GetArrayElementAtIndex(0);
-            core.FindPropertyRelative("ItemId").stringValue = "Slimecore";
-            core.FindPropertyRelative("Percent").intValue = SodaCorePercent;
+            core.FindPropertyRelative("itemId").stringValue = "Slimecore";
+            core.FindPropertyRelative("percent").intValue = SodaCorePercent;
         }
 
         /// <summary>速さ・攻撃・体力をスライムの SodaStrength 倍にする。体力の上限と初期値は頭の上の Slider が持つ（Slime）</summary>

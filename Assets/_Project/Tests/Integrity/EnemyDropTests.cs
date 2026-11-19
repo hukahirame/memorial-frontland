@@ -59,7 +59,7 @@ namespace MemorialFloor.Tests.Integrity
         {
             SerializedObject fields = Fields(enemy);
             IEnumerable<string> chances = Elements(fields.FindProperty("_chanceDrops"))
-                .Select(chance => chance.FindPropertyRelative("ItemId").stringValue);
+                .Select(chance => chance.FindPropertyRelative("itemId").stringValue);
 
             return Strings(fields.FindProperty("_drops")).Concat(chances).Where(itemId => itemId.Length > 0);
         }
@@ -67,8 +67,8 @@ namespace MemorialFloor.Tests.Integrity
         private static int CorePercent(GameObject enemy)
         {
             return Elements(Fields(enemy).FindProperty("_chanceDrops"))
-                .Where(chance => chance.FindPropertyRelative("ItemId").stringValue == "Slimecore")
-                .Sum(chance => chance.FindPropertyRelative("Percent").intValue);
+                .Where(chance => chance.FindPropertyRelative("itemId").stringValue == "Slimecore")
+                .Sum(chance => chance.FindPropertyRelative("percent").intValue);
         }
 
         private static IEnumerable<GameObject> EnemyPrefabs()

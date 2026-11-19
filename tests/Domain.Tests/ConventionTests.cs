@@ -83,6 +83,24 @@ namespace MemorialFloor.Domain.Tests
             Assert.IsEmpty(found, "書き換えられる public フィールドがある。[SerializeField] private にして、読むだけなら get だけのプロパティで出す（[D-7]）" + Lines(found));
         }
 
+        //付随する enum や結果の型は同じファイルに置いてよいが、主な型の名前がファイル名になる。テストは対象外（1 ファイルに場面ごとの組を並べる）
+        [Test]
+        public void スクリプトのファイルにはファイル名と同じ名前の型がある()
+        {
+            List<string> found = new List<string>();
+
+            foreach (Source source in Sources(Runtime))
+            {
+                string name = System.IO.Path.GetFileNameWithoutExtension(source.Path);
+                bool hasType = source.Root.DescendantNodes().OfType<BaseTypeDeclarationSyntax>().Any(type => type.Identifier.Text == name)
+                               || source.Root.DescendantNodes().OfType<DelegateDeclarationSyntax>().Any(handler => handler.Identifier.Text == name);
+
+                if (!hasType) found.Add(source.Path);
+            }
+
+            Assert.IsEmpty(found, "ファイル名と同じ名前の型が無い。主な型ごとにファイルを分け、その型の名前をファイル名にする" + Lines(found));
+        }
+
         [Test]
         public void 遊んでいる最中のコードはstaticに状態を置かない()
         {

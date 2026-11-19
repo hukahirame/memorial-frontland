@@ -42,9 +42,9 @@ namespace MemorialFloor.Game
 
         [Tooltip("割合で落ちる取得物")]
         [SerializeField, FormerlySerializedAs("chanceDrops")]
-        private List<DropChance> _chanceDrops = new List<DropChance>
+        private List<DropEntry> _chanceDrops = new List<DropEntry>
         {
-            new DropChance { ItemId = "Slimecore", Percent = 5 }
+            new DropEntry { itemId = "Slimecore", percent = 5 }
         };
 
         [Tooltip("落とし物の prefab")]
@@ -329,7 +329,7 @@ namespace MemorialFloor.Game
         /// <summary>弾け終わった。取得物を落とし、討伐を進め、湧いた根源を鎮めて消える</summary>
         private void Die()
         {
-            foreach (string itemId in DropRule.Roll(_drops, _chanceDrops, UnityRandom.Shared))
+            foreach (string itemId in DropRule.Roll(_drops, _chanceDrops.ConvertAll(entry => entry.ToChance()), UnityRandom.Shared))
             {
                 GameObject drop = Instantiate(_dropPrefab, transform.position, Quaternion.identity);
                 SceneManager.MoveGameObjectToScene(drop, gameObject.scene);

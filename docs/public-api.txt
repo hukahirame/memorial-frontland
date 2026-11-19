@@ -121,16 +121,16 @@ DayCycle.SetElapsed(int) : void
 
 sealed class DayPlan
 DayPlan.ctor()
+DayPlan.Advance(string) : bool
 DayPlan.Clear() : void
 DayPlan.Count.get : int
 DayPlan.Pending.get : IReadOnlyList<string>
 DayPlan.Restore(IEnumerable<string>) : void
-DayPlan.ShouldIssue(string) : bool
 
 sealed class DropChance
-DropChance.ctor()
-DropChance.ItemId : string
-DropChance.Percent : int
+DropChance.ctor(string, int)
+DropChance.ItemId.get : string
+DropChance.Percent.get : int
 
 static class DropRule
 static DropRule.Roll(IEnumerable<string>, IEnumerable<DropChance>, IRandom) : List<string>

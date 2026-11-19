@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MemorialFloor.Domain
+﻿namespace MemorialFloor.Domain
 {
     /// <summary>場の外へ出たときに押し戻す向き。大きさは持たず、符号だけが意味を持つ</summary>
     public readonly struct Nudge
