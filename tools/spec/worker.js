@@ -1,4 +1,4 @@
-// 誕生日を知っている人にだけ管理のページを見せる。機械での総当たりは Turnstile で止める（[D-41]）。
+// 誕生日を知っている人にだけ管理のページを見せる。機械での総当たりは Turnstile で止め、まちがえた回数で人を締め出さない。
 // 誕生日と Turnstile の秘密鍵は git に入れず、Worker の secret（PASSWORD と TURNSTILE_SECRET）に置く。
 // 設定がそろっていなければ誰も入れない。
 const COOKIE = "admin";

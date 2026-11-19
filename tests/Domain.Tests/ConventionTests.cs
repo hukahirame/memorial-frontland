@@ -80,7 +80,7 @@ namespace MemorialFloor.Domain.Tests
                 }
             }
 
-            Assert.IsEmpty(found, "書き換えられる public フィールドがある。[SerializeField] private にして、読むだけなら get だけのプロパティで出す（[D-7]）" + Lines(found));
+            Assert.IsEmpty(found, "書き換えられる public フィールドがある。[SerializeField] private にして、読むだけなら get だけのプロパティで出す" + Lines(found));
         }
 
         //付随する enum や結果の型は同じファイルに置いてよいが、主な型の名前がファイル名になる。テストは対象外（1 ファイルに場面ごとの組を並べる）

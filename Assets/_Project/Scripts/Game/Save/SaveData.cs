@@ -6,7 +6,7 @@ using UnityEngine;
 namespace MemorialFloor.Game
 {
     /// <summary>
-    /// 保存のファイルの中身。JsonUtility がそのまま読み書きするので、public フィールドで持つ（[D-7] の例外）。
+    /// 保存のファイルの中身。JsonUtility がそのまま読み書きするので、public フィールドで持つ（JsonUtility はプロパティを書かない）。
     /// 欄の名前はファイルの鍵で、変えると前の保存が読めなくなる。写すのと戻すのは SaveSystem が行う
     /// </summary>
     [Serializable]

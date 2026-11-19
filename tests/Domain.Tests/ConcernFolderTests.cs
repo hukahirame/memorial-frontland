@@ -6,7 +6,7 @@ using NUnit.Framework;
 namespace MemorialFloor.Domain.Tests
 {
     /// <summary>
-    /// 関心事の単位は層の直下のフォルダで、Domain / Game / Legacy の同じ名前のフォルダが1つの関心事になる（[D-20]）。
+    /// 関心事の単位は層の直下のフォルダで、Domain / Game の同じ名前のフォルダが1つの関心事になる（[D-20]）。
     /// 仕様書との対応は tools/spec/build.py が見る。
     /// </summary>
     public class ConcernFolderTests
