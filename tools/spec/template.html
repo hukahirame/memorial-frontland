@@ -58,7 +58,7 @@ html { scroll-padding-top: calc(var(--top-h) + 12px); }
 .toc { position: sticky; top: calc(var(--top-h) + 16px); align-self: start; display: flex; flex-direction: column; gap: 5px; max-height: calc(100vh - var(--top-h) - 32px); overflow-y: auto; padding-bottom: 8px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
 .toc-label { font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--muted); margin: 8px 2px 0; }
 .toc-label:first-child { margin-top: 0; }
-/* 仕様書【部品】のような子の見出し。親の見出しの下に、細い線を引いて並べる */
+/* 仕様書【仕組み】のような子の見出し。親の見出しの下に、細い線を引いて並べる */
 .toc-sublabel { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 400; letter-spacing: 0; margin: 2px 2px 0 4px; }
 .toc-sublabel::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 /* 絵は左の列に大きく置き、上下の余白へはみ出させてボタンの高さを変えない */
@@ -609,7 +609,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     { key: 'concept', group: '全体', icon: '📘', title: '企画', render: renderConcept },
     { key: 'adrs', group: '全体', icon: '⚖️', title: '設計判断', render: renderAdrs },
     { key: 'open', group: '全体', icon: '❓', title: '未決', render: () => renderCollected('未決', '❓', '未決', '各仕様書の「未決」を集めたもの。人が決めていない振る舞い。複数の振る舞いや作りが決まる問いは設計判断にある。') },
-    ...SYSTEMS.map((s) => ({ key: s.id, group: '仕様書【部品】', ...split(s.name), system: s, render: () => renderSystem(s) })),
+    ...SYSTEMS.map((s) => ({ key: s.id, group: '仕様書【仕組み】', ...split(s.name), system: s, render: () => renderSystem(s) })),
     // 出来事は仕組みを横に切るもの。起こす仕組みの絵を、目次のボタンの奥に透かす
     ...EVENT_LIST.map((ev) => {
       const owner = split(byId.get(ev.owner).name);
@@ -627,7 +627,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   const topButton = document.getElementById('top');
   let current = 'now';
 
-  // 「仕様書【部品】」を、親の「仕様書」と子の「部品」に分ける。目次では 2 段の見出しにする
+  // 「仕様書【仕組み】」を、親の「仕様書」と子の「仕組み」に分ける。目次では 2 段の見出しにする
   const groupParts = (g) => { const m = g.match(/^(.+?)【(.+)】$/); return m ? [m[1], m[2]] : [g, null]; };
   function renderToc() {
     let html = '', group = null;
