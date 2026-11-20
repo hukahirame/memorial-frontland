@@ -109,6 +109,7 @@ details.group > summary { cursor: pointer; font-weight: 600; font-size: 16px; ma
 .adr-entry { scroll-margin-top: 80px; }
 .adr-entry h3 .date { margin-left: auto; }
 .adr-kind { font-size: 18px; line-height: 1; cursor: default; }
+a.ev::before { content: "⚡"; font-size: 0.85em; margin-right: 1px; }
 .adr-kind.side { float: right; margin: 0 0 4px 8px; }
 .adr-entry details { margin-top: 6px; }
 .adr-entry summary { cursor: pointer; font-size: 13px; color: var(--muted); }
@@ -168,6 +169,8 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   /** ページと、その中の場所を指す住所。#roots や #adrs/adr-D-34。ブラウザの戻る・進む・再読み込み・新しいタブで開くがこれで効く */
   const href = (page, anchor) => '#' + page + (anchor ? '/' + anchor : '');
   const SYSTEMS = DATA.systems;
+  const EVENT_LIST = DATA.events || [];  // 仕組みをまたぐ出来事。起こす仕様書の ## 出来事 と、それを指す反応
+  const EVENTS = new Map(EVENT_LIST.map((ev) => [ev.key, ev]));
   // 企画は暗号で git に入れるので、鍵の無い手元では読めない（sections が null）
   const CONCEPT = DATA.concept.sections ? { id: 'concept', name: '企画 📘', sections: DATA.concept.sections } : null;
   const byId = new Map([...(CONCEPT ? [CONCEPT] : []), ...SYSTEMS].map((s) => [s.id, s]));
@@ -190,6 +193,8 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, label, target) => {
       const file = target.split('#')[0];
       const id = !file.includes('/') && file.endsWith('.md') ? file.slice(0, -3) : null;
+      const ev = id && EVENTS.get(`ev-${id}-${target.split('#')[1]}`);
+      if (ev) return `<a class="ev" href="${href(ev.key)}" data-page="${ev.key}" title="出来事">${label}</a>`;
       return id && byId.has(id) ? `<a href="#${id}" data-page="${id}">${label}</a>` : `<span class="ext" title="${target}">${label}</span>`;
     });
     s = s.replace(/\[(D-\d+)\](?!\()/g, (_, id) => adrChip(id));
@@ -240,7 +245,8 @@ table.md th { background: var(--sunk); white-space: nowrap; }
       if (b.type === 'h') return `<h4>${inline(b.text)}</h4>`;
       if (b.type === 'p') return `<p class="para" id="${base}">${inline(b.text)}</p>`;
       if (b.type === 'code') return `<pre>${esc(b.text)}</pre>`;
-      if (b.type === 'table') return tableHtml(b.head, b.rows);
+      // 出来事の表は、名前から出来事のページへ飛べるようにする
+      if (b.type === 'table') return tableHtml(b.head, sec.title === '出来事' ? b.rows.map(([name, ...rest]) => [`[${name}](${s.id}.md#${name})`, ...rest]) : b.rows);
       return `<ul class="items">${b.items.map((it, ii) => itemHtml(it, kind, `${base}-${ii}`)).join('')}</ul>`;
     }).join('');
   }
@@ -533,6 +539,28 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     }
     return html;
   }
+  // 出来事のページ。起こす仕様書と、反応する仕様書の行を集める（build.py の events）
+  function renderEvent(ev) {
+    const others = [...new Set(ev.reactions.map((r) => r.system))];
+    let html = head('⚡', ev.name, '出来事', inline(ev.when),
+      `<span>起こす：${pageLink(ev.owner)}</span><span>反応する：${others.map(pageLink).join('・')}</span>`);
+    for (const id of others) {
+      const mine = ev.reactions.filter((r) => r.system === id);
+      html += `<section class="group k-links"><h3>${pageLink(id)}</h3>`;
+      for (const heading of [...new Set(mine.map((r) => r.heading))]) {
+        const at = mine.filter((r) => r.heading === heading);
+        html += `<h4>${inline(heading)}</h4>`;
+        const rows = at.filter((r) => r.row);
+        for (const shape of [...new Set(rows.map((r) => JSON.stringify(r.head)))]) {
+          html += tableHtml(JSON.parse(shape), rows.filter((r) => JSON.stringify(r.head) === shape).map((r) => r.row));
+        }
+        const items = at.filter((r) => !r.row);
+        if (items.length) html += `<ul class="items">${items.map((r, i) => itemHtml({ text: r.text, depth: 0 }, 'links', `${ev.key}-${i}`)).join('')}</ul>`;
+      }
+      html += '</section>';
+    }
+    return html;
+  }
   function renderItems() {
     const it = DATA.items;
     const nameOf = new Map(it.rows.map((r) => [r[0], r[1]]));
@@ -548,8 +576,9 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     { key: 'now', group: '対応', icon: '🧭', title: 'いま', render: renderNow },
     { key: 'concept', group: '全体', icon: '📘', title: '企画', render: renderConcept },
     { key: 'adrs', group: '全体', icon: '⚖️', title: '設計判断', render: renderAdrs },
-    { key: 'open', group: '仕様書', icon: '❓', title: '未決', render: () => renderCollected('未決', '❓', '未決', '各仕様書の「未決」を集めたもの。人が決めていない振る舞い。複数の振る舞いや作りが決まる問いは設計判断にある。') },
-    ...SYSTEMS.map((s) => ({ key: s.id, group: '仕様書', ...split(s.name), system: s, render: () => renderSystem(s) })),
+    { key: 'open', group: '仕様書【部品】', icon: '❓', title: '未決', render: () => renderCollected('未決', '❓', '未決', '各仕様書の「未決」を集めたもの。人が決めていない振る舞い。複数の振る舞いや作りが決まる問いは設計判断にある。') },
+    ...SYSTEMS.map((s) => ({ key: s.id, group: '仕様書【部品】', ...split(s.name), system: s, render: () => renderSystem(s) })),
+    ...EVENT_LIST.map((ev) => ({ key: ev.key, group: '仕様書【出来事】', icon: '⚡', title: ev.name, event: ev, render: () => renderEvent(ev) })),
     { key: 'items', group: 'データ', icon: '🧺', title: 'アイテムとレシピ', render: renderItems },
   ];
 
@@ -567,7 +596,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     for (const p of PAGES) {
       if (p.group !== group) { group = p.group; html += `<div class="toc-label">${esc(group)}</div>`; }
       const decide = p.system ? decideCount(p.system) : p.key === 'now' ? adrsOf('保留中').length + DATA.problems.length + adrsOf('確定').filter(([, a]) => marked(a)).length : 0;
-      const sub = decide ? (p.system ? `決める ${decide}` : `対応 ${decide}`) : p.key === 'concept' ? (CONCEPT ? (conceptBlanks() ? `未記入 ${conceptBlanks()}` : '') : '手元に無い') : '';
+      const sub = p.event ? esc(split(byId.get(p.event.owner).name).title) : decide ? (p.system ? `決める ${decide}` : `対応 ${decide}`) : p.key === 'concept' ? (CONCEPT ? (conceptBlanks() ? `未記入 ${conceptBlanks()}` : '') : '手元に無い') : '';
       html += `<a href="${href(p.key)}" data-page="${p.key}"${p.key === current ? ' aria-current="page"' : ''}><span class="toc-name">${p.icon} ${esc(p.title)}</span>${sub ? `<span class="toc-sub">${sub}</span>` : ''}</a>`;
     }
     toc.innerHTML = html;

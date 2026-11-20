@@ -4,7 +4,7 @@
 
 ページは見え方で、何も書き足さない。中身は仕様書・判断の記録・原簿から毎回読む。
 直すときは元の文書を直して、作り直す。
-文書どうしの食い違い（無いリンク先、置き換え・廃止の設計判断を指す所、確定・保留中の設計判断の範囲に無い道、前提の答えの違い）と、
+文書どうしの食い違い（無いリンク先、無い出来事を指す所、ほかの仕様書が反応しない出来事、置き換え・廃止の設計判断を指す所、確定・保留中の設計判断の範囲に無い道、前提の答えの違い）と、
 仕様書の欠け（足りない欄、仕様書の無い関心事のフォルダ）は、問題として出し、終了コード 1 で終わる。
 作るたびに Cloudflare にも上げ、上げてあるページを手元と同じにする。上げられなかったときも終了コード 1。
 
@@ -45,6 +45,7 @@ LAYERS = [ROOT / "Assets" / "_Project" / "Scripts" / "Domain", ROOT / "Assets" /
           ROOT / "Assets" / "LegacyScripts"]
 SPEC_KEYS = ("id", "name", "touches")  # 仕様書の frontmatter に要る鍵
 SPEC_SECTIONS = ("受け入れ条件", "やらないこと", "未決")  # どの仕様書にも要る欄
+EVENT_SECTION = "出来事"  # その仕組みが起こし、ほかの仕組みが反応する出来事の表
 
 
 def read(path: Path) -> str:
@@ -352,6 +353,57 @@ def retired(adr_id: str, adr: dict) -> str:
     return f"置き換えられた（後継 [{adr['successor']}]）" if adr["state"] == "置き換え" else "廃止された"
 
 
+def events(systems: list[dict]) -> tuple[list[dict], list[str]]:
+    """起こす側の ## 出来事 と、ほかの仕様書から [名前](起こす側.md#名前) で指している所（反応）を集める"""
+    problems, found = [], {}
+    for s in systems:
+        sec = next((x for x in s["sections"] if x["title"] == EVENT_SECTION), None)
+        table = next((b for b in sec["blocks"] if b["type"] == "table"), None) if sec else None
+        for row in table["rows"] if table else []:
+            name = row[0].strip()
+            if (s["id"], name) in found:
+                problems.append(f"{s['id']}.md の出来事「{name}」が 2 つある")
+            found[(s["id"], name)] = {"key": f"ev-{s['id']}-{name}", "name": name, "owner": s["id"],
+                                      "when": row[1].strip() if len(row) > 1 else "", "reactions": []}
+    for s in systems:
+        for si, sec in enumerate(s["sections"]):
+            if sec["title"] == EVENT_SECTION:
+                continue
+            heading = sec["title"]
+            for bi, b in enumerate(sec["blocks"]):
+                if b["type"] == "h":
+                    heading = b["text"]
+                    continue
+                if b["type"] == "table":
+                    places = [(row, " ".join(row), "") for row in b["rows"]]
+                elif b["type"] == "list":
+                    places = [(item, item["text"], f"{s['id']}-{si}-{bi}-{ii}") for ii, item in enumerate(b["items"])]
+                elif b["type"] == "p":
+                    places = [(b, b["text"], f"{s['id']}-{si}-{bi}")]
+                else:
+                    continue
+                for place, text, anchor in places:
+                    for label, target in LINK.findall(text):
+                        file, _, name = target.partition("#")
+                        if not name or not file.endswith(".md"):
+                            continue
+                        event = found.get((file[:-3], name))
+                        if event is None:
+                            problems.append(f"{s['id']}.md の [{label}]({target}) は、{file} の出来事に無い")
+                            continue
+                        reaction = {"system": s["id"], "heading": heading, "anchor": anchor}
+                        if b["type"] == "table":
+                            reaction.update(head=b["head"], row=place)
+                        else:
+                            reaction["text"] = text
+                        if reaction not in event["reactions"]:
+                            event["reactions"].append(reaction)
+    for event in found.values():
+        if not any(r["system"] != event["owner"] for r in event["reactions"]):
+            problems.append(f"{event['owner']}.md の出来事「{event['name']}」に、ほかの仕様書が反応していない")
+    return list(found.values()), problems
+
+
 def items() -> dict:
     with ITEMS.open(encoding="utf-8-sig", newline="") as source:
         rows = [row for row in csv.reader(source) if any(cell.strip() for cell in row)]
@@ -396,7 +448,8 @@ def main() -> int:
             if section["title"] != "受け入れ条件":
                 continue
             for text in texts([section]):
-                links.update(Path(target).stem for _, target in LINK.findall(text) if target.endswith(".md"))
+                files = (target.split("#")[0] for _, target in LINK.findall(text))
+                links.update(Path(name).stem for name in files if name.endswith(".md"))
         for text in texts(sections):
             for _, target in LINK.findall(text):
                 name = target.split("#")[0]
@@ -409,6 +462,8 @@ def main() -> int:
         problems.append(f"{name}.md が INDEX.md に無い")
     for name in sorted(folders - specs):
         problems.append(f"関心事のフォルダ {name} に仕様書が無い。docs/systems/{name}.md を足す")
+    found_events, event_problems = events(systems)
+    problems += event_problems
     problems += adr_problems(adrs)
     for adr in adrs.values():
         hits = {(m.group(1) or m.group(2)).lower() for scope in adr["scope"] if (m := SCOPE_SYSTEM.search(scope))}
@@ -419,6 +474,7 @@ def main() -> int:
         "concept": {"source": str(CONCEPT.relative_to(ROOT)).replace("\\", "/"),
                     "sections": parse_body(read(CONCEPT)) if readable(CONCEPT) else None},
         "systems": systems,
+        "events": found_events,
         "adrs": adrs,
         "items": items(),
         "problems": problems,
