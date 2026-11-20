@@ -546,11 +546,11 @@ table.md th { background: var(--sunk); white-space: nowrap; }
 
   const PAGES = [
     { key: 'now', group: '対応', icon: '🧭', title: 'いま', render: renderNow },
-    { key: 'concept', group: '読む', icon: '📘', title: '企画', render: renderConcept },
-    ...SYSTEMS.map((s) => ({ key: s.id, group: '読む', ...split(s.name), system: s, render: () => renderSystem(s) })),
-    { key: 'items', group: '読む', icon: '🧺', title: 'アイテムとレシピ', render: renderItems },
-    { key: 'adrs', group: '記録', icon: '⚖️', title: '設計判断', render: renderAdrs },
-    { key: 'open', group: '記録', icon: '❓', title: '未決', render: () => renderCollected('未決', '❓', '未決', '各仕様書の「未決」を集めたもの。人が決めていない振る舞い。複数の振る舞いや作りが決まる問いは設計判断にある。') },
+    { key: 'concept', group: '全体', icon: '📘', title: '企画', render: renderConcept },
+    { key: 'adrs', group: '全体', icon: '⚖️', title: '設計判断', render: renderAdrs },
+    { key: 'open', group: '仕様書', icon: '❓', title: '未決', render: () => renderCollected('未決', '❓', '未決', '各仕様書の「未決」を集めたもの。人が決めていない振る舞い。複数の振る舞いや作りが決まる問いは設計判断にある。') },
+    ...SYSTEMS.map((s) => ({ key: s.id, group: '仕様書', ...split(s.name), system: s, render: () => renderSystem(s) })),
+    { key: 'items', group: 'データ', icon: '🧺', title: 'アイテムとレシピ', render: renderItems },
   ];
 
   // ── 目次と移動 ──
