@@ -57,6 +57,11 @@ button, input { font: inherit; color: inherit; }
 .toc a[aria-current="page"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
 .toc-name { font-weight: 600; font-size: 13px; }
 .toc-sub { font-size: 11px; color: var(--warn); }
+/* 奥に透かす絵。影絵にして色の差を消し、ボタンの右に大きく薄く置いて縁で切る */
+.toc a:has(.toc-mark) { position: relative; overflow: clip; isolation: isolate; }
+.toc-mark { position: absolute; z-index: -1; right: -2px; top: 50%; transform: translateY(-50%) rotate(-12deg); font-size: 34px; line-height: 1; color: transparent; text-shadow: 0 0 0 var(--text); opacity: .14; pointer-events: none; transition: opacity .2s, transform .2s, text-shadow .2s; }
+.toc a:hover .toc-mark { opacity: .24; transform: translateY(-50%) rotate(-6deg) scale(1.06); }
+.toc a[aria-current="page"] .toc-mark { opacity: .36; text-shadow: 0 0 0 var(--accent); transform: translateY(-50%) rotate(-6deg) scale(1.06); }
 main { min-width: 0; }
 @media (max-width: 760px) {
   .layout { grid-template-columns: minmax(0, 1fr); gap: 12px; }
@@ -582,7 +587,11 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     { key: 'adrs', group: '全体', icon: '⚖️', title: '設計判断', render: renderAdrs },
     { key: 'open', group: '全体', icon: '❓', title: '未決', render: () => renderCollected('未決', '❓', '未決', '各仕様書の「未決」を集めたもの。人が決めていない振る舞い。複数の振る舞いや作りが決まる問いは設計判断にある。') },
     ...SYSTEMS.map((s) => ({ key: s.id, group: '仕様書【部品】', ...split(s.name), system: s, render: () => renderSystem(s) })),
-    ...EVENT_LIST.map((ev) => ({ key: ev.key, group: '仕様書【出来事】', icon: '⚡', title: ev.name, event: ev, render: () => renderEvent(ev) })),
+    // 出来事は仕組みを横に切るもの。起こす仕組みの絵を、目次のボタンの奥に透かす
+    ...EVENT_LIST.map((ev) => {
+      const owner = split(byId.get(ev.owner).name);
+      return { key: ev.key, group: '仕様書【出来事】', icon: '⚡', title: ev.name, mark: { icon: owner.icon, title: `起こす：${owner.title}` }, render: () => renderEvent(ev) };
+    }),
     { key: 'items', group: 'データ', icon: '🧺', title: 'アイテムとレシピ', render: renderItems },
   ];
 
@@ -600,8 +609,9 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     for (const p of PAGES) {
       if (p.group !== group) { group = p.group; html += `<div class="toc-label">${esc(group)}</div>`; }
       const decide = p.system ? decideCount(p.system) : p.key === 'now' ? adrsOf('保留中').length + DATA.problems.length + adrsOf('確定').filter(([, a]) => marked(a)).length : 0;
-      const sub = p.event ? esc(split(byId.get(p.event.owner).name).title) : decide ? (p.system ? `決める ${decide}` : `対応 ${decide}`) : p.key === 'concept' ? (CONCEPT ? (conceptBlanks() ? `未記入 ${conceptBlanks()}` : '') : '手元に無い') : '';
-      html += `<a href="${href(p.key)}" data-page="${p.key}"${p.key === current ? ' aria-current="page"' : ''}><span class="toc-name">${p.icon} ${esc(p.title)}</span>${sub ? `<span class="toc-sub">${sub}</span>` : ''}</a>`;
+      const sub = decide ? (p.system ? `決める ${decide}` : `対応 ${decide}`) : p.key === 'concept' ? (CONCEPT ? (conceptBlanks() ? `未記入 ${conceptBlanks()}` : '') : '手元に無い') : '';
+      const mark = p.mark ? `<span class="toc-mark" aria-hidden="true">${p.mark.icon}</span>` : '';
+      html += `<a href="${href(p.key)}" data-page="${p.key}"${p.key === current ? ' aria-current="page"' : ''}${p.mark ? ` title="${esc(p.mark.title)}"` : ''}>${mark}<span class="toc-name">${p.icon} ${esc(p.title)}</span>${sub ? `<span class="toc-sub">${sub}</span>` : ''}</a>`;
     }
     toc.innerHTML = html;
   }
