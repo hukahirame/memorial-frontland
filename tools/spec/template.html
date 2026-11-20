@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'">
-<title>Admin</title>
+<title>Admin～メモフロ～</title>
 <!--
   管理のページのひな形。tools/spec/build.py が docs/systems の仕様書・docs/DECISIONS.md・原簿を読み、
   下の DATA に入れて .spec/admin.html を書く。中身はここに書かない（書いた所が 2 つになる）。
@@ -41,7 +41,6 @@ button, input { font: inherit; color: inherit; }
 .top-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
 .top h1 { margin: 0; font-size: 19px; }
 .built { font-size: 12px; color: var(--muted); }
-.meta { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
 .tools { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
 .search { flex: 1 1 auto; min-width: 0; max-width: 360px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--text); font-size: 13px; }
 .nav, .to-top { width: 32px; height: 32px; padding: 0; line-height: 1; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); cursor: pointer; }
@@ -137,13 +136,6 @@ table.md { border-collapse: collapse; width: 100%; font-size: 13px; margin: 8px 
 table.md th, table.md td { border: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
 table.md th { background: var(--sunk); white-space: nowrap; }
 
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; margin: 6px 0 4px; }
-.card { display: flex; flex-direction: column; gap: 3px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: var(--sunk); color: inherit; text-decoration: none; }
-.card:hover { border-color: var(--accent); }
-.card-name { font-weight: 600; }
-.card-sum { font-size: 13px; }
-.card-links { font-size: 12px; color: var(--muted); }
-.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
 
 .pager { display: flex; justify-content: space-between; gap: 12px; margin: 4px 0 24px; font-size: 13px; }
 .pager a { text-decoration: none; padding: 6px 10px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); }
@@ -154,8 +146,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
 <body>
 <header class="top">
   <div class="top-inner">
-    <div class="top-title"><h1>Admin</h1><span class="built" id="built"></span></div>
-    <p class="meta">仕様書（docs/systems）と判断の記録（docs/DECISIONS.md）から作った見え方。直すときは元の文書を直し、<code>python tools/spec/build.py</code> で作り直す。</p>
+    <div class="top-title"><h1>Admin～メモフロ～</h1><span class="built" id="built"></span></div>
     <div class="tools">
       <button type="button" id="back" class="nav" title="戻る" aria-label="戻る">←</button>
       <button type="button" id="forward" class="nav" title="進む" aria-label="進む">→</button>
@@ -264,16 +255,6 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   const pageLink = (id) => `<a href="#${id}" data-page="${id}">${esc(split(byId.get(id).name).title)}</a>`;
 
   // ── ページ ──
-  function renderOverview() {
-    let html = head('🗺️', 'このゲーム', '全体',
-      '仕組みごとの仕様書を、全体から細部へ読む順に並べたもの。仕様書は受け入れ条件で、狙いは企画、案の選び方は設計判断が持つ。中身は仕様書・判断の記録・原簿から作り、このページでは書き足さない。',
-      `<span>仕組み ${SYSTEMS.length}</span>`);
-    html += `<section class="group"><h3>企画</h3><p class="para">${CONCEPT ? `<a href="#concept" data-page="concept">企画</a>のページにある。` : '企画は暗号で入れてあり、この手元では読めない。'}人が書くのは企画だけ。</p></section>`;
-    html += `<section class="group"><h3>仕組み <span class="small">docs/systems/INDEX.md の並び</span></h3><div class="cards">${SYSTEMS.map(card).join('')}</div></section>`;
-    const active = Object.values(DATA.adrs).filter(live).length;
-    html += `<section class="group"><h3>設計判断</h3><p class="para">人が選んだ案と、選ばなかった案。確定と保留中が ${active} 件。<a href="#adrs" data-page="adrs">一覧</a></p></section>`;
-    return html;
-  }
   const conceptBlanks = () => (CONCEPT ? CONCEPT.sections.filter(unwritten).length : 0);
   function renderConcept() {
     const facts = `<span>正本 <code>${esc(DATA.concept.source)}</code>（暗号で git に入れる）</span><span>確定していないことも書く</span>`;
@@ -324,6 +305,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
         `${a.successor ? ` 後継 ${adrChip(a.successor)}` : ''}${a.note ? `<br>${inline(a.note)}` : ''}` +
         `<details><summary>全文</summary>${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}${adrPart(a, '決定')}${adrPart(a, '帰結')}${adrPart(a, '経緯')}</details></li>`).join('') +
       '</ul></details>';
+    html += '<p class="para small">このページ全体は、企画・仕様書・判断の記録・原簿から作った見え方。直すときは元の文書を直し、<code>python tools/spec/build.py</code> で作り直す。</p>';
     return html;
   }
   // 入口。人の対応が要るものだけを出す
@@ -510,32 +492,23 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     render(parse(shown), window.scrollY);
   }
   function nowGroup(title, hint, list) {
+    if (!list.length) return '';
     return `<section class="group"><h3>${title} <span class="small">${list.length} 件</span></h3><p class="para small">${hint}</p>` +
-      (list.length ? `<ul class="items">${list.map(([id, a]) => nowItem(id, a)).join('')}</ul>` : '<p class="none">なし</p>') + '</section>';
+      `<ul class="items">${list.map(([id, a]) => nowItem(id, a)).join('')}</ul></section>`;
   }
   function renderNow() {
     const open = adrsOf('保留中');
-    let html = head('🧭', 'いま', '全体', '人の対応が要るもの。決めたらチャットで「D-26 は (b) で試す」「D-26 は (b) で確定」のように伝える。', adrCounts());
+    let html = head('🧭', 'いま', '対応', '人の対応が要るもの。決めたらチャットで「D-番号 は (b) で試す」「D-番号 は (b) で確定」のように伝える。', adrCounts());
     if (canConnect()) html += `<p class="para small"><button type="button" class="connect">docs フォルダをつなぐ</button>${connectNote ? ` <span class="pick-state ng">${esc(connectNote)}</span>` : ''}</p>`;
     if (DATA.problems.length) html += `<div class="problems"><b>ずれ</b><ul>${DATA.problems.map((p) => `<li>${inline(p)}</li>`).join('')}</ul></div>`;
-    html += nowGroup('決めて', 'まだ案を選んでいない問い。', open.filter(([, a]) => !a.chosen));
-    html += nowGroup('遊んで確かめて', '案を選んで試している問い。遊んで残すと決めたら確定にする。', open.filter(([, a]) => a.chosen));
-    html += nowGroup('見て', '確定だが、変わったことがあって注意の印が付いた問い。', adrsOf('確定').filter(([, a]) => marked(a)));
-    if (!DATA.problems.length) html += '<section class="group"><h3>ずれ</h3><p class="none">なし</p></section>';
+    const groups = nowGroup('決めて', 'まだ案を選んでいない問い。', open.filter(([, a]) => !a.chosen)) +
+      nowGroup('遊んで確かめて', '案を選んで試している問い。遊んで残すと決めたら確定にする。', open.filter(([, a]) => a.chosen)) +
+      nowGroup('見て', '確定だが、変わったことがあって注意の印が付いた問い。', adrsOf('確定').filter(([, a]) => marked(a)));
+    html += groups;
+    if (!DATA.problems.length && !groups) html += '<p class="none">対応なし</p>';
     return html;
   }
   const decideCount = (s) => Object.values(DATA.adrs).filter((a) => a.state === '保留中' && a.systems.includes(s.id)).length;
-  function card(s) {
-    const { title, icon } = split(s.name);
-    const decide = decideCount(s);
-    const rest = listItems(sectionOf(s, '未決')).filter((item) => !/\[D-\d+\]/.test(item.text)).length;
-    const chips = [];
-    if (decide) chips.push(`<span class="badge warn">決める ${decide}</span>`);
-    if (rest) chips.push(`<span class="badge">未決 ${rest}</span>`);
-    if (!s.built) chips.push('<span class="badge">まだ作っていない</span>');
-    const links = s.links.length ? `<span class="card-links">関わる仕組み：${s.links.map((id) => esc(split(byId.get(id).name).title)).join('・')}</span>` : '';
-    return `<a class="card" href="#${s.id}" data-page="${s.id}"><span class="card-name">${icon} ${esc(title)}</span><span class="card-sum">${esc(s.summary)}</span>${links}<span class="chips">${chips.join('')}</span></a>`;
-  }
   function renderSystem(s) {
     const { title, icon } = split(s.name);
     const facts = [`<span>正本 <code>docs/systems/${s.id}.md</code></span>`];
@@ -572,13 +545,12 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   }
 
   const PAGES = [
-    { key: 'now', group: '全体', icon: '🧭', title: 'いま', render: renderNow },
-    { key: 'adrs', group: '全体', icon: '⚖️', title: '設計判断', render: renderAdrs },
-    { key: 'open', group: '全体', icon: '❓', title: '未決', render: () => renderCollected('未決', '❓', '未決', '各仕様書の「未決」を集めたもの。人が決めていない振る舞い。複数の振る舞いや作りが決まる問いは設計判断にある。') },
-    { key: 'overview', group: '全体', icon: '🗺️', title: 'このゲーム', render: renderOverview },
-    { key: 'concept', group: '全体', icon: '📘', title: '企画', render: renderConcept },
-    ...SYSTEMS.map((s) => ({ key: s.id, group: '仕組み', ...split(s.name), system: s, render: () => renderSystem(s) })),
-    { key: 'items', group: 'データ', icon: '🧺', title: 'アイテムとレシピ', render: renderItems },
+    { key: 'now', group: '対応', icon: '🧭', title: 'いま', render: renderNow },
+    { key: 'concept', group: '読む', icon: '📘', title: '企画', render: renderConcept },
+    ...SYSTEMS.map((s) => ({ key: s.id, group: '読む', ...split(s.name), system: s, render: () => renderSystem(s) })),
+    { key: 'items', group: '読む', icon: '🧺', title: 'アイテムとレシピ', render: renderItems },
+    { key: 'adrs', group: '記録', icon: '⚖️', title: '設計判断', render: renderAdrs },
+    { key: 'open', group: '記録', icon: '❓', title: '未決', render: () => renderCollected('未決', '❓', '未決', '各仕様書の「未決」を集めたもの。人が決めていない振る舞い。複数の振る舞いや作りが決まる問いは設計判断にある。') },
   ];
 
   // ── 目次と移動 ──
@@ -601,7 +573,8 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     toc.innerHTML = html;
   }
   function pager(index) {
-    const prev = PAGES[index - 1], next = PAGES[index + 1];
+    const same = (p) => (p && p.group === PAGES[index].group ? p : null);
+    const prev = same(PAGES[index - 1]), next = same(PAGES[index + 1]);
     const a = (p, cls, label) => `<a class="${cls}" href="#${p.key}" data-page="${p.key}">${label}</a>`;
     return `<nav class="pager">${prev ? a(prev, 'prev', `← ${prev.icon} ${esc(prev.title)}`) : ''}${next ? a(next, 'next', `${next.icon} ${esc(next.title)} →`) : ''}</nav>`;
   }
@@ -611,7 +584,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     current = PAGES[index].key;
     main.innerHTML = PAGES[index].render() + pager(index);
     renderToc();
-    document.title = `${PAGES[index].title} — Admin`;
+    document.title = `${PAGES[index].title} — Admin～メモフロ～`;
     const target = anchor && document.getElementById(anchor);
     for (let d = target && target.closest('details'); d; d = d.parentElement.closest('details')) d.open = true;
     if (y != null) {
@@ -695,7 +668,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   // ── 探す ──
   function search(query) {
     const q = query.trim().toLowerCase();
-    document.title = `「${query.trim()}」を探す — Admin`;
+    document.title = `「${query.trim()}」を探す — Admin～メモフロ～`;
     const hits = [];
     for (const s of byId.values()) {
       s.sections.forEach((sec, si) => sec.blocks.forEach((b, bi) => {
