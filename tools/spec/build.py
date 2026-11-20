@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 import re
 import shutil
@@ -188,6 +189,7 @@ def index_rows() -> list[dict]:
 ADR_PARTS = ("背景", "検討した選択肢", "決定", "帰結", "経緯")
 ADR_STATES = ("確定", "保留中", "置き換え", "廃止")
 RETIRED = ("置き換え", "廃止")  # もう効かない設計判断
+STALE = "確定のあとで選択か決定が書き換わった。読んだら「見た」で承認の印を付け直す"
 NEW_LINE = re.compile(r"^(\s{2,}|\([a-z]\)|[-*] |\d+\. )")
 # [D-番号] を探す文書。DECISIONS.md の中の参照と、作業の記録（STATE.md）は昔の判断を語るので見ない
 REFERRERS = ("docs/systems/*.md", "docs/conventions.md", "docs/CONTRIBUTING.md", "README.md",
@@ -212,6 +214,22 @@ def paragraphs(text: str) -> list[list[str]]:
     return out
 
 
+def seal(chunk: str) -> str:
+    """人が確定したときに見た中身の印。選択と決定の文を、空白を除いて比べる。ページの sealOf と同じ計算"""
+    lines = chunk.split("\n")
+    chosen = next((line[3:].strip() for line in lines if line.startswith("選択:")), "")
+    body, inside = [], False
+    for line in lines:
+        if line.startswith("**決定**"):
+            inside = True
+        elif inside and any(line.startswith(f"**{name}**") for name in ADR_PARTS):
+            break
+        if inside:
+            body.append(line)
+    text = re.sub(r"\s+", "", chosen + "|" + "".join(body))
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:8]
+
+
 def adr_entry(chunk: str, game: bool) -> tuple[str, dict] | None:
     head = re.match(r"## \[(D-\d+)\] (.+)", chunk)
     if not head:
@@ -233,6 +251,8 @@ def adr_entry(chunk: str, game: bool) -> tuple[str, dict] | None:
         "note": status[len(state):].strip().removeprefix("（").removesuffix("）"),
         "chosen": chosen.group(1) if chosen else "",
         "successor": (m.group(1) if (m := ADR_REF.search(field("後継"))) else ""),
+        "sealed": field("承認"),
+        "seal": seal(chunk),
         "options": sorted(set(OPTION.findall(choices))),  # ページで選べる案
         "notice": bool(field("注意")),
         "premise": field("前提"),
@@ -286,6 +306,11 @@ def adr_problems(adrs: dict) -> list[str]:
             continue
         if adr["state"] == "確定" and not adr["chosen"]:
             problems.append(f"確定の [{adr_id}] に選択が無い")
+        if adr["state"] == "確定" and not adr["sealed"]:
+            problems.append(f"確定の [{adr_id}] に承認の印が無い。頭の行に「承認: {adr['seal']}」を書く")
+        adr["stale"] = STALE if adr["state"] == "確定" and adr["sealed"] and adr["sealed"] != adr["seal"] else ""
+        if adr["stale"]:
+            adr["attention"].append(STALE)
         if len(adr["options"]) < 2:
             problems.append(f"[{adr_id}] の選択肢が 2 つ未満。選ぶものが無い問いは設計判断にしない")
         for scope in adr["scope"]:

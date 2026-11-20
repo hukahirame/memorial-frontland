@@ -354,7 +354,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
       html += a.options.map((o) => `<button type="button" class="opt" data-opt="${o}" aria-pressed="${o === choice}">(${o})</button>`).join('');
       html += ['try', 'confirm'].map((act) => `<button type="button" data-act="${act}"${choice ? '' : ' disabled'}>${ANSWER[act]}</button>`).join('');
     }
-    if (a.notice) html += '<button type="button" data-act="seen">見た</button>';
+    if (a.notice || a.stale) html += '<button type="button" data-act="seen">見た</button>';
     if (notes[id]) html += `<span class="pick-state${notes[id].ng ? ' ng' : ''}">${esc(notes[id].text)}</span>`;
     return html;
   }
@@ -389,6 +389,33 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     const field = (name) => { const l = lines.slice(start + 1, end).find((x) => x.startsWith(name + ':')); return l ? l.slice(name.length + 1).trim() : ''; };
     const chosen = /^\(([a-z])\)$/.exec(field('選択'));
     return { start, end, state: ['確定', '保留中', ...RETIRED].find((s) => field('状態').startsWith(s)) || '', chosen: chosen ? chosen[1] : '', note: field('注意') };
+  }
+  // 人が確定したときに見た中身の印。選択と決定の文を、空白を除いて比べる。build.py の seal と同じ計算
+  const ADR_PARTS = ['背景', '検討した選択肢', '決定', '帰結', '経緯'];
+  async function sealOf(lines, id) {
+    const start = lines.findIndex((l) => l.startsWith(`## [${id}] `));
+    let end = lines.findIndex((l, i) => i > start && /^## \[D-\d+\]/.test(l));
+    const own = lines.slice(start, end < 0 ? lines.length : end);
+    const chosen = (own.find((l) => l.startsWith('選択:')) || '選択:').slice(3).trim();
+    const body = [];
+    let inside = false;
+    for (const l of own) {
+      if (l.startsWith('**決定**')) inside = true;
+      else if (inside && ADR_PARTS.some((name) => l.startsWith(`**${name}**`))) break;
+      if (inside) body.push(l);
+    }
+    const text = (chosen + '|' + body.join('')).replace(/\s+/g, '');
+    const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)));
+    return [...hash].map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 8);
+  }
+  // 頭の行の 承認: を、いまの選択と決定の印にする
+  async function stamp(lines, id) {
+    const h = headOf(lines, id), line = `承認: ${await sealOf(lines, id)}`;
+    const at = lines.slice(h.start + 1, h.end).findIndex((l) => l.startsWith('承認:'));
+    const out = [...lines];
+    if (at >= 0) out[h.start + 1 + at] = line;
+    else out.splice(h.end, 0, line);
+    return out;
   }
   // 注意は文で比べる。文が書き換わったのに気づかず、人が読む前に消さないように
   const noteOf = (a) => (a.notice ? a.attention[0] : '');
@@ -435,10 +462,14 @@ table.md th { background: var(--sunk); white-space: nowrap; }
         notes[id] = { text: `記録が変わっていた（いま ${h.state}${h.chosen ? `・選択 (${h.chosen})` : ''}）`, ng: true };
         redraw = true;
       } else {
+        let out = answered(lines, h, a, action, option);
+        // 確定にしたときと、確定を見たときは、人がいま見た選択と決定に承認の印を付ける
+        if (action === 'confirm' || (action === 'seen' && a.state === '確定')) out = await stamp(out, id);
         const writer = await file.createWritable();
-        await writer.write(answered(lines, h, a, action, option).join(eol));
+        await writer.write(out.join(eol));
         await writer.close();
         adopt(a, { state: action === 'confirm' ? '確定' : a.state, chosen: action === 'seen' ? a.chosen : option, note: '' });
+        if (action !== 'try') { a.attention = a.attention.filter((t) => t !== a.stale); a.stale = ''; }
         delete selected[id];
         notes[id] = { text: `「${action === 'seen' ? '見た' : `(${option}) で${ANSWER[action]}`}」を書いた` };
       }
