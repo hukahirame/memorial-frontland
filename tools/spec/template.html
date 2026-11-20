@@ -103,12 +103,14 @@ details.group > summary { cursor: pointer; font-weight: 600; font-size: 16px; ma
 .state { font-size: 11px; font-weight: normal; padding: 0 6px; border-radius: 4px; border: 1px solid currentColor; white-space: nowrap; }
 .state[data-state="確定"] { color: var(--ok); }
 .state[data-state="保留中"] { color: var(--warn); }
-.state[data-state="棄却"] { color: var(--muted); }
+.state[data-state="置き換え"], .state[data-state="廃止"] { color: var(--muted); }
 .state-head { font-size: 13px; color: var(--muted); margin: 16px 2px 6px; }
 .adr-title { font-weight: 600; text-decoration: none; }
 .none { color: var(--muted); font-size: 13px; margin: 6px 0; }
 .adr-entry { scroll-margin-top: 80px; }
 .adr-entry h3 .date { margin-left: auto; }
+.adr-kind { font-size: 18px; line-height: 1; cursor: default; }
+.adr-kind.side { float: right; margin: 0 0 4px 8px; }
 .adr-entry details { margin-top: 6px; }
 .adr-entry summary { cursor: pointer; font-size: 13px; color: var(--muted); }
 .adr-part { margin: 8px 0 0; font-size: 13px; }
@@ -203,7 +205,8 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     return s.replace(/\u0001(\d+)\u0002/g, (_, i) => `<code>${codes[i]}</code>`);
   }
-  const live = (a) => a.state !== '棄却';
+  const RETIRED = ['置き換え', '廃止'];  // もう効かない設計判断
+  const live = (a) => !RETIRED.includes(a.state);
   const stateBadge = (a) => `<span class="state" data-state="${esc(a.state)}">${esc(a.state)}</span>`;
   const chosenText = (a) => (a.chosen ? `<span class="small">選択 (${esc(a.chosen)})</span>` : '');
   // 注意の印。注意: の行か、前提の答えが変わったもの。人が見たら注意: の行を消す
@@ -213,7 +216,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   function adrChip(id) {
     const a = DATA.adrs[id];
     if (!a) return `<span class="adr broken" title="判断の記録に無い">${id}</span>`;
-    const look = (a.state === '棄却' ? ' old' : a.state === '保留中' ? ' open' : '') + (marked(a) ? ' marked' : '');
+    const look = (!live(a) ? ' old' : a.state === '保留中' ? ' open' : '') + (marked(a) ? ' marked' : '');
     return `<button type="button" class="adr${look}" data-adr="${id}" title="${esc(a.title)}（${esc(a.state)}${marked(a) ? '・注意' : ''}）">${id}</button>`;
   }
   function toggleAdr(button) {
@@ -268,7 +271,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     html += `<section class="group"><h3>企画</h3><p class="para">${CONCEPT ? `<a href="#concept" data-page="concept">企画</a>のページにある。` : '企画は暗号で入れてあり、この手元では読めない。'}人が書くのは企画だけ。</p></section>`;
     html += `<section class="group"><h3>仕組み <span class="small">docs/systems/INDEX.md の並び</span></h3><div class="cards">${SYSTEMS.map(card).join('')}</div></section>`;
     const active = Object.values(DATA.adrs).filter(live).length;
-    html += `<section class="group"><h3>設計判断</h3><p class="para">人が選んだ案と、選ばなかった案。棄却でないもの ${active} 件。<a href="#adrs" data-page="adrs">一覧</a></p></section>`;
+    html += `<section class="group"><h3>設計判断</h3><p class="para">人が選んだ案と、選ばなかった案。確定と保留中が ${active} 件。<a href="#adrs" data-page="adrs">一覧</a></p></section>`;
     return html;
   }
   const conceptBlanks = () => (CONCEPT ? CONCEPT.sections.filter(unwritten).length : 0);
@@ -285,34 +288,40 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   }
   const adrLines = (ps) => ps.map((p) => `<p>${p.map(inline).join('<br>')}</p>`).join('');
   const adrPart = (a, name) => (a.parts[name] ? `<div class="adr-part"><b>${name}</b>${adrLines(a.parts[name])}</div>` : '');
+  // 開発の作り方か、ゲームそのものか。文字は出さず、絵だけを右に置く
+  const KINDS = { dev: ['🛠️', '開発の作り方'], game: ['🎮', 'ゲームそのもの'] };
+  const kindIcon = (a, cls = '') => {
+    const [icon, label] = KINDS[a.game ? 'game' : 'dev'];
+    return `<span class="adr-kind ${cls}" title="${label}" aria-label="${label}">${icon}</span>`;
+  };
   const adrsOf = (state) => Object.entries(DATA.adrs).filter(([, a]) => a.state === state);
   const markedCount = () => Object.values(DATA.adrs).filter(marked).length;
-  const adrCounts = () => ['確定', '保留中', '棄却'].map((state) => `<span>${state} ${adrsOf(state).length}</span>`).join('') +
+  const adrCounts = () => ['確定', '保留中', ...RETIRED].map((state) => `<span>${state} ${adrsOf(state).length}</span>`).join('') +
     (markedCount() ? `<span>注意 ${markedCount()}</span>` : '');
   function adrEntry(id, a) {
     const facts = [];
     if (a.premises.length) facts.push(`<span>前提：${a.premises.map((p) => `${adrChip(p.id)} (${esc(p.option)})`).join(' ')}</span>`);
     if (a.dependents.length) facts.push(`<span>これを前提にしている：${a.dependents.map(adrChip).join(' ')}</span>`);
     if (a.systems.length) facts.push(`<span>仕組み：${a.systems.map(pageLink).join('・')}</span>`);
-    if (a.private) facts.push('<span>公開しない（docs/private/DECISIONS.md）</span>');
     facts.push(`<span>指している所：${a.refs.length ? a.refs.map((r) => `<code>${esc(r)}</code>`).join(' ') : 'なし'}</span>`);
     const body = a.decision
       ? `${adrPart(a, '決定')}<div class="facts">${facts.join('')}</div><details><summary>背景・検討した選択肢・帰結</summary>${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}${adrPart(a, '帰結')}${adrPart(a, '経緯')}</details>`
       : `${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}${adrPart(a, '経緯')}<div class="facts">${facts.join('')}</div>`;
-    return `<section class="group adr-entry" id="adr-${id}"><h3>[${id}] ${esc(a.title)} ${stateBadge(a)}${markBadge(a)} ${chosenText(a)}<span class="small date">${esc(a.date)}</span></h3>` +
+    return `<section class="group adr-entry" id="adr-${id}"><h3>[${id}] ${esc(a.title)} ${stateBadge(a)}${markBadge(a)} ${chosenText(a)}<span class="small date">${esc(a.date)}</span>${kindIcon(a)}</h3>` +
       markText(a) + (a.note ? `<p class="para small">${inline(a.note)}</p>` : '') + body + '</section>';
   }
   function renderAdrs() {
     let html = head('⚖️', '設計判断', '一覧',
-      '1 件 1 問い。状態は確定・保留中・棄却の 3 つ。書き方は docs/DECISIONS.md の冒頭にある。',
-      `<span>正本 <code>docs/DECISIONS.md</code></span>${adrCounts()}`);
+      '1 件 1 問い。状態は確定・保留中・置き換え・廃止の 4 つ。書き方は docs/DECISIONS.md の冒頭にある。',
+      `<span>${KINDS.dev[0]} <code>docs/DECISIONS.md</code></span><span>${KINDS.game[0]} <code>docs/GAME-DECISIONS.md</code></span>${adrCounts()}`);
     for (const state of ['保留中', '確定']) {
       const list = adrsOf(state);
       if (list.length) html += `<div class="state-head">${state} ${list.length} 件</div>` + list.map(([id, a]) => adrEntry(id, a)).join('');
     }
-    const old = adrsOf('棄却');
-    html += `<details class="group"><summary>棄却 <span class="small">${old.length} 件</span></summary><ul class="adr-old">` +
-      old.map(([id, a]) => `<li id="adr-${id}"><b>[${id}] ${esc(a.title)}</b><br>${inline(a.note)}` +
+    const old = Object.entries(DATA.adrs).filter(([, a]) => !live(a));
+    html += `<details class="group"><summary>置き換え・廃止 <span class="small">${old.length} 件</span></summary><ul class="adr-old">` +
+      old.map(([id, a]) => `<li id="adr-${id}">${kindIcon(a, 'side')}<b>[${id}] ${esc(a.title)}</b> ${stateBadge(a)}` +
+        `${a.successor ? ` 後継 ${adrChip(a.successor)}` : ''}${a.note ? `<br>${inline(a.note)}` : ''}` +
         `<details><summary>全文</summary>${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}${adrPart(a, '決定')}${adrPart(a, '帰結')}${adrPart(a, '経緯')}</details></li>`).join('') +
       '</ul></details>';
     return html;
@@ -320,7 +329,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   // 入口。人の対応が要るものだけを出す
   function nowItem(id, a) {
     const where = a.systems.length ? `<span class="from">${a.systems.map((s) => esc(split(byId.get(s).name).title)).join('・')}</span>` : '';
-    return `<li class="item">${where}<a class="adr-title" href="${href('adrs', 'adr-' + id)}" data-page="adrs" data-anchor="adr-${id}">[${id}] ${esc(a.title)}</a>${markBadge(a)} ${chosenText(a)}${markText(a)}${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}` +
+    return `<li class="item">${kindIcon(a, 'side')}${where}<a class="adr-title" href="${href('adrs', 'adr-' + id)}" data-page="adrs" data-anchor="adr-${id}">[${id}] ${esc(a.title)}</a>${markBadge(a)} ${chosenText(a)}${markText(a)}${adrPart(a, '背景')}${adrPart(a, '検討した選択肢')}` +
       `<div class="pick" data-pick="${id}">${pickRow(id)}</div></li>`;
   }
 
@@ -333,8 +342,8 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   const selected = {};   // チップで選んだ、まだ押していない案
   const notes = {};      // 行の後ろに出す一言 { text, ng }
   const ANSWER = { try: '試す', confirm: '確定', seen: '見た' };
-  const FILES = [['DECISIONS.md'], ['private', 'DECISIONS.md']];
-  const fileOf = (a) => FILES[a.private ? 1 : 0];
+  const FILES = [['DECISIONS.md'], ['GAME-DECISIONS.md']];
+  const fileOf = (a) => FILES[a.game ? 1 : 0];
   const canConnect = () => !folder && 'showDirectoryPicker' in window && new URLSearchParams(location.search).has('answer');
   function pickRow(id) {
     if (!folder) return '';
@@ -379,7 +388,7 @@ table.md th { background: var(--sunk); white-space: nowrap; }
     while (end < lines.length && lines[end].trim() && !/^## \[D-\d+\]/.test(lines[end])) end += 1;
     const field = (name) => { const l = lines.slice(start + 1, end).find((x) => x.startsWith(name + ':')); return l ? l.slice(name.length + 1).trim() : ''; };
     const chosen = /^\(([a-z])\)$/.exec(field('選択'));
-    return { start, end, state: ['確定', '保留中', '棄却'].find((s) => field('状態').startsWith(s)) || '', chosen: chosen ? chosen[1] : '', note: field('注意') };
+    return { start, end, state: ['確定', '保留中', ...RETIRED].find((s) => field('状態').startsWith(s)) || '', chosen: chosen ? chosen[1] : '', note: field('注意') };
   }
   // 注意は文で比べる。文が書き換わったのに気づかず、人が読む前に消さないように
   const noteOf = (a) => (a.notice ? a.attention[0] : '');

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""企画（docs/private/concept.md）・仕様書（docs/systems/*.md）・判断の記録（docs/DECISIONS.md）から、
+"""企画（docs/concept.md）・仕様書（docs/systems/*.md）・判断の記録（docs/DECISIONS.md）から、
 管理のページ .spec/admin.html を作る。docs は暗号で git に入れる（[D-25]）ので、鍵の無い手元では作らずに終わる。
 
 ページは見え方で、何も書き足さない。中身は仕様書・判断の記録・原簿から毎回読む。
 直すときは元の文書を直して、作り直す。
-文書どうしの食い違い（無いリンク先、棄却した設計判断を指す所、棄却でない設計判断の範囲に無い道、前提の答えの違い）と、
+文書どうしの食い違い（無いリンク先、置き換え・廃止の設計判断を指す所、確定・保留中の設計判断の範囲に無い道、前提の答えの違い）と、
 仕様書の欠け（足りない欄、仕様書の無い関心事のフォルダ）は、問題として出し、終了コード 1 で終わる。
 作るたびに Cloudflare にも上げ、上げてあるページを手元と同じにする。上げられなかったときも終了コード 1。
 
@@ -24,10 +24,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SYSTEMS = ROOT / "docs" / "systems"
 DECISIONS = ROOT / "docs" / "DECISIONS.md"
-PRIVATE_DECISIONS = ROOT / "docs" / "private" / "DECISIONS.md"  # 公開しない中身の設計判断。鍵の無い手元では読めない
+GAME_DECISIONS = ROOT / "docs" / "GAME-DECISIONS.md"  # ゲームそのものの設計判断。開発の作り方は DECISIONS
 ITEMS = ROOT / "Assets" / "_Project" / "Resources" / "ItemData.csv"
 RECIPES = ROOT / "Assets" / "_Project" / "Data" / "Recipes"
-CONCEPT = ROOT / "docs" / "private" / "concept.md"  # 企画。暗号で git に入れる（[D-25]）ので、鍵の無い手元では読めない
+CONCEPT = ROOT / "docs" / "concept.md"  # 企画
 TEMPLATE = Path(__file__).with_name("template.html")
 OUT = ROOT / ".spec" / "admin.html"
 
@@ -186,7 +186,8 @@ def index_rows() -> list[dict]:
 
 
 ADR_PARTS = ("背景", "検討した選択肢", "決定", "帰結", "経緯")
-ADR_STATES = ("確定", "保留中", "棄却")
+ADR_STATES = ("確定", "保留中", "置き換え", "廃止")
+RETIRED = ("置き換え", "廃止")  # もう効かない設計判断
 NEW_LINE = re.compile(r"^(\s{2,}|\([a-z]\)|[-*] |\d+\. )")
 # [D-番号] を探す文書。DECISIONS.md の中の参照と、作業の記録（STATE.md）は昔の判断を語るので見ない
 REFERRERS = ("docs/systems/*.md", "docs/conventions.md", "docs/CONTRIBUTING.md", "README.md",
@@ -211,7 +212,7 @@ def paragraphs(text: str) -> list[list[str]]:
     return out
 
 
-def adr_entry(chunk: str, private: bool) -> tuple[str, dict] | None:
+def adr_entry(chunk: str, game: bool) -> tuple[str, dict] | None:
     head = re.match(r"## \[(D-\d+)\] (.+)", chunk)
     if not head:
         return None
@@ -231,6 +232,7 @@ def adr_entry(chunk: str, private: bool) -> tuple[str, dict] | None:
         "state": state,
         "note": status[len(state):].strip().removeprefix("（").removesuffix("）"),
         "chosen": chosen.group(1) if chosen else "",
+        "successor": (m.group(1) if (m := ADR_REF.search(field("後継"))) else ""),
         "options": sorted(set(OPTION.findall(choices))),  # ページで選べる案
         "notice": bool(field("注意")),
         "premise": field("前提"),
@@ -241,7 +243,7 @@ def adr_entry(chunk: str, private: bool) -> tuple[str, dict] | None:
         # 人に見てほしいこと。注意: の行と、前提の答えが変わったこと（adr_problems が足す）
         "attention": [note] if (note := field("注意")) else [],
         "parts": parts,
-        "private": private,
+        "game": game,
         "refs": [],
         "dependents": [],
         "systems": [],
@@ -250,11 +252,11 @@ def adr_entry(chunk: str, private: bool) -> tuple[str, dict] | None:
 
 def decisions() -> tuple[dict, list[str]]:
     adrs, problems = {}, []
-    for path, private in ((DECISIONS, False), (PRIVATE_DECISIONS, True)):
+    for path, game in ((DECISIONS, False), (GAME_DECISIONS, True)):
         if not readable(path):
             continue
         for chunk in re.split(r"\n(?=## \[D-\d+\])", read(path)):
-            entry = adr_entry(chunk, private)
+            entry = adr_entry(chunk, game)
             if entry:
                 if entry[0] in adrs:
                     problems.append(f"[{entry[0]}] が 2 か所にある")
@@ -263,13 +265,24 @@ def decisions() -> tuple[dict, list[str]]:
 
 
 def adr_problems(adrs: dict) -> list[str]:
-    """棄却でない設計判断の範囲に無い道、選択肢の不足、前提の答えの違い、棄却した・無い設計判断を指している所。指している所は adrs に控える"""
+    """確定・保留中の設計判断の範囲に無い道、選択肢の不足、前提の答えの違い、後継の欠け、もう効かない・無い設計判断を指している所。
+    指している所は adrs に控える"""
     problems = []
     for adr_id, adr in adrs.items():
         if not adr["state"]:
-            problems.append(f"[{adr_id}] の状態が確定・保留中・棄却のどれでもない")
+            problems.append(f"[{adr_id}] の状態が{'・'.join(ADR_STATES)}のどれでもない")
             continue
-        if adr["state"] == "棄却":
+        if adr["state"] == "置き換え":
+            after = adrs.get(adr["successor"])
+            if not adr["successor"]:
+                problems.append(f"置き換えの [{adr_id}] に後継が無い")
+            elif after is None:
+                problems.append(f"[{adr_id}] の後継 [{adr['successor']}] が判断の記録に無い")
+            elif after["state"] in RETIRED:
+                problems.append(f"[{adr_id}] の後継 [{adr['successor']}] も{after['state']}")
+        if adr["state"] == "廃止" and not adr["note"]:
+            problems.append(f"廃止の [{adr_id}] に理由が無い")
+        if adr["state"] in RETIRED:
             continue
         if adr["state"] == "確定" and not adr["chosen"]:
             problems.append(f"確定の [{adr_id}] に選択が無い")
@@ -287,9 +300,9 @@ def adr_problems(adrs: dict) -> list[str]:
                 problems.append(f"[{adr_id}] の前提 [{premise['id']}] が判断の記録に無い")
                 continue
             base["dependents"].append(adr_id)
-            if base["state"] == "棄却":
-                adr["attention"].append(f"前提の [{premise['id']}] が棄却された")
-                problems.append(f"[{adr_id}] の前提 [{premise['id']}] が棄却された")
+            if base["state"] in RETIRED:
+                adr["attention"].append(f"前提の [{premise['id']}] が{retired(premise['id'], base)}")
+                problems.append(f"[{adr_id}] の前提 [{premise['id']}] が{retired(premise['id'], base)}")
             elif base["chosen"] != premise["option"]:
                 now = f"({base['chosen']})" if base["chosen"] else "未決"
                 adr["attention"].append(f"前提は [{premise['id']}] の ({premise['option']}) だが、今の答えは {now}")
@@ -304,9 +317,14 @@ def adr_problems(adrs: dict) -> list[str]:
                 problems.append(f"{name} の [{adr_id}] が判断の記録に無い")
                 continue
             adr["refs"].append(name)
-            if adr["state"] == "棄却":
-                problems.append(f"{name} が棄却の [{adr_id}] を指している")
+            if adr["state"] in RETIRED:
+                problems.append(f"{name} の [{adr_id}] は{retired(adr_id, adr)}")
     return problems
+
+
+def retired(adr_id: str, adr: dict) -> str:
+    """もう効かない設計判断の言い方。置き換えなら後継を添える"""
+    return f"置き換えられた（後継 [{adr['successor']}]）" if adr["state"] == "置き換え" else "廃止された"
 
 
 def items() -> dict:
