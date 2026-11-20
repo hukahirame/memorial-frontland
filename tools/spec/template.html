@@ -169,7 +169,10 @@ table.md th { background: var(--sunk); white-space: nowrap; }
   /** ページと、その中の場所を指す住所。#roots や #adrs/adr-D-34。ブラウザの戻る・進む・再読み込み・新しいタブで開くがこれで効く */
   const href = (page, anchor) => '#' + page + (anchor ? '/' + anchor : '');
   const SYSTEMS = DATA.systems;
-  const EVENT_LIST = DATA.events || [];  // 仕組みをまたぐ出来事。起こす仕様書の ## 出来事 と、それを指す反応
+  // 出来事のページは、起こす仕組みのほかに 2 つ以上の仕組みが反応するものだけ作る。
+  // 反応が 1 つなら、その仕様書のリンクで全部が見えている
+  const crossing = (ev) => new Set(ev.reactions.map((r) => r.system).filter((id) => id !== ev.owner)).size >= 2;
+  const EVENT_LIST = (DATA.events || []).filter(crossing);
   const EVENTS = new Map(EVENT_LIST.map((ev) => [ev.key, ev]));
   // 企画は暗号で git に入れるので、鍵の無い手元では読めない（sections が null）
   const CONCEPT = DATA.concept.sections ? { id: 'concept', name: '企画 📘', sections: DATA.concept.sections } : null;
@@ -245,8 +248,9 @@ table.md th { background: var(--sunk); white-space: nowrap; }
       if (b.type === 'h') return `<h4>${inline(b.text)}</h4>`;
       if (b.type === 'p') return `<p class="para" id="${base}">${inline(b.text)}</p>`;
       if (b.type === 'code') return `<pre>${esc(b.text)}</pre>`;
-      // 出来事の表は、名前から出来事のページへ飛べるようにする
-      if (b.type === 'table') return tableHtml(b.head, sec.title === '出来事' ? b.rows.map(([name, ...rest]) => [`[${name}](${s.id}.md#${name})`, ...rest]) : b.rows);
+      // 出来事の表は、ページのある出来事だけ、名前からそのページへ飛べるようにする
+      const evLink = (name) => (EVENTS.has(`ev-${s.id}-${name}`) ? `[${name}](${s.id}.md#${name})` : name);
+      if (b.type === 'table') return tableHtml(b.head, sec.title === '出来事' ? b.rows.map(([name, ...rest]) => [evLink(name), ...rest]) : b.rows);
       return `<ul class="items">${b.items.map((it, ii) => itemHtml(it, kind, `${base}-${ii}`)).join('')}</ul>`;
     }).join('');
   }
