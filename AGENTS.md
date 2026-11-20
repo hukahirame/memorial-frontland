@@ -11,9 +11,9 @@
 
 - `.meta` の GUID の書き換え・複製、インポート設定を持つアセットの `.meta` の手書き
 - 破壊的コマンドへの `confirm=true` を自己判断で付けること
-- `Assets/` 直下の third-party への書き込み（Git 管理外＝復旧不能）
+- `Assets/` 直下の third-party への書き込み（Git 管理外＝復旧不能）。例外は git に入れる asmdef だけ（[D-53]）
 
 ## ポインタ
 
-- [D-番号]は、`docs/DECISIONS.md`に判断理由がある。ゲームの中身の判断は `docs/private/DECISIONS.md`。docs・STATE.md・FRICTIONS.md は暗号で git に入れる（[D-25]。鍵の無い手元では読めない）
+- [D-番号]は、`docs/DECISIONS.md`に判断理由がある。ゲームの中身の判断は `docs/GAME-DECISIONS.md`。docs・STATE.md・FRICTIONS.md は暗号で git に入れる（[D-25]。鍵の無い手元では読めない）
 - 取り決め: `docs/conventions.md`
